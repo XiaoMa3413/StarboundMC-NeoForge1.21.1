@@ -1,8 +1,9 @@
 package com.starboundmc.item;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,8 +16,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -24,8 +26,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import org.jetbrains.annotations.Nullable;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,41 +78,33 @@ public class MatterManipulatorItem extends Item
 
     public static int getSpeedLevel(ItemStack stack)
     {
-        int level = stack.hasTag() ? stack.getTag().getInt(NBT_SPEED_UPGRADES) : 0;
-        if (level == 0 && stack.hasTag() && stack.getTag().contains(NBT_LEGACY_UPGRADES))
-        {
-            // Migrate the old single-track upgrade to the mining speed track.
-            level = stack.getTag().getInt(NBT_LEGACY_UPGRADES);
-        }
-        return Math.max(0, Math.min(MAX_UPGRADES, level));
+        return upgrades(stack).speed();
     }
 
     public static void setSpeedLevel(ItemStack stack, int level)
     {
-        stack.getOrCreateTag().putInt(NBT_SPEED_UPGRADES, Math.max(0, Math.min(MAX_UPGRADES, level)));
+        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), upgrades(stack).withSpeed(level));
     }
 
     public static int getRangeLevel(ItemStack stack)
     {
-        int level = stack.hasTag() ? stack.getTag().getInt(NBT_RANGE_UPGRADES) : 0;
-        return Math.max(0, Math.min(MAX_UPGRADES, level));
+        return upgrades(stack).range();
     }
 
     public static void setRangeLevel(ItemStack stack, int level)
     {
-        stack.getOrCreateTag().putInt(NBT_RANGE_UPGRADES, Math.max(0, Math.min(MAX_UPGRADES, level)));
+        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), upgrades(stack).withRange(level));
     }
 
     /** Number of mining-tier upgrades applied (0 = stone-equivalent, 1 = diamond, 2 = netherite). */
     public static int getMiningUpgrades(ItemStack stack)
     {
-        int upgrades = stack.hasTag() ? stack.getTag().getInt(NBT_MINING_UPGRADES) : 0;
-        return Math.max(0, Math.min(MAX_MINING_UPGRADES, upgrades));
+        return upgrades(stack).mining();
     }
 
     public static void setMiningUpgrades(ItemStack stack, int upgrades)
     {
-        stack.getOrCreateTag().putInt(NBT_MINING_UPGRADES, Math.max(0, Math.min(MAX_MINING_UPGRADES, upgrades)));
+        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), upgrades(stack).withMining(upgrades));
     }
 
     /** Player-facing mining tier: 0 = iron-ore tier (default), 1 = diamond/obsidian tier, 2 = ancient-debris tier. */
@@ -121,41 +113,88 @@ public class MatterManipulatorItem extends Item
         return getMiningUpgrades(stack);
     }
 
-    /** Fortune upgrade level (0..3). Stored in NBT; mirrored as a real BLOCK_FORTUNE
-     *  enchantment so vanilla loot tables scale the drops. */
+    /** Fortune upgrade level (0..3), stored in the immutable upgrade component. */
     public static int getFortuneLevel(ItemStack stack)
     {
-        int level = stack.hasTag() ? stack.getTag().getInt(NBT_FORTUNE_UPGRADES) : 0;
-        return Math.max(0, Math.min(MAX_FORTUNE_UPGRADES, level));
+        return upgrades(stack).fortune();
     }
 
     public static void setFortuneLevel(ItemStack stack, int level)
     {
-        level = Math.max(0, Math.min(MAX_FORTUNE_UPGRADES, level));
-        stack.getOrCreateTag().putInt(NBT_FORTUNE_UPGRADES, level);
+        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), upgrades(stack).withFortune(level));
+    }
 
-        // Mirror as a real BLOCK_FORTUNE enchantment so vanilla loot tables
-        // scale the drops (the left-click path uses the held stack as the loot
-        // tool, the laser passes it manually). ItemStack.enchant() only APPENDS
-        // entries — it never replaces — so the list is rebuilt here: exactly
-        // one fortune entry at the current level. This also heals items whose
-        // tag was written by the appending version (duplicated fortune rows).
-        String fortuneId = EnchantmentHelper.getEnchantmentId(Enchantments.BLOCK_FORTUNE).toString();
-        ListTag enchants = stack.getTag().getList("Enchantments", Tag.TAG_COMPOUND);
-        enchants.removeIf(tag -> fortuneId.equals(((CompoundTag) tag).getString("id")));
-        if (level > 0)
+    public static void setFortuneLevel(ItemStack stack, int level, Holder<Enchantment> fortune)
+    {
+        setFortuneLevel(stack, level);
+        int clamped = getFortuneLevel(stack);
+        EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(fortune, clamped));
+    }
+
+    public static MatterManipulatorUpgrades upgrades(ItemStack stack)
+    {
+        MatterManipulatorUpgrades value = stack.get(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get());
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        if (value != null)
         {
-            enchants.add(EnchantmentHelper.storeEnchantment(
-                    EnchantmentHelper.getEnchantmentId(Enchantments.BLOCK_FORTUNE), level));
+            if (customData != null && containsLegacyFields(customData.copyTag()))
+            {
+                CompoundTag tag = customData.copyTag();
+                removeLegacyFields(tag);
+                storeCustomData(stack, tag);
+            }
+            return value;
         }
-        if (enchants.isEmpty())
-        {
-            stack.getTag().remove("Enchantments");
-        }
+        if (customData == null)
+            return MatterManipulatorUpgrades.DEFAULT;
+
+        CompoundTag tag = customData.copyTag();
+        if (!containsLegacyFields(tag))
+            return MatterManipulatorUpgrades.DEFAULT;
+
+        value = migrateLegacyTag(tag);
+        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), value);
+        storeCustomData(stack, tag);
+        return value;
+    }
+
+    /** Reads and removes the 1.20.1 custom-data fields in one operation. */
+    public static MatterManipulatorUpgrades migrateLegacyTag(CompoundTag tag)
+    {
+        if (!containsLegacyFields(tag))
+            return MatterManipulatorUpgrades.DEFAULT;
+        int speed = tag.contains(NBT_SPEED_UPGRADES, Tag.TAG_INT)
+                ? tag.getInt(NBT_SPEED_UPGRADES) : tag.getInt(NBT_LEGACY_UPGRADES);
+        MatterManipulatorUpgrades value = new MatterManipulatorUpgrades(
+                speed, tag.getInt(NBT_RANGE_UPGRADES),
+                tag.getInt(NBT_MINING_UPGRADES), tag.getInt(NBT_FORTUNE_UPGRADES));
+        removeLegacyFields(tag);
+        return value;
+    }
+
+    private static boolean containsLegacyFields(CompoundTag tag)
+    {
+        return tag.contains(NBT_SPEED_UPGRADES) || tag.contains(NBT_RANGE_UPGRADES)
+                || tag.contains(NBT_MINING_UPGRADES) || tag.contains(NBT_FORTUNE_UPGRADES)
+                || tag.contains(NBT_LEGACY_UPGRADES) || tag.contains("Enchantments");
+    }
+
+    private static void removeLegacyFields(CompoundTag tag)
+    {
+        tag.remove(NBT_SPEED_UPGRADES);
+        tag.remove(NBT_RANGE_UPGRADES);
+        tag.remove(NBT_MINING_UPGRADES);
+        tag.remove(NBT_FORTUNE_UPGRADES);
+        tag.remove(NBT_LEGACY_UPGRADES);
+        tag.remove("Enchantments");
+    }
+
+    private static void storeCustomData(ItemStack stack, CompoundTag tag)
+    {
+        if (tag.isEmpty())
+            stack.remove(DataComponents.CUSTOM_DATA);
         else
-        {
-            stack.getTag().put("Enchantments", enchants);
-        }
+            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
     }
 
     @Override
@@ -169,7 +208,7 @@ public class MatterManipulatorItem extends Item
     }
 
     @Override
-    public int getUseDuration(ItemStack stack)
+    public int getUseDuration(ItemStack stack, LivingEntity entity)
     {
         return USE_DURATION;
     }
@@ -320,7 +359,7 @@ public class MatterManipulatorItem extends Item
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag)
+    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag)
     {
         tooltip.add(Component.translatable("item.starboundmc.matter_manipulator.tooltip"));
         tooltip.add(Component.translatable("item.starboundmc.matter_manipulator.speed_level",

@@ -3,6 +3,7 @@ package com.starboundmc.network;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.TeleporterMenu;
+import com.starboundmc.menu.UpgradeMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -15,7 +16,7 @@ final class ServerPayloadHandler {
         ServerPlayer player = sender(context);
         int track = payload.track();
         if (player != null && track >= 0 && track <= 3
-                && player.containerMenu instanceof ModMenus.Stage2UpgradeMenu) {
+                && player.containerMenu instanceof UpgradeMenu) {
             ModNetwork.serverActions().upgradeMatterManipulator(player, track);
         }
     }

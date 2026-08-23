@@ -6,6 +6,7 @@ import com.starboundmc.menu.ModMenus;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
 import com.starboundmc.menu.TeleporterMenu;
+import com.starboundmc.menu.UpgradeMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -98,7 +99,8 @@ public final class Stage2Blocks {
                 BlockHitResult hit) {
             if (player instanceof ServerPlayer serverPlayer) {
                 serverPlayer.openMenu(new SimpleMenuProvider(
-                        (containerId, inventory, ignored) -> new ModMenus.Stage2UpgradeMenu(containerId),
+                        (containerId, inventory, ignored) -> new UpgradeMenu(containerId, inventory,
+                                ContainerLevelAccess.create(level, pos)),
                         Component.translatable("container.starboundmc.matter_manipulator_workbench")));
             }
             return InteractionResult.sidedSuccess(level.isClientSide);

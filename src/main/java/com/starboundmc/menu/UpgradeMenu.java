@@ -4,6 +4,7 @@ import com.starboundmc.block.ModBlocks;
 import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.item.MatterManipulatorModuleItem;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.SimpleContainer;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 public class UpgradeMenu extends AbstractContainerMenu
 {
@@ -82,10 +84,10 @@ public class UpgradeMenu extends AbstractContainerMenu
             return;
         }
 
-        // Self-heal: rebuild the fortune enchantment list to match the NBT
-        // level — repairs older items carrying duplicated fortune entries
-        // (ItemStack.enchant() used to append without replacing).
-        MatterManipulatorItem.setFortuneLevel(stack, MatterManipulatorItem.getFortuneLevel(stack));
+        var fortune = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
+                .getOrThrow(Enchantments.FORTUNE);
+        MatterManipulatorItem.setFortuneLevel(
+                stack, MatterManipulatorItem.getFortuneLevel(stack), fortune);
         this.manipulatorContainer.setChanged();
         this.broadcastChanges();
 
@@ -135,7 +137,7 @@ public class UpgradeMenu extends AbstractContainerMenu
             case TRACK_SPEED -> MatterManipulatorItem.setSpeedLevel(stack, nextLevel);
             case TRACK_RANGE -> MatterManipulatorItem.setRangeLevel(stack, nextLevel);
             case TRACK_MINING -> MatterManipulatorItem.setMiningUpgrades(stack, nextLevel);
-            case TRACK_FORTUNE -> MatterManipulatorItem.setFortuneLevel(stack, nextLevel);
+            case TRACK_FORTUNE -> MatterManipulatorItem.setFortuneLevel(stack, nextLevel, fortune);
         }
         manipulatorContainer.setChanged();
         this.broadcastChanges();

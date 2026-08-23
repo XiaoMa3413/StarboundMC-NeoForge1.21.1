@@ -17,10 +17,10 @@ public final class ModItems {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, StarboundMC.MODID);
 
-    public static final DeferredItem<Item> MATTER_MANIPULATOR = ITEMS.registerSimpleItem(
-            "matter_manipulator", new Item.Properties().stacksTo(1));
-    public static final DeferredItem<Item> MATTER_MANIPULATOR_MODULE =
-            ITEMS.registerSimpleItem("matter_manipulator_module");
+    public static final DeferredItem<MatterManipulatorItem> MATTER_MANIPULATOR = ITEMS.registerItem(
+            "matter_manipulator", MatterManipulatorItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<MatterManipulatorModuleItem> MATTER_MANIPULATOR_MODULE =
+            ITEMS.registerItem("matter_manipulator_module", MatterManipulatorModuleItem::new);
 
     public static final DeferredItem<BlockItem> MATTER_MANIPULATOR_WORKBENCH_ITEM =
             ITEMS.registerSimpleBlockItem("matter_manipulator_workbench", ModBlocks.MATTER_MANIPULATOR_WORKBENCH);

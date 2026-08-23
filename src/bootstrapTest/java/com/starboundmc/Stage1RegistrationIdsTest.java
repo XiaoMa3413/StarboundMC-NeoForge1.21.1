@@ -29,7 +29,7 @@ final class Stage1RegistrationIdsTest {
 
     @Test
     void keepsPublishedItemIds() throws IOException {
-        assertSourceIds("item/ModItems.java", "ITEMS\\.(?:registerSimpleItem|registerSimpleBlockItem)\\(\\s*\"([^\"]+)\"", Set.of(
+        assertSourceIds("item/ModItems.java", "ITEMS\\.(?:registerItem|registerSimpleItem|registerSimpleBlockItem)\\(\\s*\"([^\"]+)\"", Set.of(
                 "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
                 "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
                 "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",

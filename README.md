@@ -12,9 +12,9 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 - modId `starboundmc`
 - 版本 `0.1-alpha`
 
-阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`；阶段 2 已恢复基础方块、物品、SeatEntity、菜单与客户端 Screen 注册；阶段 3 已将 12 个旧 Forge 网络消息迁移到 NeoForge Payload 协议。全部已发布注册 ID 保持不变，复杂玩法实现继续按迁移计划隔离并逐步恢复。
+阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`；阶段 2 已恢复基础方块、物品、SeatEntity、菜单与客户端 Screen 注册；阶段 3 已将 12 个旧 Forge 网络消息迁移到 NeoForge Payload 协议；阶段 4 已用自定义 Data Component 恢复物质枪四轨升级、真实时运附魔和激光采集。全部已发布注册 ID 保持不变，复杂玩法实现继续按迁移计划隔离并逐步恢复。
 
-当前进度：阶段 0–3 已完成，下一步为阶段 4（物质枪与物品 Data Components）。
+当前进度：阶段 0–4 已完成，下一步为阶段 5（方块实体与持久化状态）。
 
 ## 构建与运行
 

@@ -17,9 +17,9 @@ public final class ModMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, StarboundMC.MODID);
 
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage2UpgradeMenu>> UPGRADE_MENU =
+    public static final DeferredHolder<MenuType<?>, MenuType<UpgradeMenu>> UPGRADE_MENU =
             MENUS.register("upgrade_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage2UpgradeMenu(id)));
+                    (id, inventory, buffer) -> new UpgradeMenu(id, inventory)));
     public static final DeferredHolder<MenuType<?>, MenuType<ShipConsoleMenu>> SHIP_CONSOLE_MENU =
             MENUS.register("ship_console_menu", () -> IMenuTypeExtension.create(
                     (id, inventory, buffer) -> new ShipConsoleMenu(id, inventory)));
@@ -56,12 +56,6 @@ public final class ModMenus {
         @Override
         public boolean stillValid(Player player) {
             return true;
-        }
-    }
-
-    public static final class Stage2UpgradeMenu extends Stage2Menu {
-        public Stage2UpgradeMenu(int containerId) {
-            super(UPGRADE_MENU.get(), containerId);
         }
     }
 

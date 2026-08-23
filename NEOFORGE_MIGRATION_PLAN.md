@@ -395,6 +395,15 @@ record MatterManipulatorUpgrades(int speed, int range, int mining, int fortune) 
 
 验收：四轨升级、掉落等级、射程、采集速度、重进世界和网络同步一致。
 
+实施状态（2026-08-24）：**Data Components 迁移已完成**。
+
+- 新增不可变 `MatterManipulatorUpgrades` 四轨记录以及 `starboundmc:matter_manipulator_upgrades` 自定义 Data Component；持久化 `Codec` 和网络 `StreamCodec` 均在构造边界钳制速度、射程、采矿等级和时运等级。
+- `MatterManipulatorItem` 已停止直接读写 ItemStack 旧 NBT。首次访问时会从 `minecraft:custom_data` 读取 `SpeedUpgrades`、`RangeUpgrades`、`MiningUpgrades`、`FortuneUpgrades`、`Upgrades` 和残留 `Enchantments`，写入新组件并删除已消费的旧字段，同时保留无关自定义数据。
+- 真实物质枪、升级模块、`UpgradeMenu` 和 `UpgradeScreen` 已恢复注册；升级仍保留四轨原上限与达到 1/2/3 级分别消耗 1/2/4 个模块的成本，并通过阶段 3 的服务端权威菜单边界处理请求。
+- 时运升级使用 1.21.1 的附魔注册表 Holder 与 `EnchantmentHelper.updateEnchantments` 同步真实 Fortune 附魔；激光采集继续把物质枪作为掉落工具，射程、采集速度和采矿等级均从新组件读取。
+- 新增组件持久化/网络往返、边界钳制、旧字段一次性迁移和接线契约测试。当前 32 项测试全部通过，完整 `test build` 成功；客户端完成资源重载，专服启动至 `Done`，两侧均无组件、菜单、Screen、事件或物品类加载异常。
+- 自动验证覆盖了序列化、迁移和注册启动边界；真实玩家的升级点击、带时运掉落、保存退出后重进世界仍保留到最终整合实机回归中复测。
+
 ### 阶段 5：方块实体与持久化状态
 
 目标：恢复容器、燃料、飞行和传送器数据的保存/读取。

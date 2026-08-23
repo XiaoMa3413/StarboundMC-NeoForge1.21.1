@@ -2,10 +2,10 @@ package com.starboundmc.event;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.item.MatterManipulatorItem;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
  * The Matter Manipulator is a laser mining tool, not a pickaxe: left-click
@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
  * never advance) and the break event is cancelled (creative instant-break
  * included), so the ONLY way to mine with it is the right-click beam.
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID)
 public class MatterManipulatorEvents
 {
     @SubscribeEvent

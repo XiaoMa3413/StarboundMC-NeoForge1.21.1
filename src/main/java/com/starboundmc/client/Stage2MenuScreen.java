@@ -4,6 +4,7 @@ import com.starboundmc.menu.ModMenus;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
 import com.starboundmc.menu.TeleporterMenu;
+import com.starboundmc.menu.UpgradeMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -30,8 +31,8 @@ public class Stage2MenuScreen<M extends AbstractContainerMenu> extends AbstractC
     }
 }
 
-final class Stage2UpgradeScreen extends Stage2MenuScreen<ModMenus.Stage2UpgradeMenu> {
-    Stage2UpgradeScreen(ModMenus.Stage2UpgradeMenu menu, Inventory inventory, Component title) {
+final class Stage2UpgradeScreen extends Stage2MenuScreen<UpgradeMenu> {
+    Stage2UpgradeScreen(UpgradeMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
     }
 }

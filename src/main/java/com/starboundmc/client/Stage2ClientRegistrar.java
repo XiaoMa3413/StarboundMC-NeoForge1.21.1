@@ -17,7 +17,7 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(ModMenus.UPGRADE_MENU.get(), Stage2UpgradeScreen::new);
+        event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);
         event.register(ModMenus.SHIP_CONSOLE_MENU.get(), Stage2ShipConsoleScreen::new);
         event.register(ModMenus.SHIP_CRATE_MENU.get(), Stage2ShipCrateScreen::new);
         event.register(ModMenus.TELEPORTER_MENU.get(), Stage2TeleporterScreen::new);
