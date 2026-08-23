@@ -12,7 +12,9 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 - modId `starboundmc`
 - 版本 `0.1-alpha`
 
-阶段 0 使用 `src/bootstrap/java` 中的最小 NeoForge 入口验证构建和运行。尚未迁移的 Forge 主源码与测试仍分别保存在 `src/main/java` 和 `src/test/java`，阶段 1 起按纵向切片逐步接回构建。
+阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`，并保留全部已发布注册 ID；复杂玩法实现仍按迁移计划隔离，后续按纵向切片逐步恢复。
+
+当前进度：阶段 0、阶段 1 已完成，下一步为阶段 2（基础方块、物品、实体和菜单）。
 
 ## 构建与运行
 

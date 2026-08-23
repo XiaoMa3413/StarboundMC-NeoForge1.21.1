@@ -16,11 +16,21 @@ base {
     archivesName = mod_id
 }
 
-// Stage 0 deliberately isolates the untouched Forge sources. Stage 1 will move
-// migrated systems back onto the normal main/test source sets in vertical slices.
+// Stage 1 compiles the migrated entry point and registry layer. Gameplay
+// implementations remain isolated until their dedicated migration stages.
 sourceSets {
     main {
-        java.setSrcDirs(['src/bootstrap/java'])
+        java {
+            setSrcDirs(['src/main/java'])
+            include 'com/starboundmc/StarboundMC.java'
+            include 'com/starboundmc/block/ModBlocks.java'
+            include 'com/starboundmc/block/ModBlockEntities.java'
+            include 'com/starboundmc/item/ModItems.java'
+            include 'com/starboundmc/entity/ModEntities.java'
+            include 'com/starboundmc/menu/ModMenus.java'
+            include 'com/starboundmc/sound/ModSounds.java'
+            include 'com/starboundmc/world/ModWorldgen.java'
+        }
         resources {
             setSrcDirs(['src/main/resources', 'src/generated/resources'])
             exclude '**/*.bbmodel'

@@ -5,6 +5,7 @@ build/
 repo/
 run/
 run-*/
+logs/
 
 ### Generated resources ###
 src/generated/**/.cache/

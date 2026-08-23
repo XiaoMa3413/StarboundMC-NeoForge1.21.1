@@ -7,118 +7,92 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-public class ModItems
-{
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, StarboundMC.MODID);
-    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, StarboundMC.MODID);
+public final class ModItems {
+    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(StarboundMC.MODID);
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, StarboundMC.MODID);
 
-    public static final RegistryObject<Item> MATTER_MANIPULATOR = ITEMS.register("matter_manipulator",
-            () -> new MatterManipulatorItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<Item> MATTER_MANIPULATOR = ITEMS.registerSimpleItem(
+            "matter_manipulator", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> MATTER_MANIPULATOR_MODULE =
+            ITEMS.registerSimpleItem("matter_manipulator_module");
 
-    public static final RegistryObject<Item> MATTER_MANIPULATOR_MODULE = ITEMS.register("matter_manipulator_module",
-            () -> new MatterManipulatorModuleItem(new Item.Properties()));
+    public static final DeferredItem<BlockItem> MATTER_MANIPULATOR_WORKBENCH_ITEM =
+            ITEMS.registerSimpleBlockItem("matter_manipulator_workbench", ModBlocks.MATTER_MANIPULATOR_WORKBENCH);
+    public static final DeferredItem<BlockItem> TELEPORTER_ITEM =
+            ITEMS.registerSimpleBlockItem("teleporter", ModBlocks.TELEPORTER);
+    public static final DeferredItem<BlockItem> SHIP_CONSOLE_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_console", ModBlocks.SHIP_CONSOLE);
+    public static final DeferredItem<BlockItem> CAPTAIN_CHAIR_ITEM =
+            ITEMS.registerSimpleBlockItem("captain_chair", ModBlocks.CAPTAIN_CHAIR);
+    public static final DeferredItem<BlockItem> FUEL_CONTROLLER_ITEM =
+            ITEMS.registerSimpleBlockItem("fuel_controller", ModBlocks.FUEL_CONTROLLER);
+    public static final DeferredItem<BlockItem> SHIP_CRATE_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_crate", ModBlocks.SHIP_CRATE);
+    public static final DeferredItem<BlockItem> SHIP_DOOR_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_door", ModBlocks.SHIP_DOOR);
+    public static final DeferredItem<BlockItem> SHIP_ENGINE_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_engine", ModBlocks.SHIP_ENGINE);
+    public static final DeferredItem<BlockItem> TUNGSTEN_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("tungsten_ore", ModBlocks.TUNGSTEN_ORE);
+    public static final DeferredItem<BlockItem> TITANIUM_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("titanium_ore", ModBlocks.TITANIUM_ORE);
+    public static final DeferredItem<BlockItem> DURASTEEL_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("durasteel_ore", ModBlocks.DURASTEEL_ORE);
+    public static final DeferredItem<BlockItem> STAR_CORE_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("star_core_ore", ModBlocks.STAR_CORE_ORE);
+    public static final DeferredItem<BlockItem> TITANIUM_ALLOY_FURNACE_ITEM =
+            ITEMS.registerSimpleBlockItem("titanium_alloy_furnace", ModBlocks.TITANIUM_ALLOY_FURNACE);
 
-    public static final RegistryObject<Item> MATTER_MANIPULATOR_WORKBENCH_ITEM = ITEMS.register("matter_manipulator_workbench",
-            () -> new BlockItem(ModBlocks.MATTER_MANIPULATOR_WORKBENCH.get(), new Item.Properties()));
+    public static final DeferredItem<Item> RAW_TUNGSTEN = ITEMS.registerSimpleItem("raw_tungsten");
+    public static final DeferredItem<Item> RAW_TITANIUM = ITEMS.registerSimpleItem("raw_titanium");
+    public static final DeferredItem<Item> RAW_DURASTEEL = ITEMS.registerSimpleItem("raw_durasteel");
+    public static final DeferredItem<Item> RAW_STAR_CORE = ITEMS.registerSimpleItem("raw_star_core");
+    public static final DeferredItem<Item> TUNGSTEN_INGOT = ITEMS.registerSimpleItem("tungsten_ingot");
+    public static final DeferredItem<Item> TITANIUM_INGOT = ITEMS.registerSimpleItem("titanium_ingot");
+    public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
+    public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
 
-    public static final RegistryObject<Item> TELEPORTER_ITEM = ITEMS.register("teleporter",
-            () -> new BlockItem(ModBlocks.TELEPORTER.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> SHIP_CONSOLE_ITEM = ITEMS.register("ship_console",
-            () -> new BlockItem(ModBlocks.SHIP_CONSOLE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> CAPTAIN_CHAIR_ITEM = ITEMS.register("captain_chair",
-            () -> new BlockItem(ModBlocks.CAPTAIN_CHAIR.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> FUEL_CONTROLLER_ITEM = ITEMS.register("fuel_controller",
-            () -> new BlockItem(ModBlocks.FUEL_CONTROLLER.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> SHIP_CRATE_ITEM = ITEMS.register("ship_crate",
-            () -> new BlockItem(ModBlocks.SHIP_CRATE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> SHIP_DOOR_ITEM = ITEMS.register("ship_door",
-            () -> new BlockItem(ModBlocks.SHIP_DOOR.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> SHIP_ENGINE_ITEM = ITEMS.register("ship_engine",
-            () -> new BlockItem(ModBlocks.SHIP_ENGINE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> TUNGSTEN_ORE_ITEM = ITEMS.register("tungsten_ore",
-            () -> new BlockItem(ModBlocks.TUNGSTEN_ORE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> TITANIUM_ORE_ITEM = ITEMS.register("titanium_ore",
-            () -> new BlockItem(ModBlocks.TITANIUM_ORE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> DURASTEEL_ORE_ITEM = ITEMS.register("durasteel_ore",
-            () -> new BlockItem(ModBlocks.DURASTEEL_ORE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> STAR_CORE_ORE_ITEM = ITEMS.register("star_core_ore",
-            () -> new BlockItem(ModBlocks.STAR_CORE_ORE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> TITANIUM_ALLOY_FURNACE_ITEM = ITEMS.register("titanium_alloy_furnace",
-            () -> new BlockItem(ModBlocks.TITANIUM_ALLOY_FURNACE.get(), new Item.Properties()));
-
-    public static final RegistryObject<Item> RAW_TUNGSTEN = ITEMS.register("raw_tungsten",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> RAW_TITANIUM = ITEMS.register("raw_titanium",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> RAW_DURASTEEL = ITEMS.register("raw_durasteel",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> RAW_STAR_CORE = ITEMS.register("raw_star_core",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> TUNGSTEN_INGOT = ITEMS.register("tungsten_ingot",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> TITANIUM_INGOT = ITEMS.register("titanium_ingot",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> DURASTEEL_INGOT = ITEMS.register("durasteel_ingot",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<Item> STAR_CORE_FRAGMENT = ITEMS.register("star_core_fragment",
-            () -> new Item(new Item.Properties()));
-
-    public static final RegistryObject<CreativeModeTab> STARBOUNDMC_TAB = CREATIVE_MODE_TABS.register("starboundmc",
-            () -> CreativeModeTab.builder()
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> STARBOUNDMC_TAB =
+            CREATIVE_MODE_TABS.register("starboundmc", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.starboundmc"))
-                    .icon(() -> MATTER_MANIPULATOR.get().getDefaultInstance())
+                    .icon(MATTER_MANIPULATOR::toStack)
                     .displayItems((parameters, output) -> {
-                        output.accept(MATTER_MANIPULATOR.get());
-                        output.accept(MATTER_MANIPULATOR_MODULE.get());
-                        output.accept(MATTER_MANIPULATOR_WORKBENCH_ITEM.get());
-                        output.accept(TELEPORTER_ITEM.get());
-                        output.accept(SHIP_CONSOLE_ITEM.get());
-                        output.accept(CAPTAIN_CHAIR_ITEM.get());
-                        output.accept(FUEL_CONTROLLER_ITEM.get());
-                        output.accept(SHIP_CRATE_ITEM.get());
-                        output.accept(SHIP_DOOR_ITEM.get());
-                        output.accept(SHIP_ENGINE_ITEM.get());
-                        output.accept(TUNGSTEN_ORE_ITEM.get());
-                        output.accept(TITANIUM_ORE_ITEM.get());
-                        output.accept(DURASTEEL_ORE_ITEM.get());
-                        output.accept(STAR_CORE_ORE_ITEM.get());
-                        output.accept(TITANIUM_ALLOY_FURNACE_ITEM.get());
-                        output.accept(RAW_TUNGSTEN.get());
-                        output.accept(RAW_TITANIUM.get());
-                        output.accept(RAW_DURASTEEL.get());
-                        output.accept(RAW_STAR_CORE.get());
-                        output.accept(TUNGSTEN_INGOT.get());
-                        output.accept(TITANIUM_INGOT.get());
-                        output.accept(DURASTEEL_INGOT.get());
-                        output.accept(STAR_CORE_FRAGMENT.get());
+                        output.accept(MATTER_MANIPULATOR);
+                        output.accept(MATTER_MANIPULATOR_MODULE);
+                        output.accept(MATTER_MANIPULATOR_WORKBENCH_ITEM);
+                        output.accept(TELEPORTER_ITEM);
+                        output.accept(SHIP_CONSOLE_ITEM);
+                        output.accept(CAPTAIN_CHAIR_ITEM);
+                        output.accept(FUEL_CONTROLLER_ITEM);
+                        output.accept(SHIP_CRATE_ITEM);
+                        output.accept(SHIP_DOOR_ITEM);
+                        output.accept(SHIP_ENGINE_ITEM);
+                        output.accept(TUNGSTEN_ORE_ITEM);
+                        output.accept(TITANIUM_ORE_ITEM);
+                        output.accept(DURASTEEL_ORE_ITEM);
+                        output.accept(STAR_CORE_ORE_ITEM);
+                        output.accept(TITANIUM_ALLOY_FURNACE_ITEM);
+                        output.accept(RAW_TUNGSTEN);
+                        output.accept(RAW_TITANIUM);
+                        output.accept(RAW_DURASTEEL);
+                        output.accept(RAW_STAR_CORE);
+                        output.accept(TUNGSTEN_INGOT);
+                        output.accept(TITANIUM_INGOT);
+                        output.accept(DURASTEEL_INGOT);
+                        output.accept(STAR_CORE_FRAGMENT);
                     })
                     .build());
 
-    public static void register(IEventBus modEventBus)
-    {
+    private ModItems() {
+    }
+
+    public static void register(IEventBus modEventBus) {
         ITEMS.register(modEventBus);
         CREATIVE_MODE_TABS.register(modEventBus);
     }

@@ -3,29 +3,29 @@ package com.starboundmc.sound;
 import com.starboundmc.StarboundMC;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModSounds
 {
     public static final DeferredRegister<SoundEvent> SOUNDS =
-            DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, StarboundMC.MODID);
+            DeferredRegister.create(Registries.SOUND_EVENT, StarboundMC.MODID);
 
-    public static final RegistryObject<SoundEvent> WARP_START =
+    public static final DeferredHolder<SoundEvent, SoundEvent> WARP_START =
             SOUNDS.register("warp_start", () -> SoundEvent.createVariableRangeEvent(
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "warp_start")));
 
-    public static final RegistryObject<SoundEvent> WARP_LOOP =
+    public static final DeferredHolder<SoundEvent, SoundEvent> WARP_LOOP =
             SOUNDS.register("warp_loop", () -> SoundEvent.createVariableRangeEvent(
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "warp_loop")));
 
-    public static final RegistryObject<SoundEvent> WARP_END =
+    public static final DeferredHolder<SoundEvent, SoundEvent> WARP_END =
             SOUNDS.register("warp_end", () -> SoundEvent.createVariableRangeEvent(
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "warp_end")));
 
-    public static final RegistryObject<SoundEvent> TELEPORTER_USE =
+    public static final DeferredHolder<SoundEvent, SoundEvent> TELEPORTER_USE =
             SOUNDS.register("teleporter_use", () -> SoundEvent.createVariableRangeEvent(
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "teleporter_use")));
 

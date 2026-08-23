@@ -286,6 +286,15 @@ java -version
 
 验收：`compileJava`、`build`、客户端创造模式中检查注册项、专用服务器启动。
 
+实施状态（2026-08-24）：**已完成**。
+
+- 已删除阶段 0 的临时 bootstrap 入口，并将真实 `StarboundMC.java` 及 7 个注册类、1 个世界生成注册壳接回 `src/main/java`；其余尚未迁移的 Forge 实现继续隔离，不参与本阶段编译。
+- 模组入口改用 NeoForge 注入的 `IEventBus` 和 `ModContainer`，注册表改用 NeoForge `DeferredRegister`/`DeferredHolder`/`DeferredBlock`/`DeferredItem`，世界生成 Codec 通过 NeoForge `RegisterEvent` 注册。
+- 保留 13 个方块、4 个方块实体、23 个物品、1 个创造模式页签、1 个实体、6 个菜单、4 个音效及 4 个世界生成 Codec 的已发布 ID；新增注册 ID 契约测试防止后续阶段意外改名。
+- 本阶段使用明确命名的最小方块实体、实体和菜单壳，以及临时 passthrough 世界生成 Codec。原复杂实现未删除，将分别在阶段 2、5 和 8 恢复。
+- `gradlew.bat compileJava`、`gradlew.bat test build` 均成功；客户端完成模组加载与资源重载，所有注册方块/物品进入模型解析流程。当前缺失模型和音效的警告属于阶段 10 的资源迁移范围。
+- 专用服务器使用 Java 21 成功加载注册层并达到 `Done`，未发生客户端类加载错误；烟测结束时按 PID 停止服务器，因此该次 `runServer` Gradle 任务本身以非零退出。
+
 ### 阶段 2：基础方块、物品、实体和菜单
 
 目标：恢复不依赖复杂网络/世界生成的基础对象。
@@ -578,7 +587,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 初始化新 Git 仓库。
 - [x] 生成并合并 Minecraft 1.21.1 / NeoForge 21.1.x ModDevGradle 骨架。
 - [x] 建立空模组客户端、服务端和构建基线。
-- [ ] 完成入口、注册和事件迁移。
+- [x] 完成入口、注册和事件迁移。
 - [ ] 完成基础对象和菜单迁移。
 - [ ] 完成 Payload 网络迁移。
 - [ ] 完成物质枪 Data Components 迁移。
