@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "starboundmc:block/matter_manipulator_workbench" },
+    "facing=east": { "model": "starboundmc:block/matter_manipulator_workbench", "y": 90 },
+    "facing=south": { "model": "starboundmc:block/matter_manipulator_workbench", "y": 180 },
+    "facing=west": { "model": "starboundmc:block/matter_manipulator_workbench", "y": 270 }
+  }
+}

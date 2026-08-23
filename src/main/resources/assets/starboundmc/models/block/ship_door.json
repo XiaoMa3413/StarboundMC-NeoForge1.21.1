@@ -1,0 +1,22 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "panel": "starboundmc:block/ship_door",
+    "side": "starboundmc:block/ship_door_side",
+    "particle": "starboundmc:block/ship_door"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#panel" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#panel" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#side" }
+      }
+    }
+  ]
+}

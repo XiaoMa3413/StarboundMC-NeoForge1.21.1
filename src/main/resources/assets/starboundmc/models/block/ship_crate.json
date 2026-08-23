@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "starboundmc:block/ship_crate_top",
+    "front": "starboundmc:block/ship_crate_front",
+    "side": "starboundmc:block/ship_crate_side"
+  }
+}

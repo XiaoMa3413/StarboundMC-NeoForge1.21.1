@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "starboundmc:block/fuel_controller_top",
+    "front": "starboundmc:block/fuel_controller_front",
+    "side": "starboundmc:block/fuel_controller_side"
+  }
+}

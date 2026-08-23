@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "starboundmc:block/fuel_controller" },
+    "facing=east": { "model": "starboundmc:block/fuel_controller", "y": 90 },
+    "facing=south": { "model": "starboundmc:block/fuel_controller", "y": 180 },
+    "facing=west": { "model": "starboundmc:block/fuel_controller", "y": 270 }
+  }
+}

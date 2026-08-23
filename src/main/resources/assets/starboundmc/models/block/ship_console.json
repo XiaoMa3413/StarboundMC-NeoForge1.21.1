@@ -1,0 +1,40 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "base": "starboundmc:block/ship_console",
+    "screen": "starboundmc:block/ship_console_screen",
+    "particle": "starboundmc:block/ship_console"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 8, 16],
+      "faces": {
+        "north": { "uv": [0, 8, 16, 16], "texture": "#base" },
+        "east": { "uv": [0, 8, 16, 16], "texture": "#base" },
+        "south": { "uv": [0, 8, 16, 16], "texture": "#base" },
+        "west": { "uv": [0, 8, 16, 16], "texture": "#base" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#base" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#base" }
+      }
+    },
+    {
+      "from": [2, 4, 1],
+      "to": [14, 15, 2],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#screen" }
+      }
+    },
+    {
+      "from": [3, 8, 3],
+      "to": [13, 9, 13],
+      "faces": {
+        "up": { "uv": [0, 0, 16, 16], "texture": "#base" },
+        "north": { "uv": [0, 7, 16, 8], "texture": "#base" },
+        "east": { "uv": [0, 7, 16, 8], "texture": "#base" },
+        "south": { "uv": [0, 7, 16, 8], "texture": "#base" },
+        "west": { "uv": [0, 7, 16, 8], "texture": "#base" }
+      }
+    }
+  ]
+}

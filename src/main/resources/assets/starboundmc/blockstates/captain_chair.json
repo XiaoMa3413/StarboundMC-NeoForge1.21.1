@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=south": { "model": "starboundmc:block/captain_chair", "y": 0 },
+    "facing=west": { "model": "starboundmc:block/captain_chair", "y": 90 },
+    "facing=north": { "model": "starboundmc:block/captain_chair", "y": 180 },
+    "facing=east": { "model": "starboundmc:block/captain_chair", "y": 270 }
+  }
+}
