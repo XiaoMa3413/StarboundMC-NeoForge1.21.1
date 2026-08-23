@@ -2,10 +2,10 @@ package com.starboundmc.event;
 
 import com.starboundmc.StarboundMC;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.event.entity.EntityTravelToDimensionEvent;
-import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityTravelToDimensionEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 
 /**
  * Vanilla Nether portals are banned everywhere: the Molten Planet replaced the
@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.Mod;
  * be ignited in any dimension, and no existing portal can drag anyone into the
  * vanilla Nether.
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID)
 public class NetherPortalHandler
 {
     @SubscribeEvent

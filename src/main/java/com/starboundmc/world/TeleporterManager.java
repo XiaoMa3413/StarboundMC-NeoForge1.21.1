@@ -95,7 +95,8 @@ public class TeleporterManager extends SavedData
         }
         else
         {
-            manager.names.put(key, safeName);
+            if (manager.names.containsKey(key) || manager.names.size() < MAX_SAVED_ENTRIES)
+                manager.names.put(key, safeName);
         }
         manager.setDirty();
     }
@@ -132,18 +133,30 @@ public class TeleporterManager extends SavedData
     }
 
     /** Teleport the player to a named teleporter, landing on top of its block. */
-    public static void teleportToNamed(ServerPlayer player, String key)
+    public static boolean teleportToNamed(ServerPlayer player, String key)
     {
-        TeleporterEntry entry = parse(player.getServer(), key, "");
-        if (entry == null)
-            return;
-        ServerLevel level = player.getServer().getLevel(entry.dimension());
+        MinecraftServer server = player.getServer();
+        if (server == null)
+            return false;
+        TeleporterManager manager = get(server);
+        String registeredName = manager.names.get(key);
+        if (registeredName == null)
+            return false;
+        TeleporterEntry entry = parse(server, key, registeredName);
+        if (entry == null) {
+            manager.names.remove(key);
+            manager.setDirty();
+            return false;
+        }
+        ServerLevel level = server.getLevel(entry.dimension());
         if (level == null)
-            return;
+            return false;
         BlockPos dest = entry.pos().above();
+        player.stopRiding();
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
         level.playSound(null, dest, ModSounds.TELEPORTER_USE.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        return true;
     }
 
     private static TeleporterEntry parse(MinecraftServer server, String key, String name)

@@ -20,11 +20,11 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
     private static final int VISIBLE = 4;
 
     private final List<TeleporterListPacket.Entry> destinations = new ArrayList<>();
-    private final List<SciFiButton> destButtons = new ArrayList<>();
+    private final List<PixelButton> destButtons = new ArrayList<>();
     private EditBox nameBox;
-    private SciFiButton saveButton;
-    private SciFiButton upButton;
-    private SciFiButton downButton;
+    private PixelButton saveButton;
+    private PixelButton upButton;
+    private PixelButton downButton;
     private int scroll = 0;
 
     public TeleporterScreen(TeleporterMenu menu, Inventory playerInventory, Component title)
@@ -39,21 +39,21 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
     {
         super.init();
         this.nameBox = new EditBox(this.font, this.leftPos + 8, this.topPos + 129, 96, 18, Component.literal(""));
-        this.nameBox.setMaxLength(24);
+        this.nameBox.setMaxLength(64);
         this.addRenderableWidget(this.nameBox);
 
-        this.saveButton = new SciFiButton(this.leftPos + 110, this.topPos + 128, 58, 20,
+        this.saveButton = new PixelButton(this.leftPos + 110, this.topPos + 128, 58, 20,
                 Component.translatable("gui.starboundmc.teleporter.save"),
                 button -> ModNetwork.sendToServer(new TeleporterRenamePacket(this.nameBox.getValue())));
         this.addRenderableWidget(this.saveButton);
 
-        this.upButton = new SciFiButton(this.leftPos + 152, this.topPos + 30, 16, 16, Component.literal("▲"),
+        this.upButton = new PixelButton(this.leftPos + 152, this.topPos + 30, 16, 16, Component.literal("▲"),
                 button ->
                 {
                     this.scroll = Math.max(0, this.scroll - 1);
                     this.rebuildDestinations();
                 });
-        this.downButton = new SciFiButton(this.leftPos + 152, this.topPos + 96, 16, 16, Component.literal("▼"),
+        this.downButton = new PixelButton(this.leftPos + 152, this.topPos + 96, 16, 16, Component.literal("▼"),
                 button ->
                 {
                     this.scroll = Math.min(this.destinations.size() - VISIBLE, this.scroll + 1);
@@ -86,7 +86,7 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
 
     private void rebuildDestinations()
     {
-        for (SciFiButton button : this.destButtons)
+        for (PixelButton button : this.destButtons)
         {
             this.removeWidget(button);
         }
@@ -102,7 +102,7 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
             TeleporterListPacket.Entry entry = this.destinations.get(index);
             Component label = Component.literal(destinationLabel(entry));
             final String key = entry.key();
-            SciFiButton button = new SciFiButton(this.leftPos + 8, this.topPos + 30 + i * 22, 140, 20, label,
+            PixelButton button = new PixelButton(this.leftPos + 8, this.topPos + 30 + i * 22, 140, 20, label,
                     b -> ModNetwork.sendToServer(new TeleporterUsePacket(key)));
             this.destButtons.add(button);
             this.addRenderableWidget(button);

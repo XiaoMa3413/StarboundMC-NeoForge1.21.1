@@ -12,9 +12,9 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 - modId `starboundmc`
 - 版本 `0.1-alpha`
 
-阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`；阶段 2 已恢复基础方块、物品、SeatEntity、菜单与客户端 Screen 注册；阶段 3 已将 12 个旧 Forge 网络消息迁移到 NeoForge Payload 协议；阶段 4 已用自定义 Data Component 恢复物质枪四轨升级、真实时运附魔和激光采集；阶段 5 已恢复真实方块实体以及飞船、传送器和模板状态的 1.21.1 持久化接口。全部已发布注册 ID 保持不变，复杂玩法实现继续按迁移计划隔离并逐步恢复。
+阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`；阶段 2 已恢复基础方块、物品、SeatEntity、菜单与客户端 Screen 注册；阶段 3 已将 12 个旧 Forge 网络消息迁移到 NeoForge Payload 协议；阶段 4 已用自定义 Data Component 恢复物质枪四轨升级、真实时运附魔和激光采集；阶段 5 已恢复真实方块实体以及飞船、传送器和模板状态的 1.21.1 持久化接口；阶段 6 已恢复首次礼包/回船、H 键、真实设备菜单、燃料消费、命名传送器和下界门禁用规则，并在所有 C→S 操作的业务层再次验证世界状态。全部已发布注册 ID 保持不变，复杂玩法实现继续按迁移计划隔离并逐步恢复。
 
-当前进度：阶段 0–5 已完成，下一步为阶段 6（玩法事件、菜单与传送器）。
+当前进度：阶段 0–6 已完成，下一步为阶段 7（连续宇宙与服务器权威跃迁）。飞船和自定义行星维度会在阶段 8 注册；在此之前，阶段 6 的回船/行星旅行会安全回退到主世界落点。
 
 ## 构建与运行
 
@@ -29,6 +29,12 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 
 ```powershell
 .\scripts\stage2-rcon-smoke.ps1
+```
+
+阶段 6 的合金炉 ticker 与下界门禁用烟测：
+
+```powershell
+.\scripts\stage6-rcon-smoke.ps1
 ```
 
 Wrapper 默认将 Gradle、Minecraft、NeoForge 依赖和运行资产缓存到仓库内的 `.gradle-home/`，避免占用系统盘；该目录不会提交。若确有需要，可在运行前显式设置 `GRADLE_USER_HOME` 覆盖此行为。

@@ -8,7 +8,7 @@ import com.starboundmc.item.ModItems;
 import com.starboundmc.item.ModDataComponents;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
-import com.starboundmc.network.Stage4ServerPayloadActions;
+import com.starboundmc.network.Stage6ServerPayloadActions;
 import com.starboundmc.sound.ModSounds;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -38,7 +38,7 @@ public final class StarboundMC {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        ModNetwork.installServerActions(new Stage4ServerPayloadActions());
+        ModNetwork.installServerActions(new Stage6ServerPayloadActions());
         LOGGER.info("{} NeoForge common setup complete.", MODID);
     }
 }

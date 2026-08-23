@@ -16,8 +16,9 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-5 compile the migrated registry, payload, data-component and
-// persistence layers. Later gameplay/worldgen/rendering systems remain isolated.
+// Stages 1-6 compile the migrated registry, payload, data-component,
+// persistence and server-authoritative gameplay layers. Later warp,
+// worldgen and high-density rendering systems remain isolated.
 sourceSets {
     main {
         java {
@@ -35,6 +36,8 @@ sourceSets {
             include 'com/starboundmc/item/MatterManipulatorItem.java'
             include 'com/starboundmc/item/MatterManipulatorModuleItem.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
+            include 'com/starboundmc/event/SpawnHandler.java'
+            include 'com/starboundmc/event/NetherPortalHandler.java'
             include 'com/starboundmc/entity/ModEntities.java'
             include 'com/starboundmc/entity/SeatEntity.java'
             include 'com/starboundmc/block/CaptainChairBlock.java'
@@ -44,23 +47,32 @@ sourceSets {
             include 'com/starboundmc/menu/ShipCrateMenu.java'
             include 'com/starboundmc/menu/TeleporterMenu.java'
             include 'com/starboundmc/menu/UpgradeMenu.java'
+            include 'com/starboundmc/menu/FuelControllerMenu.java'
+            include 'com/starboundmc/menu/AlloyFurnaceMenu.java'
             include 'com/starboundmc/client/Stage2ClientRegistrar.java'
             include 'com/starboundmc/client/Stage2MenuScreen.java'
             include 'com/starboundmc/client/SeatRenderer.java'
             include 'com/starboundmc/client/ClientTeleporterState.java'
             include 'com/starboundmc/client/UpgradeScreen.java'
+            include 'com/starboundmc/client/ShipCrateScreen.java'
+            include 'com/starboundmc/client/TeleporterScreen.java'
+            include 'com/starboundmc/client/FuelControllerScreen.java'
+            include 'com/starboundmc/client/AlloyFurnaceScreen.java'
+            include 'com/starboundmc/client/ModKeyBindings.java'
+            include 'com/starboundmc/client/ModKeyEvents.java'
             include 'com/starboundmc/client/PixelButton.java'
             include 'com/starboundmc/client/UiStyle.java'
             include 'com/starboundmc/network/*.java'
-            exclude 'com/starboundmc/network/TeleporterListPacketHelper.java'
             include 'com/starboundmc/space/SectorCoordinate.java'
             include 'com/starboundmc/space/UniverseDelta.java'
             include 'com/starboundmc/space/UniversePosition.java'
             include 'com/starboundmc/warp/FlightPhase.java'
             include 'com/starboundmc/warp/ShipStateData.java'
+            include 'com/starboundmc/warp/ShipFuelService.java'
             include 'com/starboundmc/world/Planet.java'
             include 'com/starboundmc/world/ShipTemplatePlacer.java'
             include 'com/starboundmc/world/TeleporterManager.java'
+            include 'com/starboundmc/world/Stage6TravelService.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'

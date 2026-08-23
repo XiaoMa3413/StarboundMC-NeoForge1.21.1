@@ -1,6 +1,5 @@
 package com.starboundmc.client;
 
-import com.starboundmc.menu.ModMenus;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
 import com.starboundmc.menu.TeleporterMenu;
@@ -51,18 +50,6 @@ final class Stage2ShipCrateScreen extends Stage2MenuScreen<ShipCrateMenu> {
 
 final class Stage2TeleporterScreen extends Stage2MenuScreen<TeleporterMenu> {
     Stage2TeleporterScreen(TeleporterMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-    }
-}
-
-final class Stage2AlloyFurnaceScreen extends Stage2MenuScreen<ModMenus.Stage2AlloyFurnaceMenu> {
-    Stage2AlloyFurnaceScreen(ModMenus.Stage2AlloyFurnaceMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
-    }
-}
-
-final class Stage2FuelControllerScreen extends Stage2MenuScreen<ModMenus.Stage2FuelControllerMenu> {
-    Stage2FuelControllerScreen(ModMenus.Stage2FuelControllerMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
     }
 }

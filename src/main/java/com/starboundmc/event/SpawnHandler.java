@@ -2,14 +2,14 @@ package com.starboundmc.event;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.item.ModItems;
-import com.starboundmc.world.ShipDimensions;
+import com.starboundmc.world.Stage6TravelService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID)
 public class SpawnHandler
 {
     private static final String STARTER_KEY = "starboundmc.starter_given";
@@ -21,8 +21,17 @@ public class SpawnHandler
         {
             giveStarterKit(player);
             player.getPersistentData().putBoolean(STARTER_KEY, true);
-            ShipDimensions.teleportToShip(player);
+            Stage6TravelService.teleportToShip(player);
         }
+        else if (event.getEntity() instanceof ServerPlayer player)
+            Stage6TravelService.syncState(player);
+    }
+
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event)
+    {
+        if (event.getOriginal().getPersistentData().getBoolean(STARTER_KEY))
+            event.getEntity().getPersistentData().putBoolean(STARTER_KEY, true);
     }
 
     @SubscribeEvent
@@ -32,7 +41,7 @@ public class SpawnHandler
             return;
         if (event.getEntity() instanceof ServerPlayer player && player.getRespawnPosition() == null)
         {
-            ShipDimensions.teleportToShip(player);
+            Stage6TravelService.teleportToShip(player);
         }
     }
 

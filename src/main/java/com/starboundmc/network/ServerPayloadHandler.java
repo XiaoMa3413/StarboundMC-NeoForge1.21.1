@@ -1,6 +1,6 @@
 package com.starboundmc.network;
 
-import com.starboundmc.menu.ModMenus;
+import com.starboundmc.menu.FuelControllerMenu;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
@@ -58,7 +58,8 @@ final class ServerPayloadHandler {
     static void handle(AddFuelPacket payload, IPayloadContext context) {
         ServerPlayer player = sender(context);
         if (player != null
-                && player.containerMenu instanceof ModMenus.Stage2FuelControllerMenu) {
+                && player.containerMenu instanceof FuelControllerMenu menu
+                && menu.stillValid(player)) {
             ModNetwork.serverActions().addFuel(player);
         }
     }

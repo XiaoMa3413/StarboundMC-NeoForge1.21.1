@@ -1,12 +1,9 @@
 package com.starboundmc.menu;
 
-import com.starboundmc.block.FuelControllerBlock;
 import com.starboundmc.block.ModBlocks;
 import com.starboundmc.block.entity.FuelControllerBlockEntity;
-import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.ShipDimensions;
+import com.starboundmc.warp.ShipFuelService;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
@@ -54,7 +51,7 @@ public class FuelControllerMenu extends AbstractContainerMenu
                 @Override
                 public boolean mayPlace(ItemStack stack)
                 {
-                    return FuelControllerBlock.fuelValue(stack.getItem()) > 0;
+                    return ShipFuelService.fuelValue(stack.getItem()) > 0;
                 }
             });
         }
@@ -80,20 +77,13 @@ public class FuelControllerMenu extends AbstractContainerMenu
         {
             while (!this.fuelContainer.getItem(i).isEmpty())
             {
-                int value = FuelControllerBlock.fuelValue(this.fuelContainer.getItem(i).getItem());
+                int value = ShipFuelService.fuelValue(this.fuelContainer.getItem(i).getItem());
                 if (value <= 0)
                     break;
-                if (ShipWarpManager.getFuel() + value > ShipWarpManager.MAX_FUEL)
+                if (player.getServer() == null
+                        || ShipFuelService.acceptedAmount(ShipFuelService.getFuel(player.getServer()), value) < value)
                 {
                     player.displayClientMessage(Component.translatable("message.starboundmc.fuel.full"), true);
-                    this.syncAfterFuelChange(changed);
-                    return;
-                }
-                ServerLevel ship = player.getServer() == null ? null
-                        : player.getServer().getLevel(ShipDimensions.SHIP_LEVEL);
-                int added = ShipWarpManager.addFuel(value, ship);
-                if (added <= 0)
-                {
                     this.syncAfterFuelChange(changed);
                     return;
                 }
@@ -102,6 +92,9 @@ public class FuelControllerMenu extends AbstractContainerMenu
                 ItemStack removed = this.fuelContainer.removeItem(i, 1);
                 if (removed.isEmpty())
                     break;
+                int added = ShipFuelService.addFuel(player.getServer(), value);
+                if (added != value)
+                    throw new IllegalStateException("Fuel capacity changed during a server-thread transaction");
                 changed = true;
             }
             // Replace a shrunk-to-zero stack with a real EMPTY stack.
@@ -112,7 +105,10 @@ public class FuelControllerMenu extends AbstractContainerMenu
             }
         }
         this.syncAfterFuelChange(changed);
-        if (ShipWarpManager.getFuel() >= ShipWarpManager.MAX_FUEL)
+        if (player.getServer() != null)
+            ShipFuelService.syncToAll(player.getServer());
+        if (player.getServer() != null
+                && ShipFuelService.getFuel(player.getServer()) >= ShipFuelService.MAX_FUEL)
         {
             player.displayClientMessage(Component.translatable("message.starboundmc.fuel.full"), true);
         }
@@ -150,7 +146,7 @@ public class FuelControllerMenu extends AbstractContainerMenu
                 if (!this.moveItemStackTo(stack, PLAYER_START, PLAYER_START + 36, true))
                     return ItemStack.EMPTY;
             }
-            else if (FuelControllerBlock.fuelValue(stack.getItem()) > 0)
+            else if (ShipFuelService.fuelValue(stack.getItem()) > 0)
             {
                 if (!this.moveItemStackTo(stack, FUEL_START, PLAYER_START, false))
                     return ItemStack.EMPTY;

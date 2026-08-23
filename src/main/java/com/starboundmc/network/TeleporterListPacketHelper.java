@@ -23,8 +23,11 @@ public final class TeleporterListPacketHelper
         entries.add(new TeleporterListPacket.Entry(1, "planet", ""));
         for (TeleporterManager.TeleporterEntry e : TeleporterManager.validEntries(server))
         {
-            entries.add(new TeleporterListPacket.Entry(
-                    2, "n|" + TeleporterManager.key(e.dimension(), e.pos()), e.name()));
+            String destinationKey = "n|" + TeleporterManager.key(e.dimension(), e.pos());
+            if (destinationKey.length() <= PayloadSupport.MAX_ID_LENGTH)
+                entries.add(new TeleporterListPacket.Entry(2, destinationKey, e.name()));
+            if (entries.size() >= PayloadSupport.MAX_LIST_ENTRIES)
+                break;
         }
         String currentName = TeleporterManager.getName(server, dimension, pos);
         return new TeleporterListPacket(entries, currentName == null ? "" : currentName);

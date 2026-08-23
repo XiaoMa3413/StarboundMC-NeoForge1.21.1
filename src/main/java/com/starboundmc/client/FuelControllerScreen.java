@@ -3,7 +3,8 @@ package com.starboundmc.client;
 import com.starboundmc.menu.FuelControllerMenu;
 import com.starboundmc.network.AddFuelPacket;
 import com.starboundmc.network.ModNetwork;
-import com.starboundmc.warp.ShipWarpManager;
+import com.starboundmc.network.ClientNetworkState;
+import com.starboundmc.warp.ShipFuelService;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -14,7 +15,7 @@ import net.minecraft.world.entity.player.Inventory;
  * "console" plate holding the fuel gauge with its numeric readout, five fuel
  * sockets and the refuel button, plus a warp-cost reminder; an amber
  * separator leads into the player inventory. Fuel data comes from
- * ClientPlanetState (synced by SyncFuelPacket whenever the tank changes).
+ * ClientNetworkState (synced by SyncFuelPacket whenever the tank changes).
  */
 public class FuelControllerScreen extends AbstractContainerScreen<FuelControllerMenu>
 {
@@ -65,8 +66,8 @@ public class FuelControllerScreen extends AbstractContainerScreen<FuelController
         // warp-cost reminder (slots sit at menu row y=56).
         UiStyle.drawPlate(graphics, x + 3, y + 24, 170, 92);
 
-        int maxFuel = Math.max(1, ClientPlanetState.getMaxFuel());
-        int fuel = Math.max(0, Math.min(maxFuel, ClientPlanetState.getFuel()));
+        int maxFuel = Math.max(1, ClientNetworkState.maxFuel());
+        int fuel = Math.max(0, Math.min(maxFuel, ClientNetworkState.fuel()));
         UiStyle.drawHBar(graphics, x + GAUGE_X, y + GAUGE_Y, GAUGE_W, GAUGE_H, fuel, maxFuel);
 
         for (int col = 0; col < FuelControllerMenu.FUEL_SLOTS; col++)
@@ -86,14 +87,14 @@ public class FuelControllerScreen extends AbstractContainerScreen<FuelController
 
         // Numeric readout above the gauge.
         Component fuelText = Component.translatable("gui.starboundmc.fuel",
-                ClientPlanetState.getFuel(), ClientPlanetState.getMaxFuel());
+                ClientNetworkState.fuel(), ClientNetworkState.maxFuel());
         graphics.drawString(this.font, fuelText, (PANEL_W - this.font.width(fuelText)) / 2, 27, UiStyle.C_ACCENT_LIGHT, true);
 
         // Warp cost reminder (in-system vs cross-system).
         Component local = Component.translatable("gui.starboundmc.starmap.fuel_cost_local",
-                ShipWarpManager.WARP_FUEL_COST);
+                ShipFuelService.WARP_FUEL_COST);
         Component cross = Component.translatable("gui.starboundmc.starmap.fuel_cost_cross",
-                ShipWarpManager.CROSS_SYSTEM_FUEL_COST);
+                ShipFuelService.CROSS_SYSTEM_FUEL_COST);
         graphics.drawString(this.font, local, (PANEL_W - this.font.width(local)) / 2, 98, UiStyle.C_DIM, false);
         graphics.drawString(this.font, cross, (PANEL_W - this.font.width(cross)) / 2, 106, UiStyle.C_DIM, false);
 

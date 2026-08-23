@@ -5,11 +5,15 @@ import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
 import com.starboundmc.block.entity.FuelControllerBlockEntity;
 import com.starboundmc.block.entity.ShipCrateBlockEntity;
 import com.starboundmc.block.entity.ShipDoorBlockEntity;
-import com.starboundmc.menu.ModMenus;
+import com.starboundmc.menu.AlloyFurnaceMenu;
+import com.starboundmc.menu.FuelControllerMenu;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
+import com.starboundmc.network.ModNetwork;
+import com.starboundmc.network.TeleporterListPacketHelper;
+import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -157,8 +161,18 @@ public final class Stage2Blocks {
                         (containerId, inventory, ignored) -> new TeleporterMenu(containerId, inventory,
                                 ContainerLevelAccess.create(level, pos), pos),
                         Component.translatable("container.starboundmc.teleporter")));
+                ModNetwork.sendToPlayer(serverPlayer,
+                        TeleporterListPacketHelper.build(serverPlayer.getServer(), level.dimension(), pos));
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
+        @Override
+        protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+            if (!state.is(newState.getBlock()) && !level.isClientSide && level.getServer() != null) {
+                TeleporterManager.remove(level.getServer(), level.dimension(), pos);
+            }
+            super.onRemove(state, level, pos, newState, moving);
         }
     }
 
@@ -276,8 +290,23 @@ public final class Stage2Blocks {
         @Override
         protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                 BlockHitResult hit) {
-            return openShell(level, player, ModMenus.Stage2FuelControllerMenu::new,
-                    "container.starboundmc.fuel_controller");
+            if (player instanceof ServerPlayer serverPlayer
+                    && level.getBlockEntity(pos) instanceof FuelControllerBlockEntity fuel) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new FuelControllerMenu(containerId, inventory, fuel,
+                                ContainerLevelAccess.create(level, pos)),
+                        Component.translatable("container.starboundmc.fuel_controller")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
+        @Override
+        protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+            if (!state.is(newState.getBlock())
+                    && level.getBlockEntity(pos) instanceof FuelControllerBlockEntity fuel) {
+                Containers.dropContents(level, pos, fuel);
+            }
+            super.onRemove(state, level, pos, newState, moving);
         }
     }
 
@@ -307,21 +336,24 @@ public final class Stage2Blocks {
         @Override
         protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                 BlockHitResult hit) {
-            return openShell(level, player, ModMenus.Stage2AlloyFurnaceMenu::new,
-                    "container.starboundmc.titanium_alloy_furnace");
+            if (player instanceof ServerPlayer serverPlayer
+                    && level.getBlockEntity(pos) instanceof AlloyFurnaceBlockEntity furnace) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new AlloyFurnaceMenu(containerId, inventory,
+                                furnace.getInventory(), furnace.getContainerData(),
+                                ContainerLevelAccess.create(level, pos)),
+                        Component.translatable("container.starboundmc.titanium_alloy_furnace")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
-    }
 
-    private static InteractionResult openShell(Level level, Player player, ShellMenuFactory factory, String titleKey) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.openMenu(new SimpleMenuProvider(
-                    (containerId, inventory, ignored) -> factory.create(containerId), Component.translatable(titleKey)));
+        @Override
+        protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+            if (!state.is(newState.getBlock())
+                    && level.getBlockEntity(pos) instanceof AlloyFurnaceBlockEntity furnace) {
+                Containers.dropContents(level, pos, furnace.getInventory());
+            }
+            super.onRemove(state, level, pos, newState, moving);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
-    }
-
-    @FunctionalInterface
-    private interface ShellMenuFactory {
-        net.minecraft.world.inventory.AbstractContainerMenu create(int containerId);
     }
 }

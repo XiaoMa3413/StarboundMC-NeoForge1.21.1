@@ -14,7 +14,6 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraftforge.common.ForgeHooks;
 
 public class AlloyFurnaceMenu extends AbstractContainerMenu
 {
@@ -113,7 +112,7 @@ public class AlloyFurnaceMenu extends AbstractContainerMenu
                     if (!this.moveItemStackTo(slotStack, AlloyFurnaceBlockEntity.INPUT_SLOT, AlloyFurnaceBlockEntity.INPUT_SLOT + 1, false))
                         return ItemStack.EMPTY;
                 }
-                else if (ForgeHooks.getBurnTime(slotStack, RecipeType.SMELTING) > 0)
+                else if (slotStack.getBurnTime(RecipeType.SMELTING) > 0)
                 {
                     if (!this.moveItemStackTo(slotStack, AlloyFurnaceBlockEntity.FUEL_SLOT, AlloyFurnaceBlockEntity.FUEL_SLOT + 1, false))
                         return ItemStack.EMPTY;
