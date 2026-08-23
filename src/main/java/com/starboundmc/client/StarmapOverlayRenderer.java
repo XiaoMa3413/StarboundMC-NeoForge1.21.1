@@ -82,10 +82,10 @@ public final class StarmapOverlayRenderer
         {
             positionX = start[0] + deltaX * ease;
             positionY = start[1] + deltaY * ease;
-            if (progress >= PlanetRenderer.ARRIVAL_FADE_START)
+            if (progress >= WarpVisualTiming.ARRIVAL_FADE_START)
             {
-                double amount = smoothstep((progress - PlanetRenderer.ARRIVAL_FADE_START)
-                        / (1.0D - PlanetRenderer.ARRIVAL_FADE_START));
+                double amount = smoothstep((progress - WarpVisualTiming.ARRIVAL_FADE_START)
+                        / (1.0D - WarpVisualTiming.ARRIVAL_FADE_START));
                 rotation = flightRotation * (1.0D - amount);
                 speed = 1.0D - amount;
             }
@@ -97,10 +97,10 @@ public final class StarmapOverlayRenderer
         }
         else
         {
-            if (progress >= PlanetRenderer.ARRIVAL_FADE_START)
+            if (progress >= WarpVisualTiming.ARRIVAL_FADE_START)
             {
-                double amount = smoothstep((progress - PlanetRenderer.ARRIVAL_FADE_START)
-                        / (1.0D - PlanetRenderer.ARRIVAL_FADE_START));
+                double amount = smoothstep((progress - WarpVisualTiming.ARRIVAL_FADE_START)
+                        / (1.0D - WarpVisualTiming.ARRIVAL_FADE_START));
                 rotation = flightRotation * (1.0D - amount);
                 speed = 1.0D - amount;
             }
@@ -247,7 +247,7 @@ public final class StarmapOverlayRenderer
 
     private static double decelerationStart()
     {
-        return (PlanetRenderer.ARRIVAL_FADE_START - turnFraction())
+        return (WarpVisualTiming.ARRIVAL_FADE_START - turnFraction())
                 / (1.0D - turnFraction());
     }
 

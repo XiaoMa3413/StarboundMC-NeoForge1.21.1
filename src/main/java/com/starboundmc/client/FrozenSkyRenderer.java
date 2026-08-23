@@ -16,10 +16,10 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 
 /**
@@ -27,7 +27,7 @@ import org.joml.Matrix4f;
  * with SkyType.NONE, so this renderer draws the harsh cold sky and a much smaller
  * sun instead of the vanilla one.
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class FrozenSkyRenderer
 {
     private static final Vec3 LOCAL_STAR_DIRECTION = new Vec3(0.0, 1.0, 0.0);
@@ -44,7 +44,8 @@ public class FrozenSkyRenderer
         if (!FrozenPlanet.FROZEN_LEVEL.equals(level.dimension()))
             return;
 
-        renderSky(event.getPoseStack(), level, event.getPartialTick());
+        renderSky(event.getPoseStack(), level,
+                event.getPartialTick().getGameTimeDeltaPartialTick(false));
     }
 
     private static void renderSky(PoseStack pose, ClientLevel level, float partialTick)
@@ -62,9 +63,8 @@ public class FrozenSkyRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         float s = 500.0F;
         // A cube around the camera acts as a skybox: it covers every view direction
@@ -76,7 +76,7 @@ public class FrozenSkyRenderer
         addFace(bb, matrix, -s, s, -s, s, s, -s, s, s, s, -s, s, s);
         addFace(bb, matrix, -s, -s, -s, s, -s, -s, s, -s, s, -s, -s, s);
 
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -119,7 +119,7 @@ public class FrozenSkyRenderer
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z,
                                     float r, float g, float b, float a)
     {
-        bb.vertex(matrix, x, y, z).color(r, g, b, a).endVertex();
+        bb.addVertex(matrix, x, y, z).setColor(r, g, b, a);
     }
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z, float[] rgba)

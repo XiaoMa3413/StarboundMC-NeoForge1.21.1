@@ -553,6 +553,14 @@ Codec、MapCodec、BiomeSource、NoiseGeneratorSettings、ChunkGenerator 方法�
 
 验收：GUI Scale 1/2/3/4/Auto、不同宽高比、同/跨星系航线、进入中性深空、重进世界、专用服务器启动。
 
+实施状态（2026-08-24）：**客户端空间渲染和星图迁移已完成**。
+
+- 整个 `com.starboundmc.client` 与 `client.space` 包已重新纳入主源集；旧 Forge `ModScreenRegistrar` 已删除，其菜单、实体、维度效果和跃迁 HUD 职责统一由 `Stage2ClientRegistrar` 通过 NeoForge 客户端事件注册。真实 `ShipConsoleScreen` 已替换阶段 2 占位界面，H 键与客户端连接边界保持隔离。
+- 星图三级导航、响应式宽/窄布局、GUI Scale 1–4 高密度坐标、点击区域、天体详情内容、程序化画布与行星着色逻辑已接回。原有客户端布局/几何/详情测试与连续宇宙、星系解析、环境混合、恒星 LOD 测试全部参与构建。
+- `RenderLevelStageEvent`、客户端/玩家 Tick、GUI Layer 和连接事件已迁移到 NeoForge 21.1.248；`Tesselator.begin`、`MeshData`/`buildOrThrow`、1.21.1 顶点消费者方法、`POSITION_TEX_COLOR` 和 `DeltaTracker` 已替换旧 1.20.1 即时绘制接口。
+- 激光与方块轮廓、飞船空间天空、冰冻天空、行星球体、主世界熔岩卫星、恒星完整/简化/点批处理、环境混合、跃迁隧道/闪光和阶段音效均已恢复编译与客户端订阅。星图与世界渲染共享抵达淡入阈值，避免为编译切片反向依赖大型渲染器。
+- 当前 147 项测试全部通过，完整 `test build` 成功；客户端使用 Java 21 完成模组加载、GUI/渲染注册、OpenGL 初始化和资源重载，无客户端事件、Shader/VBO API 或 GUI Layer 注册异常。专用服务器在整个客户端包参与构建后仍成功启动至 `Done`，未发生客户端类加载错误。现阶段日志中的模组模型、纹理和音效缺失属于阶段 10 资源迁移范围；资源接回后的世界内视觉矩阵将在阶段 10–11 继续自动回归。
+
 ### 阶段 10：资源、datagen 和本地化
 
 目标：所有资源在 1.21.1 无缺失、无解析警告。
@@ -660,7 +668,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 完成玩法事件与传送器迁移。
 - [x] 完成连续宇宙和跃迁迁移。
 - [x] 完成维度与世界生成迁移。
-- [ ] 完成客户端渲染和星图迁移。
+- [x] 完成客户端渲染和星图迁移。
 - [ ] 完成资源和 datagen 迁移。
 - [ ] 完成新世界、旧存档备份和专用服务器验收。
 

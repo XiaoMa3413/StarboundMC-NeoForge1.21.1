@@ -17,7 +17,7 @@ base {
 }
 
 // Stages 1-8 compile the migrated registry, gameplay, warp and worldgen
-// layers. High-density rendering remains isolated until stage 9.
+// layers. Stage 9 adds client rendering in independently verified slices.
 sourceSets {
     main {
         java {
@@ -66,6 +66,41 @@ sourceSets {
             include 'com/starboundmc/client/FrozenDimensionEffects.java'
             include 'com/starboundmc/client/PixelButton.java'
             include 'com/starboundmc/client/UiStyle.java'
+            include 'com/starboundmc/client/StarmapVisualTheme.java'
+            include 'com/starboundmc/client/StarmapViewport.java'
+            include 'com/starboundmc/client/StarmapUiDensity.java'
+            include 'com/starboundmc/client/StarmapPage.java'
+            include 'com/starboundmc/client/StarmapLayout.java'
+            include 'com/starboundmc/client/StarmapGeometry.java'
+            include 'com/starboundmc/client/StarmapFocusGeometry.java'
+            include 'com/starboundmc/client/StarmapBodyShading.java'
+            include 'com/starboundmc/client/StarMapCanvas.java'
+            include 'com/starboundmc/client/StarmapDetailLine.java'
+            include 'com/starboundmc/client/StarmapDetailSection.java'
+            include 'com/starboundmc/client/StarmapDetailContent.java'
+            include 'com/starboundmc/client/StarmapDetailContentFactory.java'
+            include 'com/starboundmc/client/StarmapHiDpiGraphics.java'
+            include 'com/starboundmc/client/StarmapChromeRenderer.java'
+            include 'com/starboundmc/client/StarmapDetailRenderer.java'
+            include 'com/starboundmc/client/StarmapTerminalPrimitives.java'
+            include 'com/starboundmc/client/StarmapOverlaySprites.java'
+            include 'com/starboundmc/client/StarmapOverlayRenderer.java'
+            include 'com/starboundmc/client/ClientPlanetState.java'
+            include 'com/starboundmc/client/StarShipSprite.java'
+            include 'com/starboundmc/client/SciFiButton.java'
+            include 'com/starboundmc/client/ShipConsoleScreen.java'
+            include 'com/starboundmc/client/WarpVisualTiming.java'
+            include 'com/starboundmc/client/LaserRenderer.java'
+            include 'com/starboundmc/client/StellarRenderer.java'
+            include 'com/starboundmc/client/StellarPointBatchRenderer.java'
+            include 'com/starboundmc/client/FrozenSkyRenderer.java'
+            include 'com/starboundmc/client/PlanetRenderer.java'
+            include 'com/starboundmc/client/MoltenMoonRenderer.java'
+            include 'com/starboundmc/client/WarpFlashOverlay.java'
+            include 'com/starboundmc/client/WarpSounds.java'
+            include 'com/starboundmc/client/ClientWarpSoundEvents.java'
+            include 'com/starboundmc/client/*.java'
+            include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
             include 'com/starboundmc/space/SectorCoordinate.java'
             include 'com/starboundmc/space/UniverseDelta.java'
@@ -110,6 +145,10 @@ sourceSets {
             include 'com/starboundmc/warp/*.java'
             include 'com/starboundmc/world/*.java'
             include 'com/starboundmc/world/starmap/*.java'
+            include 'com/starboundmc/client/Starmap*.java'
+            include 'com/starboundmc/client/ShipConsoleScreenHitTestTest.java'
+            include 'com/starboundmc/client/*.java'
+            include 'com/starboundmc/client/space/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath
@@ -132,6 +171,9 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('quickPlayWorld')) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+            }
         }
 
         server {

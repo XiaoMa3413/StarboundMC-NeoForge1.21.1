@@ -31,10 +31,10 @@ import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -56,7 +56,7 @@ import java.util.Random;
  * while the starfield fades back in. The dimension uses SkyType.NONE, so this
  * renderer also owns the space dome and the starfield.</p>
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class PlanetRenderer
 {
     static final float PLANET_RADIUS = 50.0F;
@@ -142,7 +142,6 @@ public class PlanetRenderer
     // Arrival crossfade: the target planet grows and fades in over the last ~28%
     // of the warp while the ship swings back to face it. Package-visible so the
     // star map (ShipConsoleScreen) can sync its ship animation to the same timing.
-    static final float ARRIVAL_FADE_START = 0.72F;
 
     // ---- Deterministic starfield: directions on the unit sphere + size/brightness ----
     private static final float[] STAR_X = new float[STAR_COUNT];
@@ -386,7 +385,8 @@ public class PlanetRenderer
         if (!mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL))
             return;
 
-        SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + event.getPartialTick());
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
+        SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + partialTick);
         // AFTER_SKY already carries the camera rotation. Keep the space scene
         // anchored to the ship rather than subtracting the player eye position:
         // walking around the bridge must not drag the distant planet across view.
@@ -439,7 +439,7 @@ public class PlanetRenderer
         if (hyperspaceRoute
                 && (phase == FlightPhase.HYPERSPACE || phase == FlightPhase.DECELERATE
                     || phase == FlightPhase.ACCELERATE))
-            renderWarpStreaks(skyPose, event.getCamera(), event.getPartialTick(), space);
+            renderWarpStreaks(skyPose, event.getCamera(), partialTick, space);
     }
 
     private static void renderVisiblePlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
@@ -473,7 +473,7 @@ public class PlanetRenderer
             StarSystem system = StarSystems.systemOfPlanet(body);
             float systemVisibility = stellarVisibility(stars, system);
             boolean arrivingTarget = space.warping() && body == space.targetBody()
-                    && space.warpProgress() >= ARRIVAL_FADE_START;
+                    && space.warpProgress() >= WarpVisualTiming.ARRIVAL_FADE_START;
             if (systemVisibility <= 0.20F && !arrivingTarget)
                 continue;
             renderVirtualPlanet(pose, camera, body, space);
@@ -595,9 +595,8 @@ public class PlanetRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         // 430 keeps the cube corners (430*√3 ≈ 745) inside the default far plane
         // (render distance 12 → 768); a larger dome gets clipped at the corners.
@@ -609,7 +608,7 @@ public class PlanetRenderer
         addDomeFace(bb, matrix, -s, s, -s, s, s, -s, s, s, s, -s, s, s);
         addDomeFace(bb, matrix, -s, -s, -s, s, -s, -s, s, -s, s, -s, -s, s);
 
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -665,9 +664,8 @@ public class PlanetRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         for (int i = 0; i < STAR_COUNT; i++)
         {
@@ -730,7 +728,7 @@ public class PlanetRenderer
             vertexColor(bb, matrix, px - (bx + ux) * s, py - uy * s, pz - (bz + uz) * s, r, g, b, a);
             vertexColor(bb, matrix, px + (bx - ux) * s, py - uy * s, pz + (bz - uz) * s, r, g, b, a);
         }
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -776,9 +774,8 @@ public class PlanetRenderer
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < HALO_X.length; i++)
         {
             float wx = cx + HALO_X[i] * outerFactor * scale;
@@ -809,7 +806,7 @@ public class PlanetRenderer
             }
             vertexColor(bb, matrix, wx, wy, wz, color.x, color.y, color.z, a);
         }
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -854,7 +851,7 @@ public class PlanetRenderer
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, planet.texture());
         RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
@@ -890,8 +887,8 @@ public class PlanetRenderer
         float pitchCos = (float) Math.cos(pitch);
         float pitchSin = (float) Math.sin(pitch);
 
-        BufferBuilder bb = Tesselator.getInstance().getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int i = 0; i < SPHERE_X.length; i++)
         {
             float localX = SPHERE_X[i];
@@ -907,7 +904,7 @@ public class PlanetRenderer
 
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
-        buffer.upload(bb.end());
+        buffer.upload(bb.buildOrThrow());
         VertexBuffer.unbind();
         PLANET_SURFACE_BUFFERS.put(planet, buffer);
         return buffer;
@@ -927,7 +924,7 @@ public class PlanetRenderer
         RenderSystem.defaultBlendFunc();
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
         RenderSystem.setShaderTexture(0, texture);
         RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
@@ -954,15 +951,15 @@ public class PlanetRenderer
         if (!lightingChanged)
             return moonSurfaceBuffer;
 
-        BufferBuilder bb = Tesselator.getInstance().getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         for (int i = 0; i < SPHERE_X.length; i++)
             addLitSphereVertex(bb, SPHERE_X[i], SPHERE_Y[i], SPHERE_Z[i], SPHERE_U[i], SPHERE_V[i], sun);
 
         if (moonSurfaceBuffer == null || moonSurfaceBuffer.isInvalid())
             moonSurfaceBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
         moonSurfaceBuffer.bind();
-        moonSurfaceBuffer.upload(bb.end());
+        moonSurfaceBuffer.upload(bb.buildOrThrow());
         VertexBuffer.unbind();
         moonSurfaceSunX = sun.x;
         moonSurfaceSunY = sun.y;
@@ -984,7 +981,7 @@ public class PlanetRenderer
         r += (0.90F - r) * terminator * 0.35F;
         g += (0.55F - g) * terminator * 0.25F;
         b += (0.25F - b) * terminator * 0.18F;
-        bb.vertex(x, y, z).color(r, g, b, 1.0F).uv(u, v).endVertex();
+        bb.addVertex(x, y, z).setColor(r, g, b, 1.0F).setUv(u, v);
     }
 
     private static void renderWarpStreaks(PoseStack pose, Camera cam, float partialTick,
@@ -1053,10 +1050,11 @@ public class PlanetRenderer
         float tintAmount = 0.0F;
         Vector3f arrivalTint = null;
         Planet target = space.targetBody();
-        if (target != null && progress >= ARRIVAL_FADE_START)
+        if (target != null && progress >= WarpVisualTiming.ARRIVAL_FADE_START)
         {
             arrivalTint = STELLAR_CORONA_COLORS.get(target);
-            tintAmount = smoothstep((progress - ARRIVAL_FADE_START) / (1.0F - ARRIVAL_FADE_START)) * 0.65F;
+            tintAmount = smoothstep((progress - WarpVisualTiming.ARRIVAL_FADE_START)
+                    / (1.0F - WarpVisualTiming.ARRIVAL_FADE_START)) * 0.65F;
         }
 
         FogRenderer.setupNoFog();
@@ -1067,9 +1065,8 @@ public class PlanetRenderer
         RenderSystem.disableDepthTest();
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
 
         // Distant star layer: thin, slow, dim streaks behind the main tunnel.
         // Drawn first so the bright foreground streaks layer on top.
@@ -1310,7 +1307,7 @@ public class PlanetRenderer
             drawRadialGlow(bb, matrix, 190.0F * (1.0F + (float) entryFlash * 0.22F),
                     1.0F, 1.0F, 1.0F, (float) (flashAlpha * 0.80));
         }
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
@@ -1382,7 +1379,7 @@ public class PlanetRenderer
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z,
                                     float r, float g, float b, float a)
     {
-        bb.vertex(matrix, x, y, z).color(r, g, b, a).endVertex();
+        bb.addVertex(matrix, x, y, z).setColor(r, g, b, a);
     }
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z, float[] rgba)

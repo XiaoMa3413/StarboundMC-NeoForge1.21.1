@@ -7,10 +7,10 @@ import com.starboundmc.world.Planet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -34,7 +34,7 @@ import org.joml.Vector3f;
  * <p>Uses the same celestial frame as vanilla's sun/moon rendering
  * ({@code Ry(-90) * Rx(timeOfDay*360)}), with the sun fixed at celestial +Y.</p>
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class MoltenMoonRenderer
 {
     private static final float MOON_DISTANCE = 100.0F;
@@ -65,7 +65,8 @@ public class MoltenMoonRenderer
         if (!level.dimension().equals(Level.OVERWORLD))
             return;
 
-        float timeAngle = level.getTimeOfDay(event.getPartialTick()) * 360.0F;
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
+        float timeAngle = level.getTimeOfDay(partialTick) * 360.0F;
 
         // Lunar phase: 0 = full moon, 4 = new moon. The moon stays fixed
         // opposite the sun (celestial -Y); the phase rotates the lit side

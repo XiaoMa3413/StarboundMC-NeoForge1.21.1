@@ -223,12 +223,12 @@ public final class StellarRenderer
 
     private static VertexBuffer upload(GeometryBuilder geometry)
     {
-        BufferBuilder bb = Tesselator.getInstance().getBuilder();
-        bb.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         geometry.build(bb);
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
-        buffer.upload(bb.end());
+        buffer.upload(bb.buildOrThrow());
         VertexBuffer.unbind();
         return buffer;
     }
@@ -321,6 +321,6 @@ public final class StellarRenderer
 
     private static void vertex(BufferBuilder bb, float x, float y, float z, float alpha)
     {
-        bb.vertex(x, y, z).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        bb.addVertex(x, y, z).setColor(1.0F, 1.0F, 1.0F, alpha);
     }
 }

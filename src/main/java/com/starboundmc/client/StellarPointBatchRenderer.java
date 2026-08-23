@@ -56,8 +56,8 @@ public final class StellarPointBatchRenderer
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         Matrix4f matrix = pose.last().pose();
-        BufferBuilder buffer = Tesselator.getInstance().getBuilder();
-        buffer.begin(VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder buffer = Tesselator.getInstance().begin(
+                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < stars.count(); i++)
         {
             StarSystemResolver.VisibleStar star = stars.star(i);
@@ -70,7 +70,7 @@ public final class StellarPointBatchRenderer
             double viewZ = star.relativeY() * pitchSin + yawZ * pitchCos;
             addPoint(buffer, matrix, star, viewX, viewY, viewZ);
         }
-        BufferUploader.drawWithShader(buffer.end());
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.enableDepthTest();
@@ -279,6 +279,6 @@ public final class StellarPointBatchRenderer
                                     float x, float y, float z,
                                     float red, float green, float blue, float alpha)
     {
-        buffer.vertex(matrix, x, y, z).color(red, green, blue, alpha).endVertex();
+        buffer.addVertex(matrix, x, y, z).setColor(red, green, blue, alpha);
     }
 }

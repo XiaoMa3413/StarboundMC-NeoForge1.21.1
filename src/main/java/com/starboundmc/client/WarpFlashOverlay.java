@@ -1,7 +1,7 @@
 package com.starboundmc.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraft.client.gui.LayeredDraw;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.SpaceRenderState;
 import com.starboundmc.world.starmap.StarSystem;
@@ -21,7 +21,7 @@ public class WarpFlashOverlay
     private static long arrivalFlashStartMillis = Long.MIN_VALUE;
     private static int arrivalFlashRgb = 0xFFFFFF;
 
-    public static final IGuiOverlay FLASH = (gui, guiGraphics, partialTick, screenWidth, screenHeight) ->
+    public static final LayeredDraw.Layer FLASH = (guiGraphics, deltaTracker) ->
     {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null)
@@ -30,6 +30,7 @@ public class WarpFlashOverlay
             return;
         }
 
+        float partialTick = deltaTracker.getGameTimeDeltaPartialTick(false);
         SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + partialTick);
         boolean warping = space.warping();
         long now = System.currentTimeMillis();
@@ -49,7 +50,7 @@ public class WarpFlashOverlay
             float alpha = ARRIVAL_FLASH_PEAK
                     * (1.0F - arrivalElapsed / (float) ARRIVAL_FLASH_DURATION_MS);
             int color = ((int) (alpha * 255.0F) << 24) | arrivalFlashRgb;
-            guiGraphics.fill(0, 0, screenWidth, screenHeight, color);
+            guiGraphics.fill(0, 0, guiGraphics.guiWidth(), guiGraphics.guiHeight(), color);
         }
     };
 

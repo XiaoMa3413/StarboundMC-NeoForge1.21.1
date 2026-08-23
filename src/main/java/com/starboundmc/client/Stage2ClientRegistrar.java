@@ -8,10 +8,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterDimensionSpecialEffectsEvent;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.minecraft.resources.ResourceLocation;
 
-/** Client-only registrations for the stage 2 entity and menu layer. */
+/** Client-only registrations for menus, entity renderers and dimension effects. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class Stage2ClientRegistrar {
     private Stage2ClientRegistrar() {
@@ -20,7 +21,7 @@ public final class Stage2ClientRegistrar {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);
-        event.register(ModMenus.SHIP_CONSOLE_MENU.get(), Stage2ShipConsoleScreen::new);
+        event.register(ModMenus.SHIP_CONSOLE_MENU.get(), ShipConsoleScreen::new);
         event.register(ModMenus.SHIP_CRATE_MENU.get(), ShipCrateScreen::new);
         event.register(ModMenus.TELEPORTER_MENU.get(), TeleporterScreen::new);
         event.register(ModMenus.ALLOY_FURNACE_MENU.get(), AlloyFurnaceScreen::new);
@@ -38,5 +39,11 @@ public final class Stage2ClientRegistrar {
                 new ShipDimensionEffects());
         event.register(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "frozen"),
                 new FrozenDimensionEffects());
+    }
+
+    @SubscribeEvent
+    public static void registerGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAboveAll(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "warp_flash"),
+                WarpFlashOverlay.FLASH);
     }
 }

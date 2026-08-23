@@ -3,14 +3,14 @@ package com.starboundmc.client;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.world.ShipDimensions;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 /** Stops the warp loop when the player is no longer aboard the ship. */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class ClientWarpSoundEvents
 {
     @SubscribeEvent
@@ -28,10 +28,8 @@ public class ClientWarpSoundEvents
     }
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event)
+    public static void onClientTick(ClientTickEvent.Post event)
     {
-        if (event.phase != TickEvent.Phase.END)
-            return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL))
         {

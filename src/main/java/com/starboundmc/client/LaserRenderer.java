@@ -22,11 +22,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.joml.Matrix4f;
 
 import java.util.Random;
@@ -39,7 +40,7 @@ import java.util.Random;
  * sparks. Also suppresses the arm-swing animation while the manipulator is in
  * hand — it is a laser tool, not a melee weapon.
  */
-@Mod.EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class LaserRenderer
 {
     private static final long BEAM_LINGER_MS = 250L;
@@ -54,10 +55,8 @@ public class LaserRenderer
     private static float crackProgress = 0.0F;
 
     @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event)
+    public static void onClientTick(ClientTickEvent.Post event)
     {
-        if (event.phase != TickEvent.Phase.END)
-            return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null)
             return;
@@ -136,11 +135,9 @@ public class LaserRenderer
 
     /** Suppress the melee swing animation: the manipulator fires a laser, it never swings. */
     @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event)
+    public static void onPlayerTick(PlayerTickEvent.Post event)
     {
-        if (event.phase != TickEvent.Phase.END)
-            return;
-        Player player = event.player;
+        Player player = event.getEntity();
         if (!player.level().isClientSide)
             return;
         if (player.getMainHandItem().getItem() instanceof MatterManipulatorItem)
@@ -187,7 +184,7 @@ public class LaserRenderer
 
         double range = MatterManipulatorItem.LASER_RANGE_BASE
                 + MatterManipulatorItem.getRangeLevel(stack) * MatterManipulatorItem.LASER_RANGE_PER_LEVEL;
-        float partialTick = event.getPartialTick();
+        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
         HitResult rawHit = mc.player.pick(range, partialTick, false);
         if (rawHit.getType() != HitResult.Type.BLOCK)
             return;
@@ -238,9 +235,8 @@ public class LaserRenderer
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
         vertex(bb, matrix, p1, 0.55F, 0.9F, 1.0F, alpha * 0.8F);
         vertex(bb, matrix, p2, 0.55F, 0.9F, 1.0F, alpha * 0.8F);
@@ -255,7 +251,7 @@ public class LaserRenderer
         vertex(bb, matrix, t2.add(dir.scale(0.18F)), 1.0F, 1.0F, 1.0F, 0.0F);
         vertex(bb, matrix, t1.add(dir.scale(0.18F)), 1.0F, 1.0F, 1.0F, 0.0F);
 
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.depthMask(true);
         RenderSystem.enableCull();
@@ -291,9 +287,8 @@ public class LaserRenderer
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionColorShader);
 
-        Tesselator tess = Tesselator.getInstance();
-        BufferBuilder bb = tess.getBuilder();
-        bb.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
         for (int[] edge : edges)
         {
             Vec3 a = corners[edge[0]];
@@ -301,7 +296,7 @@ public class LaserRenderer
             vertex(bb, matrix, a, 0.55F, 0.9F, 1.0F, alpha * 0.9F);
             vertex(bb, matrix, b, 0.55F, 0.9F, 1.0F, alpha * 0.9F);
         }
-        BufferUploader.drawWithShader(bb.end());
+        BufferUploader.drawWithShader(bb.buildOrThrow());
 
         RenderSystem.depthMask(true);
         RenderSystem.enableCull();
@@ -312,6 +307,6 @@ public class LaserRenderer
 
     private static void vertex(BufferBuilder bb, Matrix4f matrix, Vec3 p, float r, float g, float b, float a)
     {
-        bb.vertex(matrix, (float) p.x, (float) p.y, (float) p.z).color(r, g, b, a).endVertex();
+        bb.addVertex(matrix, (float) p.x, (float) p.y, (float) p.z).setColor(r, g, b, a);
     }
 }
