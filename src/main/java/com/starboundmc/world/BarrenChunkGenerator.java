@@ -1,6 +1,6 @@
 package com.starboundmc.world;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.server.level.WorldGenRegion;
@@ -16,7 +16,6 @@ import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 /**
  * Barren Planet terrain generator: the vanilla overworld terrain with its
@@ -29,7 +28,7 @@ public class BarrenChunkGenerator extends NoiseBasedChunkGenerator
 {
     private static final BlockState DRY_BLOCK = Blocks.SAND.defaultBlockState();
 
-    public static final Codec<BarrenChunkGenerator> CODEC = RecordCodecBuilder.create(instance ->
+    public static final MapCodec<BarrenChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("biome_source").forGetter(BarrenChunkGenerator::getBiomeSource),
                     NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter(BarrenChunkGenerator::generatorSettings))
@@ -42,16 +41,16 @@ public class BarrenChunkGenerator extends NoiseBasedChunkGenerator
     }
 
     @Override
-    protected Codec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec()
+    protected MapCodec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec()
     {
         return CODEC;
     }
 
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState,
+    public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState,
                                                         StructureManager structureManager, ChunkAccess chunk)
     {
-        return super.fillFromNoise(executor, blender, randomState, structureManager, chunk)
+        return super.fillFromNoise(blender, randomState, structureManager, chunk)
                 .thenApply(BarrenChunkGenerator::dryOutWater);
     }
 

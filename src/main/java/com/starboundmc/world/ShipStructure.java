@@ -1,15 +1,10 @@
 package com.starboundmc.world;
 
 import com.starboundmc.block.CaptainChairBlock;
-import com.starboundmc.block.FuelControllerBlock;
-import com.starboundmc.block.MatterManipulatorWorkbenchBlock;
 import com.starboundmc.block.ModBlocks;
-import com.starboundmc.block.ShipConsoleBlock;
-import com.starboundmc.block.ShipCrateBlock;
-import com.starboundmc.block.ShipDoorBlock;
 import com.starboundmc.block.ShipEngineBlock;
-import com.starboundmc.block.TitaniumAlloyFurnaceBlock;
 import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
+import com.starboundmc.block.entity.FuelControllerBlockEntity;
 import com.starboundmc.block.entity.ShipCrateBlockEntity;
 import com.starboundmc.block.entity.ShipDoorBlockEntity;
 import net.minecraft.core.BlockPos;
@@ -17,6 +12,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
 /**
@@ -161,7 +157,7 @@ public class ShipStructure
                 BlockState state;
                 if (x == 0 && y <= FLOOR_Y + 2)
                     state = ModBlocks.SHIP_DOOR.get().defaultBlockState()
-                            .setValue(ShipDoorBlock.FACING, Direction.NORTH);
+                            .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH);
                 else if (y == FLOOR_Y + 3 && Math.abs(x) <= 1)
                     state = GLASS;
                 else if (y == FLOOR_Y + 4)
@@ -230,10 +226,10 @@ public class ShipStructure
         count += place(chunk, 3, FLOOR_Y + 1, -1, crateFacing(3));
         count += place(chunk, -3, FLOOR_Y + 1, 2,
                 ModBlocks.MATTER_MANIPULATOR_WORKBENCH.get().defaultBlockState()
-                        .setValue(MatterManipulatorWorkbenchBlock.FACING, Direction.EAST));
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
         count += place(chunk, 3, FLOOR_Y + 1, 2,
                 ModBlocks.TITANIUM_ALLOY_FURNACE.get().defaultBlockState()
-                        .setValue(TitaniumAlloyFurnaceBlock.FACING, Direction.WEST));
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
         count += place(chunk, -3, FLOOR_Y + 1, 3, Blocks.POTTED_CACTUS.defaultBlockState());
 
         // Cockpit: chair and all controls fit on one compact raised deck.
@@ -242,13 +238,13 @@ public class ShipStructure
                         .setValue(CaptainChairBlock.FACING, Direction.SOUTH));
         count += place(chunk, 0, FLOOR_Y + 2, 7,
                 ModBlocks.SHIP_CONSOLE.get().defaultBlockState()
-                        .setValue(ShipConsoleBlock.FACING, Direction.NORTH));
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
         count += place(chunk, 2, FLOOR_Y + 2, 7,
                 ModBlocks.SHIP_CONSOLE.get().defaultBlockState()
-                        .setValue(ShipConsoleBlock.FACING, Direction.NORTH));
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
         count += place(chunk, -2, FLOOR_Y + 2, 7,
                 ModBlocks.FUEL_CONTROLLER.get().defaultBlockState()
-                        .setValue(FuelControllerBlock.FACING, Direction.NORTH));
+                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
         return count;
     }
 
@@ -256,7 +252,7 @@ public class ShipStructure
     private static BlockState crateFacing(int x)
     {
         return ModBlocks.SHIP_CRATE.get().defaultBlockState()
-                .setValue(ShipCrateBlock.FACING, x < 0 ? Direction.EAST : Direction.WEST);
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, x < 0 ? Direction.EAST : Direction.WEST);
     }
 
     private static int place(ChunkAccess chunk, int x, int y, int z, BlockState state)
@@ -268,10 +264,12 @@ public class ShipStructure
         BlockPos blockPos = new BlockPos(x, y, z);
         chunk.setBlockState(blockPos, state, false);
         // ProtoChunk placement does not create block entities automatically.
-        if (state.getBlock() instanceof ShipDoorBlock)
+        if (state.is(ModBlocks.SHIP_DOOR.get()))
             chunk.setBlockEntity(new ShipDoorBlockEntity(blockPos, state));
         else if (state.getBlock() == ModBlocks.SHIP_CRATE.get())
             chunk.setBlockEntity(new ShipCrateBlockEntity(blockPos, state));
+        else if (state.getBlock() == ModBlocks.FUEL_CONTROLLER.get())
+            chunk.setBlockEntity(new FuelControllerBlockEntity(blockPos, state));
         else if (state.getBlock() == ModBlocks.TITANIUM_ALLOY_FURNACE.get())
             chunk.setBlockEntity(new AlloyFurnaceBlockEntity(blockPos, state));
         return 1;

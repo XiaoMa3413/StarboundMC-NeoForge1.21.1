@@ -1,0 +1,11 @@
+{
+  "type": "starboundmc:molten",
+  "generator": {
+    "type": "starboundmc:molten",
+    "settings": "minecraft:nether",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "preset": "minecraft:nether"
+    }
+  }
+}

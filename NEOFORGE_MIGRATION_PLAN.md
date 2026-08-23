@@ -526,6 +526,14 @@ Codec、MapCodec、BiomeSource、NoiseGeneratorSettings、ChunkGenerator 方法�
 
 验收：每个维度使用新世界独立测试；检查安全落点、区块重建、门和方块实体、无天花板熔岩地形、冰冻群系过滤、荒芜去水。
 
+实施状态（2026-08-24）：**飞船与行星维度、世界生成迁移已完成**。
+
+- 已为 `starboundmc:ship`、`frozen`、`barren`、`molten` 提供 1.21.1 数据包维度、维度类型和飞船专用群系；翠绿天体继续按玩法基线使用主世界。旧版 `monster_spawn_light_level` 的均匀值包装已按 1.21.1 Codec 改为 `type/min_inclusive/max_inclusive` 结构。
+- `ShipChunkGenerator`、`MoltenChunkGenerator`、`BarrenChunkGenerator` 和 `FilteredBiomeSource` 已迁移为 1.21.1 `MapCodec`，并适配移除 `Executor` 的 `fillFromNoise` 签名。冰冻/荒芜维度保留白名单群系映射；荒芜生成后清除水体；熔岩维度生成开放天空、起伏地表和熔岩湖，不恢复原版下界顶板。
+- 21 格程序化初始飞船及船内传送器、控制台、燃料控制器、合金炉、箱子、门和方块实体已恢复；燃料控制器的 ProtoChunk 方块实体创建一并补齐。`data/starboundmc/structures/ship.nbt` 存在时仍会在服务端启动后一次性覆盖程序化船体，覆盖标记继续随飞船维度持久化。
+- 回船会进入真实飞船安全落点；行星旅行会按当前天体进入熔岩、冰冻、荒芜维度或主世界，并在数据包维度缺失时安全回退。阶段 7 的跃迁权限检查继续要求玩家真实位于 `starboundmc:ship`。
+- 新增船舶/冰冻维度客户端效果注册和 `scripts/stage8-rcon-smoke.ps1`。当前 84 项测试全部通过，完整 `test build` 成功；全新专服世界实际生成并保存了四个自定义维度，RCON 验证程序化飞船传送器、控制台和熔岩维度 Y=127 开放天空；客户端完成模组和资源重载且无维度效果注册错误，随后按 PID 结束烟测。
+
 ### 阶段 9：客户端空间渲染和星图 UI
 
 目标：在 common/server 已稳定后恢复视觉表现。
@@ -651,7 +659,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 完成持久化和方块实体迁移。
 - [x] 完成玩法事件与传送器迁移。
 - [x] 完成连续宇宙和跃迁迁移。
-- [ ] 完成维度与世界生成迁移。
+- [x] 完成维度与世界生成迁移。
 - [ ] 完成客户端渲染和星图迁移。
 - [ ] 完成资源和 datagen 迁移。
 - [ ] 完成新世界、旧存档备份和专用服务器验收。

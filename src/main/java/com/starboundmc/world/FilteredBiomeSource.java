@@ -1,6 +1,6 @@
 package com.starboundmc.world;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  */
 public class FilteredBiomeSource extends BiomeSource
 {
-    public static final Codec<FilteredBiomeSource> CODEC = RecordCodecBuilder.create(instance ->
+    public static final MapCodec<FilteredBiomeSource> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("source").forGetter(s -> s.source),
                     RegistryCodecs.homogeneousList(Registries.BIOME).fieldOf("allowed").forGetter(s -> s.allowed),
@@ -38,7 +38,7 @@ public class FilteredBiomeSource extends BiomeSource
     }
 
     @Override
-    protected Codec<? extends BiomeSource> codec()
+    protected MapCodec<? extends BiomeSource> codec()
     {
         return CODEC;
     }

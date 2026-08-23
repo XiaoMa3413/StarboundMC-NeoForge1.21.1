@@ -1,0 +1,24 @@
+{
+  "type": "starboundmc:barren",
+  "generator": {
+    "type": "starboundmc:barren",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "starboundmc:filtered",
+      "source": {
+        "type": "minecraft:multi_noise",
+        "preset": "minecraft:overworld"
+      },
+      "allowed": [
+        "minecraft:desert",
+        "minecraft:badlands",
+        "minecraft:eroded_badlands",
+        "minecraft:wooded_badlands",
+        "minecraft:savanna",
+        "minecraft:savanna_plateau",
+        "minecraft:windswept_savanna"
+      ],
+      "fallback": "minecraft:desert"
+    }
+  }
+}

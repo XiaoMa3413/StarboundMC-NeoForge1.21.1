@@ -1,25 +1,23 @@
 package com.starboundmc.world;
 
-import com.starboundmc.StarboundMC;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncPlanetPacket;
 import com.starboundmc.warp.ShipFuelService;
+import com.starboundmc.warp.ShipWarpManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 /**
- * Stage 6 travel boundary. The real ship and planet dimensions are restored in
- * stage 8; until then, a missing destination safely falls back to overworld spawn.
+ * Shared server-authoritative travel boundary. Missing datapack dimensions
+ * always fall back to the overworld instead of stranding a player.
  */
 public final class Stage6TravelService {
-    public static final ResourceKey<Level> SHIP_LEVEL = levelKey("ship");
-    public static final BlockPos SHIP_POS = new BlockPos(0, 102, 0);
+    public static final ResourceKey<Level> SHIP_LEVEL = ShipDimensions.SHIP_LEVEL;
+    public static final BlockPos SHIP_POS = ShipDimensions.SHIP_POS;
 
     private Stage6TravelService() {
     }
@@ -46,8 +44,24 @@ public final class Stage6TravelService {
         if (server == null || player.isSpectator()) {
             return false;
         }
-        // Custom planet dimensions and their safe landing rules belong to stage 8.
-        teleportToOverworldSpawn(player, true);
+        Planet current = ShipWarpManager.getCurrentPlanet();
+        ResourceKey<Level> destination = switch (current) {
+            case MOLTEN -> MoltenPlanet.MOLTEN_LEVEL;
+            case FROZEN -> FrozenPlanet.FROZEN_LEVEL;
+            case BARREN -> BarrenPlanet.BARREN_LEVEL;
+            case LUSH -> Level.OVERWORLD;
+        };
+        if (Level.OVERWORLD.equals(destination) || server.getLevel(destination) == null) {
+            teleportToOverworldSpawn(player, true);
+        } else {
+            player.stopRiding();
+            switch (current) {
+                case MOLTEN -> MoltenPlanet.teleportToMolten(player);
+                case FROZEN -> FrozenPlanet.teleportToFrozen(player);
+                case BARREN -> BarrenPlanet.teleportToBarren(player);
+                case LUSH -> throw new IllegalStateException("Lush must use the overworld");
+            }
+        }
         syncState(player);
         return true;
     }
@@ -77,10 +91,5 @@ public final class Stage6TravelService {
         player.stopRiding();
         player.teleportTo(overworld, target.getX() + 0.5, target.getY() + 0.1, target.getZ() + 0.5,
                 yaw, 0.0F);
-    }
-
-    private static ResourceKey<Level> levelKey(String path) {
-        return ResourceKey.create(Registries.DIMENSION,
-                ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, path));
     }
 }

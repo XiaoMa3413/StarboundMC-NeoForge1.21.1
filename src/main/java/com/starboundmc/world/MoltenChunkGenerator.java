@@ -1,6 +1,6 @@
 package com.starboundmc.world;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -28,7 +28,6 @@ import net.minecraft.world.level.levelgen.synth.ImprovedNoise;
 
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 /**
  * Molten Planet terrain generator.
@@ -48,7 +47,7 @@ public class MoltenChunkGenerator extends NoiseBasedChunkGenerator
 
     private static final long TERRAIN_SEED = 0x5DEECE66DL;
 
-    public static final Codec<MoltenChunkGenerator> CODEC = RecordCodecBuilder.create(instance ->
+    public static final MapCodec<MoltenChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
                     BiomeSource.CODEC.fieldOf("biome_source").forGetter(MoltenChunkGenerator::getBiomeSource),
                     NoiseGeneratorSettings.CODEC.fieldOf("settings").forGetter(MoltenChunkGenerator::generatorSettings))
@@ -62,13 +61,13 @@ public class MoltenChunkGenerator extends NoiseBasedChunkGenerator
     }
 
     @Override
-    protected Codec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec()
+    protected MapCodec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec()
     {
         return CODEC;
     }
 
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState,
+    public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState randomState,
                                                         StructureManager structureManager, ChunkAccess chunk)
     {
         fillTerrain(chunk, randomState);

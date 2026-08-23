@@ -1,0 +1,10 @@
+{
+  "type": "starboundmc:ship",
+  "generator": {
+    "type": "starboundmc:ship",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "starboundmc:ship"
+    }
+  }
+}

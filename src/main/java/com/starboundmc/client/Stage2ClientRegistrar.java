@@ -7,7 +7,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.minecraft.resources.ResourceLocation;
 
 /** Client-only registrations for the stage 2 entity and menu layer. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
@@ -28,5 +30,13 @@ public final class Stage2ClientRegistrar {
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SEAT.get(), SeatRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerDimensionEffects(RegisterDimensionSpecialEffectsEvent event) {
+        event.register(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "ship"),
+                new ShipDimensionEffects());
+        event.register(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "frozen"),
+                new FrozenDimensionEffects());
     }
 }

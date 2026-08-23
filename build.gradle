@@ -16,9 +16,8 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-6 compile the migrated registry, payload, data-component,
-// persistence and server-authoritative gameplay layers. Later warp,
-// worldgen and high-density rendering systems remain isolated.
+// Stages 1-8 compile the migrated registry, gameplay, warp and worldgen
+// layers. High-density rendering remains isolated until stage 9.
 sourceSets {
     main {
         java {
@@ -39,6 +38,7 @@ sourceSets {
             include 'com/starboundmc/event/SpawnHandler.java'
             include 'com/starboundmc/event/NetherPortalHandler.java'
             include 'com/starboundmc/event/ShipWarpEvents.java'
+            include 'com/starboundmc/event/ShipPlacementHandler.java'
             include 'com/starboundmc/entity/ModEntities.java'
             include 'com/starboundmc/entity/SeatEntity.java'
             include 'com/starboundmc/block/CaptainChairBlock.java'
@@ -62,6 +62,8 @@ sourceSets {
             include 'com/starboundmc/client/ModKeyBindings.java'
             include 'com/starboundmc/client/ModKeyEvents.java'
             include 'com/starboundmc/client/ClientConnectionEvents.java'
+            include 'com/starboundmc/client/ShipDimensionEffects.java'
+            include 'com/starboundmc/client/FrozenDimensionEffects.java'
             include 'com/starboundmc/client/PixelButton.java'
             include 'com/starboundmc/client/UiStyle.java'
             include 'com/starboundmc/network/*.java'
@@ -77,9 +79,20 @@ sourceSets {
             include 'com/starboundmc/warp/ShipWarpManager.java'
             include 'com/starboundmc/world/Planet.java'
             include 'com/starboundmc/world/ShipTemplatePlacer.java'
+            include 'com/starboundmc/world/ShipDimensions.java'
+            include 'com/starboundmc/world/ShipChunkGenerator.java'
+            include 'com/starboundmc/world/ShipStructure.java'
+            include 'com/starboundmc/world/StarterShipHullProfile.java'
+            include 'com/starboundmc/world/FilteredBiomeSource.java'
+            include 'com/starboundmc/world/BarrenChunkGenerator.java'
+            include 'com/starboundmc/world/MoltenChunkGenerator.java'
+            include 'com/starboundmc/world/BarrenPlanet.java'
+            include 'com/starboundmc/world/FrozenPlanet.java'
+            include 'com/starboundmc/world/MoltenPlanet.java'
             include 'com/starboundmc/world/TeleporterManager.java'
             include 'com/starboundmc/world/Stage6TravelService.java'
             include 'com/starboundmc/world/starmap/*.java'
+            include 'com/starboundmc/world/*.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'
@@ -95,6 +108,7 @@ sourceSets {
             setSrcDirs(['src/bootstrapTest/java', 'src/test/java'])
             include 'com/starboundmc/*.java'
             include 'com/starboundmc/warp/*.java'
+            include 'com/starboundmc/world/*.java'
             include 'com/starboundmc/world/starmap/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
