@@ -1,12 +1,12 @@
 package com.starboundmc.block;
 
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.MapCodec;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.entity.SeatEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -31,6 +31,7 @@ import java.util.Map;
 /** The captain's chair; right-click to sit. FACING is the direction a seated player looks. */
 public class CaptainChairBlock extends Block
 {
+    public static final MapCodec<CaptainChairBlock> CODEC = simpleCodec(CaptainChairBlock::new);
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -77,6 +78,12 @@ public class CaptainChairBlock extends Block
     }
 
     @Override
+    protected MapCodec<? extends Block> codec()
+    {
+        return CODEC;
+    }
+
+    @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder)
     {
         builder.add(FACING);
@@ -106,7 +113,7 @@ public class CaptainChairBlock extends Block
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit)
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit)
     {
         LOGGER.debug("CaptainChairBlock.use side={} player={} pos={} hit={}", level.isClientSide ? "client" : "server", player.getScoreboardName(), pos, hit.getLocation());
         if (level.isClientSide)

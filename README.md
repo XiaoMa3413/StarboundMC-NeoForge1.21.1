@@ -12,9 +12,9 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 - modId `starboundmc`
 - 版本 `0.1-alpha`
 
-阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`，并保留全部已发布注册 ID；复杂玩法实现仍按迁移计划隔离，后续按纵向切片逐步恢复。
+阶段 0 的最小 NeoForge 入口已完成构建和运行基线验证。阶段 1 已将真实入口、注册表和事件总线接回 `src/main/java`；阶段 2 已恢复基础方块、物品、SeatEntity、菜单与客户端 Screen 注册。全部已发布注册 ID 保持不变，复杂玩法实现继续按迁移计划隔离并逐步恢复。
 
-当前进度：阶段 0、阶段 1 已完成，下一步为阶段 2（基础方块、物品、实体和菜单）。
+当前进度：阶段 0、阶段 1、阶段 2 已完成，下一步为阶段 3（Payload 网络系统整体重写）。
 
 ## 构建与运行
 
@@ -23,6 +23,12 @@ StarboundMC 从 Forge 1.20.1 迁移到 NeoForge 1.21.1 的工作仓库。迁移�
 .\gradlew.bat build
 .\gradlew.bat runClient
 .\gradlew.bat runServer
+```
+
+阶段 2 的专服注册对象命令烟测可在本地临时启用 RCON 后运行：
+
+```powershell
+.\scripts\stage2-rcon-smoke.ps1
 ```
 
 Wrapper 默认将 Gradle、Minecraft、NeoForge 依赖和运行资产缓存到仓库内的 `.gradle-home/`，避免占用系统盘；该目录不会提交。若确有需要，可在运行前显式设置 `GRADLE_USER_HOME` 覆盖此行为。

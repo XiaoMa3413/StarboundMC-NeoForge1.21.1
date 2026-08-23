@@ -16,8 +16,8 @@ base {
     archivesName = mod_id
 }
 
-// Stage 1 compiles the migrated entry point and registry layer. Gameplay
-// implementations remain isolated until their dedicated migration stages.
+// Stages 1-2 compile the migrated registry and basic object layers. Systems
+// that depend on networking, data components or worldgen remain isolated.
 sourceSets {
     main {
         java {
@@ -27,6 +27,16 @@ sourceSets {
             include 'com/starboundmc/block/ModBlockEntities.java'
             include 'com/starboundmc/item/ModItems.java'
             include 'com/starboundmc/entity/ModEntities.java'
+            include 'com/starboundmc/entity/SeatEntity.java'
+            include 'com/starboundmc/block/CaptainChairBlock.java'
+            include 'com/starboundmc/block/ShipEngineBlock.java'
+            include 'com/starboundmc/block/Stage2Blocks.java'
+            include 'com/starboundmc/menu/ShipConsoleMenu.java'
+            include 'com/starboundmc/menu/ShipCrateMenu.java'
+            include 'com/starboundmc/menu/TeleporterMenu.java'
+            include 'com/starboundmc/client/Stage2ClientRegistrar.java'
+            include 'com/starboundmc/client/Stage2MenuScreen.java'
+            include 'com/starboundmc/client/SeatRenderer.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'

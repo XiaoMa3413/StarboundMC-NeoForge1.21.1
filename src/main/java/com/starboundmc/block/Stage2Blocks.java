@@ -1,0 +1,296 @@
+package com.starboundmc.block;
+
+import com.mojang.serialization.MapCodec;
+import com.starboundmc.block.ModBlockEntities.Stage2ShipCrateBlockEntity;
+import com.starboundmc.menu.ModMenus;
+import com.starboundmc.menu.ShipConsoleMenu;
+import com.starboundmc.menu.ShipCrateMenu;
+import com.starboundmc.menu.TeleporterMenu;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.phys.BlockHitResult;
+
+/**
+ * Stage 2 block implementations for systems whose full behavior belongs to a
+ * later migration stage. The legacy Forge classes remain untouched beside
+ * these adapters and will replace them when their dependencies are migrated.
+ */
+public final class Stage2Blocks {
+    private Stage2Blocks() {
+    }
+
+    private abstract static class FacingBlock extends Block {
+        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+        FacingBlock(Properties properties) {
+            super(properties);
+            registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        }
+
+        @Override
+        protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+            builder.add(FACING);
+        }
+
+        @Override
+        public BlockState getStateForPlacement(BlockPlaceContext context) {
+            return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        }
+    }
+
+    private abstract static class FacingEntityBlock extends BaseEntityBlock {
+        static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+        FacingEntityBlock(Properties properties) {
+            super(properties);
+            registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
+        }
+
+        @Override
+        protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+            builder.add(FACING);
+        }
+
+        @Override
+        public BlockState getStateForPlacement(BlockPlaceContext context) {
+            return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        }
+
+        @Override
+        protected RenderShape getRenderShape(BlockState state) {
+            return RenderShape.MODEL;
+        }
+    }
+
+    public static final class Workbench extends FacingBlock {
+        public static final MapCodec<Workbench> CODEC = simpleCodec(Workbench::new);
+
+        public Workbench(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends Block> codec() {
+            return CODEC;
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new ModMenus.Stage2UpgradeMenu(containerId),
+                        Component.translatable("container.starboundmc.matter_manipulator_workbench")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+    }
+
+    public static final class ShipConsole extends FacingBlock {
+        public static final MapCodec<ShipConsole> CODEC = simpleCodec(ShipConsole::new);
+
+        public ShipConsole(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends Block> codec() {
+            return CODEC;
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new ShipConsoleMenu(containerId, inventory,
+                                ContainerLevelAccess.create(level, pos)),
+                        Component.translatable("container.starboundmc.ship_console")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+    }
+
+    public static final class Teleporter extends Block {
+        public static final MapCodec<Teleporter> CODEC = simpleCodec(Teleporter::new);
+
+        public Teleporter(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends Block> codec() {
+            return CODEC;
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new TeleporterMenu(containerId, inventory,
+                                ContainerLevelAccess.create(level, pos), pos),
+                        Component.translatable("container.starboundmc.teleporter")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+    }
+
+    public static final class ShipCrate extends FacingEntityBlock {
+        public static final MapCodec<ShipCrate> CODEC = simpleCodec(ShipCrate::new);
+
+        public ShipCrate(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends BaseEntityBlock> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+            return new Stage2ShipCrateBlockEntity(pos, state);
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            if (player instanceof ServerPlayer serverPlayer
+                    && level.getBlockEntity(pos) instanceof Stage2ShipCrateBlockEntity crate) {
+                serverPlayer.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignored) -> new ShipCrateMenu(containerId, inventory,
+                                crate.container(), ContainerLevelAccess.create(level, pos), crate::setChanged),
+                        Component.translatable("container.starboundmc.ship_crate")));
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
+
+        @Override
+        protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+            if (!state.is(newState.getBlock())
+                    && level.getBlockEntity(pos) instanceof Stage2ShipCrateBlockEntity crate) {
+                Containers.dropContents(level, pos, crate.container());
+            }
+            super.onRemove(state, level, pos, newState, moving);
+        }
+    }
+
+    public static final class ShipDoor extends BaseEntityBlock {
+        public static final MapCodec<ShipDoor> CODEC = simpleCodec(ShipDoor::new);
+        public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
+        public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+
+        public ShipDoor(Properties properties) {
+            super(properties);
+            registerDefaultState(stateDefinition.any().setValue(OPEN, false).setValue(FACING, Direction.NORTH));
+        }
+
+        @Override
+        protected MapCodec<? extends BaseEntityBlock> codec() {
+            return CODEC;
+        }
+
+        @Override
+        protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+            builder.add(OPEN, FACING);
+        }
+
+        @Override
+        public BlockState getStateForPlacement(BlockPlaceContext context) {
+            return defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        }
+
+        @Override
+        public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+            return new ModBlockEntities.Stage2ShipDoorBlockEntity(pos, state);
+        }
+
+        @Override
+        protected RenderShape getRenderShape(BlockState state) {
+            return RenderShape.MODEL;
+        }
+    }
+
+    public static final class FuelController extends FacingEntityBlock {
+        public static final MapCodec<FuelController> CODEC = simpleCodec(FuelController::new);
+
+        public FuelController(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends BaseEntityBlock> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+            return new ModBlockEntities.Stage2FuelControllerBlockEntity(pos, state);
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            return openShell(level, player, ModMenus.Stage2FuelControllerMenu::new,
+                    "container.starboundmc.fuel_controller");
+        }
+    }
+
+    public static final class AlloyFurnace extends FacingEntityBlock {
+        public static final MapCodec<AlloyFurnace> CODEC = simpleCodec(AlloyFurnace::new);
+
+        public AlloyFurnace(Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected MapCodec<? extends BaseEntityBlock> codec() {
+            return CODEC;
+        }
+
+        @Override
+        public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+            return new ModBlockEntities.Stage2AlloyFurnaceBlockEntity(pos, state);
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                BlockHitResult hit) {
+            return openShell(level, player, ModMenus.Stage2AlloyFurnaceMenu::new,
+                    "container.starboundmc.titanium_alloy_furnace");
+        }
+    }
+
+    private static InteractionResult openShell(Level level, Player player, ShellMenuFactory factory, String titleKey) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.openMenu(new SimpleMenuProvider(
+                    (containerId, inventory, ignored) -> factory.create(containerId), Component.translatable(titleKey)));
+        }
+        return InteractionResult.sidedSuccess(level.isClientSide);
+    }
+
+    @FunctionalInterface
+    private interface ShellMenuFactory {
+        net.minecraft.world.inventory.AbstractContainerMenu create(int containerId);
+    }
+}

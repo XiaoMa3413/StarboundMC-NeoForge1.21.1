@@ -311,6 +311,16 @@ java -version
 
 验收：所有注册对象可通过命令获得/放置；客户端和专用服务器均无类加载错误。
 
+实施状态（2026-08-24）：**已完成**。
+
+- 普通材料、矿石和全部 BlockItem 保持已发布 ID；真实 `SeatEntity`、`CaptainChairBlock`、`ShipEngineBlock` 已按 1.21.1 的 Codec、同步数据 Builder 和乘客位置接口迁移。
+- 新增阶段 2 方块适配层，为工作台、传送器、飞船控制台、货箱、舱门、燃料控制器和合金炉恢复朝向、菜单入口及方块实体创建，同时保留旁边的旧 Forge 完整实现，等待其网络、持久化和世界逻辑阶段接替，未删除旧玩法源码。
+- `ShipConsoleMenu`、`ShipCrateMenu` 和 `TeleporterMenu` 已接回真实容器实现；升级、合金炉和燃料菜单保留明确命名的阶段 2 壳，分别等待 Data Components、方块实体和跃迁系统迁移。
+- 客户端通过 `Dist.CLIENT` 边界注册 6 个基础 Screen 和不可见座椅渲染器；专用服务器未扫描或加载这些客户端类。
+- 4 个方块实体均可随方块创建并写出稳定类型 ID；货箱壳实现 54 格 `Container`、HolderLookup 感知的物品读写和菜单移动逻辑，后续阶段 5 再接回完整方块实体实现。
+- 新增阶段 2 接线契约测试和可重复使用的 RCON 烟测脚本。`gradlew.bat test build` 成功；专服用命令验证 13 个方块可放置、23 个物品可写入容器、4 个方块实体 ID 正确、`starboundmc:seat` 可生成，清理测试块后正常保存并以 0 退出。
+- 客户端完成模组加载与资源重载，Screen/Renderer 订阅无异常；验证后按 PID 停止，因此 `runClient` 任务本身以非零退出。缺失模型和音效仍属于阶段 10。
+
 ### 阶段 3：网络系统整体重写
 
 目标：替换 Forge `SimpleChannel`，恢复全部客户端/服务端通信。
@@ -588,7 +598,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 生成并合并 Minecraft 1.21.1 / NeoForge 21.1.x ModDevGradle 骨架。
 - [x] 建立空模组客户端、服务端和构建基线。
 - [x] 完成入口、注册和事件迁移。
-- [ ] 完成基础对象和菜单迁移。
+- [x] 完成基础对象和菜单迁移。
 - [ ] 完成 Payload 网络迁移。
 - [ ] 完成物质枪 Data Components 迁移。
 - [ ] 完成持久化和方块实体迁移。

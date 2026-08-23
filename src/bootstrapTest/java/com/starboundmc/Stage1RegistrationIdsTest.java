@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 final class Stage1RegistrationIdsTest {
     @Test
     void keepsPublishedBlockIds() throws IOException {
-        assertSourceIds("block/ModBlocks.java", "(?:registerCopy|registerSimpleBlock)\\(\\s*\"([^\"]+)\"", Set.of(
+        assertSourceIds("block/ModBlocks.java", "(?:registerCopy|registerSimpleBlock|registerBlock)\\(\\s*\"([^\"]+)\"", Set.of(
                 "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
                 "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
                 "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace"

@@ -4,9 +4,11 @@ import com.mojang.logging.LogUtils;
 import com.starboundmc.block.CaptainChairBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 
 /**
@@ -56,9 +58,9 @@ public class SeatEntity extends Entity
     }
 
     @Override
-    public double getPassengersRidingOffset()
+    public Vec3 getPassengerRidingPosition(Entity passenger)
     {
-        return 0.3D;
+        return this.position().add(0.0D, 0.3D, 0.0D);
     }
 
     @Override
@@ -74,7 +76,7 @@ public class SeatEntity extends Entity
     }
 
     @Override
-    protected void defineSynchedData()
+    protected void defineSynchedData(SynchedEntityData.Builder builder)
     {
         // Entity's constructor already registered the shared-flags data parameter
         // (id 0) before this hook runs, so a direct Entity subclass must leave

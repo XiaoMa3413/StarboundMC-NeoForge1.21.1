@@ -12,28 +12,29 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModMenus {
-    // Stage 2 restores the real inventory/menu behavior behind these stable IDs.
+    // Network/data-dependent menus retain small shells until their dedicated
+    // stages; independent menus use their real container implementations.
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, StarboundMC.MODID);
 
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1UpgradeMenu>> UPGRADE_MENU =
+    public static final DeferredHolder<MenuType<?>, MenuType<Stage2UpgradeMenu>> UPGRADE_MENU =
             MENUS.register("upgrade_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1UpgradeMenu(id)));
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1ShipConsoleMenu>> SHIP_CONSOLE_MENU =
+                    (id, inventory, buffer) -> new Stage2UpgradeMenu(id)));
+    public static final DeferredHolder<MenuType<?>, MenuType<ShipConsoleMenu>> SHIP_CONSOLE_MENU =
             MENUS.register("ship_console_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1ShipConsoleMenu(id)));
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1ShipCrateMenu>> SHIP_CRATE_MENU =
+                    (id, inventory, buffer) -> new ShipConsoleMenu(id, inventory)));
+    public static final DeferredHolder<MenuType<?>, MenuType<ShipCrateMenu>> SHIP_CRATE_MENU =
             MENUS.register("ship_crate_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1ShipCrateMenu(id)));
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1TeleporterMenu>> TELEPORTER_MENU =
+                    (id, inventory, buffer) -> new ShipCrateMenu(id, inventory)));
+    public static final DeferredHolder<MenuType<?>, MenuType<TeleporterMenu>> TELEPORTER_MENU =
             MENUS.register("teleporter_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1TeleporterMenu(id)));
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1AlloyFurnaceMenu>> ALLOY_FURNACE_MENU =
+                    (id, inventory, buffer) -> new TeleporterMenu(id, inventory)));
+    public static final DeferredHolder<MenuType<?>, MenuType<Stage2AlloyFurnaceMenu>> ALLOY_FURNACE_MENU =
             MENUS.register("alloy_furnace_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1AlloyFurnaceMenu(id)));
-    public static final DeferredHolder<MenuType<?>, MenuType<Stage1FuelControllerMenu>> FUEL_CONTROLLER_MENU =
+                    (id, inventory, buffer) -> new Stage2AlloyFurnaceMenu(id)));
+    public static final DeferredHolder<MenuType<?>, MenuType<Stage2FuelControllerMenu>> FUEL_CONTROLLER_MENU =
             MENUS.register("fuel_controller_menu", () -> IMenuTypeExtension.create(
-                    (id, inventory, buffer) -> new Stage1FuelControllerMenu(id)));
+                    (id, inventory, buffer) -> new Stage2FuelControllerMenu(id)));
 
     private ModMenus() {
     }
@@ -42,8 +43,8 @@ public final class ModMenus {
         MENUS.register(modEventBus);
     }
 
-    private abstract static class Stage1Menu extends AbstractContainerMenu {
-        protected Stage1Menu(MenuType<?> type, int containerId) {
+    private abstract static class Stage2Menu extends AbstractContainerMenu {
+        protected Stage2Menu(MenuType<?> type, int containerId) {
             super(type, containerId);
         }
 
@@ -58,38 +59,20 @@ public final class ModMenus {
         }
     }
 
-    public static final class Stage1UpgradeMenu extends Stage1Menu {
-        private Stage1UpgradeMenu(int containerId) {
+    public static final class Stage2UpgradeMenu extends Stage2Menu {
+        public Stage2UpgradeMenu(int containerId) {
             super(UPGRADE_MENU.get(), containerId);
         }
     }
 
-    public static final class Stage1ShipConsoleMenu extends Stage1Menu {
-        private Stage1ShipConsoleMenu(int containerId) {
-            super(SHIP_CONSOLE_MENU.get(), containerId);
-        }
-    }
-
-    public static final class Stage1ShipCrateMenu extends Stage1Menu {
-        private Stage1ShipCrateMenu(int containerId) {
-            super(SHIP_CRATE_MENU.get(), containerId);
-        }
-    }
-
-    public static final class Stage1TeleporterMenu extends Stage1Menu {
-        private Stage1TeleporterMenu(int containerId) {
-            super(TELEPORTER_MENU.get(), containerId);
-        }
-    }
-
-    public static final class Stage1AlloyFurnaceMenu extends Stage1Menu {
-        private Stage1AlloyFurnaceMenu(int containerId) {
+    public static final class Stage2AlloyFurnaceMenu extends Stage2Menu {
+        public Stage2AlloyFurnaceMenu(int containerId) {
             super(ALLOY_FURNACE_MENU.get(), containerId);
         }
     }
 
-    public static final class Stage1FuelControllerMenu extends Stage1Menu {
-        private Stage1FuelControllerMenu(int containerId) {
+    public static final class Stage2FuelControllerMenu extends Stage2Menu {
+        public Stage2FuelControllerMenu(int containerId) {
             super(FUEL_CONTROLLER_MENU.get(), containerId);
         }
     }
