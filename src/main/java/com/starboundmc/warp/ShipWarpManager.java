@@ -9,7 +9,7 @@ import com.starboundmc.network.WarpStartPacket;
 import com.starboundmc.sound.ModSounds;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.world.Planet;
-import com.starboundmc.world.ShipDimensions;
+import com.starboundmc.world.Stage6TravelService;
 import com.starboundmc.world.starmap.PlanetEntry;
 import com.starboundmc.world.starmap.StarSystem;
 import com.starboundmc.world.starmap.StarSystems;
@@ -28,9 +28,9 @@ public final class ShipWarpManager
     /** Compatibility constants; flight duration now belongs to each controller. */
     public static final int WARP_TICKS = ShipFlightController.LONG_ROUTE_MIN_TICKS;
     public static final int TURN_TICKS = ShipFlightController.DEPART_TICKS;
-    public static final int MAX_FUEL = 1000;
-    public static final int WARP_FUEL_COST = 20;
-    public static final int CROSS_SYSTEM_FUEL_COST = 100;
+    public static final int MAX_FUEL = ShipFuelService.MAX_FUEL;
+    public static final int WARP_FUEL_COST = ShipFuelService.WARP_FUEL_COST;
+    public static final int CROSS_SYSTEM_FUEL_COST = ShipFuelService.CROSS_SYSTEM_FUEL_COST;
     private static final int SNAPSHOT_INTERVAL = 5;
 
     private static ShipStateData state;
@@ -43,6 +43,8 @@ public final class ShipWarpManager
 
     public static void init(MinecraftServer server)
     {
+        revision = Math.max(1L, server.overworld().getGameTime());
+        broadcastAge = 0;
         state = ShipStateData.get(server);
         if (state.getCurrentEntryId() == null) state.setCurrentEntryId(defaultEntryIdFor(state.getPlanet()));
         if (state.isFlightActive())
@@ -75,10 +77,12 @@ public final class ShipWarpManager
 
     public static boolean startWarp(ServerPlayer player, String entryId)
     {
-        if (flight != null || state == null || !player.level().dimension().equals(ShipDimensions.SHIP_LEVEL)) return false;
+        MinecraftServer server = player.getServer();
+        if (server == null || flight != null || state == null
+                || !player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)) return false;
         PlanetEntry entry = StarSystems.entryById(entryId);
         if (entry == null || !entry.isReachable() || entry.getDestination() == getCurrentPlanet()) return false;
-        ServerLevel ship = player.getServer() == null ? null : player.getServer().getLevel(ShipDimensions.SHIP_LEVEL);
+        ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship == null) return false;
         int cost = warpFuelCost(state.getCurrentEntryId(), entryId);
         if (getFuel() < cost)
@@ -92,7 +96,7 @@ public final class ShipWarpManager
         revision++;
         broadcastAge = 0;
         persistFlight();
-        ship.playSound(null, ShipDimensions.SHIP_POS, ModSounds.WARP_START.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        ship.playSound(null, Stage6TravelService.SHIP_POS, ModSounds.WARP_START.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         player.displayClientMessage(Component.translatable("message.starboundmc.warp.start", Component.translatable(entry.getNameKey())), true);
         // A compatibility cue only: snapshots own position and progression.
         ModNetwork.sendToPlayersInDimension(ship,
@@ -105,7 +109,7 @@ public final class ShipWarpManager
     public static void tick(MinecraftServer server)
     {
         if (flight == null) return;
-        ServerLevel ship = server.getLevel(ShipDimensions.SHIP_LEVEL);
+        ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship == null) return;
         FlightPhase previous = flight.getPhase();
         flight.tick();
@@ -130,13 +134,17 @@ public final class ShipWarpManager
         ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), MAX_FUEL));
         ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
                 new ArrayList<>(state == null ? List.of() : state.getVisited()), state == null ? null : state.getCurrentEntryId()));
-        ServerLevel ship = player.getServer() == null ? null : player.getServer().getLevel(ShipDimensions.SHIP_LEVEL);
+        ServerLevel ship = player.getServer() == null ? null
+                : player.getServer().getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship != null) ModNetwork.sendToPlayer(player, packet(ship));
     }
 
     public static int addFuel(int amount, ServerLevel ship)
     {
-        int before = getFuel(); state.setFuel(before + Math.max(0, amount)); int added = getFuel() - before;
+        if (state == null) return 0;
+        int before = getFuel();
+        state.setFuel(before + Math.max(0, amount));
+        int added = getFuel() - before;
         if (added > 0 && ship != null)
             ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), MAX_FUEL));
         return added;

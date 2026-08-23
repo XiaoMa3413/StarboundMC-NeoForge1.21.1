@@ -18,6 +18,19 @@ public final class ClientNetworkState {
     private ClientNetworkState() {
     }
 
+    public static void resetConnectionState() {
+        planetId = "lush";
+        warpTargetId = null;
+        warpEntryId = null;
+        warpDurationTicks = 0;
+        fuel = 0;
+        maxFuel = 1;
+        visited = List.of();
+        currentEntryId = null;
+        teleporterList = new TeleporterListPacket(List.of(), "");
+        flight = null;
+    }
+
     static void apply(SyncPlanetPacket payload) {
         planetId = payload.planetId();
     }

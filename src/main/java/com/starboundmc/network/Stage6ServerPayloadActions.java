@@ -11,7 +11,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
 /** Stage 6 gameplay actions attached to the payload authority boundary. */
-public final class Stage6ServerPayloadActions implements ServerPayloadActions {
+public class Stage6ServerPayloadActions implements ServerPayloadActions {
     @Override
     public void upgradeMatterManipulator(ServerPlayer player, int track) {
         if (player.containerMenu instanceof UpgradeMenu menu && menu.stillValid(player)) {

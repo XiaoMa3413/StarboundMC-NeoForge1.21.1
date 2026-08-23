@@ -66,7 +66,7 @@ public final class ShipFlightController
         double t = SHORT_ROUTE_TICKS + (distance - LONG_ROUTE_MIN) / 40.0;
         return (int) Math.round(Math.max(SHORT_ROUTE_TICKS + 1, Math.min(LONG_ROUTE_MAX_TICKS, t)));
     }
-    public void tick(){if(isLanded())return;elapsedTicks=Math.min(totalTicks,elapsedTicks+1);UniversePosition old=pos;pos=sampleUniversePosition(from,target,totalTicks,elapsedTicks);velocity=old.deltaTo(pos).scale(TPS);phase=samplePhase(from,target,totalTicks,elapsedTicks);updatePose();}
+    public void tick(){if(isLanded())return;elapsedTicks=Math.min(totalTicks,elapsedTicks+1);UniversePosition old=pos;pos=sampleUniversePosition(from,target,totalTicks,elapsedTicks);velocity=isLanded()?new UniverseDelta(0.0,0.0,0.0):old.deltaTo(pos).scale(TPS);phase=samplePhase(from,target,totalTicks,elapsedTicks);updatePose();}
     private void updatePose(){yaw=sampleYaw(from,target,totalTicks,elapsedTicks);pitch=samplePitch(from,target,totalTicks,elapsedTicks);}
 
     private static boolean isShort(Planet a,Planet b){return ShipSpace.flightDistance(a,b)<=LONG_ROUTE_MIN;}
@@ -75,7 +75,11 @@ public final class ShipFlightController
     public static FlightPhase samplePhase(Planet from,Planet to,int total,double tick)
     {
         if(tick<TURN_TICKS)return FlightPhase.TURN;
-        if(tick<travelStart())return FlightPhase.ACCELERATE;
+        // The 11-second moon route exactly equals the authored manoeuvre
+        // budgets. Reserve one tick for CRUISE instead of skipping the travel
+        // phase entirely, while keeping the total duration unchanged.
+        int phaseTravelStart=Math.min(travelStart(),decelStart(total)-1);
+        if(tick<phaseTravelStart)return FlightPhase.ACCELERATE;
         if(tick<decelStart(total))return isShort(from,to)?FlightPhase.CRUISE:FlightPhase.HYPERSPACE;
         if(tick<total-ARRIVE_TICKS)return FlightPhase.DECELERATE;
         return FlightPhase.ARRIVE;

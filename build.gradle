@@ -38,6 +38,7 @@ sourceSets {
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
             include 'com/starboundmc/event/SpawnHandler.java'
             include 'com/starboundmc/event/NetherPortalHandler.java'
+            include 'com/starboundmc/event/ShipWarpEvents.java'
             include 'com/starboundmc/entity/ModEntities.java'
             include 'com/starboundmc/entity/SeatEntity.java'
             include 'com/starboundmc/block/CaptainChairBlock.java'
@@ -60,6 +61,7 @@ sourceSets {
             include 'com/starboundmc/client/AlloyFurnaceScreen.java'
             include 'com/starboundmc/client/ModKeyBindings.java'
             include 'com/starboundmc/client/ModKeyEvents.java'
+            include 'com/starboundmc/client/ClientConnectionEvents.java'
             include 'com/starboundmc/client/PixelButton.java'
             include 'com/starboundmc/client/UiStyle.java'
             include 'com/starboundmc/network/*.java'
@@ -69,10 +71,15 @@ sourceSets {
             include 'com/starboundmc/warp/FlightPhase.java'
             include 'com/starboundmc/warp/ShipStateData.java'
             include 'com/starboundmc/warp/ShipFuelService.java'
+            include 'com/starboundmc/warp/UniverseRouteFrame.java'
+            include 'com/starboundmc/warp/ShipSpace.java'
+            include 'com/starboundmc/warp/ShipFlightController.java'
+            include 'com/starboundmc/warp/ShipWarpManager.java'
             include 'com/starboundmc/world/Planet.java'
             include 'com/starboundmc/world/ShipTemplatePlacer.java'
             include 'com/starboundmc/world/TeleporterManager.java'
             include 'com/starboundmc/world/Stage6TravelService.java'
+            include 'com/starboundmc/world/starmap/*.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'
@@ -84,7 +91,12 @@ sourceSets {
         }
     }
     test {
-        java.setSrcDirs(['src/bootstrapTest/java'])
+        java {
+            setSrcDirs(['src/bootstrapTest/java', 'src/test/java'])
+            include 'com/starboundmc/*.java'
+            include 'com/starboundmc/warp/*.java'
+            include 'com/starboundmc/world/starmap/*.java'
+        }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath

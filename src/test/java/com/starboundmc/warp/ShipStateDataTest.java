@@ -5,6 +5,7 @@ import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.world.Planet;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.RegistryAccess;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +39,7 @@ class ShipStateDataTest
         original.setFlight(true, "test:target", 17, 90, FlightPhase.HYPERSPACE,
                 expectedPosition, expectedVelocity, 22.0, -3.0, 1.5);
 
-        ShipStateData restored = ShipStateData.load(original.save(new CompoundTag()));
+        ShipStateData restored = ShipStateData.load(original.save(new CompoundTag(), RegistryAccess.EMPTY));
 
         assertEquals(expectedPosition, restored.getShipUniversePosition());
         assertEquals(expectedVelocity, restored.getShipVelocity());
@@ -71,7 +72,7 @@ class ShipStateDataTest
                 UniversePosition.of(new SectorCoordinate(1L, -1L, 0L), 25.0, -40.0, 102.0),
                 new UniverseDelta(0.0, 0.0, 0.0), 0.0, 0.0, 0.0);
 
-        CompoundTag saved = data.save(new CompoundTag());
+        CompoundTag saved = data.save(new CompoundTag(), RegistryAccess.EMPTY);
 
         assertTrue(saved.contains("ShipX"));
         assertTrue(saved.contains("ShipY"));
