@@ -1,0 +1,34 @@
+### Local migration/build caches (kept on this drive) ###
+.gradle/
+.gradle-home/
+build/
+repo/
+run/
+run-*/
+
+### Generated resources ###
+src/generated/**/.cache/
+
+### IntelliJ IDEA ###
+.idea/
+.run/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse ###
+.apt_generated/
+.classpath
+.eclipse/
+.factorypath
+.project
+.settings/
+bin/
+
+### VS Code ###
+.vscode/
+
+### OS files ###
+.DS_Store
+Thumbs.db

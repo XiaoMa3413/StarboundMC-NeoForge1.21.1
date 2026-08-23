@@ -1,0 +1,7 @@
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+src/generated/**/.cache/* text eol=lf
+src/generated/**/*.json text eol=lf
+# Preserve intentional Markdown hard breaks in the read-only legacy snapshot.
+docs/legacy-forge/** whitespace=-blank-at-eol
