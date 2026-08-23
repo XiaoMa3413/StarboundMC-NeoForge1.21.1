@@ -3,11 +3,15 @@ package com.starboundmc.world;
 import com.mojang.logging.LogUtils;
 import com.starboundmc.StarboundMC;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -40,15 +44,17 @@ public class ShipTemplatePlacer
     public static final BlockPos TEMPLATE_ORIGIN = new BlockPos(0, 102, 0);
 
     private static final String DATA_NAME = "starboundmc_ship_template";
+    private static final ResourceKey<Level> SHIP_LEVEL = ResourceKey.create(
+            Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "ship"));
 
     public static void placeOnServerStart(MinecraftServer server)
     {
-        ServerLevel ship = server.getLevel(ShipDimensions.SHIP_LEVEL);
+        ServerLevel ship = server.getLevel(SHIP_LEVEL);
         if (ship == null)
             return;
 
         ShipTemplateData data = ship.getDataStorage()
-                .computeIfAbsent(ShipTemplateData::load, ShipTemplateData::new, DATA_NAME);
+                .computeIfAbsent(ShipTemplateData.FACTORY, DATA_NAME);
         if (data.placed)
             return;
 
@@ -68,17 +74,24 @@ public class ShipTemplatePlacer
 
     public static class ShipTemplateData extends SavedData
     {
+        private static final SavedData.Factory<ShipTemplateData> FACTORY =
+                new SavedData.Factory<>(ShipTemplateData::new, ShipTemplateData::load);
         private boolean placed;
 
-        public static ShipTemplateData load(CompoundTag tag)
+        public static ShipTemplateData load(CompoundTag tag, HolderLookup.Provider registries)
         {
             ShipTemplateData data = new ShipTemplateData();
             data.placed = tag.getBoolean("Placed");
             return data;
         }
 
+        public static ShipTemplateData load(CompoundTag tag)
+        {
+            return load(tag, HolderLookup.Provider.create(java.util.stream.Stream.empty()));
+        }
+
         @Override
-        public CompoundTag save(CompoundTag tag)
+        public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries)
         {
             tag.putBoolean("Placed", placed);
             return tag;

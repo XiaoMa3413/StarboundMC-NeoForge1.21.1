@@ -1,7 +1,7 @@
 package com.starboundmc.block.entity;
 
 import com.starboundmc.block.ModBlockEntities;
-import com.starboundmc.block.ShipDoorBlock;
+import com.starboundmc.block.Stage2Blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -26,16 +26,16 @@ public class ShipDoorBlockEntity extends BlockEntity
             return;
         // The BOTTOM half of a paired door drives the whole door, so the two
         // halves never toggle twice or double the sound.
-        if (level.getBlockState(pos.below()).getBlock() instanceof ShipDoorBlock)
+        if (level.getBlockState(pos.below()).getBlock() instanceof Stage2Blocks.ShipDoor)
             return;
         if (level.getGameTime() % CHECK_INTERVAL != 0)
             return;
 
         boolean shouldOpen = !level.getEntitiesOfClass(Player.class, new AABB(pos).inflate(2.5)).isEmpty();
-        boolean open = state.getValue(ShipDoorBlock.OPEN);
+        boolean open = state.getValue(Stage2Blocks.ShipDoor.OPEN);
         if (shouldOpen != open)
         {
-            ShipDoorBlock.setOpen(level, pos, shouldOpen);
+            Stage2Blocks.ShipDoor.setOpen(level, pos, shouldOpen);
             level.playSound(null, pos, shouldOpen ? SoundEvents.PISTON_CONTRACT : SoundEvents.PISTON_EXTEND,
                     SoundSource.BLOCKS, 0.6F, 1.0F);
         }

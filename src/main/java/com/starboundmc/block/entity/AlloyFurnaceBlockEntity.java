@@ -3,6 +3,7 @@ package com.starboundmc.block.entity;
 import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.item.ModItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.SimpleContainer;
@@ -12,7 +13,6 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.ForgeHooks;
 
 public class AlloyFurnaceBlockEntity extends BlockEntity
 {
@@ -66,6 +66,7 @@ public class AlloyFurnaceBlockEntity extends BlockEntity
     public AlloyFurnaceBlockEntity(BlockPos pos, BlockState state)
     {
         super(ModBlockEntities.ALLOY_FURNACE.get(), pos, state);
+        inventory.addListener(ignored -> setChanged());
     }
 
     public SimpleContainer getInventory()
@@ -95,7 +96,7 @@ public class AlloyFurnaceBlockEntity extends BlockEntity
         boolean canSmelt = be.canSmelt();
         if (be.litTime == 0 && canSmelt)
         {
-            int burnTime = ForgeHooks.getBurnTime(fuel, RecipeType.SMELTING);
+            int burnTime = fuel.getBurnTime(RecipeType.SMELTING);
             if (burnTime > 0)
             {
                 be.litTime = burnTime;
@@ -186,10 +187,10 @@ public class AlloyFurnaceBlockEntity extends BlockEntity
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag)
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
     {
-        super.saveAdditional(tag);
-        tag.put("Items", inventory.createTag());
+        super.saveAdditional(tag, registries);
+        tag.put("Items", inventory.createTag(registries));
         tag.putInt("LitTime", litTime);
         tag.putInt("LitDuration", litDuration);
         tag.putInt("CookingProgress", cookingProgress);
@@ -197,13 +198,18 @@ public class AlloyFurnaceBlockEntity extends BlockEntity
     }
 
     @Override
-    public void load(CompoundTag tag)
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries)
     {
-        super.load(tag);
-        inventory.fromTag(tag.getList("Items", Tag.TAG_COMPOUND));
-        litTime = tag.getInt("LitTime");
-        litDuration = tag.getInt("LitDuration");
-        cookingProgress = tag.getInt("CookingProgress");
-        cookingTotalTime = tag.getInt("CookingTotalTime");
+        super.loadAdditional(tag, registries);
+        inventory.fromTag(tag.getList("Items", Tag.TAG_COMPOUND), registries);
+        litTime = nonNegative(tag.getInt("LitTime"));
+        litDuration = nonNegative(tag.getInt("LitDuration"));
+        cookingProgress = nonNegative(tag.getInt("CookingProgress"));
+        cookingTotalTime = nonNegative(tag.getInt("CookingTotalTime"));
+    }
+
+    private static int nonNegative(int value)
+    {
+        return Math.max(0, value);
     }
 }

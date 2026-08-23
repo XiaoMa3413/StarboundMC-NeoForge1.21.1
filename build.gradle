@@ -16,8 +16,8 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-3 compile the migrated registry, basic object and payload layers.
-// Systems that depend on data components, persistence or worldgen remain isolated.
+// Stages 1-5 compile the migrated registry, payload, data-component and
+// persistence layers. Later gameplay/worldgen/rendering systems remain isolated.
 sourceSets {
     main {
         java {
@@ -25,6 +25,10 @@ sourceSets {
             include 'com/starboundmc/StarboundMC.java'
             include 'com/starboundmc/block/ModBlocks.java'
             include 'com/starboundmc/block/ModBlockEntities.java'
+            include 'com/starboundmc/block/entity/AlloyFurnaceBlockEntity.java'
+            include 'com/starboundmc/block/entity/FuelControllerBlockEntity.java'
+            include 'com/starboundmc/block/entity/ShipCrateBlockEntity.java'
+            include 'com/starboundmc/block/entity/ShipDoorBlockEntity.java'
             include 'com/starboundmc/item/ModItems.java'
             include 'com/starboundmc/item/ModDataComponents.java'
             include 'com/starboundmc/item/MatterManipulatorUpgrades.java'
@@ -53,7 +57,10 @@ sourceSets {
             include 'com/starboundmc/space/UniverseDelta.java'
             include 'com/starboundmc/space/UniversePosition.java'
             include 'com/starboundmc/warp/FlightPhase.java'
+            include 'com/starboundmc/warp/ShipStateData.java'
             include 'com/starboundmc/world/Planet.java'
+            include 'com/starboundmc/world/ShipTemplatePlacer.java'
+            include 'com/starboundmc/world/TeleporterManager.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'

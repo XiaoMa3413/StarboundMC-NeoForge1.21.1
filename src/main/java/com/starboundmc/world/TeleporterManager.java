@@ -1,8 +1,9 @@
 package com.starboundmc.world;
 
-import com.starboundmc.block.TeleporterBlock;
+import com.starboundmc.block.ModBlocks;
 import com.starboundmc.sound.ModSounds;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
@@ -27,28 +28,42 @@ import java.util.Map;
 public class TeleporterManager extends SavedData
 {
     public static final String NAME = "starboundmc_teleporters";
+    public static final int MAX_NAME_LENGTH = 64;
+    private static final int MAX_SAVED_ENTRIES = 4096;
+    private static final int MAX_KEY_LENGTH = 256;
+    private static final SavedData.Factory<TeleporterManager> FACTORY =
+            new SavedData.Factory<>(TeleporterManager::new, TeleporterManager::load);
 
     private final Map<String, String> names = new HashMap<>();
 
     public static TeleporterManager get(MinecraftServer server)
     {
         return server.overworld().getDataStorage()
-                .computeIfAbsent(TeleporterManager::load, TeleporterManager::new, NAME);
+                .computeIfAbsent(FACTORY, NAME);
     }
 
-    public static TeleporterManager load(CompoundTag tag)
+    public static TeleporterManager load(CompoundTag tag, HolderLookup.Provider registries)
     {
         TeleporterManager manager = new TeleporterManager();
         CompoundTag entries = tag.getCompound("Entries");
         for (String key : entries.getAllKeys())
         {
-            manager.names.put(key, entries.getString(key));
+            String name = sanitizeName(entries.getString(key));
+            if (manager.names.size() >= MAX_SAVED_ENTRIES)
+                break;
+            if (key.length() <= MAX_KEY_LENGTH && name != null)
+                manager.names.put(key, name);
         }
         return manager;
     }
 
+    public static TeleporterManager load(CompoundTag tag)
+    {
+        return load(tag, HolderLookup.Provider.create(java.util.stream.Stream.empty()));
+    }
+
     @Override
-    public CompoundTag save(CompoundTag tag)
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries)
     {
         CompoundTag entries = new CompoundTag();
         for (Map.Entry<String, String> e : names.entrySet())
@@ -73,13 +88,14 @@ public class TeleporterManager extends SavedData
     {
         TeleporterManager manager = get(server);
         String key = key(dimension, pos);
-        if (name == null || name.isBlank())
+        String safeName = sanitizeName(name);
+        if (safeName == null)
         {
             manager.names.remove(key);
         }
         else
         {
-            manager.names.put(key, name.trim());
+            manager.names.put(key, safeName);
         }
         manager.setDirty();
     }
@@ -135,7 +151,10 @@ public class TeleporterManager extends SavedData
         int sep = key.indexOf('|');
         if (sep <= 0)
             return null;
-        ResourceKey<Level> dim = ResourceKey.create(Registries.DIMENSION, ResourceLocation.parse(key.substring(0, sep)));
+        ResourceLocation dimensionId = ResourceLocation.tryParse(key.substring(0, sep));
+        if (dimensionId == null)
+            return null;
+        ResourceKey<Level> dim = ResourceKey.create(Registries.DIMENSION, dimensionId);
         ServerLevel level = server.getLevel(dim);
         if (level == null)
             return null;
@@ -151,9 +170,19 @@ public class TeleporterManager extends SavedData
         {
             return null;
         }
-        if (!(level.getBlockState(pos).getBlock() instanceof TeleporterBlock))
+        if (!level.getBlockState(pos).is(ModBlocks.TELEPORTER.get()))
             return null;
         return new TeleporterEntry(dim, pos, name);
+    }
+
+    private static String sanitizeName(String name)
+    {
+        if (name == null)
+            return null;
+        String trimmed = name.trim();
+        if (trimmed.isEmpty())
+            return null;
+        return trimmed.substring(0, Math.min(MAX_NAME_LENGTH, trimmed.length()));
     }
 
     public record TeleporterEntry(ResourceKey<Level> dimension, BlockPos pos, String name)

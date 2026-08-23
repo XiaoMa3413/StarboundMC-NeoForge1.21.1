@@ -429,6 +429,16 @@ record MatterManipulatorUpgrades(int speed, int range, int mining, int fortune) 
 
 验收：保存退出、重进、服务器重启、跃迁中断恢复、容器持久化和传送器名称持久化。
 
+实施状态（2026-08-24）：**持久化层迁移已完成**。
+
+- `ship_crate`、`ship_door`、`titanium_alloy_furnace` 和 `fuel_controller` 已从阶段 2 保存壳替换为真实方块实体类型；箱子实现标准 `Container`，箱子和合金炉接回容器脏标记，门与合金炉接回服务端 ticker。
+- 箱子、燃料槽和合金炉库存全部使用带 `HolderLookup.Provider` 的 1.21.1 序列化接口；旧 `Items`、`FuelItems`、燃烧时间和烹饪进度键继续读取，无效负进度回落到安全范围。合金炉燃料时长改用 NeoForge ItemStack 扩展，不再依赖 Forge Hooks。
+- `ShipStateData`、`TeleporterManager` 和 `ShipTemplatePlacer.ShipTemplateData` 已迁移到 `SavedData.Factory` 与注册表上下文保存接口。燃料、访问记录、传送器名称、飞行计时、阶段、分区坐标、速度和姿态均有缺失/损坏值边界；完整飞行快照仍由一次 `setFlight` 调用原子更新。
+- `SeatEntity` 没有额外持久字段，保留 1.21.1 的空 `readAdditionalSaveData` / `addAdditionalSaveData` 实现；离座或座椅方块消失时仍由服务端清理实体。
+- 新增完整飞行快照往返、损坏字段安全默认、传送器名称约束、模板放置标记、真实方块实体接线和现代签名测试。当前 40 项测试全部通过，专服启动至 `Done`。
+- 自动专服保存—重启烟测确认：`ShipCrateBlockEntity` 中 5 个钻石与 `FuelControllerBlockEntity` 中 7 个煤均在 `save-all flush`、正常停服和重启后按原数量读回；烟测方块已清理。
+- 跃迁中断的真实控制器恢复、传送器命名/失效清理和燃料菜单操作分别依赖阶段 6–7 的业务接线；本阶段已验证它们所依赖的持久化格式和损坏存档回退，不提前宣称完整玩法通过。
+
 ### 阶段 6：玩法事件、菜单与传送器
 
 目标：恢复首次登录到行星探索前的完整服务端玩法。

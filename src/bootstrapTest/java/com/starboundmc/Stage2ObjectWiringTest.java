@@ -32,9 +32,12 @@ final class Stage2ObjectWiringTest {
     @Test
     void givesPlacedCrateASavedInventoryShell() throws IOException {
         String blockEntities = source("block/ModBlockEntities.java");
-        assertTrue(blockEntities.contains("new SimpleContainer(SLOT_COUNT)"));
-        assertTrue(blockEntities.contains("ContainerHelper.loadAllItems"));
-        assertTrue(blockEntities.contains("ContainerHelper.saveAllItems"));
+        assertTrue(blockEntities.contains("BlockEntityType<ShipCrateBlockEntity>"));
+        assertFalse(blockEntities.contains("Stage2ShipCrateBlockEntity"));
+
+        String crate = source("block/entity/ShipCrateBlockEntity.java");
+        assertTrue(crate.contains("container.createTag(registries)"));
+        assertTrue(crate.contains("container.fromTag(") && crate.contains("registries"));
     }
 
     private static String source(String relativePath) throws IOException {

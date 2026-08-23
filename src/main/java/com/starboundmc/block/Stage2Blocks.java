@@ -1,7 +1,10 @@
 package com.starboundmc.block;
 
 import com.mojang.serialization.MapCodec;
-import com.starboundmc.block.ModBlockEntities.Stage2ShipCrateBlockEntity;
+import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
+import com.starboundmc.block.entity.FuelControllerBlockEntity;
+import com.starboundmc.block.entity.ShipCrateBlockEntity;
+import com.starboundmc.block.entity.ShipDoorBlockEntity;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
@@ -23,6 +26,8 @@ import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -171,17 +176,17 @@ public final class Stage2Blocks {
 
         @Override
         public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-            return new Stage2ShipCrateBlockEntity(pos, state);
+            return new ShipCrateBlockEntity(pos, state);
         }
 
         @Override
         protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                 BlockHitResult hit) {
             if (player instanceof ServerPlayer serverPlayer
-                    && level.getBlockEntity(pos) instanceof Stage2ShipCrateBlockEntity crate) {
+                    && level.getBlockEntity(pos) instanceof ShipCrateBlockEntity crate) {
                 serverPlayer.openMenu(new SimpleMenuProvider(
                         (containerId, inventory, ignored) -> new ShipCrateMenu(containerId, inventory,
-                                crate.container(), ContainerLevelAccess.create(level, pos), crate::setChanged),
+                                crate.getContainer(), ContainerLevelAccess.create(level, pos), crate::setChanged),
                         Component.translatable("container.starboundmc.ship_crate")));
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
@@ -190,8 +195,8 @@ public final class Stage2Blocks {
         @Override
         protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
             if (!state.is(newState.getBlock())
-                    && level.getBlockEntity(pos) instanceof Stage2ShipCrateBlockEntity crate) {
-                Containers.dropContents(level, pos, crate.container());
+                    && level.getBlockEntity(pos) instanceof ShipCrateBlockEntity crate) {
+                Containers.dropContents(level, pos, crate.getContainer());
             }
             super.onRemove(state, level, pos, newState, moving);
         }
@@ -224,12 +229,30 @@ public final class Stage2Blocks {
 
         @Override
         public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-            return new ModBlockEntities.Stage2ShipDoorBlockEntity(pos, state);
+            return new ShipDoorBlockEntity(pos, state);
+        }
+
+        @Override
+        public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+                Level level, BlockState state, BlockEntityType<T> type) {
+            return createTickerHelper(type, ModBlockEntities.SHIP_DOOR.get(), ShipDoorBlockEntity::tick);
         }
 
         @Override
         protected RenderShape getRenderShape(BlockState state) {
             return RenderShape.MODEL;
+        }
+
+        public static void setOpen(Level level, BlockPos pos, boolean open) {
+            setOpenAt(level, pos, open);
+            setOpenAt(level, pos.above(), open);
+            setOpenAt(level, pos.below(), open);
+        }
+
+        private static void setOpenAt(Level level, BlockPos pos, boolean open) {
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof ShipDoor && state.getValue(OPEN) != open)
+                level.setBlock(pos, state.setValue(OPEN, open), 3);
         }
     }
 
@@ -247,7 +270,7 @@ public final class Stage2Blocks {
 
         @Override
         public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-            return new ModBlockEntities.Stage2FuelControllerBlockEntity(pos, state);
+            return new FuelControllerBlockEntity(pos, state);
         }
 
         @Override
@@ -272,7 +295,13 @@ public final class Stage2Blocks {
 
         @Override
         public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-            return new ModBlockEntities.Stage2AlloyFurnaceBlockEntity(pos, state);
+            return new AlloyFurnaceBlockEntity(pos, state);
+        }
+
+        @Override
+        public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+                Level level, BlockState state, BlockEntityType<T> type) {
+            return createTickerHelper(type, ModBlockEntities.ALLOY_FURNACE.get(), AlloyFurnaceBlockEntity::tick);
         }
 
         @Override

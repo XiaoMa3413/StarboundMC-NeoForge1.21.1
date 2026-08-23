@@ -4,6 +4,7 @@ import com.starboundmc.space.SectorCoordinate;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.world.Planet;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -23,9 +24,14 @@ import java.util.Set;
 public class ShipStateData extends SavedData
 {
     public static final String NAME = "starboundmc_ship";
+    public static final int MAX_FUEL = 1000;
+    private static final int MAX_VISITED_ENTRIES = 1024;
+    private static final int MAX_ENTRY_ID_LENGTH = 128;
+    private static final SavedData.Factory<ShipStateData> FACTORY =
+            new SavedData.Factory<>(ShipStateData::new, ShipStateData::load);
 
     private Planet planet = Planet.LUSH;
-    private int fuel = ShipWarpManager.MAX_FUEL;
+    private int fuel = MAX_FUEL;
     private final Set<String> visited = new LinkedHashSet<>();
     private String currentEntryId = null;
 
@@ -44,34 +50,37 @@ public class ShipStateData extends SavedData
     public static ShipStateData get(MinecraftServer server)
     {
         return server.overworld().getDataStorage()
-                .computeIfAbsent(ShipStateData::load, ShipStateData::new, NAME);
+                .computeIfAbsent(FACTORY, NAME);
     }
 
-    public static ShipStateData load(CompoundTag tag)
+    public static ShipStateData load(CompoundTag tag, HolderLookup.Provider registries)
     {
         ShipStateData data = new ShipStateData();
         data.planet = Planet.fromId(tag.getString("Planet"));
         // Old/partially-written saves may lack the Fuel tag; start them full
         // instead of reading the missing int as 0.
-        data.fuel = tag.contains("Fuel", Tag.TAG_INT) ? tag.getInt("Fuel") : ShipWarpManager.MAX_FUEL;
+        data.fuel = tag.contains("Fuel", Tag.TAG_INT)
+                ? clamp(tag.getInt("Fuel"), 0, MAX_FUEL) : MAX_FUEL;
         if (tag.contains("Visited", Tag.TAG_LIST))
         {
             ListTag list = tag.getList("Visited", Tag.TAG_STRING);
-            for (int i = 0; i < list.size(); i++)
+            for (int i = 0; i < list.size() && data.visited.size() < MAX_VISITED_ENTRIES; i++)
             {
-                data.visited.add(list.getString(i));
+                String entry = safeEntryId(list.getString(i));
+                if (entry != null)
+                    data.visited.add(entry);
             }
         }
         if (tag.contains("CurrentEntry", Tag.TAG_STRING))
         {
             String entry = tag.getString("CurrentEntry");
-            data.currentEntryId = entry.isEmpty() ? null : entry;
+            data.currentEntryId = safeEntryId(entry);
         }
         data.flightActive = tag.getBoolean("FlightActive");
-        data.flightTargetEntryId = tag.contains("FlightTarget", Tag.TAG_STRING) && !tag.getString("FlightTarget").isEmpty()
-                ? tag.getString("FlightTarget") : null;
-        data.flightElapsedTicks = tag.getInt("FlightElapsed");
-        data.flightTotalTicks = tag.getInt("FlightTotal");
+        data.flightTargetEntryId = tag.contains("FlightTarget", Tag.TAG_STRING)
+                ? safeEntryId(tag.getString("FlightTarget")) : null;
+        data.flightTotalTicks = Math.max(0, tag.getInt("FlightTotal"));
+        data.flightElapsedTicks = clamp(tag.getInt("FlightElapsed"), 0, data.flightTotalTicks);
         if (tag.contains("FlightPhaseName", Tag.TAG_STRING))
         {
             try { data.flightPhase = FlightPhase.valueOf(tag.getString("FlightPhaseName")); }
@@ -94,14 +103,27 @@ public class ShipStateData extends SavedData
                 finiteDoubleOrDefault(tag, "ShipVelocityX", 0.0),
                 finiteDoubleOrDefault(tag, "ShipVelocityY", 0.0),
                 finiteDoubleOrDefault(tag, "ShipVelocityZ", 0.0));
-        data.shipYaw = tag.contains("ShipYaw", Tag.TAG_DOUBLE) ? tag.getDouble("ShipYaw") : ShipSpace.yawDock(data.planet);
-        data.shipPitch = tag.getDouble("ShipPitch");
-        data.shipRoll = tag.getDouble("ShipRoll");
+        data.shipYaw = finiteDoubleOrDefault(tag, "ShipYaw", 0.0);
+        data.shipPitch = finiteDoubleOrDefault(tag, "ShipPitch", 0.0);
+        data.shipRoll = finiteDoubleOrDefault(tag, "ShipRoll", 0.0);
+        if (data.flightActive && (data.flightTargetEntryId == null || data.flightTotalTicks == 0))
+        {
+            data.flightActive = false;
+            data.flightTargetEntryId = null;
+            data.flightElapsedTicks = 0;
+            data.flightTotalTicks = 0;
+            data.flightPhase = FlightPhase.DOCKED;
+        }
         return data;
     }
 
+    public static ShipStateData load(CompoundTag tag)
+    {
+        return load(tag, HolderLookup.Provider.create(java.util.stream.Stream.empty()));
+    }
+
     @Override
-    public CompoundTag save(CompoundTag tag)
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries)
     {
         tag.putString("Planet", planet.getId());
         tag.putInt("Fuel", fuel);
@@ -156,13 +178,13 @@ public class ShipStateData extends SavedData
 
     public void setFuel(int fuel)
     {
-        this.fuel = Math.max(0, Math.min(ShipWarpManager.MAX_FUEL, fuel));
+        this.fuel = clamp(fuel, 0, MAX_FUEL);
         this.setDirty();
     }
 
     public Set<String> getVisited()
     {
-        return visited;
+        return java.util.Collections.unmodifiableSet(visited);
     }
 
     public boolean isVisited(String entryId)
@@ -172,7 +194,8 @@ public class ShipStateData extends SavedData
 
     public void markVisited(String entryId)
     {
-        if (entryId != null && visited.add(entryId))
+        String safeEntry = safeEntryId(entryId);
+        if (safeEntry != null && visited.size() < MAX_VISITED_ENTRIES && visited.add(safeEntry))
         {
             this.setDirty();
         }
@@ -185,7 +208,7 @@ public class ShipStateData extends SavedData
 
     public void setCurrentEntryId(String entryId)
     {
-        this.currentEntryId = entryId;
+        this.currentEntryId = safeEntryId(entryId);
         this.setDirty();
     }
 
@@ -240,15 +263,15 @@ public class ShipStateData extends SavedData
                           double yaw, double pitch, double roll)
     {
         this.flightActive = active;
-        this.flightTargetEntryId = targetEntryId;
-        this.flightElapsedTicks = Math.max(0, elapsedTicks);
+        this.flightTargetEntryId = safeEntryId(targetEntryId);
         this.flightTotalTicks = Math.max(0, totalTicks);
+        this.flightElapsedTicks = clamp(elapsedTicks, 0, this.flightTotalTicks);
         this.flightPhase = phase == null ? FlightPhase.DOCKED : phase;
         this.shipPosition = java.util.Objects.requireNonNull(position, "position");
         this.shipVelocity = java.util.Objects.requireNonNull(velocity, "velocity");
-        this.shipYaw = yaw;
-        this.shipPitch = pitch;
-        this.shipRoll = roll;
+        this.shipYaw = finiteOrDefault(yaw, 0.0);
+        this.shipPitch = finiteOrDefault(pitch, 0.0);
+        this.shipRoll = finiteOrDefault(roll, 0.0);
         this.setDirty();
     }
 
@@ -269,7 +292,7 @@ public class ShipStateData extends SavedData
                         tag.getDouble("ShipLocalX"), tag.getDouble("ShipLocalY"), tag.getDouble("ShipLocalZ"));
             }
 
-            UniversePosition dock = ShipSpace.universeDock(planet);
+            UniversePosition dock = defaultDock(planet);
             boolean hasLegacyPosition = tag.contains("ShipX", Tag.TAG_DOUBLE)
                     || tag.contains("ShipY", Tag.TAG_DOUBLE)
                     || tag.contains("ShipZ", Tag.TAG_DOUBLE);
@@ -282,7 +305,7 @@ public class ShipStateData extends SavedData
         }
         catch (IllegalArgumentException | ArithmeticException ignored)
         {
-            return ShipSpace.universeDock(planet);
+            return defaultDock(planet);
         }
     }
 
@@ -297,5 +320,28 @@ public class ShipStateData extends SavedData
     private static double legacyCoordinate(long sector, double local)
     {
         return (double) sector * UniversePosition.SECTOR_SIZE + local;
+    }
+
+    private static UniversePosition defaultDock(Planet planet)
+    {
+        return UniversePosition.of(0.0, 102.0, 0.0);
+    }
+
+    private static String safeEntryId(String value)
+    {
+        if (value == null)
+            return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() || trimmed.length() > MAX_ENTRY_ID_LENGTH ? null : trimmed;
+    }
+
+    private static int clamp(int value, int minimum, int maximum)
+    {
+        return Math.max(minimum, Math.min(maximum, value));
+    }
+
+    private static double finiteOrDefault(double value, double fallback)
+    {
+        return Double.isFinite(value) ? value : fallback;
     }
 }

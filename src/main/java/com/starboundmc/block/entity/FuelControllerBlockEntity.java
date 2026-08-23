@@ -1,8 +1,8 @@
 package com.starboundmc.block.entity;
 
 import com.starboundmc.block.ModBlockEntities;
-import com.starboundmc.menu.FuelControllerMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -18,7 +18,8 @@ import net.minecraft.world.level.block.state.BlockState;
  */
 public class FuelControllerBlockEntity extends BlockEntity implements Container
 {
-    private final ItemStack[] items = new ItemStack[FuelControllerMenu.FUEL_SLOTS];
+    public static final int FUEL_SLOTS = 5;
+    private final ItemStack[] items = new ItemStack[FUEL_SLOTS];
 
     public FuelControllerBlockEntity(BlockPos pos, BlockState state)
     {
@@ -74,6 +75,8 @@ public class FuelControllerBlockEntity extends BlockEntity implements Container
         {
             ItemStack stack = this.items[index];
             this.items[index] = ItemStack.EMPTY;
+            if (!stack.isEmpty())
+                this.setChanged();
             return stack;
         }
         return ItemStack.EMPTY;
@@ -117,27 +120,29 @@ public class FuelControllerBlockEntity extends BlockEntity implements Container
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag)
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries)
     {
-        super.saveAdditional(tag);
+        super.saveAdditional(tag, registries);
         ListTag list = new ListTag();
         for (ItemStack stack : this.items)
         {
-            list.add(stack.save(new CompoundTag()));
+            list.add(stack.saveOptional(registries));
         }
         tag.put("FuelItems", list);
     }
 
     @Override
-    public void load(CompoundTag tag)
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries)
     {
-        super.load(tag);
+        super.loadAdditional(tag, registries);
+        for (int i = 0; i < this.items.length; i++)
+            this.items[i] = ItemStack.EMPTY;
         if (tag.contains("FuelItems", Tag.TAG_LIST))
         {
             ListTag list = tag.getList("FuelItems", Tag.TAG_COMPOUND);
             for (int i = 0; i < this.items.length && i < list.size(); i++)
             {
-                this.items[i] = ItemStack.of(list.getCompound(i));
+                this.items[i] = ItemStack.parseOptional(registries, list.getCompound(i));
             }
         }
     }
