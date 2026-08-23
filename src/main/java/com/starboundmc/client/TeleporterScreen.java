@@ -3,6 +3,7 @@ package com.starboundmc.client;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.TeleporterRenamePacket;
+import com.starboundmc.network.TeleporterListPacket;
 import com.starboundmc.network.TeleporterUsePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -18,7 +19,7 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
 {
     private static final int VISIBLE = 4;
 
-    private final List<String[]> destinations = new ArrayList<>();
+    private final List<TeleporterListPacket.Entry> destinations = new ArrayList<>();
     private final List<SciFiButton> destButtons = new ArrayList<>();
     private EditBox nameBox;
     private SciFiButton saveButton;
@@ -43,7 +44,7 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
 
         this.saveButton = new SciFiButton(this.leftPos + 110, this.topPos + 128, 58, 20,
                 Component.translatable("gui.starboundmc.teleporter.save"),
-                button -> ModNetwork.CHANNEL.sendToServer(new TeleporterRenamePacket(this.nameBox.getValue())));
+                button -> ModNetwork.sendToServer(new TeleporterRenamePacket(this.nameBox.getValue())));
         this.addRenderableWidget(this.saveButton);
 
         this.upButton = new SciFiButton(this.leftPos + 152, this.topPos + 30, 16, 16, Component.literal("▲"),
@@ -98,11 +99,11 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
             int index = this.scroll + i;
             if (index >= this.destinations.size())
                 break;
-            String[] entry = this.destinations.get(index);
+            TeleporterListPacket.Entry entry = this.destinations.get(index);
             Component label = Component.literal(destinationLabel(entry));
-            final String key = entry[1];
+            final String key = entry.key();
             SciFiButton button = new SciFiButton(this.leftPos + 8, this.topPos + 30 + i * 22, 140, 20, label,
-                    b -> ModNetwork.CHANNEL.sendToServer(new TeleporterUsePacket(key)));
+                    b -> ModNetwork.sendToServer(new TeleporterUsePacket(key)));
             this.destButtons.add(button);
             this.addRenderableWidget(button);
         }
@@ -110,13 +111,13 @@ public class TeleporterScreen extends AbstractContainerScreen<TeleporterMenu>
         this.downButton.active = this.scroll < max;
     }
 
-    private String destinationLabel(String[] entry)
+    private String destinationLabel(TeleporterListPacket.Entry entry)
     {
-        if ("0".equals(entry[0]))
+        if (entry.type() == 0)
             return Component.translatable("gui.starboundmc.teleporter.ship").getString();
-        if ("1".equals(entry[0]))
+        if (entry.type() == 1)
             return Component.translatable("gui.starboundmc.teleporter.planet").getString();
-        return entry[2];
+        return entry.label();
     }
 
     @Override

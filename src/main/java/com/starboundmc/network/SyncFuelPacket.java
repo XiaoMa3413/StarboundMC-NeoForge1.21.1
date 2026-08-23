@@ -1,37 +1,32 @@
 package com.starboundmc.network;
 
-import com.starboundmc.client.ClientPlanetState;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-import java.util.function.Supplier;
+/** Server -> client authoritative ship fuel snapshot. */
+public record SyncFuelPacket(int fuel, int maxFuel) implements CustomPacketPayload {
+    public static final Type<SyncFuelPacket> TYPE = PayloadSupport.type("sync_fuel");
+    public static final StreamCodec<FriendlyByteBuf, SyncFuelPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(SyncFuelPacket::write, SyncFuelPacket::new);
 
-/** Server -> Client: sync the ship's fuel level. */
-public class SyncFuelPacket
-{
-    private final int fuel;
-    private final int maxFuel;
-
-    public SyncFuelPacket(int fuel, int maxFuel)
-    {
-        this.fuel = fuel;
-        this.maxFuel = maxFuel;
+    public SyncFuelPacket {
+        if (maxFuel <= 0 || fuel < 0 || fuel > maxFuel) {
+            throw new IllegalArgumentException("Invalid fuel snapshot " + fuel + "/" + maxFuel);
+        }
     }
 
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeVarInt(fuel);
-        buf.writeVarInt(maxFuel);
+    private SyncFuelPacket(FriendlyByteBuf buffer) {
+        this(buffer.readVarInt(), buffer.readVarInt());
     }
 
-    public static SyncFuelPacket decode(FriendlyByteBuf buf)
-    {
-        return new SyncFuelPacket(buf.readVarInt(), buf.readVarInt());
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeVarInt(fuel);
+        buffer.writeVarInt(maxFuel);
     }
 
-    public static void handle(SyncFuelPacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() -> ClientPlanetState.setFuel(msg.fuel, msg.maxFuel));
-        ctx.get().setPacketHandled(true);
+    @Override
+    public Type<SyncFuelPacket> type() {
+        return TYPE;
     }
 }

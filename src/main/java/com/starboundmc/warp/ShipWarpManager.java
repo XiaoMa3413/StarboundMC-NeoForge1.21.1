@@ -18,7 +18,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,10 +95,10 @@ public final class ShipWarpManager
         ship.playSound(null, ShipDimensions.SHIP_POS, ModSounds.WARP_START.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
         player.displayClientMessage(Component.translatable("message.starboundmc.warp.start", Component.translatable(entry.getNameKey())), true);
         // A compatibility cue only: snapshots own position and progression.
-        ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()),
+        ModNetwork.sendToPlayersInDimension(ship,
                 new WarpStartPacket(entry.getDestination(), flight.getTotalTicks(), entryId));
         broadcastFlight(ship);
-        ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()), new SyncFuelPacket(getFuel(), MAX_FUEL));
+        ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), MAX_FUEL));
         return true;
     }
 
@@ -127,19 +126,19 @@ public final class ShipWarpManager
 
     public static void syncToPlayer(ServerPlayer player)
     {
-        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new SyncPlanetPacket(getCurrentPlanet()));
-        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new SyncFuelPacket(getFuel(), MAX_FUEL));
-        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new SyncStarStatePacket(
+        ModNetwork.sendToPlayer(player, new SyncPlanetPacket(getCurrentPlanet()));
+        ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), MAX_FUEL));
+        ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
                 new ArrayList<>(state == null ? List.of() : state.getVisited()), state == null ? null : state.getCurrentEntryId()));
         ServerLevel ship = player.getServer() == null ? null : player.getServer().getLevel(ShipDimensions.SHIP_LEVEL);
-        if (ship != null) ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), packet(ship));
+        if (ship != null) ModNetwork.sendToPlayer(player, packet(ship));
     }
 
     public static int addFuel(int amount, ServerLevel ship)
     {
         int before = getFuel(); state.setFuel(before + Math.max(0, amount)); int added = getFuel() - before;
         if (added > 0 && ship != null)
-            ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()), new SyncFuelPacket(getFuel(), MAX_FUEL));
+            ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), MAX_FUEL));
         return added;
     }
 
@@ -148,8 +147,8 @@ public final class ShipWarpManager
         Planet target = flight.getTarget(); String entry = targetEntryId;
         state.setPlanet(target); state.markVisited(entry); state.setCurrentEntryId(entry);
         flight = null; targetEntryId = null; revision++; persistDock(); broadcastFlight(ship);
-        ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()), new SyncPlanetPacket(target));
-        ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()),
+        ModNetwork.sendToPlayersInDimension(ship, new SyncPlanetPacket(target));
+        ModNetwork.sendToPlayersInDimension(ship,
                 new SyncStarStatePacket(new ArrayList<>(state.getVisited()), state.getCurrentEntryId()));
         PlanetEntry arrived = StarSystems.entryById(entry);
         Component name = arrived == null ? Component.translatable(target.translationKey()) : Component.translatable(arrived.getNameKey());
@@ -187,7 +186,7 @@ public final class ShipWarpManager
 
     private static void broadcastFlight(ServerLevel ship)
     {
-        ModNetwork.CHANNEL.send(PacketDistributor.DIMENSION.with(() -> ship.dimension()), packet(ship));
+        ModNetwork.sendToPlayersInDimension(ship, packet(ship));
     }
 
     private static String defaultEntryIdFor(Planet planet)

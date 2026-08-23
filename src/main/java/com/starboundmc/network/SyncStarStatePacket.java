@@ -1,60 +1,65 @@
 package com.starboundmc.network;
 
-import com.starboundmc.client.ClientPlanetState;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/**
- * Server -> Client: the ship's star-map progress — which entries have been
- * visited and the exact entry the ship is currently docked at. Sent when a
- * player enters the ship and whenever a warp completes.
- */
-public class SyncStarStatePacket
-{
-    private final List<String> visited;
-    private final String currentEntryId;
+/** Server -> client visited destinations and current star-map entry. */
+public record SyncStarStatePacket(List<String> visited, String currentEntryId)
+        implements CustomPacketPayload {
+    public static final Type<SyncStarStatePacket> TYPE = PayloadSupport.type("sync_star_state");
+    public static final StreamCodec<FriendlyByteBuf, SyncStarStatePacket> STREAM_CODEC =
+            CustomPacketPayload.codec(SyncStarStatePacket::write, SyncStarStatePacket::new);
 
-    public SyncStarStatePacket(List<String> visited, String currentEntryId)
-    {
-        this.visited = visited;
-        this.currentEntryId = currentEntryId;
-    }
-
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeInt(visited.size());
-        for (String entryId : visited)
-        {
-            buf.writeUtf(entryId);
+    public SyncStarStatePacket {
+        if (visited == null || visited.size() > PayloadSupport.MAX_LIST_ENTRIES) {
+            throw new IllegalArgumentException("visited list is null or too large");
         }
-        buf.writeUtf(currentEntryId == null ? "" : currentEntryId);
+        List<String> copy = new ArrayList<>(visited.size());
+        for (String entryId : visited) {
+            copy.add(PayloadSupport.requireString(
+                    entryId, PayloadSupport.MAX_ID_LENGTH, "visited entry"));
+        }
+        visited = List.copyOf(copy);
+        if (currentEntryId != null) {
+            currentEntryId = PayloadSupport.requireString(
+                    currentEntryId, PayloadSupport.MAX_ID_LENGTH, "currentEntryId");
+        }
     }
 
-    public static SyncStarStatePacket decode(FriendlyByteBuf buf)
-    {
-        int count = buf.readInt();
+    private SyncStarStatePacket(FriendlyByteBuf buffer) {
+        this(readVisited(buffer), readNullableId(buffer));
+    }
+
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeVarInt(visited.size());
+        for (String entryId : visited) {
+            buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
+        }
+        buffer.writeBoolean(currentEntryId != null);
+        if (currentEntryId != null) {
+            buffer.writeUtf(currentEntryId, PayloadSupport.MAX_ID_LENGTH);
+        }
+    }
+
+    private static List<String> readVisited(FriendlyByteBuf buffer) {
+        int count = PayloadSupport.readCount(
+                buffer, PayloadSupport.MAX_LIST_ENTRIES, "visited");
         List<String> visited = new ArrayList<>(count);
-        for (int i = 0; i < count; i++)
-        {
-            visited.add(buf.readUtf());
+        for (int index = 0; index < count; index++) {
+            visited.add(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
         }
-        String current = buf.readUtf();
-        return new SyncStarStatePacket(visited, current.isEmpty() ? null : current);
+        return visited;
     }
 
-    public static void handle(SyncStarStatePacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() ->
-        {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () ->
-                    ClientPlanetState.setStarState(msg.visited, msg.currentEntryId));
-        });
-        ctx.get().setPacketHandled(true);
+    private static String readNullableId(FriendlyByteBuf buffer) {
+        return buffer.readBoolean() ? buffer.readUtf(PayloadSupport.MAX_ID_LENGTH) : null;
+    }
+
+    @Override
+    public Type<SyncStarStatePacket> type() {
+        return TYPE;
     }
 }

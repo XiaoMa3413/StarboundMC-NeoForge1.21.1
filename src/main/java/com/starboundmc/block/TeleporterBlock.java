@@ -17,7 +17,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.PacketDistributor;
 
 /**
  * The unified teleporter: right-click opens a destination UI (ship, current planet
@@ -40,7 +39,7 @@ public class TeleporterBlock extends Block
         if (player instanceof ServerPlayer serverPlayer)
         {
             serverPlayer.openMenu(getMenuProvider(state, level, pos));
-            ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> serverPlayer),
+            ModNetwork.sendToPlayer(serverPlayer,
                     TeleporterListPacketHelper.build(serverPlayer.getServer(), level.dimension(), pos));
         }
         return InteractionResult.CONSUME;

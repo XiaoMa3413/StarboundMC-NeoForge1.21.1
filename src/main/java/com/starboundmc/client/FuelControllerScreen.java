@@ -42,7 +42,7 @@ public class FuelControllerScreen extends AbstractContainerScreen<FuelController
         super.init();
         this.addButton = new PixelButton(this.leftPos + 43, this.topPos + 78, 90, 16,
                 Component.translatable("gui.starboundmc.fuel_controller.add"),
-                b -> ModNetwork.CHANNEL.sendToServer(new AddFuelPacket()));
+                b -> ModNetwork.sendToServer(new AddFuelPacket()));
         this.addRenderableWidget(this.addButton);
     }
 

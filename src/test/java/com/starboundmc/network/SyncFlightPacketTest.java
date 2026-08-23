@@ -32,8 +32,8 @@ class SyncFlightPacketTest
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         try
         {
-            original.encode(buffer);
-            SyncFlightPacket decoded = SyncFlightPacket.decode(buffer);
+            SyncFlightPacket.STREAM_CODEC.encode(buffer, original);
+            SyncFlightPacket decoded = SyncFlightPacket.STREAM_CODEC.decode(buffer);
 
             assertEquals(expectedPosition, decoded.position());
             assertEquals(expectedVelocity, decoded.velocity());

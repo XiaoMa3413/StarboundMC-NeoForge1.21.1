@@ -1,69 +1,68 @@
 package com.starboundmc.network;
 
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import java.util.Objects;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-public class ModNetwork
-{
-    private static final String PROTOCOL_VERSION = "4";
+/** NeoForge 1.21.1 play-payload protocol. Incompatible with Forge protocol 4. */
+public final class ModNetwork {
+    public static final String PROTOCOL_VERSION = "1";
+    private static volatile ServerPayloadActions serverActions = ServerPayloadActions.NONE;
 
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath("starboundmc", "main"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals);
+    private ModNetwork() {
+    }
 
-    public static void register()
-    {
-        int id = 0;
-        CHANNEL.registerMessage(id++, UpgradeMatterManipulatorPacket.class,
-                UpgradeMatterManipulatorPacket::encode,
-                UpgradeMatterManipulatorPacket::decode,
-                UpgradeMatterManipulatorPacket::handle);
-        CHANNEL.registerMessage(id++, StartWarpPacket.class,
-                StartWarpPacket::encode,
-                StartWarpPacket::decode,
-                StartWarpPacket::handle);
-        CHANNEL.registerMessage(id++, SyncStarStatePacket.class,
-                SyncStarStatePacket::encode,
-                SyncStarStatePacket::decode,
-                SyncStarStatePacket::handle);
-        CHANNEL.registerMessage(id++, SyncPlanetPacket.class,
-                SyncPlanetPacket::encode,
-                SyncPlanetPacket::decode,
-                SyncPlanetPacket::handle);
-        CHANNEL.registerMessage(id++, WarpStartPacket.class,
-                WarpStartPacket::encode,
-                WarpStartPacket::decode,
-                WarpStartPacket::handle);
-        CHANNEL.registerMessage(id++, SyncFuelPacket.class,
-                SyncFuelPacket::encode,
-                SyncFuelPacket::decode,
-                SyncFuelPacket::handle);
-        CHANNEL.registerMessage(id++, TeleporterListPacket.class,
-                TeleporterListPacket::encode,
-                TeleporterListPacket::decode,
-                TeleporterListPacket::handle);
-        CHANNEL.registerMessage(id++, TeleporterUsePacket.class,
-                TeleporterUsePacket::encode,
-                TeleporterUsePacket::decode,
-                TeleporterUsePacket::handle);
-        CHANNEL.registerMessage(id++, TeleporterRenamePacket.class,
-                TeleporterRenamePacket::encode,
-                TeleporterRenamePacket::decode,
-                TeleporterRenamePacket::handle);
-        CHANNEL.registerMessage(id++, TeleportToShipPacket.class,
-                TeleportToShipPacket::encode,
-                TeleportToShipPacket::decode,
-                TeleportToShipPacket::handle);
-        CHANNEL.registerMessage(id++, AddFuelPacket.class,
-                AddFuelPacket::encode,
-                AddFuelPacket::decode,
-                AddFuelPacket::handle);
-        CHANNEL.registerMessage(id++, SyncFlightPacket.class,
-                SyncFlightPacket::encode,
-                SyncFlightPacket::decode,
-                SyncFlightPacket::handle);
+    public static void register(RegisterPayloadHandlersEvent event) {
+        PayloadRegistrar registrar = event.registrar(PROTOCOL_VERSION);
+
+        registrar.playToServer(UpgradeMatterManipulatorPacket.TYPE,
+                UpgradeMatterManipulatorPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(StartWarpPacket.TYPE,
+                StartWarpPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(TeleporterUsePacket.TYPE,
+                TeleporterUsePacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(TeleporterRenamePacket.TYPE,
+                TeleporterRenamePacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(TeleportToShipPacket.TYPE,
+                TeleportToShipPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(AddFuelPacket.TYPE,
+                AddFuelPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+
+        registrar.playToClient(SyncStarStatePacket.TYPE,
+                SyncStarStatePacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncPlanetPacket.TYPE,
+                SyncPlanetPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(WarpStartPacket.TYPE,
+                WarpStartPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncFuelPacket.TYPE,
+                SyncFuelPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(TeleporterListPacket.TYPE,
+                TeleporterListPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncFlightPacket.TYPE,
+                SyncFlightPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+    }
+
+    public static void installServerActions(ServerPayloadActions actions) {
+        serverActions = Objects.requireNonNull(actions, "actions");
+    }
+
+    static ServerPayloadActions serverActions() {
+        return serverActions;
+    }
+
+    public static void sendToServer(CustomPacketPayload payload) {
+        PacketDistributor.sendToServer(payload);
+    }
+
+    public static void sendToPlayer(ServerPlayer player, CustomPacketPayload payload) {
+        PacketDistributor.sendToPlayer(player, payload);
+    }
+
+    public static void sendToPlayersInDimension(ServerLevel level, CustomPacketPayload payload) {
+        PacketDistributor.sendToPlayersInDimension(level, payload);
     }
 }

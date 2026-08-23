@@ -354,6 +354,16 @@ java -version
 
 验收：为每个 StreamCodec 添加往返测试；实机验证登录同步、燃料、跃迁、传送和升级请求。
 
+实施状态（2026-08-24）：**协议迁移已完成**。
+
+- 旧 Forge `SimpleChannel` 协议 4 已替换为 NeoForge play Payload 协议 1；12 个消息均实现 `CustomPacketPayload`，拥有唯一的 `starboundmc:*` Type、有界 `StreamCodec` 和显式 C→S/S→C 注册方向。
+- 新协议与 Forge 协议 4 明确不兼容。字符串、列表、传送目标类型、燃料快照、飞行阶段和有限数值均在构造/解码边界校验，避免客户端构造无界集合或非法请求字段。
+- 客户端同步处理集中在独立 `ClientPayloadHandler` 和 `ClientNetworkState` 边界；专服成功加载同一注册表，不会执行客户端效果。传送器列表已接回其客户端状态镜像。
+- 服务端请求统一由主线程 `ServerPayloadHandler` 处理，先验证 `ServerPlayer`、菜单类型、方块位置、目标格式和请求范围，再进入 `ServerPayloadActions` 权威业务端口。后续组件、持久化、跃迁与传送阶段安装真实业务动作时，仍须在变更世界前复核维度、燃料、目标和权限。
+- 全部旧 `ModNetwork.CHANNEL`、Forge `PacketDistributor` 和 `net.minecraftforge.network` 调用点已迁移；发送统一使用 NeoForge 21.1.248 实际提供的 `PacketDistributor.sendToServer`、`sendToPlayer` 和 `sendToPlayersInDimension`。
+- 新增 12/12 Payload 字节往返测试、Type 唯一性测试和方向/侧别/旧 API 契约测试。`gradlew.bat test` 通过；客户端完成资源重载，专服启动至 `Done`，两侧均无 Payload 重复注册、方向冲突或类加载异常。
+- 登录同步、燃料消耗、跃迁、传送和升级的完整实机行为需要阶段 4–7 的真实业务实现接入 `ServerPayloadActions` 后复测；本阶段不以信任客户端或直接调用尚未迁移旧实现的方式伪造通过。
+
 ### 阶段 4：物质枪 NBT → Data Components
 
 目标：恢复物质枪升级、附魔和激光采集。
@@ -599,7 +609,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 建立空模组客户端、服务端和构建基线。
 - [x] 完成入口、注册和事件迁移。
 - [x] 完成基础对象和菜单迁移。
-- [ ] 完成 Payload 网络迁移。
+- [x] 完成 Payload 网络迁移。
 - [ ] 完成物质枪 Data Components 迁移。
 - [ ] 完成持久化和方块实体迁移。
 - [ ] 完成玩法事件与传送器迁移。

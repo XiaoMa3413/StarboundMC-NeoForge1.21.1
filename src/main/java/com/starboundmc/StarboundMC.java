@@ -6,6 +6,7 @@ import com.starboundmc.block.ModBlocks;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.item.ModItems;
 import com.starboundmc.menu.ModMenus;
+import com.starboundmc.network.ModNetwork;
 import com.starboundmc.sound.ModSounds;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -20,6 +21,7 @@ public final class StarboundMC {
 
     public StarboundMC(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
+        modEventBus.addListener(ModNetwork::register);
 
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);

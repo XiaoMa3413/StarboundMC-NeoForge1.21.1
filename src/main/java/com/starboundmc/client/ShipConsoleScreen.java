@@ -639,7 +639,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                 this.detailDrawerOpen = false;
             this.applyMode();
         }
-        ModNetwork.CHANNEL.sendToServer(new StartWarpPacket(warpTarget.getEntryId()));
+        ModNetwork.sendToServer(new StartWarpPacket(warpTarget.getEntryId()));
         // Keep the star map open: the ship animation plays on the canvas,
         // synchronized with the 3D warp transition rendered by the overlay layer.
     }

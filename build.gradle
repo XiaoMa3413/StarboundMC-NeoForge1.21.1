@@ -16,8 +16,8 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-2 compile the migrated registry and basic object layers. Systems
-// that depend on networking, data components or worldgen remain isolated.
+// Stages 1-3 compile the migrated registry, basic object and payload layers.
+// Systems that depend on data components, persistence or worldgen remain isolated.
 sourceSets {
     main {
         java {
@@ -37,6 +37,14 @@ sourceSets {
             include 'com/starboundmc/client/Stage2ClientRegistrar.java'
             include 'com/starboundmc/client/Stage2MenuScreen.java'
             include 'com/starboundmc/client/SeatRenderer.java'
+            include 'com/starboundmc/client/ClientTeleporterState.java'
+            include 'com/starboundmc/network/*.java'
+            exclude 'com/starboundmc/network/TeleporterListPacketHelper.java'
+            include 'com/starboundmc/space/SectorCoordinate.java'
+            include 'com/starboundmc/space/UniverseDelta.java'
+            include 'com/starboundmc/space/UniversePosition.java'
+            include 'com/starboundmc/warp/FlightPhase.java'
+            include 'com/starboundmc/world/Planet.java'
             include 'com/starboundmc/menu/ModMenus.java'
             include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'
@@ -50,6 +58,8 @@ sourceSets {
     test {
         java.setSrcDirs(['src/bootstrapTest/java'])
         resources.setSrcDirs(['src/bootstrapTest/resources'])
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
     }
 }
 

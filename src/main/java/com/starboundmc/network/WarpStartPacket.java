@@ -1,60 +1,43 @@
 package com.starboundmc.network;
 
-import com.starboundmc.client.ClientPlanetState;
-import com.starboundmc.client.WarpSounds;
 import com.starboundmc.world.Planet;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-import java.util.function.Supplier;
+/** Server -> client notification that an authoritative warp has begun. */
+public record WarpStartPacket(String planetId, int durationTicks, String entryId)
+        implements CustomPacketPayload {
+    public static final Type<WarpStartPacket> TYPE = PayloadSupport.type("warp_start");
+    public static final StreamCodec<FriendlyByteBuf, WarpStartPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(WarpStartPacket::write, WarpStartPacket::new);
 
-/**
- * Server -> Client: a warp has begun. Carries the target planet, the total
- * duration and the star-map entry id of the destination (used by the star map
- * UI to animate the ship flying to it).
- */
-public class WarpStartPacket
-{
-    private final String planetId;
-    private final int durationTicks;
-    private final String entryId;
-
-    public WarpStartPacket(Planet planet, int durationTicks, String entryId)
-    {
-        this.planetId = planet.getId();
-        this.durationTicks = durationTicks;
-        this.entryId = entryId == null ? "" : entryId;
+    public WarpStartPacket {
+        planetId = PayloadSupport.requireString(planetId, PayloadSupport.MAX_ID_LENGTH, "planetId");
+        entryId = PayloadSupport.requireString(
+                entryId == null ? "" : entryId, PayloadSupport.MAX_ID_LENGTH, "entryId");
+        if (durationTicks < 0) {
+            throw new IllegalArgumentException("durationTicks cannot be negative");
+        }
     }
 
-    public WarpStartPacket(String planetId, int durationTicks, String entryId)
-    {
-        this.planetId = planetId;
-        this.durationTicks = durationTicks;
-        this.entryId = entryId == null ? "" : entryId;
+    public WarpStartPacket(Planet planet, int durationTicks, String entryId) {
+        this(planet.getId(), durationTicks, entryId);
     }
 
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeUtf(planetId);
-        buf.writeVarInt(durationTicks);
-        buf.writeUtf(entryId);
+    private WarpStartPacket(FriendlyByteBuf buffer) {
+        this(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH), buffer.readVarInt(),
+                buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
     }
 
-    public static WarpStartPacket decode(FriendlyByteBuf buf)
-    {
-        return new WarpStartPacket(buf.readUtf(), buf.readVarInt(), buf.readUtf());
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeUtf(planetId, PayloadSupport.MAX_ID_LENGTH);
+        buffer.writeVarInt(durationTicks);
+        buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
     }
 
-    public static void handle(WarpStartPacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() ->
-        {
-            ClientPlanetState.startWarp(Planet.fromId(msg.planetId), msg.durationTicks,
-                    msg.entryId.isEmpty() ? null : msg.entryId);
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> WarpSounds::onWarpStarted);
-        });
-        ctx.get().setPacketHandled(true);
+    @Override
+    public Type<WarpStartPacket> type() {
+        return TYPE;
     }
 }

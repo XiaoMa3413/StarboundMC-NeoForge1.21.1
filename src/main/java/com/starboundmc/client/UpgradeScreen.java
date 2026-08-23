@@ -78,19 +78,19 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu>
         this.speedButton = new PixelButton(
                 this.leftPos + BTN_X, this.topPos + ROW_Y0, BTN_W, BTN_H,
                 Component.translatable("gui.starboundmc.upgrade_speed"),
-                button -> ModNetwork.CHANNEL.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_SPEED)));
+                button -> ModNetwork.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_SPEED)));
         this.rangeButton = new PixelButton(
                 this.leftPos + BTN_X, this.topPos + ROW_Y0 + ROW_PITCH, BTN_W, BTN_H,
                 Component.translatable("gui.starboundmc.upgrade_range"),
-                button -> ModNetwork.CHANNEL.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_RANGE)));
+                button -> ModNetwork.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_RANGE)));
         this.miningButton = new PixelButton(
                 this.leftPos + BTN_X, this.topPos + ROW_Y0 + ROW_PITCH * 2, BTN_W, BTN_H,
                 Component.translatable("gui.starboundmc.upgrade_mining"),
-                button -> ModNetwork.CHANNEL.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_MINING)));
+                button -> ModNetwork.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_MINING)));
         this.fortuneButton = new PixelButton(
                 this.leftPos + BTN_X, this.topPos + ROW_Y0 + ROW_PITCH * 3, BTN_W, BTN_H,
                 Component.translatable("gui.starboundmc.upgrade_fortune"),
-                button -> ModNetwork.CHANNEL.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_FORTUNE)));
+                button -> ModNetwork.sendToServer(new UpgradeMatterManipulatorPacket(UpgradeMenu.TRACK_FORTUNE)));
         this.addRenderableWidget(this.speedButton);
         this.addRenderableWidget(this.rangeButton);
         this.addRenderableWidget(this.miningButton);

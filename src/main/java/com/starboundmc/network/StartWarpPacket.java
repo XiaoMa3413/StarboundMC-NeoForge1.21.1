@@ -1,46 +1,29 @@
 package com.starboundmc.network;
 
-import com.starboundmc.warp.ShipWarpManager;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-import java.util.function.Supplier;
+/** Client -> server request for a star-map destination. */
+public record StartWarpPacket(String entryId) implements CustomPacketPayload {
+    public static final Type<StartWarpPacket> TYPE = PayloadSupport.type("start_warp");
+    public static final StreamCodec<FriendlyByteBuf, StartWarpPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(StartWarpPacket::write, StartWarpPacket::new);
 
-/**
- * Client -> Server: request a warp to the given star-map entry.
- * The server resolves the entry id against the static star map, so a
- * client cannot warp to locked/unreachable bodies.
- */
-public class StartWarpPacket
-{
-    private final String entryId;
-
-    public StartWarpPacket(String entryId)
-    {
-        this.entryId = entryId;
+    public StartWarpPacket {
+        entryId = PayloadSupport.requireString(entryId, PayloadSupport.MAX_ID_LENGTH, "entryId");
     }
 
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeUtf(entryId);
+    private StartWarpPacket(FriendlyByteBuf buffer) {
+        this(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
     }
 
-    public static StartWarpPacket decode(FriendlyByteBuf buf)
-    {
-        return new StartWarpPacket(buf.readUtf());
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
     }
 
-    public static void handle(StartWarpPacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() ->
-        {
-            ServerPlayer player = ctx.get().getSender();
-            if (player != null)
-            {
-                ShipWarpManager.startWarp(player, msg.entryId);
-            }
-        });
-        ctx.get().setPacketHandled(true);
+    @Override
+    public Type<StartWarpPacket> type() {
+        return TYPE;
     }
 }

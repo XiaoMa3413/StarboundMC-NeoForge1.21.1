@@ -1,54 +1,70 @@
 package com.starboundmc.network;
 
-import com.starboundmc.client.ClientTeleporterState;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/**
- * Server -> Client: the destination list for the open teleporter UI.
- * Each entry is {type, key, label}: type 0 = ship, 1 = planet surface, 2 = named teleporter.
- */
-public class TeleporterListPacket
-{
-    private final List<String[]> entries;
-    private final String currentName;
+/** Server -> client destination list for the currently open teleporter. */
+public record TeleporterListPacket(List<Entry> entries, String currentName)
+        implements CustomPacketPayload {
+    public static final Type<TeleporterListPacket> TYPE = PayloadSupport.type("teleporter_list");
+    public static final StreamCodec<FriendlyByteBuf, TeleporterListPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(TeleporterListPacket::write, TeleporterListPacket::new);
 
-    public TeleporterListPacket(List<String[]> entries, String currentName)
-    {
-        this.entries = entries;
-        this.currentName = currentName;
-    }
-
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeVarInt(entries.size());
-        for (String[] entry : entries)
-        {
-            buf.writeByte(Integer.parseInt(entry[0]));
-            buf.writeUtf(entry[1]);
-            buf.writeUtf(entry[2]);
+    public TeleporterListPacket {
+        if (entries == null || entries.size() > PayloadSupport.MAX_LIST_ENTRIES) {
+            throw new IllegalArgumentException("teleporter entries are null or too large");
         }
-        buf.writeUtf(currentName);
+        entries = List.copyOf(entries);
+        currentName = PayloadSupport.requireString(
+                currentName, PayloadSupport.MAX_NAME_LENGTH, "currentName");
     }
 
-    public static TeleporterListPacket decode(FriendlyByteBuf buf)
-    {
-        int size = buf.readVarInt();
-        List<String[]> entries = new ArrayList<>(size);
-        for (int i = 0; i < size; i++)
-        {
-            entries.add(new String[] { Integer.toString(buf.readByte()), buf.readUtf(), buf.readUtf() });
+    private TeleporterListPacket(FriendlyByteBuf buffer) {
+        this(readEntries(buffer), buffer.readUtf(PayloadSupport.MAX_NAME_LENGTH));
+    }
+
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeVarInt(entries.size());
+        for (Entry entry : entries) {
+            buffer.writeByte(entry.type);
+            buffer.writeUtf(entry.key, PayloadSupport.MAX_ID_LENGTH);
+            buffer.writeUtf(entry.label, PayloadSupport.MAX_NAME_LENGTH);
         }
-        return new TeleporterListPacket(entries, buf.readUtf());
+        buffer.writeUtf(currentName, PayloadSupport.MAX_NAME_LENGTH);
     }
 
-    public static void handle(TeleporterListPacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() -> ClientTeleporterState.receive(msg.entries, msg.currentName));
-        ctx.get().setPacketHandled(true);
+    private static List<Entry> readEntries(FriendlyByteBuf buffer) {
+        int count = PayloadSupport.readCount(
+                buffer, PayloadSupport.MAX_LIST_ENTRIES, "teleporter entries");
+        List<Entry> entries = new ArrayList<>(count);
+        for (int index = 0; index < count; index++) {
+            entries.add(new Entry(buffer.readByte(),
+                    buffer.readUtf(PayloadSupport.MAX_ID_LENGTH),
+                    buffer.readUtf(PayloadSupport.MAX_NAME_LENGTH)));
+        }
+        return entries;
+    }
+
+    @Override
+    public Type<TeleporterListPacket> type() {
+        return TYPE;
+    }
+
+    /** type: 0 = ship, 1 = planet surface, 2 = named teleporter. */
+    public record Entry(byte type, String key, String label) {
+        public Entry {
+            if (type < 0 || type > 2) {
+                throw new IllegalArgumentException("Unknown teleporter destination type " + type);
+            }
+            key = PayloadSupport.requireString(key, PayloadSupport.MAX_ID_LENGTH, "key");
+            label = PayloadSupport.requireString(label, PayloadSupport.MAX_NAME_LENGTH, "label");
+        }
+
+        public Entry(int type, String key, String label) {
+            this((byte) type, key, label);
+        }
     }
 }

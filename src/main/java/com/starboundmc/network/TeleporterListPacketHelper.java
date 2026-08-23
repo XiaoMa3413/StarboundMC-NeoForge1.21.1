@@ -18,12 +18,13 @@ public final class TeleporterListPacketHelper
 
     public static TeleporterListPacket build(MinecraftServer server, ResourceKey<Level> dimension, BlockPos pos)
     {
-        List<String[]> entries = new ArrayList<>();
-        entries.add(new String[] { "0", "ship", "" });
-        entries.add(new String[] { "1", "planet", "" });
+        List<TeleporterListPacket.Entry> entries = new ArrayList<>();
+        entries.add(new TeleporterListPacket.Entry(0, "ship", ""));
+        entries.add(new TeleporterListPacket.Entry(1, "planet", ""));
         for (TeleporterManager.TeleporterEntry e : TeleporterManager.validEntries(server))
         {
-            entries.add(new String[] { "2", "n|" + TeleporterManager.key(e.dimension(), e.pos()), e.name() });
+            entries.add(new TeleporterListPacket.Entry(
+                    2, "n|" + TeleporterManager.key(e.dimension(), e.pos()), e.name()));
         }
         String currentName = TeleporterManager.getName(server, dimension, pos);
         return new TeleporterListPacket(entries, currentName == null ? "" : currentName);

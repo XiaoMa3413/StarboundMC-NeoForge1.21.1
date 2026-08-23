@@ -19,7 +19,7 @@ public class ModKeyEvents
             return;
         if (ModKeyBindings.returnToShip != null && ModKeyBindings.returnToShip.consumeClick())
         {
-            ModNetwork.CHANNEL.sendToServer(new TeleportToShipPacket());
+            ModNetwork.sendToServer(new TeleportToShipPacket());
         }
     }
 }

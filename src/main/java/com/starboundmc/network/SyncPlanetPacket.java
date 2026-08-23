@@ -1,50 +1,34 @@
 package com.starboundmc.network;
 
-import com.starboundmc.client.ClientPlanetState;
-import com.starboundmc.client.WarpSounds;
 import com.starboundmc.world.Planet;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-import java.util.function.Supplier;
+/** Server -> client current-orbit snapshot. */
+public record SyncPlanetPacket(String planetId) implements CustomPacketPayload {
+    public static final Type<SyncPlanetPacket> TYPE = PayloadSupport.type("sync_planet");
+    public static final StreamCodec<FriendlyByteBuf, SyncPlanetPacket> STREAM_CODEC =
+            CustomPacketPayload.codec(SyncPlanetPacket::write, SyncPlanetPacket::new);
 
-/** Server -> Client: tells the client which planet is currently being orbited. */
-public class SyncPlanetPacket
-{
-    private final String planetId;
-
-    public SyncPlanetPacket(Planet planet)
-    {
-        this.planetId = planet.getId();
+    public SyncPlanetPacket {
+        planetId = PayloadSupport.requireString(planetId, PayloadSupport.MAX_ID_LENGTH, "planetId");
     }
 
-    public SyncPlanetPacket(String planetId)
-    {
-        this.planetId = planetId;
+    public SyncPlanetPacket(Planet planet) {
+        this(planet.getId());
     }
 
-    public void encode(FriendlyByteBuf buf)
-    {
-        buf.writeUtf(planetId);
+    private SyncPlanetPacket(FriendlyByteBuf buffer) {
+        this(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
     }
 
-    public static SyncPlanetPacket decode(FriendlyByteBuf buf)
-    {
-        return new SyncPlanetPacket(buf.readUtf());
+    private void write(FriendlyByteBuf buffer) {
+        buffer.writeUtf(planetId, PayloadSupport.MAX_ID_LENGTH);
     }
 
-    public static void handle(SyncPlanetPacket msg, Supplier<NetworkEvent.Context> ctx)
-    {
-        ctx.get().enqueueWork(() ->
-        {
-            ClientPlanetState.setCurrent(Planet.fromId(msg.planetId));
-            if (ClientPlanetState.consumeArrivalCue())
-            {
-                DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> WarpSounds::onWarpFinished);
-            }
-        });
-        ctx.get().setPacketHandled(true);
+    @Override
+    public Type<SyncPlanetPacket> type() {
+        return TYPE;
     }
 }

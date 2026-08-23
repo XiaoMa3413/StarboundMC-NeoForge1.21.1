@@ -1,11 +1,12 @@
 package com.starboundmc.client;
 
+import com.starboundmc.network.TeleporterListPacket;
 import java.util.List;
 
 /** Client-side mirror of the teleporter destination list, filled by packets. */
 public class ClientTeleporterState
 {
-    private static List<String[]> destinations = List.of(); // {type, key, label}
+    private static List<TeleporterListPacket.Entry> destinations = List.of();
     private static String currentName = "";
     private static boolean dirty = false;
 
@@ -13,14 +14,14 @@ public class ClientTeleporterState
     {
     }
 
-    public static void receive(List<String[]> destinations, String currentName)
+    public static void receive(List<TeleporterListPacket.Entry> destinations, String currentName)
     {
-        ClientTeleporterState.destinations = destinations;
+        ClientTeleporterState.destinations = List.copyOf(destinations);
         ClientTeleporterState.currentName = currentName;
         dirty = true;
     }
 
-    public static List<String[]> getDestinations()
+    public static List<TeleporterListPacket.Entry> getDestinations()
     {
         return destinations;
     }
