@@ -1,0 +1,22 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "open": "starboundmc:block/ship_door_open",
+    "side": "starboundmc:block/ship_door_side",
+    "particle": "starboundmc:block/ship_door_open"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#open" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#open" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#side" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#side" }
+      }
+    }
+  ]
+}

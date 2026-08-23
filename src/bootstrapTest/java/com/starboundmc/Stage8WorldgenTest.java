@@ -13,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class Stage8WorldgenTest {
-    private static final Path DATA = Path.of("src/main/resources/data/starboundmc");
+    private static final Path MAIN_DATA = Path.of("src/main/resources/data/starboundmc");
+    private static final Path GENERATED_DATA = Path.of("src/generated/resources/data/starboundmc");
 
     @Test
     void everyAuthoredDimensionHasAValidTypeAndExpectedGenerator() throws IOException {
@@ -40,7 +41,7 @@ final class Stage8WorldgenTest {
         JsonObject biomeSource = generator.getAsJsonObject("biome_source");
         assertEquals("minecraft:fixed", biomeSource.get("type").getAsString());
         assertEquals("starboundmc:ship", biomeSource.get("biome").getAsString());
-        assertTrue(Files.isRegularFile(DATA.resolve("worldgen/biome/ship.json")));
+        assertTrue(Files.isRegularFile(resource("worldgen/biome/ship.json")));
     }
 
     @Test
@@ -74,7 +75,12 @@ final class Stage8WorldgenTest {
     }
 
     private static JsonObject json(String relativePath) throws IOException {
-        return JsonParser.parseString(Files.readString(DATA.resolve(relativePath))).getAsJsonObject();
+        return JsonParser.parseString(Files.readString(resource(relativePath))).getAsJsonObject();
+    }
+
+    private static Path resource(String relativePath) {
+        Path authored = MAIN_DATA.resolve(relativePath);
+        return Files.isRegularFile(authored) ? authored : GENERATED_DATA.resolve(relativePath);
     }
 
     private static String source(String relativePath) throws IOException {

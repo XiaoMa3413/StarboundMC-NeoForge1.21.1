@@ -575,6 +575,15 @@ Codec、MapCodec、BiomeSource、NoiseGeneratorSettings、ChunkGenerator 方法�
 
 验收：构建日志中无 missing model、missing texture、unknown registry、data pack validation 错误。
 
+实施状态（2026-08-24）：**资源、datagen 和本地化迁移已完成**。
+
+- 已审计旧项目 113 个 assets 和 24 个 data 资源；113 个客户端资源完整接回，包括 13 组 blockstate/方块模型、23 个物品模型、方块/物品/GUI/星图/行星贴图、4 个声音事件及用于隐藏原版月亮的透明纹理。`logo.png` 与四张行星贴图的 CC BY 4.0 来源说明一并保留。
+- 13 个方块战利品表已从旧复数目录 `loot_tables/blocks` 迁移到 1.21.1 单数目录 `loot_table/blocks`；4 个配方的结果物品已由旧 `item` 字段改为 1.21.1 的 `id` 字段并补齐 recipe book category。阶段 8 已验证的行星维度资源保持不变；未再携带未被当前熔岩生成器引用的旧 `molten_noise` 输入。
+- 飞船维度、维度类型和专用群系已恢复为 `RegistrySetBuilder` datagen，并通过 NeoForge `GatherDataEvent` 重新生成到 `src/generated/resources`；主资源目录中的手写副本已移除，避免两套定义漂移。`runData` 成功生成 3 个动态注册表资源。
+- `en_us.json` 与 `zh_cn.json` 均包含 126 个相同翻译键，覆盖注册对象、设备菜单、物质枪升级、燃料、传送器、跃迁、星图详情和按键绑定。新增阶段 10 资源契约测试，校验所有注册方块/物品的模型、模组内模型/纹理引用、声音文件、本地化键集合、配方字段、战利品目录和 datagen 输出。
+- `pack.mcmeta` 保持 1.21.1 的 pack format 34，`neoforge.mods.toml` 继续由模板生成并声明 NeoForge/Minecraft 双侧依赖。当前 152 项测试全部通过，`runData` 与完整 `test build` 成功。
+- 专用服务器实际加载 1294 个配方并启动至 `Done`，没有未知注册表、数据包或客户端类加载错误。客户端使用 Java 21 / OpenGL 4.6 完成资源重载、声音引擎启动和纹理图集构建；日志中没有 `starboundmc` missing model、missing texture、missing sound 或资源解析警告。烟测完成后相关 Java/Gradle 进程均已结束。
+
 ### 阶段 11：测试、存档迁移与发布准备
 
 自动验证最低要求：
@@ -669,7 +678,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 完成连续宇宙和跃迁迁移。
 - [x] 完成维度与世界生成迁移。
 - [x] 完成客户端渲染和星图迁移。
-- [ ] 完成资源和 datagen 迁移。
+- [x] 完成资源和 datagen 迁移。
 - [ ] 完成新世界、旧存档备份和专用服务器验收。
 
 ## 14. 官方参考
