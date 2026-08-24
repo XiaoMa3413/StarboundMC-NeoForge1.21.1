@@ -20,6 +20,9 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<ShipConsoleMenu>> SHIP_CONSOLE_MENU =
             MENUS.register("ship_console_menu", () -> IMenuTypeExtension.create(
                     (id, inventory, buffer) -> new ShipConsoleMenu(id, inventory)));
+    public static final DeferredHolder<MenuType<?>, MenuType<StarmapTerminalMenu>> STARMAP_TERMINAL_MENU =
+            MENUS.register("starmap_terminal_menu", () -> IMenuTypeExtension.create(
+                    (id, inventory, buffer) -> new StarmapTerminalMenu(id, inventory)));
     public static final DeferredHolder<MenuType<?>, MenuType<ShipCrateMenu>> SHIP_CRATE_MENU =
             MENUS.register("ship_crate_menu", () -> IMenuTypeExtension.create(
                     (id, inventory, buffer) -> new ShipCrateMenu(id, inventory)));

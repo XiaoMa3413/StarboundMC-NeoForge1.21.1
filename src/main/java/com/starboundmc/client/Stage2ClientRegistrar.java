@@ -3,6 +3,7 @@ package com.starboundmc.client;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.menu.ModMenus;
+import com.starboundmc.client.starmap.StarmapTerminalScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -22,6 +23,7 @@ public final class Stage2ClientRegistrar {
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);
         event.register(ModMenus.SHIP_CONSOLE_MENU.get(), ShipConsoleScreen::new);
+        event.register(ModMenus.STARMAP_TERMINAL_MENU.get(), StarmapTerminalScreen::new);
         event.register(ModMenus.SHIP_CRATE_MENU.get(), ShipCrateScreen::new);
         event.register(ModMenus.TELEPORTER_MENU.get(), TeleporterScreen::new);
         event.register(ModMenus.ALLOY_FURNACE_MENU.get(), AlloyFurnaceScreen::new);
