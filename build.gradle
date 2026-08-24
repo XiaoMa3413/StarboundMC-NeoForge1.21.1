@@ -149,6 +149,7 @@ sourceSets {
             include 'com/starboundmc/client/ShipConsoleScreenHitTestTest.java'
             include 'com/starboundmc/client/*.java'
             include 'com/starboundmc/client/space/*.java'
+            include 'com/starboundmc/network/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath
