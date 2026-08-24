@@ -1,7 +1,8 @@
 param(
     [string]$RconHost = "127.0.0.1",
     [int]$Port = 25575,
-    [string]$Password = "starboundmc-stage8-smoke"
+    [string]$Password = "starboundmc-stage8-smoke",
+    [switch]$AllowMissingConsole
 )
 
 $ErrorActionPreference = "Stop"
@@ -70,9 +71,14 @@ try {
 
     $console = Invoke-Rcon "execute in starboundmc:ship if block 0 102 7 starboundmc:ship_console run setblock 14 120 15 minecraft:diamond_block"
     if ($console -notmatch "Changed the block|Changed block") {
-        throw "Procedural ship console was not generated: $console"
+        if (-not $AllowMissingConsole) {
+            throw "Procedural ship console was not generated: $console"
+        }
+        Write-Output "procedural ship console: not present (allowed for a player-modified legacy ship)"
     }
-    Write-Output "procedural ship console: $console"
+    else {
+        Write-Output "procedural ship console: $console"
+    }
 
     $moltenSky = Invoke-Rcon "execute in starboundmc:molten if block 0 127 0 minecraft:air run setblock 15 127 15 minecraft:gold_block"
     if ($moltenSky -notmatch "Changed the block|Changed block") {
