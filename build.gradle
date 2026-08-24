@@ -44,7 +44,9 @@ sourceSets {
             include 'com/starboundmc/block/CaptainChairBlock.java'
             include 'com/starboundmc/block/ShipEngineBlock.java'
             include 'com/starboundmc/block/Stage2Blocks.java'
+            include 'com/starboundmc/block/StarmapTerminalBlock.java'
             include 'com/starboundmc/menu/ShipConsoleMenu.java'
+            include 'com/starboundmc/menu/StarmapTerminalMenu.java'
             include 'com/starboundmc/menu/ShipCrateMenu.java'
             include 'com/starboundmc/menu/TeleporterMenu.java'
             include 'com/starboundmc/menu/UpgradeMenu.java'
@@ -100,6 +102,7 @@ sourceSets {
             include 'com/starboundmc/client/WarpSounds.java'
             include 'com/starboundmc/client/ClientWarpSoundEvents.java'
             include 'com/starboundmc/client/*.java'
+            include 'com/starboundmc/client/starmap/*.java'
             include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
             include 'com/starboundmc/space/SectorCoordinate.java'
@@ -213,9 +216,17 @@ configurations {
 }
 
 repositories {
+    maven {
+        name = 'FirstDark'
+        url = uri('https://maven.firstdark.dev/snapshots')
+        content {
+            includeGroup 'com.lowdragmc.ldlib2'
+        }
+    }
 }
 
 dependencies {
+    implementation "com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all"
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -227,6 +238,7 @@ def generateModMetadata = tasks.register('generateModMetadata', ProcessResources
             minecraft_version_range : minecraft_version_range,
             neo_version             : neo_version,
             loader_version_range    : loader_version_range,
+            ldlib2_version_range    : ldlib2_version_range,
             mod_id                  : mod_id,
             mod_name                : mod_name,
             mod_license             : mod_license,

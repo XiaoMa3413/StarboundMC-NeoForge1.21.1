@@ -24,3 +24,10 @@ type="required"
 versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="ldlib2"
+type="required"
+versionRange="${ldlib2_version_range}"
+ordering="AFTER"
+side="CLIENT"

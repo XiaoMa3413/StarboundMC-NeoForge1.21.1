@@ -1,0 +1,3 @@
+.starmap-redraw-root {
+  background: sdf(#050912, 0);
+}
