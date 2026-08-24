@@ -10,6 +10,7 @@
   "gui.starboundmc.starmap.redraw.level.planet": "行星系统",
   "gui.starboundmc.starmap.redraw.back_hint": "右键返回  |  Esc 关闭",
   "gui.starboundmc.starmap.redraw.body_count": "%1$s 个天体",
+  "gui.starboundmc.starmap.redraw.inspect": "查看行星系统",
   "block.starboundmc.ship_console": "飞船驾驶台",
   "block.starboundmc.ship_crate": "飞船储物仓",
   "block.starboundmc.ship_door": "气闸门",

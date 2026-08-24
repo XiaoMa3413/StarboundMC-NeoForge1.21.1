@@ -16,6 +16,7 @@
   "gui.starboundmc.starmap.redraw.level.planet": "PLANETARY SYSTEM",
   "gui.starboundmc.starmap.redraw.back_hint": "Right-click: Back  |  Esc: Close",
   "gui.starboundmc.starmap.redraw.body_count": "%1$s celestial bodies",
+  "gui.starboundmc.starmap.redraw.inspect": "Open planetary system",
   "container.starboundmc.matter_manipulator_workbench": "Matter Manipulator Upgrade Workbench",
   "gui.starboundmc.upgrade_mining": "Upgrade Mining",
   "gui.starboundmc.upgrade_speed": "Upgrade Speed",
