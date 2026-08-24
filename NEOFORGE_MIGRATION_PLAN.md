@@ -581,7 +581,7 @@ Codec、MapCodec、BiomeSource、NoiseGeneratorSettings、ChunkGenerator 方法�
 - 13 个方块战利品表已从旧复数目录 `loot_tables/blocks` 迁移到 1.21.1 单数目录 `loot_table/blocks`；4 个配方的结果物品已由旧 `item` 字段改为 1.21.1 的 `id` 字段并补齐 recipe book category。阶段 8 已验证的行星维度资源保持不变；未再携带未被当前熔岩生成器引用的旧 `molten_noise` 输入。
 - 飞船维度、维度类型和专用群系已恢复为 `RegistrySetBuilder` datagen，并通过 NeoForge `GatherDataEvent` 重新生成到 `src/generated/resources`；主资源目录中的手写副本已移除，避免两套定义漂移。`runData` 成功生成 3 个动态注册表资源。
 - `en_us.json` 与 `zh_cn.json` 均包含 126 个相同翻译键，覆盖注册对象、设备菜单、物质枪升级、燃料、传送器、跃迁、星图详情和按键绑定。新增阶段 10 资源契约测试，校验所有注册方块/物品的模型、模组内模型/纹理引用、声音文件、本地化键集合、配方字段、战利品目录和 datagen 输出。
-- `pack.mcmeta` 保持 1.21.1 的 pack format 34，`neoforge.mods.toml` 继续由模板生成并声明 NeoForge/Minecraft 双侧依赖。当前 152 项测试全部通过，`runData` 与完整 `test build` 成功。
+- `pack.mcmeta` 保持 1.21.1 的 pack format 34，`neoforge.mods.toml` 继续由模板生成并声明 NeoForge/Minecraft 双侧依赖。阶段 10 完成时 152 项测试全部通过，`runData` 与完整 `test build` 成功。
 - 专用服务器实际加载 1294 个配方并启动至 `Done`，没有未知注册表、数据包或客户端类加载错误。客户端使用 Java 21 / OpenGL 4.6 完成资源重载、声音引擎启动和纹理图集构建；日志中没有 `starboundmc` missing model、missing texture、missing sound 或资源解析警告。烟测完成后相关 Java/Gradle 进程均已结束。
 
 ### 阶段 11：测试、存档迁移与发布准备
@@ -610,6 +610,15 @@ git diff --check
 - 单人、局域网和专用服务器的 common/client 边界。
 
 仅在新世界完全稳定后，复制旧存档的备份进行兼容测试。发现不兼容时编写显式迁移逻辑或声明不支持，不得在唯一存档上试错。
+
+实施状态（2026-08-24）：**自动验收已完成，真人交互矩阵待实机确认**。
+
+- 隔离新世界 `stage11-new-r2` 已依次通过阶段 2、6、8 的 RCON 烟测：13 个方块、23 个物品、4 个方块实体、`SeatEntity`、合金炉 ticker、下界门禁用、飞船与三个行星维度、程序化传送器和控制台，以及熔岩维度开放天空均已验证。测试内容已清理，全部维度正常保存并停服。
+- 并发生成四个维度时发现 Minecraft 1.21.1 `OctahedralGroup` 延迟初始化竞态，可使 Jigsaw 旋转读取未填完的方向表。现已在 common setup 单线程预热全部 48 种旋转和 6 个方向，并新增覆盖所有合法 Jigsaw 朝向及四种水平旋转的回归测试；修复后的新世界不再出现对应 worldgen 崩溃。
+- 旧 Forge 项目始终只读。两份旧存档先复制到 `run/saves/stage11-old-world-a` 和 `run/saves/stage11-old-world-b`，复制前后文件数、总字节数及关键 SHA-256 一致；两份备份均完成 NeoForge 1.21.1 自动升级、四个自定义维度加载、正常保存和再次启动，并保留 `starboundmc_ship.dat`。首次升级警告在保存后消失，无需显式存档修改代码。
+- `old-world-a` 的固定控制台坐标为空，但传送器和四维度正常，符合玩家改造旧飞船的情形。阶段 8 烟测因此新增显式 `-AllowMissingConsole` 开关；默认仍严格要求新世界生成控制台。
+- 最终 `runData` 成功且 3 个生成资源无变化，完整 `test build` 成功；153 项测试全部通过，0 failures、0 errors、0 skipped。客户端使用 Java 21 / OpenGL 4.6 完成资源重载、声音引擎启动和 14 个纹理图集构建，`starboundmc` missing/unknown/failed 和 ERROR/FATAL 均为 0，结束后无残留 Java 进程。
+- 尚需真人确认 GUI Scale 1/2/3/4/Auto、真实点击与跃迁手感、登录/死亡/重进流程，以及单人和局域网交互。自动验收不能替代这些视觉与操作判断。
 
 ## 10. 推荐提交策略
 
@@ -679,7 +688,7 @@ E:\Develop\doing\StarboundMC Neoforge
 - [x] 完成维度与世界生成迁移。
 - [x] 完成客户端渲染和星图迁移。
 - [x] 完成资源和 datagen 迁移。
-- [ ] 完成新世界、旧存档备份和专用服务器验收。
+- [x] 完成新世界、旧存档备份和专用服务器自动验收；真人交互矩阵待实机确认。
 
 ## 14. 官方参考
 

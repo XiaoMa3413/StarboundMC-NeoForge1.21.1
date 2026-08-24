@@ -11,6 +11,7 @@ import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.Stage7ServerPayloadActions;
 import com.starboundmc.sound.ModSounds;
 import com.starboundmc.world.ShipDimensions;
+import com.starboundmc.world.WorldgenRotationWarmup;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -40,6 +41,7 @@ public final class StarboundMC {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
+        WorldgenRotationWarmup.initialize();
         ModNetwork.installServerActions(new Stage7ServerPayloadActions());
         LOGGER.info("{} NeoForge common setup complete.", MODID);
     }
