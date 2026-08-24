@@ -618,6 +618,7 @@ git diff --check
 - 旧 Forge 项目始终只读。两份旧存档先复制到 `run/saves/stage11-old-world-a` 和 `run/saves/stage11-old-world-b`，复制前后文件数、总字节数及关键 SHA-256 一致；两份备份均完成 NeoForge 1.21.1 自动升级、四个自定义维度加载、正常保存和再次启动，并保留 `starboundmc_ship.dat`。首次升级警告在保存后消失，无需显式存档修改代码。
 - `old-world-a` 的固定控制台坐标为空，但传送器和四维度正常，符合玩家改造旧飞船的情形。阶段 8 烟测因此新增显式 `-AllowMissingConsole` 开关；默认仍严格要求新世界生成控制台。
 - 最终 `runData` 成功且 3 个生成资源无变化，完整 `test build` 成功；153 项测试全部通过，0 failures、0 errors、0 skipped。客户端使用 Java 21 / OpenGL 4.6 完成资源重载、声音引擎启动和 14 个纹理图集构建，`starboundmc` missing/unknown/failed 和 ERROR/FATAL 均为 0，结束后无残留 Java 进程。
+- 真人跃迁验收随后发现服务端已显示“开始跃迁”，但客户端画面不推进。根因是阶段 3 Payload 迁移只更新了 `ClientNetworkState`，而星图、空间渲染和声音仍读取 `ClientPlanetState`。客户端 Payload handler 现已恢复当前天体、跃迁开始、燃料、星图访问状态和权威飞行快照的渲染状态副作用；默认测试源集也已纳入此前被遗漏的 `network` 包测试。修复后完整构建共执行 158 项测试，0 failures、0 errors、0 skipped；专服再次启动至 `Done` 并正常保存全部维度后停服。跃迁视觉与抵达流程仍需真人复验。
 - 尚需真人确认 GUI Scale 1/2/3/4/Auto、真实点击与跃迁手感、登录/死亡/重进流程，以及单人和局域网交互。自动验收不能替代这些视觉与操作判断。
 
 ## 10. 推荐提交策略

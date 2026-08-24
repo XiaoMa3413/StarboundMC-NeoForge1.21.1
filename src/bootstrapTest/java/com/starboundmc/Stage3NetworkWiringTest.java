@@ -26,6 +26,11 @@ final class Stage3NetworkWiringTest {
         String client = source("network/ClientPayloadHandler.java");
         String server = source("network/ServerPayloadHandler.java");
         assertFalse(client.contains("ServerPlayer"));
+        assertTrue(client.contains("ClientPlanetState.setStarState"));
+        assertTrue(client.contains("ClientPlanetState.setCurrent"));
+        assertTrue(client.contains("ClientPlanetState.startWarp"));
+        assertTrue(client.contains("ClientPlanetState.setFuel"));
+        assertTrue(client.contains("ClientPlanetState.applyFlightSnapshot"));
         assertTrue(server.contains("instanceof ServerPlayer"));
         assertTrue(server.contains("containerMenu instanceof"));
         assertTrue(server.contains("validDestinationKey"));
