@@ -5,6 +5,10 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.client.StarmapGeometry;
+import com.starboundmc.client.ClientPlanetState;
+import com.starboundmc.network.ModNetwork;
+import com.starboundmc.network.StartWarpPacket;
+import com.starboundmc.warp.ShipWarpManager;
 import com.starboundmc.world.starmap.PlanetEntry;
 import com.starboundmc.world.starmap.StarSystem;
 import com.starboundmc.world.starmap.StarSystems;
@@ -25,6 +29,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private static final int ACCENT = 0xFF63E2DF;
     private static final int MUTED = 0xFF8CA2B3;
     private static final int PANEL = 0xD90A1420;
+    private static final int BUTTON = 0xFF1A4B57;
 
     private StarmapLevel level = StarmapLevel.GALAXY;
     private StarSystem selectedSystem;
@@ -52,6 +57,11 @@ public final class StarmapTerminalRoot extends UIElement {
         float height = getSizeHeight();
         float localX = event.x - getPositionX();
         float localY = event.y - getPositionY();
+        if (selectedTarget() != null && isInsideAction(localX, localY, width)) {
+            performAction();
+            event.stopPropagation();
+            return;
+        }
         if (level == StarmapLevel.GALAXY) {
             StarSystem system = nearestSystem(localX, localY, width, height);
             if (system != null) {
@@ -194,10 +204,11 @@ public final class StarmapTerminalRoot extends UIElement {
         if (selectedSystem == null && selectedEntry == null)
             return;
         Font font = Minecraft.getInstance().font;
-        int panelWidth = Math.min(210, Math.max(150, width / 4));
+        int panelWidth = Math.min(230, Math.max(170, width / 4));
         int panelX = Math.max(x + 14, x + width - panelWidth - 18);
         int panelY = y + 38;
-        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + 58, PANEL);
+        int panelHeight = selectedTarget() == null ? 82 : 122;
+        graphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, PANEL);
         Component title = selectedEntry == null
                 ? Component.translatable(selectedSystem.getNameKey())
                 : Component.translatable(selectedEntry.getNameKey());
@@ -210,7 +221,63 @@ public final class StarmapTerminalRoot extends UIElement {
             graphics.drawString(font, Component.translatable(
                     "gui.starboundmc.starmap.redraw.body_count", selectedSystem.getEntries().size()),
                     panelX + 8, panelY + 38, MUTED, false);
+            String description = selectedSystem.getDescriptionKey();
+            graphics.drawString(font, font.plainSubstrByWidth(
+                    Component.translatable(description).getString(), panelWidth - 16),
+                    panelX + 8, panelY + 54, MUTED, false);
+        } else {
+            graphics.drawString(font, Component.translatable(
+                    "gui.starboundmc.starmap.threat", selectedEntry.getThreatLevel()),
+                    panelX + 8, panelY + 38, MUTED, false);
+            graphics.drawString(font, font.plainSubstrByWidth(
+                    Component.translatable(selectedEntry.getDescriptionKey()).getString(), panelWidth - 16),
+                    panelX + 8, panelY + 54, MUTED, false);
+            int buttonY = panelY + panelHeight - 25;
+            boolean active = level == StarmapLevel.SYSTEM
+                    ? !selectedEntry.isMoon()
+                    : isWarpAvailable();
+            graphics.fill(panelX + 8, buttonY, panelX + panelWidth - 8, buttonY + 17,
+                    active ? BUTTON : 0xFF18232C);
+            Component action = level == StarmapLevel.PLANET
+                    ? Component.translatable("gui.starboundmc.starmap.warp")
+                    : Component.translatable("gui.starboundmc.starmap.redraw.inspect");
+            graphics.drawCenteredString(font, action, panelX + panelWidth / 2, buttonY + 4,
+                    active ? 0xFFEAF5F7 : 0xFF6E7C86);
         }
+    }
+
+    private PlanetEntry selectedTarget() {
+        return selectedEntry;
+    }
+
+    private boolean isInsideAction(float localX, float localY, float width) {
+        int panelWidth = Math.min(230, Math.max(170, Math.round(width) / 4));
+        int panelX = Math.max(14, Math.round(width) - panelWidth - 18);
+        int panelY = 38;
+        int buttonY = panelY + 122 - 25;
+        return localX >= panelX + 8 && localX < panelX + panelWidth - 8
+                && localY >= buttonY && localY < buttonY + 17;
+    }
+
+    private void performAction() {
+        if (selectedEntry == null)
+            return;
+        if (level == StarmapLevel.SYSTEM && !selectedEntry.isMoon()) {
+            focusedPlanet = selectedEntry;
+            level = StarmapLevel.PLANET;
+        } else if (level == StarmapLevel.PLANET && isWarpAvailable()) {
+            ModNetwork.sendToServer(new StartWarpPacket(selectedEntry.getEntryId()));
+        }
+    }
+
+    private boolean isWarpAvailable() {
+        if (selectedEntry == null || !selectedEntry.isReachable()
+                || ClientPlanetState.isWarping()
+                || selectedEntry.getDestination() == ClientPlanetState.getCurrent())
+            return false;
+        int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
+                selectedEntry.getEntryId());
+        return ClientPlanetState.getFuel() >= cost;
     }
 
     private Component levelLabel() {
