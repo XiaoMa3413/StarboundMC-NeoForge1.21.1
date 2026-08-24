@@ -35,13 +35,14 @@ public final class StarmapTerminalRoot extends UIElement {
     private StarSystem selectedSystem;
     private PlanetEntry selectedEntry;
     private PlanetEntry focusedPlanet;
-    private float orbitPhase;
+    /** Accumulated reference-clock ticks; each orbit derives its own phase. */
+    private float orbitClock;
 
     public StarmapTerminalRoot() {
         addClass("starmap-redraw-root");
         layout(layout -> layout.widthPercent(100).heightPercent(100));
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
-        addEventListener(UIEvents.TICK, event -> orbitPhase += 0.0125F);
+        addEventListener(UIEvents.TICK, event -> orbitClock += 1.0F);
     }
 
     private void onMouseDown(UIEvent event) {
@@ -159,7 +160,8 @@ public final class StarmapTerminalRoot extends UIElement {
                 continue;
             int radius = Math.max(18, entry.getOrbitRadius() * Math.min(width, height) / 220);
             drawOrbit(graphics, centerX, centerY, radius, 0x665B91A5);
-            int[] point = orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(), orbitPhase);
+            int[] point = orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(),
+                    StarmapOrbitMotion.phase(orbitClock, entry.getOrbitRadius()));
             int bodySize = 6;
             graphics.fill(point[0] - bodySize, point[1] - bodySize,
                     point[0] + bodySize, point[1] + bodySize,
@@ -186,7 +188,8 @@ public final class StarmapTerminalRoot extends UIElement {
                 continue;
             int radius = Math.max(22, entry.getOrbitRadius() * Math.min(width, height) / 180);
             drawOrbit(graphics, centerX, centerY, radius, 0x665B91A5);
-            int[] point = orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(), orbitPhase * 1.6F);
+            int[] point = orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(),
+                    StarmapOrbitMotion.moonPhase(orbitClock, entry.getOrbitRadius()));
             graphics.fill(point[0] - 5, point[1] - 5, point[0] + 5, point[1] + 5,
                     entry == selectedEntry ? ACCENT : entry.getVisual().getPrimaryColor());
         }
@@ -334,7 +337,8 @@ public final class StarmapTerminalRoot extends UIElement {
             if (!moon.isMoon() || !moon.getParentEntryId().equals(focusedPlanet.getEntryId()))
                 continue;
             int radius = Math.max(22, moon.getOrbitRadius() * Math.min(Math.round(width), Math.round(height)) / 180);
-            int[] point = orbitPoint(centerX, centerY, radius, moon.getOrbitAngle(), orbitPhase * 1.6F);
+            int[] point = orbitPoint(centerX, centerY, radius, moon.getOrbitAngle(),
+                    StarmapOrbitMotion.moonPhase(orbitClock, moon.getOrbitRadius()));
             double current = Math.hypot(localX - point[0], localY - point[1]);
             if (current <= 14 && current < distance) {
                 nearest = moon;
@@ -349,7 +353,8 @@ public final class StarmapTerminalRoot extends UIElement {
         int centerY = height / 2;
         if (!entry.isMoon()) {
             int radius = Math.max(18, entry.getOrbitRadius() * Math.min(width, height) / 220);
-            return orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(), orbitPhase);
+            return orbitPoint(centerX, centerY, radius, entry.getOrbitAngle(),
+                    StarmapOrbitMotion.phase(orbitClock, entry.getOrbitRadius()));
         }
         PlanetEntry parent = StarSystems.entryById(entry.getParentEntryId());
         if (parent == null)
@@ -357,7 +362,7 @@ public final class StarmapTerminalRoot extends UIElement {
         int[] parentPoint = systemPoint(parent, width, height);
         int radius = Math.max(8, entry.getOrbitRadius() * Math.min(width, height) / 360);
         return orbitPoint(parentPoint[0], parentPoint[1], radius,
-                entry.getOrbitAngle(), orbitPhase * 1.6F);
+                entry.getOrbitAngle(), StarmapOrbitMotion.moonPhase(orbitClock, entry.getOrbitRadius()));
     }
 
     private static void drawOrbit(GuiGraphics graphics, int centerX, int centerY, int radius, int color) {
