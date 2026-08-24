@@ -34,7 +34,7 @@ final class Stage1RegistrationIdsTest {
                 "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
                 "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
                 "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
-                "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
+                "star_core_ore", "titanium_alloy_furnace", "starmap_terminal", "raw_tungsten", "raw_titanium",
                 "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
                 "durasteel_ingot", "star_core_fragment"
         ));
