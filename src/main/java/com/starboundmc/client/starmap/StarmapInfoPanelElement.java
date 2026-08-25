@@ -149,12 +149,18 @@ final class StarmapInfoPanelElement extends UIElement {
         if (entry == null) {
             metadata.setText(Component.translatable(
                     "gui.starboundmc.starmap.redraw.body_count", system.getEntries().size()));
-            status.setDisplay(false);
             description.setText(Component.translatable(system.getDescriptionKey()));
-            boolean canEnter = root.canEnterSelectedSystem();
-            action.setDisplay(canEnter);
-            action.setText(root.actionLabel());
-            action.setActive(canEnter);
+            boolean galaxy = root.getLevel() == StarmapLevel.GALAXY;
+            boolean canEnter = galaxy && root.canEnterSelectedSystem();
+            Component reason = galaxy ? root.actionStatus() : null;
+            status.setDisplay(reason != null);
+            if (reason != null)
+                status.setText(reason);
+            action.setDisplay(galaxy);
+            if (galaxy) {
+                action.setText(root.actionLabel());
+                action.setActive(canEnter);
+            }
             preview.style(style -> style.backgroundTexture(SDFRectTexture.of(system.getStarColor())
                     .setRadius(16).setBorderColor(ACCENT).setStroke(1)));
         } else {

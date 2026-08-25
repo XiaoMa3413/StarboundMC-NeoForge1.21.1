@@ -51,6 +51,8 @@
   "gui.starboundmc.starmap.fuel_cost_local": "星系内跃迁：%1$s 燃料",
   "gui.starboundmc.starmap.fuel_cost_cross": "跨星系跃迁：%1$s 燃料",
   "gui.starboundmc.starmap.locked": "尚未到达",
+  "gui.starboundmc.starmap.system_locked": "恒星系尚未解锁",
+  "gui.starboundmc.starmap.system_unreachable": "尚无可用的超空间航道",
   "gui.starboundmc.starmap.visited": "已探访",
   "gui.starboundmc.starmap.current": "当前停靠",
   "gui.starboundmc.starmap.detail.system": "星系",

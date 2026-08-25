@@ -5,12 +5,12 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
-import com.starboundmc.client.StarmapGeometry;
 import com.starboundmc.client.ClientPlanetState;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.warp.ShipWarpManager;
 import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.starmap.StarmapGalaxyGraph;
 import com.starboundmc.world.starmap.StarSystem;
 import com.starboundmc.world.starmap.StarSystems;
 import net.minecraft.client.gui.GuiGraphics;
@@ -41,6 +41,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private PlanetEntry focusedPlanet;
     /** True when the central star is explicitly selected in the system view. */
     private boolean centralStarSelected;
+    private final StarmapGalaxyGraph galaxyGraph;
     private final StarmapViewTransform viewTransform = new StarmapViewTransform();
     private final UIElement nodeLayer;
     private final StarmapSelectionOverlayElement selectionOverlay;
@@ -63,6 +64,11 @@ public final class StarmapTerminalRoot extends UIElement {
     private float viewDragStartOffsetY;
 
     public StarmapTerminalRoot() {
+        this(StarmapGalaxyGraphResources.load());
+    }
+
+    StarmapTerminalRoot(StarmapGalaxyGraph galaxyGraph) {
+        this.galaxyGraph = java.util.Objects.requireNonNull(galaxyGraph, "galaxyGraph");
         addClass("starmap-redraw-root");
         layout(layout -> layout.widthPercent(100).heightPercent(100));
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
@@ -74,7 +80,8 @@ public final class StarmapTerminalRoot extends UIElement {
                 .layout(layout -> layout.widthPercent(100).heightPercent(100)
                         .positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE))
                 .setAllowHitTest(false);
-        for (StarSystem system : StarSystems.all()) {
+        for (StarmapGalaxyGraph.Node graphNode : galaxyGraph.nodes()) {
+            StarSystem system = graphNode.system();
             StarmapNodeElement.StarSystemRef ref = new StarmapNodeElement.StarSystemRef(system);
             StarmapNodeElement starNode = new StarmapNodeElement(this, ref, null, false);
             nodes.add(starNode);
@@ -338,12 +345,15 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void drawGalaxy(GuiGraphics graphics, int x, int y, int width, int height) {
-        float[] first = null;
-        for (StarSystem system : StarSystems.all()) {
-            float[] position = galaxyPointF(system, x, y, width, height);
-            if (first != null)
-                drawDashedLine(graphics, first[0], first[1], position[0], position[1], MUTED);
-            first = position;
+        for (StarmapGalaxyGraph.Route route : galaxyGraph.routes()) {
+            StarmapGalaxyGraph.Node from = galaxyGraph.node(route.fromId());
+            StarmapGalaxyGraph.Node to = galaxyGraph.node(route.toId());
+            if (from == null || to == null)
+                continue;
+            float[] start = galaxyPointF(from.system(), x, y, width, height);
+            float[] end = galaxyPointF(to.system(), x, y, width, height);
+            drawDashedLine(graphics, start[0], start[1], end[0], end[1],
+                    route.available() ? MUTED : 0x66566B75);
         }
     }
 
@@ -455,6 +465,9 @@ public final class StarmapTerminalRoot extends UIElement {
     void enterSystem(StarSystem system) {
         if (system == null)
             return;
+        StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(system);
+        if (graphNode == null || !graphNode.available())
+            return;
         selectedSystem = system;
         level = StarmapLevel.SYSTEM;
         selectedEntry = null;
@@ -509,7 +522,9 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     boolean canEnterSelectedSystem() {
-        return level == StarmapLevel.GALAXY && selectedSystem != null && selectedEntry == null;
+        StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(selectedSystem);
+        return level == StarmapLevel.GALAXY && selectedSystem != null && selectedEntry == null
+                && graphNode != null && graphNode.available();
     }
 
     boolean isInfoPanelVisible() {
@@ -533,6 +548,14 @@ public final class StarmapTerminalRoot extends UIElement {
      * selected destination is currently valid.
      */
     Component actionStatus() {
+        if (level == StarmapLevel.GALAXY && selectedSystem != null) {
+            StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(selectedSystem);
+            if (graphNode == null || !graphNode.unlocked())
+                return Component.translatable("gui.starboundmc.starmap.system_locked");
+            if (!graphNode.reachable())
+                return Component.translatable("gui.starboundmc.starmap.system_unreachable");
+            return null;
+        }
         if (level != StarmapLevel.PLANET || selectedEntry == null)
             return null;
         if (!selectedEntry.isReachable())
@@ -630,7 +653,7 @@ public final class StarmapTerminalRoot extends UIElement {
         int preferredWidth = Math.min(230, Math.max(156, frameWidth / 4));
         int panelWidth = Math.min(preferredWidth, Math.max(1, frameWidth - 32));
         int panelHeight;
-        if (selectedEntry != null || canEnterSelectedSystem()) {
+        if (selectedEntry != null || (level == StarmapLevel.GALAXY && selectedSystem != null)) {
             panelHeight = 122;
         } else if (centralStarSelected) {
             // Header (34) + metadata (11) + description (28) + padding (16)
@@ -735,9 +758,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private float[] galaxyPointF(StarSystem system, float x, float y, float width, float height) {
-        int[] base = StarmapGeometry.galaxyPosition(system);
-        float worldX = base[0] * width / (float) BASE_WIDTH;
-        float worldY = base[1] * height / (float) BASE_HEIGHT;
+        StarmapGalaxyGraph.Node node = galaxyGraph.node(system);
+        var position = node == null ? system.getGalaxyMapPosition() : node.position();
+        float worldX = position.pixelX(BASE_WIDTH) * width / (float) BASE_WIDTH;
+        float worldY = position.pixelY(BASE_HEIGHT) * height / (float) BASE_HEIGHT;
         StarmapViewTransform.Point point = viewTransform.toScreen(
                 worldX, worldY, width, height);
         return new float[] { x + point.x(), y + point.y() };
@@ -758,7 +782,8 @@ public final class StarmapTerminalRoot extends UIElement {
     private StarSystem nearestSystem(float localX, float localY, float width, float height) {
         StarSystem nearest = null;
         double distance = Double.MAX_VALUE;
-        for (StarSystem system : StarSystems.all()) {
+        for (StarmapGalaxyGraph.Node node : galaxyGraph.nodes()) {
+            StarSystem system = node.system();
             float[] point = galaxyPointF(system, 0, 0, width, height);
             double current = Math.hypot(localX - point[0], localY - point[1]);
             double hitRadius = Math.max(14.0D, 20.0D * viewTransform.scale());
