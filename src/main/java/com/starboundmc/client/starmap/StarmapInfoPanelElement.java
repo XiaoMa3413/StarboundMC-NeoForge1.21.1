@@ -10,8 +10,11 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import net.minecraft.network.chat.Component;
 import com.starboundmc.world.starmap.PlanetEntry;
+
+import java.util.Objects;
 
 /** Floating detail card built from LDLib2 elements rather than raw draw calls. */
 final class StarmapInfoPanelElement extends UIElement {
@@ -31,6 +34,9 @@ final class StarmapInfoPanelElement extends UIElement {
     private final Label description = new Label();
     private final Button action = new Button();
     private StarmapInfoPanelPlacement.Placement placement;
+    private boolean targetVisible;
+    private String contentKey;
+    private ISubscription visibilityAnimation = StarmapUiAnimations.none();
 
     StarmapInfoPanelElement(StarmapTerminalRoot root) {
         this.root = root;
@@ -102,6 +108,7 @@ final class StarmapInfoPanelElement extends UIElement {
         }, true);
         addChild(panel);
         addEventListener(UIEvents.TICK, event -> refresh());
+        setDisplay(false);
         refresh();
     }
 
@@ -111,7 +118,7 @@ final class StarmapInfoPanelElement extends UIElement {
     }
 
     void prepareFrame(int width, int height) {
-        if (!isDisplayed())
+        if (!isDisplayed() || !targetVisible)
             return;
         StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
         if (next.equals(placement))
@@ -129,7 +136,21 @@ final class StarmapInfoPanelElement extends UIElement {
         PlanetEntry entry = root.getSelectedEntry();
         var system = root.getSelectedSystem();
         boolean visible = root.isInfoPanelVisible() && (system != null || entry != null);
-        setDisplay(visible);
+        String nextContentKey = visible ? root.selectionTargetKey() : null;
+        boolean visibilityChanged = visible != targetVisible;
+        if (visibilityChanged) {
+            targetVisible = visible;
+            contentKey = nextContentKey;
+            if (visible)
+                showAnimated();
+            else
+                hideAnimated();
+        } else if (visible && !Objects.equals(nextContentKey, contentKey)) {
+            contentKey = nextContentKey;
+            visibilityAnimation.unsubscribe();
+            visibilityAnimation = StarmapUiAnimations.fade(panel, 0.58F, 1.0F,
+                    StarmapUiAnimations.SELECTION_DURATION, null);
+        }
         if (!visible)
             return;
 
@@ -174,5 +195,23 @@ final class StarmapInfoPanelElement extends UIElement {
             preview.style(style -> style.backgroundTexture(
                     root.previewBodyTexture(entry, 32.0F)));
         }
+    }
+
+    private void showAnimated() {
+        visibilityAnimation.unsubscribe();
+        setDisplay(true);
+        panel.setAllowHitTest(true);
+        visibilityAnimation = StarmapUiAnimations.fade(panel, 0.12F, 1.0F,
+                StarmapUiAnimations.PANEL_DURATION, null);
+    }
+
+    private void hideAnimated() {
+        visibilityAnimation.unsubscribe();
+        panel.setAllowHitTest(false);
+        visibilityAnimation = StarmapUiAnimations.fade(panel, 1.0F, 0.0F,
+                StarmapUiAnimations.PANEL_DURATION, () -> {
+                    if (!targetVisible)
+                        setDisplay(false);
+                });
     }
 }
