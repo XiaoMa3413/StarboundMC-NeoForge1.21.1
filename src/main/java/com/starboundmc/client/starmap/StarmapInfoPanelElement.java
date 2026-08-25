@@ -28,6 +28,7 @@ final class StarmapInfoPanelElement extends UIElement {
     private final Label title = new Label();
     private final Label subtitle = new Label();
     private final Label metadata = new Label();
+    private final Label status = new Label();
     private final Label description = new Label();
     private final Button action = new Button();
 
@@ -36,6 +37,8 @@ final class StarmapInfoPanelElement extends UIElement {
         addClasses("starmap-info-layer", "starmap-layer");
         layout(layout -> layout.widthPercent(100).heightPercent(100)
                 .positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE));
+        // The full-screen layer must stay transparent to hit testing; its
+        // panel child remains hit-testable so nested buttons receive clicks.
         setAllowHitTest(false);
 
         panel = new UIElement().addClasses("starmap-info-panel", "starmap-panel")
@@ -44,6 +47,7 @@ final class StarmapInfoPanelElement extends UIElement {
                 .style(style -> style.backgroundTexture(
                         SDFRectTexture.of(0xE00A1420).setRadius(4).setStroke(1)
                                 .setBorderColor(0xFF2F6676)));
+        panel.setAllowHitTest(true);
 
         preview = new UIElement().addClass("starmap-info-preview")
                 .layout(layout -> layout.width(32).height(32).marginRight(7))
@@ -66,6 +70,10 @@ final class StarmapInfoPanelElement extends UIElement {
         metadata.addClass("starmap-info-metadata");
         metadata.layout(layout -> layout.widthPercent(100).height(11));
         metadata.textStyle(style -> style.textColor(MUTED).fontSize(7));
+        status.addClass("starmap-info-status");
+        status.layout(layout -> layout.widthPercent(100).height(14));
+        status.textStyle(style -> style.textColor(0xFFFFB36B).fontSize(7)
+                .textWrap(TextWrap.WRAP).textAlignVertical(Vertical.TOP));
         description.addClass("starmap-info-description");
         description.layout(layout -> layout.widthPercent(100).height(28));
         description.textStyle(style -> style.textColor(MUTED).fontSize(7)
@@ -80,7 +88,15 @@ final class StarmapInfoPanelElement extends UIElement {
                 .pressedTexture(SDFRectTexture.of(0xFF123B45).setRadius(2)));
         action.setOnClick(this::onActionClick);
 
-        panel.addChildren(header, metadata, description, action);
+        panel.addChildren(header, metadata, status, description, action);
+        // The panel is an absolutely positioned overlay. Handle the action
+        // during capture as a fallback for clicks landing on the button's
+        // text child; this keeps the command reliable across LDLib2 layouts.
+        panel.addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button == 0 && action.isDisplayed()
+                    && action.isIntersectWithPoint(event.x, event.y))
+                onActionClick(event);
+        }, true);
         addChild(panel);
         addEventListener(UIEvents.TICK, event -> refresh());
         refresh();
@@ -94,7 +110,7 @@ final class StarmapInfoPanelElement extends UIElement {
     void refresh() {
         PlanetEntry entry = root.getSelectedEntry();
         var system = root.getSelectedSystem();
-        boolean visible = system != null || entry != null;
+        boolean visible = root.isInfoPanelVisible() && (system != null || entry != null);
         setDisplay(visible);
         if (!visible)
             return;
@@ -110,8 +126,12 @@ final class StarmapInfoPanelElement extends UIElement {
         if (entry == null) {
             metadata.setText(Component.translatable(
                     "gui.starboundmc.starmap.redraw.body_count", system.getEntries().size()));
+            status.setDisplay(false);
             description.setText(Component.translatable(system.getDescriptionKey()));
-            action.setDisplay(false);
+            boolean canEnter = root.canEnterSelectedSystem();
+            action.setDisplay(canEnter);
+            action.setText(root.actionLabel());
+            action.setActive(canEnter);
             preview.style(style -> style.backgroundTexture(SDFRectTexture.of(system.getStarColor())
                     .setRadius(16).setBorderColor(ACCENT).setStroke(1)));
         } else {
@@ -119,10 +139,12 @@ final class StarmapInfoPanelElement extends UIElement {
                     entry.getThreatLevel()));
             description.setText(Component.translatable(entry.getDescriptionKey()));
             action.setDisplay(true);
-            action.setText(root.getLevel() == StarmapLevel.PLANET
-                    ? Component.translatable("gui.starboundmc.starmap.warp")
-                    : Component.translatable("gui.starboundmc.starmap.redraw.inspect"));
+            action.setText(root.actionLabel());
             action.setActive(root.isActionAvailable());
+            Component reason = root.actionStatus();
+            status.setDisplay(reason != null);
+            if (reason != null)
+                status.setText(reason);
             String texture = root.previewTexture(entry);
             if (texture != null)
                 preview.style(style -> style.backgroundTexture(SpriteTexture.of(ResourceLocation.parse(texture))));
