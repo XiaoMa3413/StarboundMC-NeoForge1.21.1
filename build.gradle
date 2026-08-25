@@ -149,6 +149,7 @@ sourceSets {
             include 'com/starboundmc/world/*.java'
             include 'com/starboundmc/world/starmap/*.java'
             include 'com/starboundmc/client/Starmap*.java'
+            include 'com/starboundmc/client/starmap/*.java'
             include 'com/starboundmc/client/ShipConsoleScreenHitTestTest.java'
             include 'com/starboundmc/client/*.java'
             include 'com/starboundmc/client/space/*.java'

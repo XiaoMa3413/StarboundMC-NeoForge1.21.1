@@ -6,6 +6,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Transform2D;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
@@ -23,6 +24,7 @@ final class StarmapInfoPanelElement extends UIElement {
     private static final int BUTTON = 0xFF1A4B57;
 
     private final StarmapTerminalRoot root;
+    private final Transform2D panelTransform = Transform2D.identity().pivot(0.0F, 0.0F);
     private final UIElement panel;
     private final UIElement preview;
     private final Label title = new Label();
@@ -31,6 +33,7 @@ final class StarmapInfoPanelElement extends UIElement {
     private final Label status = new Label();
     private final Label description = new Label();
     private final Button action = new Button();
+    private StarmapInfoPanelPlacement.Placement placement;
 
     StarmapInfoPanelElement(StarmapTerminalRoot root) {
         this.root = root;
@@ -46,7 +49,8 @@ final class StarmapInfoPanelElement extends UIElement {
                         .width(220).height(126).paddingAll(8))
                 .style(style -> style.backgroundTexture(
                         SDFRectTexture.of(0xE00A1420).setRadius(4).setStroke(1)
-                                .setBorderColor(0xFF2F6676)));
+                                .setBorderColor(0xFF2F6676))
+                        .transform2D(panelTransform));
         panel.setAllowHitTest(true);
 
         preview = new UIElement().addClass("starmap-info-preview")
@@ -93,8 +97,10 @@ final class StarmapInfoPanelElement extends UIElement {
         // during capture as a fallback for clicks landing on the button's
         // text child; this keeps the command reliable across LDLib2 layouts.
         panel.addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            double[] point = { event.x, event.y };
+            panelTransform.inversePoint(panel, point);
             if (event.button == 0 && action.isDisplayed()
-                    && action.isIntersectWithPoint(event.x, event.y))
+                    && action.isIntersectWithPoint(point[0], point[1]))
                 onActionClick(event);
         }, true);
         addChild(panel);
@@ -107,6 +113,21 @@ final class StarmapInfoPanelElement extends UIElement {
         event.stopPropagation();
     }
 
+    void prepareFrame(int width, int height) {
+        if (!isDisplayed())
+            return;
+        StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
+        if (next.equals(placement))
+            return;
+        placement = next;
+        panelTransform.translate(next.x(), next.y());
+        panel.clearPoseCache();
+    }
+
+    boolean containsLocalPoint(float x, float y) {
+        return placement != null && placement.contains(x, y);
+    }
+
     void refresh() {
         PlanetEntry entry = root.getSelectedEntry();
         var system = root.getSelectedSystem();
@@ -115,9 +136,11 @@ final class StarmapInfoPanelElement extends UIElement {
         if (!visible)
             return;
 
-        int[] rect = root.infoPanelRect(0, 0, Math.round(root.getSizeWidth()),
-                Math.round(root.getSizeHeight()), false);
-        panel.layout(layout -> layout.left(rect[0]).top(rect[1]).width(rect[2]).height(rect[3]));
+        int width = Math.max(1, Math.round(root.getSizeWidth()));
+        int height = Math.max(1, Math.round(root.getSizeHeight()));
+        StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
+        panel.layout(layout -> layout.left(0).top(0).width(next.width()).height(next.height()));
+        prepareFrame(width, height);
         title.setText(entry == null ? Component.translatable(system.getNameKey())
                 : Component.translatable(entry.getNameKey()));
         subtitle.setText(entry == null ? Component.translatable(system.getStarTypeKey())
