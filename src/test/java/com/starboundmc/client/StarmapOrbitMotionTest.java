@@ -26,4 +26,16 @@ class StarmapOrbitMotionTest
         assertTrue(moon > StarmapOrbitMotion.phase(1.0F, 20.0F));
         assertTrue(outer > 0.0F);
     }
+
+    @Test
+    void acceptsFractionalRenderClockForContinuousMotion()
+    {
+        float previous = StarmapOrbitMotion.phase(12.0D, 84.0F);
+        float interpolated = StarmapOrbitMotion.phase(12.5D, 84.0F);
+        float next = StarmapOrbitMotion.phase(13.0D, 84.0F);
+
+        assertTrue(previous < interpolated);
+        assertTrue(interpolated < next);
+        assertEquals((previous + next) * 0.5F, interpolated, 0.000001F);
+    }
 }

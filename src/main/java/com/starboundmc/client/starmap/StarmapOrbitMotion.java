@@ -24,12 +24,16 @@ public final class StarmapOrbitMotion
         return BASE_SPEED * (float) Math.sqrt(REFERENCE_RADIUS / radius);
     }
 
-    public static float phase(float orbitClock, float orbitRadius)
+    /**
+     * Calculates a phase from a continuous clock. The clock is deliberately a
+     * double so a long-running screen does not lose sub-tick precision.
+     */
+    public static float phase(double orbitClock, float orbitRadius)
     {
-        return orbitClock * speedForRadius(orbitRadius);
+        return (float) (orbitClock * speedForRadius(orbitRadius));
     }
 
-    public static float moonPhase(float orbitClock, float orbitRadius)
+    public static float moonPhase(double orbitClock, float orbitRadius)
     {
         return phase(orbitClock, orbitRadius) * MOON_SPEED_MULTIPLIER;
     }
