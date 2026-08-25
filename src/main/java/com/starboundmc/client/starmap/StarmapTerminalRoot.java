@@ -150,8 +150,7 @@ public final class StarmapTerminalRoot extends UIElement {
                 PlanetEntry entry = nearestSystemEntry(localX, localY, width, height);
                 if (entry != null) {
                     if (entry == selectedEntry) {
-                        focusedPlanet = entry;
-                        level = StarmapLevel.PLANET;
+                        enterPlanet(entry);
                     } else {
                         selectedEntry = entry;
                     }
@@ -256,16 +255,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     public void goBack() {
-        if (level == StarmapLevel.PLANET) {
-            level = StarmapLevel.SYSTEM;
-            selectedEntry = focusedPlanet;
-            focusedPlanet = null;
-            centralStarSelected = false;
-            resetViewForLevel();
-        } else if (level == StarmapLevel.SYSTEM) {
-            level = StarmapLevel.GALAXY;
-            selectedEntry = null;
-            centralStarSelected = false;
+        StarmapNavigationState current = navigationState();
+        StarmapNavigationState next = current.goBack();
+        if (!next.equals(current)) {
+            applyNavigationState(next);
             resetViewForLevel();
         }
         refreshComponents();
@@ -473,11 +466,7 @@ public final class StarmapTerminalRoot extends UIElement {
         StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(system);
         if (graphNode == null || !graphNode.available())
             return;
-        selectedSystem = system;
-        level = StarmapLevel.SYSTEM;
-        selectedEntry = null;
-        focusedPlanet = null;
-        centralStarSelected = false;
+        applyNavigationState(navigationState().enterSystem(system));
         resetViewForLevel();
         refreshComponents();
     }
@@ -501,9 +490,7 @@ public final class StarmapTerminalRoot extends UIElement {
                 return;
             centralStarSelected = false;
             if (entry == selectedEntry) {
-                focusedPlanet = entry;
-                level = StarmapLevel.PLANET;
-                resetViewForLevel();
+                enterPlanet(entry);
             } else {
                 selectedEntry = entry;
             }
@@ -744,13 +731,34 @@ public final class StarmapTerminalRoot extends UIElement {
         if (selectedEntry == null)
             return;
         if (level == StarmapLevel.SYSTEM && !selectedEntry.isMoon()) {
-            focusedPlanet = selectedEntry;
-            level = StarmapLevel.PLANET;
-            resetViewForLevel();
-            refreshComponents();
+            enterPlanet(selectedEntry);
         } else if (level == StarmapLevel.PLANET && isWarpAvailable()) {
             ModNetwork.sendToServer(new StartWarpPacket(selectedEntry.getEntryId()));
         }
+    }
+
+    /** Change page context without carrying an implicit selection into it. */
+    private void enterPlanet(PlanetEntry planet) {
+        StarmapNavigationState current = navigationState();
+        StarmapNavigationState next = current.enterPlanet(planet);
+        if (next.equals(current))
+            return;
+        applyNavigationState(next);
+        resetViewForLevel();
+        refreshComponents();
+    }
+
+    private StarmapNavigationState navigationState() {
+        return new StarmapNavigationState(level, selectedSystem, selectedEntry,
+                focusedPlanet, centralStarSelected);
+    }
+
+    private void applyNavigationState(StarmapNavigationState state) {
+        level = state.level();
+        selectedSystem = state.selectedSystem();
+        selectedEntry = state.selectedEntry();
+        focusedPlanet = state.focusedPlanet();
+        centralStarSelected = state.centralStarSelected();
     }
 
     private boolean isWarpAvailable() {

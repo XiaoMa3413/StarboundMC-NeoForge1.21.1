@@ -1,6 +1,7 @@
 package com.starboundmc.client.starmap;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.mojang.logging.LogUtils;
@@ -18,7 +19,7 @@ import java.util.function.Predicate;
 /** Resolves optional body sprites once and guarantees an SDF fallback. */
 final class StarmapBodyTextureResolver {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int FALLBACK_BORDER = 0xAA6B94A4;
+    private static final int DEFAULT_OUTLINE = 0xD06B94A4;
 
     private final Predicate<ResourceLocation> resourceExists;
     private final Map<String, Optional<ResourceLocation>> cache = new HashMap<>();
@@ -56,18 +57,22 @@ final class StarmapBodyTextureResolver {
     }
 
     IGuiTexture texture(PlanetEntry entry, float size, ResourceLocation resolved) {
-        if (resolved != null)
-            return SpriteTexture.of(resolved);
         if (entry == null)
             return IGuiTexture.EMPTY;
         StarmapBodyVisual visual = entry.getVisual();
-        int border = visual.hasAtmosphere()
-                ? (0xAA000000 | (visual.getAtmosphereColor() & 0x00FFFFFF))
-                : FALLBACK_BORDER;
-        return SDFRectTexture.of(visual.getPrimaryColor())
+        IGuiTexture body = resolved != null
+                ? SpriteTexture.of(resolved)
+                : SDFRectTexture.of(visual.getPrimaryColor())
                 .setRadius(Math.max(2.0F, size * 0.5F))
-                .setBorderColor(border)
-                .setStroke(Math.max(0.75F, Math.min(1.5F, size * 0.06F)));
+                .setStroke(0.0F);
+        int outlineColor = visual.hasAtmosphere()
+                ? (0xD0000000 | (visual.getAtmosphereColor() & 0x00FFFFFF))
+                : DEFAULT_OUTLINE;
+        IGuiTexture outline = SDFRectTexture.of(0x00000000)
+                .setRadius(Math.max(2.0F, size * 0.5F))
+                .setBorderColor(outlineColor)
+                .setStroke(Math.max(0.75F, Math.min(1.25F, size * 0.04F)));
+        return GuiTextureGroup.of(body, outline);
     }
 
     private ResourceLocation resolveId(String rawId) {
