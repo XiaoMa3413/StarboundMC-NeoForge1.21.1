@@ -72,6 +72,8 @@
   "gui.starboundmc.starmap.fuel_cost_local": "In-system warp: %1$s fuel",
   "gui.starboundmc.starmap.fuel_cost_cross": "Cross-system warp: %1$s fuel",
   "gui.starboundmc.starmap.locked": "Not yet reachable",
+  "gui.starboundmc.starmap.system_locked": "Star system not yet unlocked",
+  "gui.starboundmc.starmap.system_unreachable": "No usable hyperspace route",
   "gui.starboundmc.starmap.visited": "Visited",
   "gui.starboundmc.starmap.current": "Currently docked",
   "gui.starboundmc.starmap.detail.system": "SYS",
