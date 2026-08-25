@@ -1,5 +1,6 @@
 package com.starboundmc.client.starmap;
 
+import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.starboundmc.world.starmap.PlanetEntry;
@@ -33,8 +34,14 @@ final class StarmapBodyTextureResolverTest {
                         "starboundmc:textures/gui/starmap/bodies/molten.png"),
                 resolver.resolve(molten.getVisual(), true));
         assertNull(resolver.resolve(gasGiant.getVisual(), true));
-        assertInstanceOf(SpriteTexture.class, resolver.texture(barren, 32.0F, true));
-        assertInstanceOf(SDFRectTexture.class, resolver.texture(gasGiant, 16.0F, true));
+        GuiTextureGroup sprite = assertInstanceOf(GuiTextureGroup.class,
+                resolver.texture(barren, 32.0F, true));
+        GuiTextureGroup fallback = assertInstanceOf(GuiTextureGroup.class,
+                resolver.texture(gasGiant, 16.0F, true));
+        assertInstanceOf(SpriteTexture.class, sprite.getTextures()[0]);
+        assertInstanceOf(SDFRectTexture.class, sprite.getTextures()[1]);
+        assertInstanceOf(SDFRectTexture.class, fallback.getTextures()[0]);
+        assertInstanceOf(SDFRectTexture.class, fallback.getTextures()[1]);
     }
 
     @Test
