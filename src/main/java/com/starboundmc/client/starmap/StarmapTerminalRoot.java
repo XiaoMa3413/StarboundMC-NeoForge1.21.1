@@ -1,6 +1,7 @@
 package com.starboundmc.client.starmap;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
@@ -16,6 +17,7 @@ import com.starboundmc.world.starmap.StarSystems;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -42,6 +44,7 @@ public final class StarmapTerminalRoot extends UIElement {
     /** True when the central star is explicitly selected in the system view. */
     private boolean centralStarSelected;
     private final StarmapGalaxyGraph galaxyGraph;
+    private final StarmapBodyTextureResolver bodyTextures;
     private final StarmapViewTransform viewTransform = new StarmapViewTransform();
     private final UIElement nodeLayer;
     private final StarmapSelectionOverlayElement selectionOverlay;
@@ -64,11 +67,13 @@ public final class StarmapTerminalRoot extends UIElement {
     private float viewDragStartOffsetY;
 
     public StarmapTerminalRoot() {
-        this(StarmapGalaxyGraphResources.load());
+        this(StarmapGalaxyGraphResources.load(), StarmapBodyTextureResolver.clientResources());
     }
 
-    StarmapTerminalRoot(StarmapGalaxyGraph galaxyGraph) {
+    StarmapTerminalRoot(StarmapGalaxyGraph galaxyGraph,
+                        StarmapBodyTextureResolver bodyTextures) {
         this.galaxyGraph = java.util.Objects.requireNonNull(galaxyGraph, "galaxyGraph");
+        this.bodyTextures = java.util.Objects.requireNonNull(bodyTextures, "bodyTextures");
         addClass("starmap-redraw-root");
         layout(layout -> layout.widthPercent(100).heightPercent(100));
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
@@ -572,20 +577,26 @@ public final class StarmapTerminalRoot extends UIElement {
         return null;
     }
 
-    String previewTexture(PlanetEntry entry) {
+    ResourceLocation previewTexture(PlanetEntry entry) {
         if (entry == null)
             return null;
-        String focus = entry.getVisual().getFocusTextureId();
-        String normal = entry.getVisual().getTextureId();
-        return level == StarmapLevel.PLANET && focus != null ? focus : normal;
+        return bodyTextures.resolve(entry.getVisual(), level == StarmapLevel.PLANET);
     }
 
-    String nodeTexture(PlanetEntry entry) {
+    ResourceLocation nodeTexture(PlanetEntry entry) {
         // Overview satellites are deliberately dots; a full sprite at this
         // scale reads as noise and makes neighbouring moons appear merged.
         if (entry != null && entry.isMoon() && level == StarmapLevel.SYSTEM)
             return null;
         return previewTexture(entry);
+    }
+
+    IGuiTexture bodyTexture(PlanetEntry entry, float size, ResourceLocation resolved) {
+        return bodyTextures.texture(entry, size, resolved);
+    }
+
+    IGuiTexture previewBodyTexture(PlanetEntry entry, float size) {
+        return bodyTextures.texture(entry, size, previewTexture(entry));
     }
 
     StarmapNodeElement.NodePlacement nodePlacement(StarSystem system, PlanetEntry entry,

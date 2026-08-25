@@ -1,8 +1,6 @@
 package com.starboundmc.client.starmap;
 
-import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
@@ -13,7 +11,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import com.starboundmc.world.starmap.PlanetEntry;
 
 /** Floating detail card built from LDLib2 elements rather than raw draw calls. */
@@ -174,12 +171,8 @@ final class StarmapInfoPanelElement extends UIElement {
             status.setDisplay(reason != null);
             if (reason != null)
                 status.setText(reason);
-            String texture = root.previewTexture(entry);
-            if (texture != null)
-                preview.style(style -> style.backgroundTexture(SpriteTexture.of(ResourceLocation.parse(texture))));
-            else
-                preview.style(style -> style.backgroundTexture(SDFRectTexture.of(entry.getVisual().getPrimaryColor())
-                        .setRadius(16).setBorderColor(ACCENT).setStroke(1)));
+            preview.style(style -> style.backgroundTexture(
+                    root.previewBodyTexture(entry, 32.0F)));
         }
     }
 }
