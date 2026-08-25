@@ -48,6 +48,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapViewTransform viewTransform = new StarmapViewTransform();
     private final UIElement nodeLayer;
     private final StarmapSelectionOverlayElement selectionOverlay;
+    private final StarmapTransitionOverlayElement transitionOverlay;
     private final StarmapChromeElement chrome;
     private final StarmapInfoPanelElement infoPanel;
     private final List<StarmapNodeElement> nodes = new ArrayList<>();
@@ -98,9 +99,10 @@ public final class StarmapTerminalRoot extends UIElement {
             }
         }
         selectionOverlay = new StarmapSelectionOverlayElement(this);
+        transitionOverlay = new StarmapTransitionOverlayElement();
         chrome = new StarmapChromeElement(this);
         infoPanel = new StarmapInfoPanelElement(this);
-        addChildren(nodeLayer, selectionOverlay, chrome, infoPanel);
+        addChildren(nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel);
         addEventListener(UIEvents.TICK, event -> {
             orbitClock += 1.0D;
             renderOrbitClock = orbitClock;
@@ -110,6 +112,7 @@ public final class StarmapTerminalRoot extends UIElement {
 
     private void refreshComponents() {
         nodes.forEach(StarmapNodeElement::refresh);
+        selectionOverlay.refresh();
         chrome.refresh();
         infoPanel.refresh();
     }
@@ -262,6 +265,8 @@ public final class StarmapTerminalRoot extends UIElement {
             resetViewForLevel();
         }
         refreshComponents();
+        if (!next.equals(current))
+            playLevelTransition();
     }
 
     /** Prepare continuous visual positions before LDLib2 performs hit testing. */
@@ -310,14 +315,16 @@ public final class StarmapTerminalRoot extends UIElement {
      * used by the orbiting nodes. This deliberately lives outside the node
      * layout boxes, which are updated on the simulation tick.
      */
-    void drawSelectionOverlay(GuiGraphics graphics) {
+    void drawSelectionOverlay(GuiGraphics graphics, float alpha) {
+        if (alpha <= 0.0F)
+            return;
         int width = Math.max(1, Math.round(getSizeWidth()));
         int height = Math.max(1, Math.round(getSizeHeight()));
         SelectedVisual selected = selectedVisual(width, height, renderOrbitClock);
         if (selected == null)
             return;
         drawSelectionBrackets(graphics, getPositionX() + selected.x,
-                getPositionY() + selected.y, selected.diameter);
+                getPositionY() + selected.y, selected.diameter, alpha);
         graphics.flush();
     }
 
@@ -469,6 +476,7 @@ public final class StarmapTerminalRoot extends UIElement {
         applyNavigationState(navigationState().enterSystem(system));
         resetViewForLevel();
         refreshComponents();
+        playLevelTransition();
     }
 
     void selectCentralStar(StarSystem system) {
@@ -723,6 +731,21 @@ public final class StarmapTerminalRoot extends UIElement {
                 "planet:" + selectedEntry.getEntryId());
     }
 
+    String selectionTargetKey() {
+        if (level == StarmapLevel.GALAXY && selectedSystem != null)
+            return "galaxy:" + selectedSystem.getSystemId();
+        if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
+            if (centralStarSelected)
+                return "system:" + selectedSystem.getSystemId() + ":star";
+            if (selectedEntry != null)
+                return "system:" + selectedEntry.getEntryId();
+            return null;
+        }
+        if (level == StarmapLevel.PLANET && selectedEntry != null)
+            return "planet:" + selectedEntry.getEntryId();
+        return null;
+    }
+
     private void performAction() {
         if (canEnterSelectedSystem()) {
             enterSystem(selectedSystem);
@@ -746,6 +769,11 @@ public final class StarmapTerminalRoot extends UIElement {
         applyNavigationState(next);
         resetViewForLevel();
         refreshComponents();
+        playLevelTransition();
+    }
+
+    private void playLevelTransition() {
+        transitionOverlay.play();
     }
 
     private StarmapNavigationState navigationState() {
@@ -1007,7 +1035,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void drawSelectionBrackets(GuiGraphics graphics, float centerX, float centerY,
-                                       float bodySize) {
+                                       float bodySize, float alpha) {
         float pad = Math.max(4.0F, bodySize * 0.22F);
         float half = bodySize * 0.5F + pad;
         float left = centerX - half;
@@ -1016,8 +1044,8 @@ public final class StarmapTerminalRoot extends UIElement {
         float bottom = centerY + half;
         float corner = Math.max(5.0F, bodySize * 0.30F);
         float thickness = Math.max(1.0F, Math.min(1.65F, bodySize * 0.08F));
-        int core = 0xFF63E2DF;
-        int glow = 0x4A63E2DF;
+        int core = multiplyAlpha(0xFF63E2DF, alpha);
+        int glow = multiplyAlpha(0x4A63E2DF, alpha);
         drawCorner(graphics, left, top, corner, thickness, true, true, glow, core);
         drawCorner(graphics, right, top, corner, thickness, false, true, glow, core);
         drawCorner(graphics, left, bottom, corner, thickness, true, false, glow, core);
