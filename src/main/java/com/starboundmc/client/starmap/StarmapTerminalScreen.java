@@ -54,6 +54,21 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
     }
 
     @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button,
+                                double dragX, double dragY) {
+        boolean mapHandled = root != null && root.dragView((float) mouseX, (float) mouseY);
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY) || mapHandled;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean handled = super.mouseReleased(mouseX, mouseY, button);
+        if (root != null)
+            root.finishViewDrag();
+        return handled;
+    }
+
+    @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         graphics.fill(0, 0, width, height, 0xFF050912);
     }

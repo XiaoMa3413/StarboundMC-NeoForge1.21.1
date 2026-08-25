@@ -3,6 +3,7 @@ package com.starboundmc.client.starmap;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorBorderTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
@@ -18,6 +19,8 @@ final class StarmapChromeElement extends UIElement {
     private final StarmapTerminalRoot root;
     private final Label levelLabel = new Label();
     private final Label backHint = new Label();
+    private final Button resetView = new Button();
+    private final Button focusTarget = new Button();
 
     StarmapChromeElement(StarmapTerminalRoot root) {
         this.root = root;
@@ -44,7 +47,7 @@ final class StarmapChromeElement extends UIElement {
 
         levelLabel.addClass("starmap-level-label");
         levelLabel.layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
-                .left(22).top(16).width(150).height(12));
+                .left(22).top(16).width(104).height(12));
         levelLabel.textStyle(style -> style.textColor(ACCENT).fontSize(9)
                 .textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER)
                 .textShadow(true));
@@ -57,16 +60,66 @@ final class StarmapChromeElement extends UIElement {
                 .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER));
         backHint.setAllowHitTest(false);
 
-        addChildren(frame, innerFrame, separator, levelLabel, backHint);
+        UIElement viewControls = new UIElement().addClass("starmap-view-controls")
+                .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                        .left(132).top(14).width(64).height(16)
+                        .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.ROW).gapAll(2));
+        configureViewButton(resetView);
+        configureViewButton(focusTarget);
+        resetView.setOnClick(event -> {
+            root.resetView();
+            event.stopPropagation();
+        });
+        focusTarget.setOnClick(event -> {
+            root.focusSelectedView();
+            event.stopPropagation();
+        });
+        viewControls.addChildren(resetView, focusTarget);
+        // Match the proven information-panel fallback: resolve the button
+        // during capture as well, so clicks landing on the adaptive text
+        // child cannot bypass the intended action on some LDLib2 layouts.
+        viewControls.addEventListener(UIEvents.MOUSE_DOWN, event -> {
+            if (event.button != 0)
+                return;
+            if (resetView.isActive() && resetView.isIntersectWithPoint(event.x, event.y))
+                root.resetView();
+            else if (focusTarget.isActive()
+                    && focusTarget.isIntersectWithPoint(event.x, event.y))
+                root.focusSelectedView();
+        }, true);
+        // These controls float over the scene. Their clicks and wheel input
+        // must not start a map drag or zoom the view behind the button.
+        viewControls.stopInteractionEventsPropagation();
+
+        addChildren(frame, innerFrame, separator, levelLabel, viewControls, backHint);
         addEventListener(UIEvents.TICK, event -> refresh());
         refresh();
     }
 
     void refresh() {
         levelLabel.setText(root.levelLabel());
+        resetView.setText(Component.translatable("gui.starboundmc.starmap.redraw.reset_view"));
+        resetView.setActive(!root.isViewReset());
+        focusTarget.setText(Component.translatable("gui.starboundmc.starmap.redraw.focus_target"));
+        focusTarget.setActive(root.canFocusView());
         boolean canGoBack = root.getLevel() != StarmapLevel.GALAXY;
-        backHint.setDisplay(canGoBack);
-        if (canGoBack)
-            backHint.setText(Component.translatable("gui.starboundmc.starmap.redraw.back_hint"));
+        backHint.setDisplay(true);
+        backHint.setText(Component.translatable(canGoBack
+                ? "gui.starboundmc.starmap.redraw.back_hint"
+                : "gui.starboundmc.starmap.redraw.close_hint"));
+    }
+
+    private static void configureViewButton(Button button) {
+        button.addClasses("starmap-view-button", "starmap-button");
+        button.layout(layout -> layout.flex(1).height(16));
+        button.textStyle(style -> style.textColor(MUTED).fontSize(6.0F)
+                .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER));
+        button.buttonStyle(style -> style
+                .baseTexture(SDFRectTexture.of(0xB0102632).setRadius(2)
+                        .setStroke(1).setBorderColor(0xAA315F70))
+                .hoverTexture(SDFRectTexture.of(0xE0183B47).setRadius(2)
+                        .setStroke(1).setBorderColor(ACCENT))
+                .pressedTexture(SDFRectTexture.of(0xE00B1B24).setRadius(2)
+                        .setStroke(1).setBorderColor(0xFF3B8490)));
     }
 }

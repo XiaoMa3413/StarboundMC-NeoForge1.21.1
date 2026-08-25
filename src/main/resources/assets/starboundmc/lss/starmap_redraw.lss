@@ -69,6 +69,11 @@
   text-shadow: false;
 }
 
+.starmap-view-button.__disabled__ .__button_text__ {
+  text-color: #526875;
+  text-shadow: false;
+}
+
 .starmap-back-hint {
   text-color: #8ca2b3;
 }
