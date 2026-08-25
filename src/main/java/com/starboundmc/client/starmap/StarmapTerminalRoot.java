@@ -50,6 +50,8 @@ public final class StarmapTerminalRoot extends UIElement {
     private double orbitClock;
     /** Continuous phase used by the current render pass and hit testing. */
     private double renderOrbitClock;
+    private String infoPanelTargetKey;
+    private StarmapInfoPanelPlacement.Side infoPanelSide;
     private int laidOutWidth;
     private int laidOutHeight;
 
@@ -168,12 +170,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private boolean isInsideInfoPanel(float localX, float localY) {
-        if (!isInfoPanelVisible())
-            return false;
-        int[] rect = infoPanelRect(0, 0, Math.round(getSizeWidth()),
-                Math.round(getSizeHeight()), false);
-        return localX >= rect[0] && localX < rect[0] + rect[2]
-                && localY >= rect[1] && localY < rect[1] + rect[3];
+        return isInfoPanelVisible() && infoPanel.containsLocalPoint(localX, localY);
     }
 
     public void goBack() {
@@ -188,6 +185,17 @@ public final class StarmapTerminalRoot extends UIElement {
             centralStarSelected = false;
         }
         refreshComponents();
+    }
+
+    /** Prepare continuous visual positions before LDLib2 performs hit testing. */
+    void prepareFrame(float partialTick) {
+        renderOrbitClock = orbitClock + partialTick;
+        int width = Math.max(1, Math.round(getSizeWidth()));
+        int height = Math.max(1, Math.round(getSizeHeight()));
+        if (width <= 1 || height <= 1)
+            return;
+        nodes.forEach(node -> node.prepareRender(renderOrbitClock));
+        infoPanel.prepareFrame(width, height);
     }
 
     @Override
@@ -205,8 +213,7 @@ public final class StarmapTerminalRoot extends UIElement {
         // Layout is resolved before the render pass. Keep the UI node boxes at
         // their tick positions, but let each node draw at this interpolated
         // phase so the orbital motion does not snap every 1/20 second.
-        renderOrbitClock = orbitClock + context.partialTick;
-        nodes.forEach(node -> node.prepareRender(renderOrbitClock));
+        prepareFrame(context.partialTick);
         drawStars(graphics, x, y, width, height);
         if (level == StarmapLevel.GALAXY)
             drawGalaxy(graphics, x, y, width, height);
@@ -228,45 +235,11 @@ public final class StarmapTerminalRoot extends UIElement {
     void drawSelectionOverlay(GuiGraphics graphics) {
         int width = Math.max(1, Math.round(getSizeWidth()));
         int height = Math.max(1, Math.round(getSizeHeight()));
-        float originX = getPositionX();
-        float originY = getPositionY();
-        if (level == StarmapLevel.GALAXY && selectedSystem != null) {
-            float[] point = galaxyPointF(selectedSystem, 0, 0, width, height);
-            drawSelectionBrackets(graphics, originX + point[0], originY + point[1], 22.0F);
-            graphics.flush();
+        SelectedVisual selected = selectedVisual(width, height, renderOrbitClock);
+        if (selected == null)
             return;
-        }
-        if (selectedSystem == null)
-            return;
-        if (level == StarmapLevel.SYSTEM) {
-            if (centralStarSelected) {
-                drawSelectionBrackets(graphics, originX + width / 2.0F,
-                        originY + height / 2.0F, 28.0F);
-            } else if (selectedEntry != null) {
-                float[] point = systemPointF(selectedEntry, width, height, renderOrbitClock);
-                drawSelectionBrackets(graphics, originX + point[0], originY + point[1], 16.0F);
-            }
-            graphics.flush();
-            return;
-        }
-        if (level != StarmapLevel.PLANET || selectedEntry == null)
-            return;
-        if (selectedEntry == focusedPlanet) {
-            drawSelectionBrackets(graphics, originX + width / 2.0F,
-                    originY + height / 2.0F, 54.0F);
-            graphics.flush();
-            return;
-        }
-        if (selectedEntry.isMoon() && focusedPlanet != null
-                && java.util.Objects.equals(selectedEntry.getParentEntryId(), focusedPlanet.getEntryId())) {
-            int centerX = width / 2;
-            int centerY = height / 2;
-            int radius = moonDisplayRadius(selectedSystem, selectedEntry, width, height, true);
-            float[] point = orbitPointF(centerX, centerY, radius,
-                    moonDisplayAngle(selectedSystem, selectedEntry),
-                    StarmapOrbitMotion.moonPhase(renderOrbitClock, selectedEntry.getOrbitRadius()));
-            drawSelectionBrackets(graphics, originX + point[0], originY + point[1], 14.0F);
-        }
+        drawSelectionBrackets(graphics, getPositionX() + selected.x,
+                getPositionY() + selected.y, selected.diameter);
         graphics.flush();
     }
 
@@ -530,21 +503,11 @@ public final class StarmapTerminalRoot extends UIElement {
         return new StarmapNodeElement.NodePlacement(0, 0, 0, false, false);
     }
 
-    /**
-     * Shared geometry of the floating info panel so drawing and hit testing
-     * always agree. Returns {@code [panelX, panelY, panelWidth, panelHeight]}.
-     *
-     * @param forHitTest when true the button-bearing height (122) is used even
-     *                   if a system is selected, matching the action rect the
-     *                   drawing layer paints for a selected entry.
-     */
-    int[] infoPanelRect(int frameX, int frameY, int frameWidth, int frameHeight,
-                        boolean forHitTest) {
-        int panelWidth = Math.min(230, Math.max(170, frameWidth / 4));
-        int panelX = Math.max(frameX + 14, frameX + frameWidth - panelWidth - 18);
-        int panelY = frameY + 38;
+    StarmapInfoPanelPlacement.Placement infoPanelPlacement(int frameWidth, int frameHeight) {
+        int preferredWidth = Math.min(230, Math.max(156, frameWidth / 4));
+        int panelWidth = Math.min(preferredWidth, Math.max(1, frameWidth - 32));
         int panelHeight;
-        if (selectedEntry != null || canEnterSelectedSystem() || forHitTest) {
+        if (selectedEntry != null || canEnterSelectedSystem()) {
             panelHeight = 122;
         } else if (centralStarSelected) {
             // Header (34) + metadata (11) + description (28) + padding (16)
@@ -554,7 +517,56 @@ public final class StarmapTerminalRoot extends UIElement {
         } else {
             panelHeight = 82;
         }
-        return new int[] { panelX, panelY, panelWidth, panelHeight };
+
+        SelectedVisual selected = selectedVisual(frameWidth, frameHeight, renderOrbitClock);
+        if (selected == null) {
+            return new StarmapInfoPanelPlacement.Placement(14.0F, 38.0F,
+                    panelWidth, panelHeight, StarmapInfoPanelPlacement.Side.RIGHT);
+        }
+        if (!selected.key.equals(infoPanelTargetKey)) {
+            infoPanelTargetKey = selected.key;
+            infoPanelSide = null;
+        }
+        StarmapInfoPanelPlacement.Placement placement = StarmapInfoPanelPlacement.place(
+                0.0F, 0.0F, frameWidth, frameHeight, panelWidth, panelHeight,
+                selected.x, selected.y, selected.selectionRadius(), infoPanelSide);
+        infoPanelSide = placement.side();
+        return placement;
+    }
+
+    private SelectedVisual selectedVisual(int width, int height, double phaseClock) {
+        if (level == StarmapLevel.GALAXY && selectedSystem != null) {
+            float[] point = galaxyPointF(selectedSystem, 0, 0, width, height);
+            return new SelectedVisual(point[0], point[1], 22.0F,
+                    "galaxy:" + selectedSystem.getSystemId());
+        }
+        if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
+            if (centralStarSelected) {
+                return new SelectedVisual(width / 2.0F, height / 2.0F, 28.0F,
+                        "system:" + selectedSystem.getSystemId() + ":star");
+            }
+            if (selectedEntry != null) {
+                float[] point = systemPointF(selectedEntry, width, height, phaseClock);
+                return new SelectedVisual(point[0], point[1], 16.0F,
+                        "system:" + selectedEntry.getEntryId());
+            }
+            return null;
+        }
+        if (level != StarmapLevel.PLANET || selectedSystem == null || selectedEntry == null)
+            return null;
+        if (selectedEntry == focusedPlanet) {
+            return new SelectedVisual(width / 2.0F, height / 2.0F, 54.0F,
+                    "planet:" + selectedEntry.getEntryId());
+        }
+        if (!selectedEntry.isMoon() || focusedPlanet == null
+                || !java.util.Objects.equals(selectedEntry.getParentEntryId(), focusedPlanet.getEntryId()))
+            return null;
+        int radius = moonDisplayRadius(selectedSystem, selectedEntry, width, height, true);
+        float[] point = orbitPointF(width / 2.0F, height / 2.0F, radius,
+                moonDisplayAngle(selectedSystem, selectedEntry),
+                StarmapOrbitMotion.moonPhase(phaseClock, selectedEntry.getOrbitRadius()));
+        return new SelectedVisual(point[0], point[1], 14.0F,
+                "planet:" + selectedEntry.getEntryId());
     }
 
     private void performAction() {
@@ -858,5 +870,11 @@ public final class StarmapTerminalRoot extends UIElement {
         int alpha = (color >>> 24) & 0xFF;
         int scaled = Math.max(0, Math.min(255, Math.round(alpha * factor)));
         return (scaled << 24) | (color & 0x00FFFFFF);
+    }
+
+    private record SelectedVisual(float x, float y, float diameter, String key) {
+        float selectionRadius() {
+            return diameter * 0.5F + Math.max(4.0F, diameter * 0.22F);
+        }
     }
 }

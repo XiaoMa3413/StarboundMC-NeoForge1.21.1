@@ -15,6 +15,7 @@ import org.lwjgl.glfw.GLFW;
 /** LDLib2 screen for the standalone starmap terminal. */
 public final class StarmapTerminalScreen extends AbstractContainerScreen<StarmapTerminalMenu> {
     private ModularUI modularUI;
+    private StarmapTerminalRoot root;
 
     public StarmapTerminalScreen(StarmapTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -26,7 +27,7 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
     protected void init() {
         disposeModularUi();
         super.init();
-        StarmapTerminalRoot root = new StarmapTerminalRoot();
+        root = new StarmapTerminalRoot();
         modularUI = ModularUI.of(UI.of(root, ResourceLocation.fromNamespaceAndPath(
                         StarboundMC.MODID, "lss/starmap_redraw.lss")),
                 Minecraft.getInstance().player);
@@ -34,6 +35,13 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
         modularUI.setScreenAndInit(this);
         addRenderableWidget(modularUI.getWidget());
         setFocused(modularUI.getWidget());
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        if (root != null)
+            root.prepareFrame(partialTick);
+        super.render(graphics, mouseX, mouseY, partialTick);
     }
 
     @Override
@@ -73,5 +81,6 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
             modularUI.setScreen(null);
             modularUI = null;
         }
+        root = null;
     }
 }
