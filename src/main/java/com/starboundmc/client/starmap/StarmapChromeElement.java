@@ -30,14 +30,17 @@ final class StarmapChromeElement extends UIElement {
                 .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                         .left(8).top(8).right(8).bottom(8))
                 .style(style -> style.backgroundTexture(new ColorBorderTexture(2, FRAME)));
+        frame.setAllowHitTest(false);
         UIElement innerFrame = new UIElement().addClass("starmap-frame-inner")
                 .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                         .left(12).top(12).right(12).bottom(12))
                 .style(style -> style.backgroundTexture(new ColorBorderTexture(1, 0x66305C70)));
+        innerFrame.setAllowHitTest(false);
         UIElement separator = new UIElement().addClass("starmap-header-rule")
                 .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                         .left(22).top(31).right(22).height(1))
                 .style(style -> style.backgroundTexture(SDFRectTexture.of(0x664B8EA0)));
+        separator.setAllowHitTest(false);
 
         levelLabel.addClass("starmap-level-label");
         levelLabel.layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
@@ -45,12 +48,14 @@ final class StarmapChromeElement extends UIElement {
         levelLabel.textStyle(style -> style.textColor(ACCENT).fontSize(9)
                 .textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER)
                 .textShadow(true));
+        levelLabel.setAllowHitTest(false);
 
         backHint.addClass("starmap-back-hint");
         backHint.layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                 .right(22).top(16).width(180).height(12));
         backHint.textStyle(style -> style.textColor(MUTED).fontSize(7)
                 .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER));
+        backHint.setAllowHitTest(false);
 
         addChildren(frame, innerFrame, separator, levelLabel, backHint);
         addEventListener(UIEvents.TICK, event -> refresh());

@@ -28,6 +28,10 @@
   z-index: 14;
 }
 
+.starmap-selection-layer {
+  z-index: 18;
+}
+
 .starmap-chrome {
   z-index: 30;
 }
@@ -47,6 +51,11 @@
 
 .starmap-info-description {
   text-wrap: wrap;
+}
+
+.starmap-info-status {
+  text-wrap: wrap;
+  text-color: #ffb36b;
 }
 
 .starmap-action-button:host {

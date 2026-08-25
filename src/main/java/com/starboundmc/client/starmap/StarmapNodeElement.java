@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import dev.vfyjxf.taffy.style.TaffyPosition;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
 /** A positioned, independently hit-testable celestial node. */
@@ -30,6 +31,10 @@ final class StarmapNodeElement extends UIElement {
         this.centralStar = centralStar;
         addClass("starmap-node");
         layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE));
+        // Selection brackets and the galaxy star-spark intentionally extend
+        // beyond the node box. Keep them visible even if a theme later adds
+        // an overflow rule to the node class.
+        setOverflowVisible(true);
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
         refresh();
     }
@@ -38,15 +43,21 @@ final class StarmapNodeElement extends UIElement {
         if (event.button != 0)
             return;
         // A system overview shows moons as orientation dots only. They must
-        // not turn into a second selection target when the user clicks them.
+        // not turn into a second selection target when the user clicks them;
+        // the root maps the click to the owning planet instead.
         if (entry != null && entry.isMoon() && root.getLevel() == StarmapLevel.SYSTEM) {
+            root.selectEntry(entry);
             event.stopPropagation();
             return;
         }
-        if (entry == null)
-            root.selectSystem(systemRef.system());
-        else
+        if (entry == null) {
+            if (root.getLevel() == StarmapLevel.SYSTEM)
+                root.selectCentralStar(systemRef.system());
+            else
+                root.selectSystem(systemRef.system());
+        } else {
             root.selectEntry(entry);
+        }
         event.stopPropagation();
     }
 
@@ -99,6 +110,47 @@ final class StarmapNodeElement extends UIElement {
         context.graphics.pose().popPose();
     }
 
+    @Override
+    public void drawBackgroundAdditional(GUIContext context) {
+        if (!renderPlacement.visible())
+            return;
+        float targetX = root.getPositionX() + renderPlacement.x() - renderPlacement.size() / 2F;
+        float targetY = root.getPositionY() + renderPlacement.y() - renderPlacement.size() / 2F;
+        float dx = targetX - getPositionX();
+        float dy = targetY - getPositionY();
+        GuiGraphics graphics = context.graphics;
+        graphics.pose().pushPose();
+        graphics.pose().translate(dx, dy, 0);
+        if (entry == null && root.getLevel() == StarmapLevel.GALAXY)
+            drawGeminiSpark(graphics);
+        graphics.pose().popPose();
+    }
+
+    /** Four tapered, softly layered points inspired by the Gemini sparkle mark. */
+    private void drawGeminiSpark(GuiGraphics graphics) {
+        int centerX = Math.round(getPositionX() + getSizeWidth() / 2F);
+        int centerY = Math.round(getPositionY() + getSizeHeight() / 2F);
+        int half = Math.max(7, Math.round(getSizeWidth() * 0.68F));
+        int rgb = systemRef.system().getStarColor() & 0x00FFFFFF;
+        for (int offset = -half; offset <= half; offset++) {
+            int distance = Math.abs(offset);
+            int taper = Math.max(1, Math.round((half - distance) * 0.30F) + 1);
+            int glowAlpha = Math.max(18, 66 - distance * 3);
+            int coreAlpha = Math.max(70, 220 - distance * 12);
+            int glow = (glowAlpha << 24) | rgb;
+            int core = (coreAlpha << 24) | rgb;
+            graphics.fill(centerX - taper - 1, centerY + offset,
+                    centerX + taper + 2, centerY + offset + 1, glow);
+            graphics.fill(centerX + offset, centerY - taper - 1,
+                    centerX + offset + 1, centerY + taper + 2, glow);
+            graphics.fill(centerX - taper, centerY + offset,
+                    centerX + taper + 1, centerY + offset + 1, core);
+            graphics.fill(centerX + offset, centerY - taper,
+                    centerX + offset + 1, centerY + taper + 1, core);
+        }
+        graphics.fill(centerX - 2, centerY - 2, centerX + 3, centerY + 3, 0xFFFFFFFF);
+    }
+
     private void updateStyle(float size, boolean selected) {
         String texture = entry == null ? null : root.nodeTexture(entry);
         if (styleInitialized && styledSize == size && styledSelected == selected
@@ -116,13 +168,16 @@ final class StarmapNodeElement extends UIElement {
                 return;
             }
             style(style -> style.backgroundTexture(SDFRectTexture.of(
-                    selected ? 0xFF63E2DF : entry.getVisual().getPrimaryColor())
+                    entry.getVisual().getPrimaryColor())
                     .setRadius(Math.max(2, size / 3F))
-                    .setBorderColor(selected ? 0xFFB8FFFF : 0x886B94A4).setStroke(selected ? 2 : 1)));
+                    .setBorderColor(0x886B94A4).setStroke(1)));
         } else {
+            if (root.getLevel() == StarmapLevel.GALAXY) {
+                style(style -> style.backgroundTexture(com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture.EMPTY));
+                return;
+            }
             style(style -> style.backgroundTexture(SDFRectTexture.of(systemRef.system().getStarColor())
-                    .setRadius(size / 2F).setBorderColor(selected ? 0xFF63E2DF : 0x885B91A5)
-                    .setStroke(selected ? 2 : 1)));
+                    .setRadius(size / 2F).setBorderColor(0x885B91A5).setStroke(1)));
         }
     }
 
