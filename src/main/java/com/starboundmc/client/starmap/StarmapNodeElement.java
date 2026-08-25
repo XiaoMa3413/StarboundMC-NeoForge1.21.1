@@ -1,7 +1,6 @@
 package com.starboundmc.client.starmap;
 
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
@@ -18,7 +17,7 @@ final class StarmapNodeElement extends UIElement {
     private final boolean centralStar;
     private NodePlacement simulationPlacement = new NodePlacement(0, 0, 0, false, false);
     private NodePlacement renderPlacement = simulationPlacement;
-    private String styledTextureId;
+    private ResourceLocation styledTextureId;
     private boolean styledSelected;
     private float styledSize = -1;
     private boolean styleInitialized;
@@ -152,7 +151,7 @@ final class StarmapNodeElement extends UIElement {
     }
 
     private void updateStyle(float size, boolean selected) {
-        String texture = entry == null ? null : root.nodeTexture(entry);
+        ResourceLocation texture = entry == null ? null : root.nodeTexture(entry);
         if (styleInitialized && styledSize == size && styledSelected == selected
                 && java.util.Objects.equals(styledTextureId, texture))
             return;
@@ -163,14 +162,7 @@ final class StarmapNodeElement extends UIElement {
         if (selected) addClass("starmap-node-selected");
         else removeClass("starmap-node-selected");
         if (entry != null) {
-            if (texture != null) {
-                style(style -> style.backgroundTexture(SpriteTexture.of(ResourceLocation.parse(texture))));
-                return;
-            }
-            style(style -> style.backgroundTexture(SDFRectTexture.of(
-                    entry.getVisual().getPrimaryColor())
-                    .setRadius(Math.max(2, size / 3F))
-                    .setBorderColor(0x886B94A4).setStroke(1)));
+            style(style -> style.backgroundTexture(root.bodyTexture(entry, size, texture)));
         } else {
             if (root.getLevel() == StarmapLevel.GALAXY) {
                 style(style -> style.backgroundTexture(com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture.EMPTY));
