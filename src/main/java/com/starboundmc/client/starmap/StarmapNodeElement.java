@@ -35,6 +35,7 @@ final class StarmapNodeElement extends UIElement {
         // an overflow rule to the node class.
         setOverflowVisible(true);
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
+        addEventListener(UIEvents.DOUBLE_CLICK, this::onDoubleClick);
         refresh();
     }
 
@@ -58,6 +59,25 @@ final class StarmapNodeElement extends UIElement {
             root.selectEntry(entry);
         }
         event.stopPropagation();
+    }
+
+    private void onDoubleClick(UIEvent event) {
+        if (event.button != 0 || entry != null || root.getLevel() != StarmapLevel.GALAXY)
+            return;
+        root.enterSystem(systemRef.system());
+        event.stopPropagation();
+    }
+
+    @Override
+    public boolean isIntersectWithPoint(double localX, double localY) {
+        if (!renderPlacement.visible())
+            return false;
+        float centerX = root.getPositionX() + renderPlacement.x();
+        float centerY = root.getPositionY() + renderPlacement.y();
+        float radius = StarmapHitGeometry.radius(root.getLevel(), entry == null,
+                entry != null && entry.isMoon(), entry == root.getFocusedPlanet(),
+                root.viewTransform().scale());
+        return StarmapHitGeometry.contains(localX, localY, centerX, centerY, radius);
     }
 
     void refresh() {

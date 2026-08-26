@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class StarmapRedrawBootstrapTest {
@@ -26,11 +27,17 @@ final class StarmapRedrawBootstrapTest {
                 "src/main/java/com/starboundmc/client/starmap/StarmapTerminalRoot.java"));
         String screen = Files.readString(Path.of(
                 "src/main/java/com/starboundmc/client/starmap/StarmapTerminalScreen.java"));
+        String vectors = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/starmap/StarmapVectorDrawing.java"));
         assertTrue(root.contains("StarmapLevel.GALAXY"));
         assertTrue(root.contains("StarmapLevel.SYSTEM"));
         assertTrue(root.contains("StarmapLevel.PLANET"));
         assertTrue(root.contains("GLFW_MOUSE_BUTTON_RIGHT"));
-        assertTrue(root.contains("drawDashedLine"));
+        assertTrue(root.contains("StarmapSceneElement"));
+        assertTrue(vectors.contains("drawDashedLine"));
+        assertFalse(root.contains("nearestSystem("));
+        assertFalse(root.contains("nearestSystemEntry("));
+        assertFalse(root.contains("nearestPlanetTarget("));
         assertTrue(screen.contains("GLFW_KEY_ESCAPE"));
     }
 }

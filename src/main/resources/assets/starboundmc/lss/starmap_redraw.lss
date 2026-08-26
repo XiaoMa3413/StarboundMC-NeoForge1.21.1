@@ -8,6 +8,10 @@
   z-index: 20;
 }
 
+.starmap-scene-layer {
+  z-index: 5;
+}
+
 .starmap-frame-inner {
   z-index: 21;
 }
