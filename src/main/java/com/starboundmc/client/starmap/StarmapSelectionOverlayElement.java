@@ -40,6 +40,17 @@ final class StarmapSelectionOverlayElement extends UIElement {
     @Override
     public void drawBackgroundAdditional(GUIContext context) {
         float alpha = ((getStyle().color() >>> 24) & 0xFF) / 255.0F;
-        root.drawSelectionOverlay(context.graphics, alpha);
+        if (alpha <= 0.0F)
+            return;
+        int width = Math.max(1, Math.round(root.getSizeWidth()));
+        int height = Math.max(1, Math.round(root.getSizeHeight()));
+        StarmapTerminalRoot.SelectedVisual selected = root.selectedVisual(
+                width, height, root.renderOrbitClock());
+        if (selected == null)
+            return;
+        StarmapVectorDrawing.drawSelectionBrackets(context.graphics,
+                root.getPositionX() + selected.x(), root.getPositionY() + selected.y(),
+                selected.diameter(), alpha);
+        context.graphics.flush();
     }
 }

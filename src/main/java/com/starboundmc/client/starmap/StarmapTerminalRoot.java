@@ -1,11 +1,9 @@
 package com.starboundmc.client.starmap;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.client.ClientPlanetState;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartWarpPacket;
@@ -14,16 +12,12 @@ import com.starboundmc.world.starmap.PlanetEntry;
 import com.starboundmc.world.starmap.StarmapGalaxyGraph;
 import com.starboundmc.world.starmap.StarSystem;
 import com.starboundmc.world.starmap.StarSystems;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /** Full-screen LDLib2 canvas for the new starmap terminal. */
 public final class StarmapTerminalRoot extends UIElement {
@@ -31,11 +25,6 @@ public final class StarmapTerminalRoot extends UIElement {
     private static final int BASE_HEIGHT = 220;
     /** Keeps the outer authored orbit inside the framed viewport. */
     private static final int SYSTEM_ORBIT_SCALE = 300;
-    private static final int STAR = 0xFFB9D7E5;
-    private static final int MUTED = 0xFF8CA2B3;
-    private static final int GRID = 0x243A6373;
-    private static final int ORBIT = 0x665B91A5;
-    private static final int ORBIT_SELECTED = 0xB563E2DF;
 
     private StarmapLevel level = StarmapLevel.GALAXY;
     private StarSystem selectedSystem;
@@ -46,6 +35,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapGalaxyGraph galaxyGraph;
     private final StarmapBodyTextureResolver bodyTextures;
     private final StarmapViewTransform viewTransform = new StarmapViewTransform();
+    private final StarmapSceneElement sceneLayer;
     private final UIElement nodeLayer;
     private final StarmapSelectionOverlayElement selectionOverlay;
     private final StarmapTransitionOverlayElement transitionOverlay;
@@ -79,9 +69,9 @@ public final class StarmapTerminalRoot extends UIElement {
         layout(layout -> layout.widthPercent(100).heightPercent(100));
         addEventListener(UIEvents.MOUSE_DOWN, this::onMouseDown);
         addEventListener(UIEvents.CLICK, this::onClick);
-        addEventListener(UIEvents.DOUBLE_CLICK, this::onDoubleClick);
         addEventListener(UIEvents.MOUSE_WHEEL, this::onMouseWheel);
 
+        sceneLayer = new StarmapSceneElement(this);
         nodeLayer = new UIElement().addClass("starmap-node-layer")
                 .layout(layout -> layout.widthPercent(100).heightPercent(100)
                         .positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE))
@@ -102,7 +92,7 @@ public final class StarmapTerminalRoot extends UIElement {
         transitionOverlay = new StarmapTransitionOverlayElement();
         chrome = new StarmapChromeElement(this);
         infoPanel = new StarmapInfoPanelElement(this);
-        addChildren(nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel);
+        addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel);
         addEventListener(UIEvents.TICK, event -> {
             orbitClock += 1.0D;
             renderOrbitClock = orbitClock;
@@ -128,58 +118,18 @@ public final class StarmapTerminalRoot extends UIElement {
 
         viewDragStarted = false;
         viewDragMoved = false;
-
-        float width = getSizeWidth();
-        float height = getSizeHeight();
         float localX = event.x - getPositionX();
         float localY = event.y - getPositionY();
-        boolean targetSelected = false;
-        if (level == StarmapLevel.GALAXY) {
-            StarSystem system = nearestSystem(localX, localY, width, height);
-            if (system != null) {
-                selectedSystem = system;
-                selectedEntry = null;
-                centralStarSelected = false;
-                targetSelected = true;
-            }
-        } else if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
-            StarmapViewTransform.Point center = viewTransform.toScreen(
-                    width / 2.0F, height / 2.0F, width, height);
-            if (Math.hypot(localX - center.x(), localY - center.y())
-                    <= Math.max(18.0D, 24.0D * viewTransform.scale())) {
-                selectCentralStar(selectedSystem);
-                targetSelected = true;
-            } else {
-                PlanetEntry entry = nearestSystemEntry(localX, localY, width, height);
-                if (entry != null) {
-                    if (entry == selectedEntry) {
-                        enterPlanet(entry);
-                    } else {
-                        selectedEntry = entry;
-                    }
-                    targetSelected = true;
-                }
-            }
-        } else if (level == StarmapLevel.PLANET) {
-            PlanetEntry target = nearestPlanetTarget(localX, localY, width, height);
-            if (target != null) {
-                selectedEntry = target;
-                targetSelected = true;
-            }
-        }
-        boolean insideInfoPanel = isInsideInfoPanel(localX, localY);
-        if (!targetSelected && !insideInfoPanel) {
-            // Any non-interactive scene child may become LDLib2's concrete
-            // hit target. Reaching the root without selecting a node or panel
-            // is the reliable definition of map background here.
-            viewDragStarted = true;
-            viewDragStartMouseX = event.x;
-            viewDragStartMouseY = event.y;
-            viewDragStartOffsetX = viewTransform.offsetX();
-            viewDragStartOffsetY = viewTransform.offsetY();
-            event.stopPropagation();
-        }
-        refreshComponents();
+        if (isInsideInfoPanel(localX, localY))
+            return;
+        // Celestial nodes stop propagation themselves. Reaching the root is
+        // therefore the single definition of a background drag gesture.
+        viewDragStarted = true;
+        viewDragStartMouseX = event.x;
+        viewDragStartMouseY = event.y;
+        viewDragStartOffsetX = viewTransform.offsetX();
+        viewDragStartOffsetY = viewTransform.offsetY();
+        event.stopPropagation();
     }
 
     private void onClick(UIEvent event) {
@@ -192,20 +142,6 @@ public final class StarmapTerminalRoot extends UIElement {
         viewDragStarted = false;
         viewDragMoved = false;
         event.stopPropagation();
-    }
-
-    private void onDoubleClick(UIEvent event) {
-        if (event.button != GLFW.GLFW_MOUSE_BUTTON_LEFT || level != StarmapLevel.GALAXY)
-            return;
-        float width = getSizeWidth();
-        float height = getSizeHeight();
-        float localX = event.x - getPositionX();
-        float localY = event.y - getPositionY();
-        StarSystem system = nearestSystem(localX, localY, width, height);
-        if (system != null) {
-            enterSystem(system);
-            event.stopPropagation();
-        }
     }
 
     private void onMouseWheel(UIEvent event) {
@@ -276,132 +212,14 @@ public final class StarmapTerminalRoot extends UIElement {
         int height = Math.max(1, Math.round(getSizeHeight()));
         if (width <= 1 || height <= 1)
             return;
-        nodes.forEach(node -> node.prepareRender(renderOrbitClock));
-        infoPanel.prepareFrame(width, height);
-    }
-
-    @Override
-    public void drawBackgroundAdditional(GUIContext context) {
-        GuiGraphics graphics = context.graphics;
-        int x = Math.round(getPositionX());
-        int y = Math.round(getPositionY());
-        int width = Math.max(1, Math.round(getSizeWidth()));
-        int height = Math.max(1, Math.round(getSizeHeight()));
         if (width != laidOutWidth || height != laidOutHeight) {
             laidOutWidth = width;
             laidOutHeight = height;
             viewTransform.constrain(width, height);
             refreshComponents();
         }
-        // Layout is resolved before the render pass. Keep the UI node boxes at
-        // their tick positions, but let each node draw at this interpolated
-        // phase so the orbital motion does not snap every 1/20 second.
-        prepareFrame(context.partialTick);
-        drawStars(graphics, x, y, width, height);
-        if (level == StarmapLevel.GALAXY)
-            drawGalaxy(graphics, x, y, width, height);
-        else if (level == StarmapLevel.SYSTEM)
-            drawSystem(graphics, x, y, width, height);
-        else
-            drawPlanet(graphics, x, y, width, height);
-        // Vector route/orbit vertices use the shared GUI buffer. Flush them
-        // before child nodes so the scene always stays behind the UI layer.
-        graphics.flush();
-        super.drawBackgroundAdditional(context);
-    }
-
-    /**
-     * Render the selected-body marker from the same interpolated coordinates
-     * used by the orbiting nodes. This deliberately lives outside the node
-     * layout boxes, which are updated on the simulation tick.
-     */
-    void drawSelectionOverlay(GuiGraphics graphics, float alpha) {
-        if (alpha <= 0.0F)
-            return;
-        int width = Math.max(1, Math.round(getSizeWidth()));
-        int height = Math.max(1, Math.round(getSizeHeight()));
-        SelectedVisual selected = selectedVisual(width, height, renderOrbitClock);
-        if (selected == null)
-            return;
-        drawSelectionBrackets(graphics, getPositionX() + selected.x,
-                getPositionY() + selected.y, selected.diameter, alpha);
-        graphics.flush();
-    }
-
-    private void drawStars(GuiGraphics graphics, int x, int y, int width, int height) {
-        Random random = new Random(0x5EEDL);
-        for (int i = 0; i < Math.max(120, width * height / 6500); i++) {
-            int px = x + random.nextInt(Math.max(1, width));
-            int py = y + random.nextInt(Math.max(1, height));
-            int roll = random.nextInt(12);
-            int size = roll == 0 ? 3 : roll < 3 ? 2 : 1;
-            int color = roll == 0 ? 0xB9D7E5 : roll < 4 ? 0x789BB0 : 0x526B7C;
-            graphics.fill(px, py, px + size, py + size, color | 0xFF000000);
-            if (roll == 0) {
-                graphics.fill(px - 2, py + 1, px + size + 2, py + 2, 0x385B91A5);
-                graphics.fill(px + 1, py - 2, px + 2, py + size + 2, 0x385B91A5);
-            }
-        }
-        int gridStep = Math.max(32, Math.min(width, height) / 5);
-        for (int gx = x + gridStep; gx < x + width; gx += gridStep)
-            graphics.fill(gx, y + 12, gx + 1, y + height - 12, GRID);
-        for (int gy = y + gridStep; gy < y + height; gy += gridStep)
-            graphics.fill(x + 12, gy, x + width - 12, gy + 1, GRID);
-    }
-
-    private void drawGalaxy(GuiGraphics graphics, int x, int y, int width, int height) {
-        for (StarmapGalaxyGraph.Route route : galaxyGraph.routes()) {
-            StarmapGalaxyGraph.Node from = galaxyGraph.node(route.fromId());
-            StarmapGalaxyGraph.Node to = galaxyGraph.node(route.toId());
-            if (from == null || to == null)
-                continue;
-            float[] start = galaxyPointF(from.system(), x, y, width, height);
-            float[] end = galaxyPointF(to.system(), x, y, width, height);
-            drawDashedLine(graphics, start[0], start[1], end[0], end[1],
-                    route.available() ? MUTED : 0x66566B75);
-        }
-    }
-
-    private void drawSystem(GuiGraphics graphics, int x, int y, int width, int height) {
-        StarmapViewTransform.Point center = viewTransform.toScreen(
-                width / 2.0F, height / 2.0F, width, height);
-        float centerX = x + center.x();
-        float centerY = y + center.y();
-        for (PlanetEntry entry : selectedSystem.getEntries()) {
-            if (entry.isMoon())
-                continue;
-            float radius = viewTransform.scaleLength(Math.max(18,
-                    entry.getOrbitRadius() * Math.min(width, height) / SYSTEM_ORBIT_SCALE));
-            drawOrbit(graphics, centerX, centerY, radius,
-                    entry == selectedEntry ? ORBIT_SELECTED : ORBIT);
-            float[] point = systemPointF(entry, width, height, renderOrbitClock);
-            for (PlanetEntry moon : selectedSystem.getEntries()) {
-                if (!moon.isMoon()
-                        || !java.util.Objects.equals(moon.getParentEntryId(), entry.getEntryId()))
-                    continue;
-                drawOrbit(graphics, x + point[0], y + point[1],
-                        viewTransform.scaleLength(moonDisplayRadius(
-                                selectedSystem, moon, width, height, false)),
-                        0x453D7182, true);
-            }
-        }
-    }
-
-    private void drawPlanet(GuiGraphics graphics, int x, int y, int width, int height) {
-        StarmapViewTransform.Point center = viewTransform.toScreen(
-                width / 2.0F, height / 2.0F, width, height);
-        float centerX = x + center.x();
-        float centerY = y + center.y();
-        if (focusedPlanet == null)
-            return;
-        for (PlanetEntry entry : selectedSystem.getEntries()) {
-            if (!entry.isMoon() || !entry.getParentEntryId().equals(focusedPlanet.getEntryId()))
-                continue;
-            float radius = viewTransform.scaleLength(moonDisplayRadius(
-                    selectedSystem, entry, width, height, true));
-            drawOrbit(graphics, centerX, centerY, radius,
-                    entry == selectedEntry ? ORBIT_SELECTED : ORBIT);
-        }
+        nodes.forEach(node -> node.prepareRender(renderOrbitClock));
+        infoPanel.prepareFrame(width, height);
     }
 
     StarmapLevel getLevel() {
@@ -414,6 +232,27 @@ public final class StarmapTerminalRoot extends UIElement {
 
     PlanetEntry getSelectedEntry() {
         return selectedEntry;
+    }
+
+    PlanetEntry getFocusedPlanet() {
+        return focusedPlanet;
+    }
+
+    StarmapGalaxyGraph galaxyGraph() {
+        return galaxyGraph;
+    }
+
+    StarmapViewTransform viewTransform() {
+        return viewTransform;
+    }
+
+    double renderOrbitClock() {
+        return renderOrbitClock;
+    }
+
+    float systemOrbitRadius(PlanetEntry entry, int width, int height) {
+        return viewTransform.scaleLength(Math.max(18,
+                entry.getOrbitRadius() * Math.min(width, height) / SYSTEM_ORBIT_SCALE));
     }
 
     boolean isCentralStarSelected() {
@@ -686,7 +525,7 @@ public final class StarmapTerminalRoot extends UIElement {
         return placement;
     }
 
-    private SelectedVisual selectedVisual(int width, int height, double phaseClock) {
+    SelectedVisual selectedVisual(int width, int height, double phaseClock) {
         if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             float[] point = galaxyPointF(selectedSystem, 0, 0, width, height);
             return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(22.0F),
@@ -799,12 +638,7 @@ public final class StarmapTerminalRoot extends UIElement {
         return ClientPlanetState.getFuel() >= cost;
     }
 
-    private int[] galaxyPoint(StarSystem system, int x, int y, int width, int height) {
-        float[] point = galaxyPointF(system, x, y, width, height);
-        return new int[] { Math.round(point[0]), Math.round(point[1]) };
-    }
-
-    private float[] galaxyPointF(StarSystem system, float x, float y, float width, float height) {
+    float[] galaxyPointF(StarSystem system, float x, float y, float width, float height) {
         StarmapGalaxyGraph.Node node = galaxyGraph.node(system);
         var position = node == null ? system.getGalaxyMapPosition() : node.position();
         float worldX = position.pixelX(BASE_WIDTH) * width / (float) BASE_WIDTH;
@@ -814,11 +648,6 @@ public final class StarmapTerminalRoot extends UIElement {
         return new float[] { x + point.x(), y + point.y() };
     }
 
-    private static int[] orbitPoint(int centerX, int centerY, int radius, float angle, float phase) {
-        float[] point = orbitPointF(centerX, centerY, radius, angle, phase);
-        return new int[] { Math.round(point[0]), Math.round(point[1]) };
-    }
-
     private static float[] orbitPointF(float centerX, float centerY, float radius,
                                        float angle, float phase) {
         double radians = Math.toRadians(angle) + phase;
@@ -826,77 +655,11 @@ public final class StarmapTerminalRoot extends UIElement {
                 centerY + (float) Math.sin(radians) * radius };
     }
 
-    private StarSystem nearestSystem(float localX, float localY, float width, float height) {
-        StarSystem nearest = null;
-        double distance = Double.MAX_VALUE;
-        for (StarmapGalaxyGraph.Node node : galaxyGraph.nodes()) {
-            StarSystem system = node.system();
-            float[] point = galaxyPointF(system, 0, 0, width, height);
-            double current = Math.hypot(localX - point[0], localY - point[1]);
-            double hitRadius = Math.max(14.0D, 20.0D * viewTransform.scale());
-            if (current <= hitRadius && current < distance) {
-                nearest = system;
-                distance = current;
-            }
-        }
-        return nearest;
-    }
-
-    private PlanetEntry nearestSystemEntry(float localX, float localY, float width, float height) {
-        PlanetEntry nearest = null;
-        double distance = Double.MAX_VALUE;
-        for (PlanetEntry entry : selectedSystem.getEntries()) {
-            float[] point = systemPointF(entry, Math.round(width), Math.round(height), renderOrbitClock);
-            double current = Math.hypot(localX - point[0], localY - point[1]);
-            double hitRadius = entry.isMoon()
-                    ? Math.max(10.0D, 14.0D * viewTransform.scale())
-                    : Math.max(14.0D, 18.0D * viewTransform.scale());
-            if (current <= hitRadius && current < distance) {
-                nearest = entry.isMoon()
-                        ? StarSystems.entryById(entry.getParentEntryId()) : entry;
-                distance = current;
-            }
-        }
-        return nearest;
-    }
-
-    private PlanetEntry nearestPlanetTarget(float localX, float localY, float width, float height) {
-        StarmapViewTransform.Point center = viewTransform.toScreen(
-                width / 2.0F, height / 2.0F, width, height);
-        if (Math.hypot(localX - center.x(), localY - center.y())
-                <= Math.max(22.0D, 30.0D * viewTransform.scale()))
-            return focusedPlanet;
-        PlanetEntry nearest = null;
-        double distance = Double.MAX_VALUE;
-        for (PlanetEntry moon : selectedSystem.getEntries()) {
-            if (!moon.isMoon() || !moon.getParentEntryId().equals(focusedPlanet.getEntryId()))
-                continue;
-            float radius = viewTransform.scaleLength(moonDisplayRadius(selectedSystem, moon,
-                    Math.round(width), Math.round(height), true));
-            float[] point = orbitPointF(center.x(), center.y(), radius,
-                    moonDisplayAngle(selectedSystem, moon),
-                    StarmapOrbitMotion.moonPhase(renderOrbitClock, moon.getOrbitRadius()));
-            double current = Math.hypot(localX - point[0], localY - point[1]);
-            if (current <= Math.max(10.0D, 14.0D * viewTransform.scale())
-                    && current < distance) {
-                nearest = moon;
-                distance = current;
-            }
-        }
-        return nearest;
-    }
-
-    private int[] systemPoint(PlanetEntry entry, int width, int height) {
-        float[] point = systemPointF(entry, width, height, renderOrbitClock);
-        return new int[] { Math.round(point[0]), Math.round(point[1]) };
-    }
-
-    private float[] systemPointF(PlanetEntry entry, int width, int height, double phaseClock) {
+    float[] systemPointF(PlanetEntry entry, int width, int height, double phaseClock) {
         StarmapViewTransform.Point center = viewTransform.toScreen(
                 width / 2.0F, height / 2.0F, width, height);
         if (!entry.isMoon()) {
-            float radius = viewTransform.scaleLength(Math.max(18,
-                    entry.getOrbitRadius() * Math.min(width, height) / SYSTEM_ORBIT_SCALE));
+            float radius = systemOrbitRadius(entry, width, height);
             return orbitPointF(center.x(), center.y(), radius, entry.getOrbitAngle(),
                     StarmapOrbitMotion.phase(phaseClock, entry.getOrbitRadius()));
         }
@@ -921,8 +684,8 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     /** Visual radius for a moon, including room for the parent node and a gap. */
-    private int moonDisplayRadius(StarSystem system, PlanetEntry moon, int width,
-                                  int height, boolean focusedPlanetView) {
+    int moonDisplayRadius(StarSystem system, PlanetEntry moon, int width,
+                          int height, boolean focusedPlanetView) {
         int minDimension = Math.max(1, Math.min(width, height));
         int ordinal = moonOrdinal(system, moon);
         int authored = focusedPlanetView
@@ -949,7 +712,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     /** Spread authored angles into deterministic slots when a parent has many moons. */
-    private float moonDisplayAngle(StarSystem system, PlanetEntry moon) {
+    float moonDisplayAngle(StarSystem system, PlanetEntry moon) {
         if (system == null || moon == null)
             return moon == null ? 0.0F : moon.getOrbitAngle();
         int count = 0;
@@ -966,128 +729,7 @@ public final class StarmapTerminalRoot extends UIElement {
         return ordinal * (360.0F / count) + moon.getOrbitAngle() * 0.2F;
     }
 
-    private static void drawOrbit(GuiGraphics graphics, float centerX, float centerY,
-                                   float radius, int color) {
-        drawOrbit(graphics, centerX, centerY, radius, color, false);
-    }
-
-    /** Draw a continuous vector-like orbit rather than a ring of square pixels. */
-    private static void drawOrbit(GuiGraphics graphics, float centerX, float centerY,
-                                  float radius, int color, boolean dashed) {
-        int steps = Math.max(128, (int) Math.ceil(radius * Math.PI * 2.4D));
-        float circumference = Math.max(1.0F, (float) (Math.PI * 2.0D * radius));
-        int dashSpan = Math.max(2, Math.round(steps * 7.0F / circumference));
-        int gapSpan = Math.max(2, Math.round(steps * 11.0F / circumference));
-        int dashPeriod = dashSpan + gapSpan;
-        int glow = multiplyAlpha(color, dashed ? 0.22F : 0.30F);
-        int core = multiplyAlpha(color, dashed ? 0.82F : 0.94F);
-        for (int pass = 0; pass < 2; pass++) {
-            boolean draw = pass == 0;
-            int passColor = draw ? glow : core;
-            float width = draw ? (dashed ? 2.8F : 3.4F) : (dashed ? 0.85F : 1.05F);
-            for (int i = 0; i < steps; i++) {
-                if (dashed && (i % dashPeriod) >= dashSpan)
-                    continue;
-                double a = Math.PI * 2.0D * i / steps;
-                double b = Math.PI * 2.0D * (i + 1) / steps;
-                drawSmoothSegment(graphics,
-                        centerX + (float) Math.cos(a) * radius,
-                        centerY + (float) Math.sin(a) * radius,
-                        centerX + (float) Math.cos(b) * radius,
-                        centerY + (float) Math.sin(b) * radius,
-                        width, passColor);
-            }
-        }
-    }
-
-    /**
-     * Kept under the original name for the bootstrap contract. The route is
-     * now made from sub-pixel quads with a soft halo and clean dash spacing.
-     */
-    private static void drawDashedLine(GuiGraphics graphics, int x1, int y1,
-                                       int x2, int y2, int color) {
-        drawDashedLine(graphics, (float) x1, (float) y1, (float) x2, (float) y2, color);
-    }
-
-    private static void drawDashedLine(GuiGraphics graphics, float x1, float y1,
-                                       float x2, float y2, int color) {
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float length = (float) Math.sqrt(dx * dx + dy * dy);
-        if (length < 0.01F)
-            return;
-        float dash = 6.0F;
-        float gap = 8.0F;
-        int glow = multiplyAlpha(color, 0.28F);
-        int core = multiplyAlpha(color, 0.92F);
-        for (int pass = 0; pass < 2; pass++) {
-            int passColor = pass == 0 ? glow : core;
-            float width = pass == 0 ? 3.2F : 1.05F;
-            for (float offset = 0.0F; offset < length; offset += dash + gap) {
-                float start = offset / length;
-                float end = Math.min(length, offset + dash) / length;
-                drawSmoothSegment(graphics,
-                        x1 + dx * start, y1 + dy * start,
-                        x1 + dx * end, y1 + dy * end,
-                        width, passColor);
-            }
-        }
-    }
-
-    private void drawSelectionBrackets(GuiGraphics graphics, float centerX, float centerY,
-                                       float bodySize, float alpha) {
-        float pad = Math.max(4.0F, bodySize * 0.22F);
-        float half = bodySize * 0.5F + pad;
-        float left = centerX - half;
-        float top = centerY - half;
-        float right = centerX + half;
-        float bottom = centerY + half;
-        float corner = Math.max(5.0F, bodySize * 0.30F);
-        float thickness = Math.max(1.0F, Math.min(1.65F, bodySize * 0.08F));
-        int core = multiplyAlpha(0xFF63E2DF, alpha);
-        int glow = multiplyAlpha(0x4A63E2DF, alpha);
-        drawCorner(graphics, left, top, corner, thickness, true, true, glow, core);
-        drawCorner(graphics, right, top, corner, thickness, false, true, glow, core);
-        drawCorner(graphics, left, bottom, corner, thickness, true, false, glow, core);
-        drawCorner(graphics, right, bottom, corner, thickness, false, false, glow, core);
-    }
-
-    private static void drawCorner(GuiGraphics graphics, float x, float y, float length,
-                                   float thickness, boolean left, boolean top,
-                                   int glow, int core) {
-        float horizontal = left ? x + length : x - length;
-        float vertical = top ? y + length : y - length;
-        drawSmoothSegment(graphics, x, y, horizontal, y, thickness * 2.8F, glow);
-        drawSmoothSegment(graphics, x, y, x, vertical, thickness * 2.8F, glow);
-        drawSmoothSegment(graphics, x, y, horizontal, y, thickness, core);
-        drawSmoothSegment(graphics, x, y, x, vertical, thickness, core);
-    }
-
-    private static void drawSmoothSegment(GuiGraphics graphics, float x1, float y1,
-                                           float x2, float y2, float width, int color) {
-        float dx = x2 - x1;
-        float dy = y2 - y1;
-        float length = (float) Math.sqrt(dx * dx + dy * dy);
-        if (length < 0.001F)
-            return;
-        float half = width * 0.5F;
-        float nx = -dy / length * half;
-        float ny = dx / length * half;
-        Matrix4f matrix = graphics.pose().last().pose();
-        VertexConsumer buffer = graphics.bufferSource().getBuffer(RenderType.gui());
-        buffer.addVertex(matrix, x1 + nx, y1 + ny, 0).setColor(color);
-        buffer.addVertex(matrix, x2 + nx, y2 + ny, 0).setColor(color);
-        buffer.addVertex(matrix, x2 - nx, y2 - ny, 0).setColor(color);
-        buffer.addVertex(matrix, x1 - nx, y1 - ny, 0).setColor(color);
-    }
-
-    private static int multiplyAlpha(int color, float factor) {
-        int alpha = (color >>> 24) & 0xFF;
-        int scaled = Math.max(0, Math.min(255, Math.round(alpha * factor)));
-        return (scaled << 24) | (color & 0x00FFFFFF);
-    }
-
-    private record SelectedVisual(float x, float y, float diameter, String key) {
+    record SelectedVisual(float x, float y, float diameter, String key) {
         float selectionRadius() {
             return diameter * 0.5F + Math.max(4.0F, diameter * 0.22F);
         }
