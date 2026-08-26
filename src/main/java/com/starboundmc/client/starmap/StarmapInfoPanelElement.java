@@ -10,10 +10,12 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import net.minecraft.network.chat.Component;
 import com.starboundmc.world.starmap.PlanetEntry;
 
+import java.util.List;
 import java.util.Objects;
 
 /** Floating detail card built from LDLib2 elements rather than raw draw calls. */
@@ -26,6 +28,8 @@ final class StarmapInfoPanelElement extends UIElement {
     private final StarmapTerminalRoot root;
     private final Transform2D panelTransform = Transform2D.identity().pivot(0.0F, 0.0F);
     private final UIElement panel;
+    private final UIElement panelSurface;
+    private final UIElement content;
     private final UIElement preview;
     private final Label title = new Label();
     private final Label subtitle = new Label();
@@ -36,8 +40,10 @@ final class StarmapInfoPanelElement extends UIElement {
     private final Button action = new Button();
     private StarmapInfoPanelPlacement.Placement placement;
     private boolean targetVisible;
+    private boolean panelExpanded;
     private String contentKey;
-    private ISubscription visibilityAnimation = StarmapUiAnimations.none();
+    private ISubscription surfaceAnimation = StarmapUiAnimations.none();
+    private ISubscription contentAnimation = StarmapUiAnimations.none();
 
     StarmapInfoPanelElement(StarmapTerminalRoot root) {
         this.root = root;
@@ -48,14 +54,26 @@ final class StarmapInfoPanelElement extends UIElement {
         // panel child remains hit-testable so nested buttons receive clicks.
         setAllowHitTest(false);
 
-        panel = new UIElement().addClasses("starmap-info-panel", "starmap-panel")
+        panel = new UIElement().addClass("starmap-info-anchor")
                 .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
-                        .width(220).height(126).paddingAll(8))
+                        .width(220).height(126))
+                .style(style -> style.transform2D(panelTransform));
+        panel.setAllowHitTest(false);
+
+        panelSurface = new UIElement().addClasses("starmap-info-panel", "starmap-panel")
+                .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                        .left(0).top(0).widthPercent(100).heightPercent(100))
                 .style(style -> style.backgroundTexture(
                         SDFRectTexture.of(0xE00A1420).setRadius(4).setStroke(1)
                                 .setBorderColor(0xFF2F6676))
-                        .transform2D(panelTransform));
-        panel.setAllowHitTest(true);
+                        .transform2D(fullPanelTransform()));
+        panelSurface.setAllowHitTest(false);
+
+        content = new UIElement();
+        content.addClass("starmap-info-content");
+        content.layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                .left(0).top(0).widthPercent(100).heightPercent(100).paddingAll(8));
+        content.style(style -> style.zIndex(1));
 
         preview = new UIElement().addClass("starmap-info-preview")
                 .layout(layout -> layout.width(32).height(32).marginRight(7))
@@ -100,7 +118,8 @@ final class StarmapInfoPanelElement extends UIElement {
                 .pressedTexture(SDFRectTexture.of(0xFF123B45).setRadius(2)));
         action.setOnClick(this::onActionClick);
 
-        panel.addChildren(header, metadata, satelliteCount, status, description, action);
+        content.addChildren(header, metadata, satelliteCount, status, description, action);
+        panel.addChildren(panelSurface, content);
         // The panel is an absolutely positioned overlay. Handle the action
         // during capture as a fallback for clicks landing on the button's
         // text child; this keeps the command reliable across LDLib2 layouts.
@@ -113,8 +132,7 @@ final class StarmapInfoPanelElement extends UIElement {
         }, true);
         addChild(panel);
         addEventListener(UIEvents.REMOVED, event -> {
-            visibilityAnimation.unsubscribe();
-            visibilityAnimation = StarmapUiAnimations.none();
+            cancelAnimations();
         });
         setDisplay(false);
         refresh();
@@ -155,9 +173,10 @@ final class StarmapInfoPanelElement extends UIElement {
                 hideAnimated();
         } else if (visible && !Objects.equals(nextContentKey, contentKey)) {
             contentKey = nextContentKey;
-            visibilityAnimation.unsubscribe();
-            visibilityAnimation = StarmapUiAnimations.fade(panel, 0.58F, 1.0F,
-                    StarmapUiAnimations.SELECTION_DURATION, null);
+            if (panelExpanded)
+                playContentReveal(0x48FFFFFF);
+            else
+                content.setDisplay(false);
         }
         if (!visible)
             return;
@@ -212,20 +231,60 @@ final class StarmapInfoPanelElement extends UIElement {
     }
 
     private void showAnimated() {
-        visibilityAnimation.unsubscribe();
+        cancelAnimations();
+        panelExpanded = false;
+        panel.setAllowHitTest(false);
+        content.setDisplay(false);
+        panelSurface.style(style -> style.transform2D(linePanelTransform()));
         setDisplay(true);
-        panel.setAllowHitTest(true);
-        visibilityAnimation = StarmapUiAnimations.fade(panel, 0.12F, 1.0F,
-                StarmapUiAnimations.PANEL_DURATION, null);
+        surfaceAnimation = StarmapUiAnimations.transform(panelSurface,
+                linePanelTransform(), fullPanelTransform(),
+                StarmapUiAnimations.PANEL_EXPAND_DURATION, Eases.QUAD_OUT, () -> {
+                    if (!targetVisible)
+                        return;
+                    panelExpanded = true;
+                    playContentReveal(0x00FFFFFF);
+                });
     }
 
     private void hideAnimated() {
-        visibilityAnimation.unsubscribe();
+        cancelAnimations();
+        panelExpanded = false;
         panel.setAllowHitTest(false);
-        visibilityAnimation = StarmapUiAnimations.fade(panel, 1.0F, 0.0F,
-                StarmapUiAnimations.PANEL_DURATION, () -> {
+        content.setDisplay(false);
+        Transform2D from = panelSurface.getStyle().transform2D().copy();
+        surfaceAnimation = StarmapUiAnimations.transform(panelSurface,
+                from, linePanelTransform(), StarmapUiAnimations.PANEL_COLLAPSE_DURATION,
+                Eases.QUAD_IN, () -> {
                     if (!targetVisible)
                         setDisplay(false);
                 });
+    }
+
+    private void playContentReveal(int fromColor) {
+        contentAnimation.unsubscribe();
+        content.setDisplay(true);
+        contentAnimation = StarmapUiAnimations.tintTogether(List.of(
+                        title, subtitle, metadata, satelliteCount, status, description),
+                fromColor, 0xFFFFFFFF,
+                StarmapUiAnimations.PANEL_CONTENT_DURATION, () -> {
+                    if (targetVisible)
+                        panel.setAllowHitTest(true);
+                });
+    }
+
+    private void cancelAnimations() {
+        surfaceAnimation.unsubscribe();
+        contentAnimation.unsubscribe();
+        surfaceAnimation = StarmapUiAnimations.none();
+        contentAnimation = StarmapUiAnimations.none();
+    }
+
+    private static Transform2D linePanelTransform() {
+        return Transform2D.identity().pivot(0.5F, 0.5F).scale(1.0F, 0.018F);
+    }
+
+    private static Transform2D fullPanelTransform() {
+        return Transform2D.identity().pivot(0.5F, 0.5F);
     }
 }

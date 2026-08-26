@@ -9,22 +9,36 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class StarmapOrbitMotionTest
 {
     @Test
-    void keepsTheNewBaselineBelowTheFormerUniformSpeed()
+    void slowsTheReferenceOrbitWellBelowThePreviousBaseline()
     {
-        assertEquals(0.0035F, StarmapOrbitMotion.speedForRadius(52.0F), 0.000001F);
-        assertTrue(StarmapOrbitMotion.speedForRadius(52.0F) < 0.0125F);
+        assertEquals(0.0015F, StarmapOrbitMotion.speedForRadius(52.0F), 0.000001F);
+        assertTrue(StarmapOrbitMotion.speedForRadius(52.0F) < 0.0035F);
     }
 
     @Test
-    void slowsOuterOrbitsAndKeepsMoonsSlightlyFaster()
+    void appliesAVisibleKeplerStyleFalloffAcrossPlanetaryOrbits()
     {
-        float inner = StarmapOrbitMotion.speedForRadius(22.0F);
+        float inner = StarmapOrbitMotion.speedForRadius(52.0F);
+        float middle = StarmapOrbitMotion.speedForRadius(84.0F);
         float outer = StarmapOrbitMotion.speedForRadius(116.0F);
-        float moon = StarmapOrbitMotion.moonPhase(1.0F, 20.0F);
 
-        assertTrue(outer < inner);
-        assertTrue(moon > StarmapOrbitMotion.phase(1.0F, 20.0F));
-        assertTrue(outer > 0.0F);
+        assertTrue(middle < inner);
+        assertTrue(outer < middle);
+        assertTrue(inner / outer > 3.0F);
+        assertEquals(inner * Math.pow(52.0D / 116.0D, 1.5D), outer, 0.000001D);
+    }
+
+    @Test
+    void slowsMoonOrbitsAndStillMakesTheOuterMoonSlower()
+    {
+        float innerMoon = StarmapOrbitMotion.moonSpeedForRadius(20.0F);
+        float outerMoon = StarmapOrbitMotion.moonSpeedForRadius(22.0F);
+
+        assertEquals(0.0030F, innerMoon, 0.000001F);
+        assertTrue(outerMoon < innerMoon);
+        assertTrue(innerMoon < 0.0040F);
+        float moon = StarmapOrbitMotion.moonPhase(1.0F, 20.0F);
+        assertEquals(innerMoon, moon, 0.000001F);
     }
 
     @Test
