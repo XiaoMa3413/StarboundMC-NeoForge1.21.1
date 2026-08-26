@@ -120,4 +120,16 @@ public class StarSystem
     {
         return entries;
     }
+
+    /** Number of direct satellites orbiting the supplied planet in this system. */
+    public int getMoonCount(PlanetEntry parent)
+    {
+        if (parent == null || parent.isMoon())
+            return 0;
+        String parentId = parent.getEntryId();
+        return (int) entries.stream()
+                .filter(PlanetEntry::isMoon)
+                .filter(entry -> Objects.equals(parentId, entry.getParentEntryId()))
+                .count();
+    }
 }

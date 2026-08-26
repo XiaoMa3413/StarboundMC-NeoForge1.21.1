@@ -219,6 +219,7 @@ public final class StarmapTerminalRoot extends UIElement {
             refreshComponents();
         }
         nodes.forEach(node -> node.prepareRender(renderOrbitClock));
+        chrome.prepareFrame(renderOrbitClock);
         infoPanel.prepareFrame(width, height);
     }
 
@@ -485,7 +486,11 @@ public final class StarmapTerminalRoot extends UIElement {
         int preferredWidth = Math.min(230, Math.max(156, frameWidth / 4));
         int panelWidth = Math.min(preferredWidth, Math.max(1, frameWidth - 32));
         int panelHeight;
-        if (selectedEntry != null || (level == StarmapLevel.GALAXY && selectedSystem != null)) {
+        if (selectedEntry != null) {
+            int moonCount = selectedSystem == null ? 0
+                    : selectedSystem.getMoonCount(selectedEntry);
+            panelHeight = 122 + (moonCount > 0 ? 11 : 0);
+        } else if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             panelHeight = 122;
         } else if (centralStarSelected) {
             // Header (34) + metadata (11) + description (28) + padding (16)

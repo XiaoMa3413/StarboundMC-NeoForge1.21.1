@@ -3,6 +3,7 @@ package com.starboundmc.world;
 import com.starboundmc.block.CaptainChairBlock;
 import com.starboundmc.block.ModBlocks;
 import com.starboundmc.block.ShipEngineBlock;
+import com.starboundmc.block.StarmapTerminalBlock;
 import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
 import com.starboundmc.block.entity.FuelControllerBlockEntity;
 import com.starboundmc.block.entity.ShipCrateBlockEntity;
@@ -237,11 +238,11 @@ public class ShipStructure
                 ModBlocks.CAPTAIN_CHAIR.get().defaultBlockState()
                         .setValue(CaptainChairBlock.FACING, Direction.SOUTH));
         count += place(chunk, 0, FLOOR_Y + 2, 7,
-                ModBlocks.SHIP_CONSOLE.get().defaultBlockState()
-                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+                ModBlocks.STARMAP_TERMINAL.get().defaultBlockState()
+                        .setValue(StarmapTerminalBlock.FACING, Direction.NORTH));
         count += place(chunk, 2, FLOOR_Y + 2, 7,
-                ModBlocks.SHIP_CONSOLE.get().defaultBlockState()
-                        .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+                ModBlocks.STARMAP_TERMINAL.get().defaultBlockState()
+                        .setValue(StarmapTerminalBlock.FACING, Direction.NORTH));
         count += place(chunk, -2, FLOOR_Y + 2, 7,
                 ModBlocks.FUEL_CONTROLLER.get().defaultBlockState()
                         .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));

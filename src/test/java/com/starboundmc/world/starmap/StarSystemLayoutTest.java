@@ -48,4 +48,20 @@ class StarSystemLayoutTest
         assertEquals(1.45F, StarSystems.byId(StarSystems.SYS_COLD).getStellarVisual()
                 .getDistanceResponse().remotePointRadius(), 1.0E-6F);
     }
+
+    @Test
+    void countsOnlyDirectSatellitesOfAPlanet()
+    {
+        StarSystem main = StarSystems.byId(StarSystems.SYS_MAIN);
+        PlanetEntry lush = StarSystems.entryById("sys1:lush");
+        PlanetEntry gasGiant = StarSystems.entryById("sys1:gasgiant");
+        PlanetEntry barren = StarSystems.entryById("sys1:barren");
+        PlanetEntry moon = StarSystems.entryById("sys1:molten");
+
+        assertEquals(1, main.getMoonCount(lush));
+        assertEquals(1, main.getMoonCount(gasGiant));
+        assertEquals(0, main.getMoonCount(barren));
+        assertEquals(0, main.getMoonCount(moon));
+        assertEquals(0, main.getMoonCount(null));
+    }
 }

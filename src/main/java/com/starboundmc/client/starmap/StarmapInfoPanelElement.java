@@ -30,6 +30,7 @@ final class StarmapInfoPanelElement extends UIElement {
     private final Label title = new Label();
     private final Label subtitle = new Label();
     private final Label metadata = new Label();
+    private final Label satelliteCount = new Label();
     private final Label status = new Label();
     private final Label description = new Label();
     private final Button action = new Button();
@@ -77,6 +78,10 @@ final class StarmapInfoPanelElement extends UIElement {
         metadata.addClass("starmap-info-metadata");
         metadata.layout(layout -> layout.widthPercent(100).height(11));
         metadata.textStyle(style -> style.textColor(MUTED).fontSize(7));
+        satelliteCount.addClass("starmap-info-satellites");
+        satelliteCount.layout(layout -> layout.widthPercent(100).height(11));
+        satelliteCount.textStyle(style -> style.textColor(ACCENT).fontSize(7));
+        satelliteCount.setDisplay(false);
         status.addClass("starmap-info-status");
         status.layout(layout -> layout.widthPercent(100).height(14));
         status.textStyle(style -> style.textColor(0xFFFFB36B).fontSize(7)
@@ -95,7 +100,7 @@ final class StarmapInfoPanelElement extends UIElement {
                 .pressedTexture(SDFRectTexture.of(0xFF123B45).setRadius(2)));
         action.setOnClick(this::onActionClick);
 
-        panel.addChildren(header, metadata, status, description, action);
+        panel.addChildren(header, metadata, satelliteCount, status, description, action);
         // The panel is an absolutely positioned overlay. Handle the action
         // during capture as a fallback for clicks landing on the button's
         // text child; this keeps the command reliable across LDLib2 layouts.
@@ -168,6 +173,7 @@ final class StarmapInfoPanelElement extends UIElement {
                 : Component.translatable(entry.getTypeKey()));
 
         if (entry == null) {
+            satelliteCount.setDisplay(false);
             metadata.setText(Component.translatable(
                     "gui.starboundmc.starmap.redraw.body_count", system.getEntries().size()));
             description.setText(Component.translatable(system.getDescriptionKey()));
@@ -185,6 +191,11 @@ final class StarmapInfoPanelElement extends UIElement {
             preview.style(style -> style.backgroundTexture(SDFRectTexture.of(system.getStarColor())
                     .setRadius(16).setBorderColor(ACCENT).setStroke(1)));
         } else {
+            int moons = system == null ? 0 : system.getMoonCount(entry);
+            satelliteCount.setDisplay(moons > 0);
+            if (moons > 0)
+                satelliteCount.setText(Component.translatable(
+                        "gui.starboundmc.starmap.redraw.moon_count", moons));
             metadata.setText(Component.translatable("gui.starboundmc.starmap.threat",
                     entry.getThreatLevel()));
             description.setText(Component.translatable(entry.getDescriptionKey()));

@@ -54,15 +54,8 @@ final class StarmapStarfieldCache {
         int safeWidth = Math.max(1, width);
         int safeHeight = Math.max(1, height);
         NativeImage image = new NativeImage(safeWidth, safeHeight, true);
-        for (Star star : pattern(safeWidth, safeHeight)) {
+        for (Star star : pattern(safeWidth, safeHeight))
             fill(image, star.x(), star.y(), star.size(), star.size(), star.argb());
-            if (star.flare()) {
-                fill(image, star.x() - 2, star.y() + 1,
-                        star.size() + 4, 1, 0x385B91A5);
-                fill(image, star.x() + 1, star.y() - 2,
-                        1, star.size() + 4, 0x385B91A5);
-            }
-        }
 
         int gridStep = Math.max(32, Math.min(safeWidth, safeHeight) / 5);
         for (int x = gridStep; x < safeWidth; x += gridStep)
@@ -82,10 +75,10 @@ final class StarmapStarfieldCache {
             int x = random.nextInt(safeWidth);
             int y = random.nextInt(safeHeight);
             int roll = random.nextInt(12);
-            int size = roll == 0 ? 3 : roll < 3 ? 2 : 1;
+            int size = roll < 3 ? 2 : 1;
             int color = roll == 0 ? 0xFFB9D7E5
                     : roll < 4 ? 0xFF789BB0 : 0xFF526B7C;
-            stars.add(new Star(x, y, size, color, roll == 0));
+            stars.add(new Star(x, y, size, color));
         }
         return List.copyOf(stars);
     }
@@ -116,5 +109,5 @@ final class StarmapStarfieldCache {
                 | (argb & 0x000000FF) << 16;
     }
 
-    record Star(int x, int y, int size, int argb, boolean flare) {}
+    record Star(int x, int y, int size, int argb) {}
 }
