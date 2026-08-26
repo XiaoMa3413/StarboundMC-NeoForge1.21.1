@@ -1,9 +1,9 @@
 package com.starboundmc.network;
 
 import com.starboundmc.menu.FuelControllerMenu;
-import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
+import com.starboundmc.menu.WarpControlMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
@@ -24,7 +24,8 @@ final class ServerPayloadHandler {
     static void handle(StartWarpPacket payload, IPayloadContext context) {
         ServerPlayer player = sender(context);
         if (player != null && !payload.entryId().isBlank()
-                && player.containerMenu instanceof ShipConsoleMenu) {
+                && player.containerMenu instanceof WarpControlMenu menu
+                && menu.stillValid(player)) {
             ModNetwork.serverActions().startWarp(player, payload.entryId());
         }
     }

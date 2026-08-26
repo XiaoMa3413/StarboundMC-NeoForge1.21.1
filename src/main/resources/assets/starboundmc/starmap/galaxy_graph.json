@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "system_id": "sys1",
+      "x": 0.25,
+      "y": 0.3840909090909091,
+      "unlocked": true,
+      "reachable": true
+    },
+    {
+      "system_id": "sys2",
+      "x": 0.73,
+      "y": 0.5886363636363636,
+      "unlocked": true,
+      "reachable": true
+    }
+  ],
+  "routes": [
+    {
+      "id": "main-cold-hyperlane",
+      "from": "sys1",
+      "to": "sys2",
+      "unlocked": true,
+      "reachable": true
+    }
+  ]
+}

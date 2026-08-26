@@ -21,6 +21,9 @@ public final class ModBlocks {
     public static final DeferredBlock<Stage2Blocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
             Stage2Blocks.ShipConsole::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
+    public static final DeferredBlock<StarmapTerminalBlock> STARMAP_TERMINAL = BLOCKS.registerBlock(
+            "starmap_terminal", StarmapTerminalBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 8));
     public static final DeferredBlock<ShipEngineBlock> SHIP_ENGINE = BLOCKS.registerBlock("ship_engine",
             ShipEngineBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 14));
     public static final DeferredBlock<CaptainChairBlock> CAPTAIN_CHAIR = BLOCKS.registerBlock("captain_chair",

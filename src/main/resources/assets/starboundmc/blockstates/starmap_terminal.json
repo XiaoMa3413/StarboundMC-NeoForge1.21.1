@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "starboundmc:block/starmap_terminal" },
+    "facing=east": { "model": "starboundmc:block/starmap_terminal", "y": 90 },
+    "facing=south": { "model": "starboundmc:block/starmap_terminal", "y": 180 },
+    "facing=west": { "model": "starboundmc:block/starmap_terminal", "y": 270 }
+  }
+}

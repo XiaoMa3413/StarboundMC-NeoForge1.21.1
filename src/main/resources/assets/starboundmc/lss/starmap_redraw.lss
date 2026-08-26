@@ -1,0 +1,93 @@
+.starmap-redraw-root {
+  background: sdf(#050912, 0);
+}
+
+// The scene is intentionally sparse; the component layers carry the chrome
+// and readable information hierarchy.
+.starmap-frame {
+  z-index: 20;
+}
+
+.starmap-scene-layer {
+  z-index: 5;
+}
+
+.starmap-frame-inner {
+  z-index: 21;
+}
+
+.starmap-header-rule {
+  z-index: 22;
+}
+
+.starmap-node-layer {
+  z-index: 10;
+}
+
+.starmap-node {
+  z-index: 12;
+}
+
+.starmap-node-selected {
+  z-index: 14;
+}
+
+.starmap-selection-layer {
+  z-index: 18;
+}
+
+.starmap-chrome {
+  z-index: 30;
+}
+
+.starmap-info-layer {
+  z-index: 40;
+}
+
+.starmap-info-panel {
+  padding-all: 8;
+}
+
+.starmap-info-title,
+.starmap-level-label {
+  text-shadow: true;
+}
+
+.starmap-info-description {
+  text-wrap: wrap;
+}
+
+.starmap-info-status {
+  text-wrap: wrap;
+  text-color: #ffb36b;
+}
+
+.starmap-info-satellites {
+  text-color: #63e2df;
+}
+
+.starmap-action-button:host {
+  base-background: sdf(#1a4b57, 2);
+  hover-background: sdf(#276d78, 2);
+  pressed-background: sdf(#123b45, 2);
+}
+
+.starmap-action-button.__disabled__ .__button_text__ {
+  text-color: #6e7c86;
+  text-shadow: false;
+}
+
+.starmap-view-button.__disabled__ .__button_text__ {
+  text-color: #526875;
+  text-shadow: false;
+}
+
+.starmap-back-hint {
+  text-color: #8ca2b3;
+}
+
+.starmap-warp-status {
+  z-index: 32;
+  text-color: #63e2df;
+  text-shadow: true;
+}

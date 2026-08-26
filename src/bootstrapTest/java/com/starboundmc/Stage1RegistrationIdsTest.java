@@ -16,7 +16,8 @@ final class Stage1RegistrationIdsTest {
         assertSourceIds("block/ModBlocks.java", "(?:registerCopy|registerSimpleBlock|registerBlock)\\(\\s*\"([^\"]+)\"", Set.of(
                 "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
                 "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
-                "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace"
+                "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
+                "starmap_terminal"
         ));
     }
 
@@ -33,7 +34,7 @@ final class Stage1RegistrationIdsTest {
                 "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
                 "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
                 "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
-                "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
+                "star_core_ore", "titanium_alloy_furnace", "starmap_terminal", "raw_tungsten", "raw_titanium",
                 "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
                 "durasteel_ingot", "star_core_fragment"
         ));
@@ -46,7 +47,7 @@ final class Stage1RegistrationIdsTest {
         assertSourceIds("entity/ModEntities.java", "ENTITIES\\.register\\(\\s*\"([^\"]+)\"", Set.of("seat"));
         assertSourceIds("menu/ModMenus.java", "MENUS\\.register\\(\\s*\"([^\"]+)\"", Set.of(
                 "upgrade_menu", "ship_console_menu", "ship_crate_menu", "teleporter_menu",
-                "alloy_furnace_menu", "fuel_controller_menu"
+                "alloy_furnace_menu", "fuel_controller_menu", "starmap_terminal_menu"
         ));
         assertSourceIds("sound/ModSounds.java", "SOUNDS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("warp_start", "warp_loop", "warp_end", "teleporter_use"));

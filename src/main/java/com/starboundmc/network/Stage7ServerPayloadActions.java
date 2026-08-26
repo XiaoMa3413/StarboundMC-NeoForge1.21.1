@@ -1,6 +1,6 @@
 package com.starboundmc.network;
 
-import com.starboundmc.menu.ShipConsoleMenu;
+import com.starboundmc.menu.WarpControlMenu;
 import com.starboundmc.warp.ShipWarpManager;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 public final class Stage7ServerPayloadActions extends Stage6ServerPayloadActions {
     @Override
     public void startWarp(ServerPlayer player, String entryId) {
-        if (player.containerMenu instanceof ShipConsoleMenu menu && menu.stillValid(player)) {
+        if (player.containerMenu instanceof WarpControlMenu menu && menu.stillValid(player)) {
             ShipWarpManager.startWarp(player, entryId);
         }
     }
