@@ -40,4 +40,24 @@ final class StarmapRedrawBootstrapTest {
         assertFalse(root.contains("nearestPlanetTarget("));
         assertTrue(screen.contains("GLFW_KEY_ESCAPE"));
     }
+
+    @Test
+    void animationSubscriptionsAreReleasedWithTheElementTree() throws IOException {
+        for (String file : new String[] {
+                "StarmapInfoPanelElement.java",
+                "StarmapSelectionOverlayElement.java",
+                "StarmapTransitionOverlayElement.java"
+        }) {
+            String source = Files.readString(Path.of(
+                    "src/main/java/com/starboundmc/client/starmap", file));
+            assertTrue(source.contains("UIEvents.REMOVED"), file);
+            assertTrue(source.contains(".unsubscribe()"), file);
+        }
+
+        String screen = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/starmap/StarmapTerminalScreen.java"));
+        assertTrue(screen.contains("protected void init() {\n        disposeModularUi();"));
+        assertTrue(screen.contains("modularUI.onRemoved()"));
+        assertTrue(screen.contains("modularUI.setScreen(null)"));
+    }
 }

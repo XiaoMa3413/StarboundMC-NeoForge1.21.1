@@ -8,7 +8,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 
 /** Container for the ship console; it holds no item slots. */
-public class ShipConsoleMenu extends AbstractContainerMenu
+public class ShipConsoleMenu extends AbstractContainerMenu implements WarpControlMenu
 {
     private final ContainerLevelAccess access;
 

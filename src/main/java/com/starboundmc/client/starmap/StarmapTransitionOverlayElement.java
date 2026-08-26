@@ -2,6 +2,7 @@ package com.starboundmc.client.starmap;
 
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 
@@ -18,6 +19,10 @@ final class StarmapTransitionOverlayElement extends UIElement {
                 .color(0x00FFFFFF));
         setAllowHitTest(false);
         setDisplay(false);
+        addEventListener(UIEvents.REMOVED, event -> {
+            animation.unsubscribe();
+            animation = StarmapUiAnimations.none();
+        });
     }
 
     void play() {

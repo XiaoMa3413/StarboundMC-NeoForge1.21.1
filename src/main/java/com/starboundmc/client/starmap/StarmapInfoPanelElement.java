@@ -107,7 +107,10 @@ final class StarmapInfoPanelElement extends UIElement {
                 onActionClick(event);
         }, true);
         addChild(panel);
-        addEventListener(UIEvents.TICK, event -> refresh());
+        addEventListener(UIEvents.REMOVED, event -> {
+            visibilityAnimation.unsubscribe();
+            visibilityAnimation = StarmapUiAnimations.none();
+        });
         setDisplay(false);
         refresh();
     }

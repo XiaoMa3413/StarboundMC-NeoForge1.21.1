@@ -3,6 +3,7 @@ package com.starboundmc.client.starmap;
 /** Shared client-side orbit timing model used by drawing and hit testing. */
 public final class StarmapOrbitMotion
 {
+    private static final double FULL_TURN = Math.PI * 2.0D;
     /** Radians advanced per client tick by an orbit at the reference radius. */
     public static final float BASE_SPEED = 0.0035F;
     /** Authoring-space radius whose speed is exactly {@link #BASE_SPEED}. */
@@ -30,11 +31,20 @@ public final class StarmapOrbitMotion
      */
     public static float phase(double orbitClock, float orbitRadius)
     {
-        return (float) (orbitClock * speedForRadius(orbitRadius));
+        return normalizedPhase(orbitClock, speedForRadius(orbitRadius));
     }
 
     public static float moonPhase(double orbitClock, float orbitRadius)
     {
-        return phase(orbitClock, orbitRadius) * MOON_SPEED_MULTIPLIER;
+        return normalizedPhase(orbitClock,
+                speedForRadius(orbitRadius) * MOON_SPEED_MULTIPLIER);
+    }
+
+    private static float normalizedPhase(double orbitClock, double speed)
+    {
+        double phase = orbitClock * speed % FULL_TURN;
+        if (phase < 0.0D)
+            phase += FULL_TURN;
+        return (float) phase;
     }
 }

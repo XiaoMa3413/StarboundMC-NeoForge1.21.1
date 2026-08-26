@@ -353,17 +353,11 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     boolean isActionAvailable() {
-        if (level == StarmapLevel.GALAXY)
-            return canEnterSelectedSystem();
-        if (selectedEntry == null)
-            return false;
-        return level == StarmapLevel.SYSTEM ? !selectedEntry.isMoon() : isWarpAvailable();
+        return actionAvailability().available();
     }
 
     boolean canEnterSelectedSystem() {
-        StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(selectedSystem);
-        return level == StarmapLevel.GALAXY && selectedSystem != null && selectedEntry == null
-                && graphNode != null && graphNode.available();
+        return level == StarmapLevel.GALAXY && actionAvailability().available();
     }
 
     boolean isInfoPanelVisible() {
@@ -387,28 +381,21 @@ public final class StarmapTerminalRoot extends UIElement {
      * selected destination is currently valid.
      */
     Component actionStatus() {
-        if (level == StarmapLevel.GALAXY && selectedSystem != null) {
-            StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(selectedSystem);
-            if (graphNode == null || !graphNode.unlocked())
-                return Component.translatable("gui.starboundmc.starmap.system_locked");
-            if (!graphNode.reachable())
-                return Component.translatable("gui.starboundmc.starmap.system_unreachable");
-            return null;
-        }
-        if (level != StarmapLevel.PLANET || selectedEntry == null)
-            return null;
-        if (!selectedEntry.isReachable())
-            return Component.translatable("gui.starboundmc.starmap.locked");
-        if (ClientPlanetState.isWarping())
-            return Component.translatable("gui.starboundmc.warping");
-        if (selectedEntry.getDestination() == ClientPlanetState.getCurrent())
-            return Component.translatable("gui.starboundmc.starmap.current");
-        int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
-                selectedEntry.getEntryId());
-        if (ClientPlanetState.getFuel() < cost)
-            return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail",
-                    cost, ClientPlanetState.getFuel());
-        return null;
+        StarmapActionAvailability.Result availability = actionAvailability();
+        return switch (availability.reason()) {
+            case SYSTEM_LOCKED -> Component.translatable(
+                    "gui.starboundmc.starmap.system_locked");
+            case SYSTEM_UNREACHABLE -> Component.translatable(
+                    "gui.starboundmc.starmap.system_unreachable");
+            case BODY_LOCKED -> Component.translatable("gui.starboundmc.starmap.locked");
+            case WARP_IN_PROGRESS -> Component.translatable("gui.starboundmc.warping");
+            case CURRENT_DESTINATION -> Component.translatable(
+                    "gui.starboundmc.starmap.current");
+            case INSUFFICIENT_FUEL -> Component.translatable(
+                    "gui.starboundmc.starmap.action.insufficient_fuel_detail",
+                    availability.requiredFuel(), availability.availableFuel());
+            default -> null;
+        };
     }
 
     ResourceLocation previewTexture(PlanetEntry entry) {
@@ -629,13 +616,31 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private boolean isWarpAvailable() {
-        if (selectedEntry == null || !selectedEntry.isReachable()
-                || ClientPlanetState.isWarping()
-                || selectedEntry.getDestination() == ClientPlanetState.getCurrent())
-            return false;
+        return level == StarmapLevel.PLANET && actionAvailability().available();
+    }
+
+    private StarmapActionAvailability.Result actionAvailability() {
+        if (level == StarmapLevel.GALAXY) {
+            StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(selectedSystem);
+            return StarmapActionAvailability.galaxy(
+                    selectedSystem != null && selectedEntry == null,
+                    graphNode != null && graphNode.unlocked(),
+                    graphNode != null && graphNode.reachable());
+        }
+        if (level == StarmapLevel.SYSTEM) {
+            return StarmapActionAvailability.system(selectedEntry != null,
+                    selectedEntry != null && selectedEntry.isMoon());
+        }
+        if (selectedEntry == null)
+            return StarmapActionAvailability.planet(false, false, false,
+                    false, 0, 0);
+        int fuel = ClientPlanetState.getFuel();
         int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
                 selectedEntry.getEntryId());
-        return ClientPlanetState.getFuel() >= cost;
+        return StarmapActionAvailability.planet(true, selectedEntry.isReachable(),
+                ClientPlanetState.isWarping(),
+                selectedEntry.getDestination() == ClientPlanetState.getCurrent(),
+                fuel, cost);
     }
 
     float[] galaxyPointF(StarSystem system, float x, float y, float width, float height) {

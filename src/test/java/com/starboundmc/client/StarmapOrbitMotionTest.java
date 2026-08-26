@@ -38,4 +38,19 @@ class StarmapOrbitMotionTest
         assertTrue(interpolated < next);
         assertEquals((previous + next) * 0.5F, interpolated, 0.000001F);
     }
+
+    @Test
+    void keepsSubTickPrecisionAfterLongRunningSessions()
+    {
+        double clock = 1_000_000_000.0D;
+        float previous = StarmapOrbitMotion.phase(clock, 84.0F);
+        float interpolated = StarmapOrbitMotion.phase(clock + 0.5D, 84.0F);
+        double angularDelta = Math.atan2(Math.sin(interpolated - previous),
+                Math.cos(interpolated - previous));
+
+        assertTrue(Float.isFinite(previous));
+        assertTrue(previous >= 0.0F && previous < Math.PI * 2.0D);
+        assertEquals(StarmapOrbitMotion.speedForRadius(84.0F) * 0.5D,
+                angularDelta, 0.000001D);
+    }
 }
