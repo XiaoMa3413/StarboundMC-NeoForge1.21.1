@@ -79,10 +79,13 @@ final class Stage7WarpTest {
 
     @Test
     void warpPayloadAndLifecycleEventsAreServerAuthoritative() throws IOException {
+        String handler = source("network/ServerPayloadHandler.java");
         String actions = source("network/Stage7ServerPayloadActions.java");
         String manager = source("warp/ShipWarpManager.java");
         String events = source("event/ShipWarpEvents.java");
-        assertTrue(actions.contains("instanceof ShipConsoleMenu menu && menu.stillValid(player)"));
+        assertTrue(handler.contains("instanceof WarpControlMenu menu"));
+        assertTrue(handler.contains("menu.stillValid(player)"));
+        assertTrue(actions.contains("instanceof WarpControlMenu menu && menu.stillValid(player)"));
         assertTrue(manager.contains("player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)"));
         assertTrue(manager.contains("entry == null || !entry.isReachable()"));
         assertTrue(manager.contains("getFuel() < cost"));
@@ -91,6 +94,17 @@ final class Stage7WarpTest {
         assertTrue(events.contains("ServerStartedEvent"));
         assertTrue(events.contains("ServerStoppedEvent"));
         assertFalse(events.contains("net.minecraftforge"));
+    }
+
+    @Test
+    void bothConsoleTypesUseTheSameWarpAuthorityBoundary() throws IOException {
+        String shipConsole = source("menu/ShipConsoleMenu.java");
+        String starmapTerminal = source("menu/StarmapTerminalMenu.java");
+        String boundary = source("menu/WarpControlMenu.java");
+
+        assertTrue(shipConsole.contains("implements WarpControlMenu"));
+        assertTrue(starmapTerminal.contains("implements WarpControlMenu"));
+        assertTrue(boundary.contains("boolean stillValid(Player player)"));
     }
 
     @Test

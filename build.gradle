@@ -47,6 +47,7 @@ sourceSets {
             include 'com/starboundmc/block/StarmapTerminalBlock.java'
             include 'com/starboundmc/menu/ShipConsoleMenu.java'
             include 'com/starboundmc/menu/StarmapTerminalMenu.java'
+            include 'com/starboundmc/menu/WarpControlMenu.java'
             include 'com/starboundmc/menu/ShipCrateMenu.java'
             include 'com/starboundmc/menu/TeleporterMenu.java'
             include 'com/starboundmc/menu/UpgradeMenu.java'

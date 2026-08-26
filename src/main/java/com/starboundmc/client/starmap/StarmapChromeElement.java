@@ -92,7 +92,6 @@ final class StarmapChromeElement extends UIElement {
         viewControls.stopInteractionEventsPropagation();
 
         addChildren(frame, innerFrame, separator, levelLabel, viewControls, backHint);
-        addEventListener(UIEvents.TICK, event -> refresh());
         refresh();
     }
 

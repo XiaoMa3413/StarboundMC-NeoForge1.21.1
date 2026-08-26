@@ -8,7 +8,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 
 /** Slotless server boundary for the standalone starmap terminal. */
-public final class StarmapTerminalMenu extends AbstractContainerMenu {
+public final class StarmapTerminalMenu extends AbstractContainerMenu implements WarpControlMenu {
     private final ContainerLevelAccess access;
 
     public StarmapTerminalMenu(int containerId, Inventory inventory) {

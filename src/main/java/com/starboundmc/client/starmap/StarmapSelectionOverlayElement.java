@@ -1,6 +1,7 @@
 package com.starboundmc.client.starmap;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import dev.vfyjxf.taffy.style.TaffyPosition;
@@ -23,6 +24,10 @@ final class StarmapSelectionOverlayElement extends UIElement {
                 .positionType(TaffyPosition.ABSOLUTE));
         style(style -> style.zIndex(18).color(0xFFFFFFFF));
         setAllowHitTest(false);
+        addEventListener(UIEvents.REMOVED, event -> {
+            selectionAnimation.unsubscribe();
+            selectionAnimation = StarmapUiAnimations.none();
+        });
     }
 
     void refresh() {
