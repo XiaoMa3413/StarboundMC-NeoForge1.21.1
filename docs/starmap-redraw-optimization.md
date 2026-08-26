@@ -1,15 +1,18 @@
 # 星图重绘优化方案（实现文档）
 
-> 本文面向实现 agent。目标：把 `StarmapTerminalRoot.java` 从「单一巨根 + 手写命中测试 + 手写像素绘制」重构为 LDLib2 惯用的「子元素树 + 框架事件派发 + 样式引擎/LSS 驱动绘制」。**不改变**已评审的公转速度模型与现有服务端跃迁逻辑。
+> 本文记录重构方案与实现依据。方案已于 2026-08-26 完成；最终结构以当前源码和
+> `docs/starmap-redraw-todo.md` 为准。重构保持已评审的公转速度模型与现有服务端跃迁逻辑。
 
 ## 0. 背景与范围
 
-当前分支 `codex/starmap-redraw` 已能运行三级星图（深空星域 / 恒星系 / 行星系统）、轨道公转、跃迁按钮和悬浮信息板。但 `StarmapTerminalRoot.java`（444 行）把状态机、命中测试、全部绘制集中在根元素里手写像素，绕过了 LDLib2 的 Layout、事件派发、样式引擎和 tooltip 管线。本方案的收益：
+实施前的 `StarmapTerminalRoot.java` 一度达到 1096 行，并集中状态机、重复近邻命中和场景
+绘制。实施后根元素为 743 行，场景、节点、选框、转场、边缘提示、信息板、动作判定和
+静态星空缓存均有独立组件；根元素只保留跨组件状态编排、坐标模型和事件协调。已实现收益：
 
 - 删除全部手写近邻命中测试（约 49 行）。
 - 用 LDLib2 绘制原语替代逐点 `fill`（轨道、虚线航道、角标）。
 - 把硬编码颜色迁入 LSS，拿到 hover/选中/disabled 态和过渡动画。
-- 用 `HOVER_TOOLTIPS` 替代手绘信息板命中面板。
+- 用 LDLib2 `UIElement`、`Label`、`Button` 和 Taffy 布局替代手绘信息板命中面板。
 
 **硬约束（不得改动）：**
 1. `StarmapOrbitMotion` 的 `sqrt(52/r)` 速度衰减和月亮 `1.45×` 系数（`starmap/StarmapOrbitMotion.java` L21-35）——已经过评审。
@@ -23,13 +26,13 @@
 ```text
 StarmapTerminalScreen                       // AbstractContainerScreen（保持现状）
   └─ StarmapTerminalRoot                    // UIElement：仅做 level 状态机 + 层级切换
-       ├─ StarmapSceneElement               // 唯一绘制入口，按 level 选数据集
-       │    ├─ StarNode    (GALAXY)         // 每恒星系一个子元素，各自注册 MOUSE_DOWN/CLICK
-       │    ├─ PlanetNode  (SYSTEM)         // 每行星一个子元素
-       │    └─ MoonNode    (PLANET)         // 每卫星一个子元素，独立命中
-       ├─ StarmapEdgeChrome                 // 边框 / 角标 / 层级标题
-       ├─ StarmapLevelMarker                // 层级提示 tooltip（「右键返回恒星系」）
-       └─ StarmapFloatingInfo               // 按需创建 / 自动避让定位的信息板
+       ├─ StarmapSceneElement               // 星空缓存、航道和轨道导引线
+       ├─ nodeLayer
+       │    └─ StarmapNodeElement[]         // 节点绘制、命中和事件停止冒泡
+       ├─ StarmapSelectionOverlayElement    // 连续坐标选中角标
+       ├─ StarmapTransitionOverlayElement   // 层级短转场
+       ├─ StarmapChromeElement              // 边框、标题、固定提示与视野按钮
+       └─ StarmapInfoPanelElement           // LDLib2 信息板和操作按钮
 ```
 
 ### 拆分原则
@@ -110,12 +113,13 @@ StarmapTerminalScreen                       // AbstractContainerScreen（保持�
 
 实现后必须满足（对应 `docs/starmap-redraw-requirements.md` 第 9 节验收标准）：
 
-- [ ] 三个层级均可进入、返回，右键返回（深空星域忽略右键）和 `Esc` 关闭行为不变。
-- [ ] 恒星系层级不能独立选中卫星;行星系统层级可以独立选中卫星。
-- [ ] 行星、卫星公转连续，卫星跟随父行星，**命中区域随公转实时移动**（不要出现点空白命中、或点不中移动中的目标）。
-- [ ] 信息板不遮挡目标、包含描述与对应层级的天体数量;跃迁按钮触发服务端权威请求。
-- [ ] 轨道、航道、星体在不同宽高比 / GUI Scale 下不拉伸错位。
-- [ ] `StarmapOrbitMotion` 行为与相位模型未被改动。
+- [x] 三个层级均可进入、返回，右键返回（深空星域忽略右键）和 `Esc` 关闭行为不变。
+- [x] 恒星系层级不能独立选中卫星;行星系统层级可以独立选中卫星。
+- [x] 行星、卫星公转连续，卫星跟随父行星，**命中区域随公转实时移动**。
+- [x] 信息板不遮挡目标、包含描述与对应层级的天体数量;跃迁按钮触发服务端权威请求。
+- [x] 轨道、航道、星体在不同宽高比 / GUI Scale 下不拉伸错位。
+- [x] `StarmapOrbitMotion` 保留 `sqrt(52/r)` 与卫星 `1.45×` 模型，并将长时间相位归一化
+      以保持 sub-tick 精度。
 
 ## 5. 风险与注意
 

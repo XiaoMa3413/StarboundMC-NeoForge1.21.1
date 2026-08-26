@@ -34,6 +34,15 @@ final class StarmapRedrawBootstrapTest {
         assertTrue(root.contains("StarmapLevel.PLANET"));
         assertTrue(root.contains("GLFW_MOUSE_BUTTON_RIGHT"));
         assertTrue(root.contains("StarmapSceneElement"));
+        String scene = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/starmap/StarmapSceneElement.java"));
+        String starfield = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/starmap/StarmapStarfieldCache.java"));
+        assertTrue(scene.contains("StarmapStarfieldCache"));
+        assertFalse(scene.contains("new Random("));
+        assertFalse(scene.contains("root.prepareFrame("));
+        assertTrue(screen.contains("root.prepareFrame(partialTick)"));
+        assertTrue(starfield.contains("getTextureManager().release(location)"));
         assertTrue(vectors.contains("drawDashedLine"));
         assertFalse(root.contains("nearestSystem("));
         assertFalse(root.contains("nearestSystemEntry("));
