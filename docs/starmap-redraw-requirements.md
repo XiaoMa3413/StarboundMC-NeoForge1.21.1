@@ -1,14 +1,14 @@
 # 星图重绘需求与 LDLib2 实现方案
 
-本文是 `codex/starmap-redraw` 分支的需求基线。该分支从远端 `main` 创建，
+本文是 `codex/starmap-redraw-opt` 分支的需求基线。该分支从远端 `main` 创建，
 不继承旧星图 UI 的实现；现有星球缩略图资源可以复用。
 
-当前进度：已完成新 `starmap_terminal` 方块、菜单边界、LDLib2 根屏幕、三级导航
-骨架、深空恒星与虚线航道、恒星系/行星系统基础轨道和客户端公转预览。跃迁按钮、
-悬浮信息板、行星系统跃迁请求、有限缩放、空白拖拽、视野重置、目标聚焦和可配置
-星域数据图均已接入；资源缩略图盘点、过渡动画和矿物分布字段仍在后续阶段。选中框已
-独立为连续坐标叠加层；航道与轨道采用浮点线段、柔和光晕和稳定 dash 节奏，避免
-点阵/像素块观感。
+当前进度：除矿物分布外，本文定义的 UI 与交互需求均已完成并通过客户端核验。新
+`starmap_terminal` 方块使用独立菜单和 LDLib2 元素树；三级导航、信息板、服务端权威跃迁、
+缩放/拖拽/聚焦、数据驱动星域图、资源缩略图和短过渡动画均已接入。选中框独立为连续
+坐标叠加层；航道与轨道采用浮点线段、柔和光晕和稳定 dash 节奏；静态星空与校准网格由
+尺寸感知纹理缓存负责。矿物分布因星球维度与资源生成模型尚未落地而明确延期，不显示
+虚假占位数据。
 
 ## 1. 产品目标
 
@@ -68,7 +68,7 @@
 - 右键：返回上一级；深空星域不执行关闭操作。
 - `Esc`：关闭星图；当存在可返回层级时仍优先由右键完成返回。
 - 鼠标滚轮：有限缩放；拖拽：平移；提供重置视野和聚焦当前目标的入口。
-- 右键返回提示通过层级标记 tooltip 呈现，例如“右键返回恒星系”。
+- 右键返回与 `Esc` 关闭提示固定在右上角，避免跟随鼠标遮挡星图。
 - 不可用目标必须同时使用文字和视觉状态说明原因（当前目标、燃料不足、不可达、跃迁中）。
 - 动画不能改变命中逻辑；目标在公转时，命中区域和信息板位置实时跟随。
 
@@ -77,12 +77,12 @@
 | 需求 | LDLib2 方案 | 项目自定义部分 |
 | --- | --- | --- |
 | 根 UI 与层级切换 | `ModularUI` + 一个根 `UIElement` | `StarmapLevel` 状态机和返回规则 |
-| 星空、轨道、航道、星体绘制 | 自定义 `UIElement.drawBackgroundAdditional(GUIContext)`，使用 `GuiGraphics` | `StarmapSceneElement` 的三层绘制器和等比投影 |
+| 星空、轨道、航道、星体绘制 | 自定义 `UIElement.drawBackgroundAdditional(GUIContext)`，使用 `GuiGraphics` | `StarmapStarfieldCache` 静态纹理、`StarmapSceneElement` 动态导引线和节点等比投影 |
 | 页面布局 | Taffy layout DSL：`flex`、`gap`、`padding`、`aspectRatio` | 仅保留画布、边缘装饰、动态信息板，不建立固定侧栏/底栏 |
 | LSS 主题 | `StylesheetManager` 加载资源包 `.lss` | 透明叠层、边缘装饰、选中/警告/可跃迁状态 |
 | 右键返回 | `UIEvents.MOUSE_DOWN`，判断 `event.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT` | 根 UI 处理 `popLevel()`；深空星域忽略右键 |
 | Esc 关闭 | 屏幕 `keyPressed` 或根元素 `UIEvents.KEY_DOWN` | 无上级时关闭 `Screen` |
-| Tooltip 提示 | `UIEvents.HOVER_TOOLTIPS` + `HoverTooltips` | 层级标记和返回提示文案 |
+| 输入提示 | `Label` + 绝对定位，禁用命中 | 右上角层级返回与关闭提示文案 |
 | 悬浮信息板 | 普通 `UIElement`/`TextElement`/`Button`，动态设置布局位置 | 锚点避让、目标跟随和信息字段 |
 | 公转动画 | `UIEvents.TICK` 更新逻辑相位；`GUIContext.partialTick` 做帧间插值 | 行星/卫星层级轨道模型、速度、初始相位 |
 | 动画过渡 | `UIElement.animation()` / `StyleAnimation` | 信息板出现、目标高亮和页面切换的短过渡 |
@@ -91,18 +91,22 @@
 ## 6. 推荐组件结构
 
 ```text
-StarmapBlock
-  -> StarmapBlockEntity/菜单入口（只负责打开界面）
-  -> StarmapScreen
+StarmapTerminalBlock
+  -> StarmapTerminalMenu（服务端有效性边界）
+  -> StarmapTerminalScreen
       -> ModularUI
-          -> StarmapRoot
+          -> StarmapTerminalRoot
               -> StarmapSceneElement
-              -> StarmapEdgeChrome
-              -> StarmapLevelMarker
-              -> StarmapFloatingInfo (按需创建/定位)
+                   -> StarmapStarfieldCache
+              -> nodeLayer -> StarmapNodeElement[]
+              -> StarmapSelectionOverlayElement
+              -> StarmapTransitionOverlayElement
+              -> StarmapChromeElement
+              -> StarmapInfoPanelElement
 ```
 
-`StarmapSceneElement` 是唯一的星图绘制与命中入口。它根据当前层级选择数据集：
+`StarmapSceneElement` 只负责非交互场景绘制；各 `StarmapNodeElement` 自己处理命中并停止
+事件冒泡，根元素不保留第二套最近目标搜索。场景和节点根据当前层级选择数据集：
 
 - `GALAXY`: 恒星节点 + 超空间航道。
 - `SYSTEM`: 恒星 + 行星轨道 + 行星节点 + 跟随行星的卫星点。
@@ -131,6 +135,8 @@ StarmapBlock
 8. 做宽屏、窄屏、GUI Scale、密集卫星和边缘目标的视觉核验。
 
 ## 9. 验收标准
+
+以下项目已于 2026-08-25 至 2026-08-26 完成客户端视觉、交互和跃迁端到端核验：
 
 - 首屏无固定侧边栏和底部信息栏，星图主体占据主要区域。
 - 三个层级均可进入、返回，右键和 `Esc` 行为符合定义。
