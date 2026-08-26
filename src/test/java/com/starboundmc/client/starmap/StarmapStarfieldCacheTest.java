@@ -28,7 +28,7 @@ final class StarmapStarfieldCacheTest {
         for (StarmapStarfieldCache.Star star : StarmapStarfieldCache.pattern(width, height)) {
             assertTrue(star.x() >= 0 && star.x() < width);
             assertTrue(star.y() >= 0 && star.y() < height);
-            assertTrue(star.size() >= 1 && star.size() <= 3);
+            assertTrue(star.size() >= 1 && star.size() <= 2);
         }
     }
 }

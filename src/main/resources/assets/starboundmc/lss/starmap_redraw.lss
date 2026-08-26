@@ -62,6 +62,10 @@
   text-color: #ffb36b;
 }
 
+.starmap-info-satellites {
+  text-color: #63e2df;
+}
+
 .starmap-action-button:host {
   base-background: sdf(#1a4b57, 2);
   hover-background: sdf(#276d78, 2);
@@ -80,4 +84,10 @@
 
 .starmap-back-hint {
   text-color: #8ca2b3;
+}
+
+.starmap-warp-status {
+  z-index: 32;
+  text-color: #63e2df;
+  text-shadow: true;
 }

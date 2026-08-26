@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
+import com.starboundmc.client.ClientPlanetState;
 import net.minecraft.network.chat.Component;
 
 /** LDLib2 chrome layer: frame, level marker and the contextual back hint. */
@@ -19,6 +20,7 @@ final class StarmapChromeElement extends UIElement {
     private final StarmapTerminalRoot root;
     private final Label levelLabel = new Label();
     private final Label backHint = new Label();
+    private final Label warpStatus = new Label();
     private final Button resetView = new Button();
     private final Button focusTarget = new Button();
 
@@ -60,6 +62,15 @@ final class StarmapChromeElement extends UIElement {
                 .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER));
         backHint.setAllowHitTest(false);
 
+        warpStatus.addClass("starmap-warp-status");
+        warpStatus.layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                .leftPercent(50).marginLeft(-60).width(120).bottom(34).height(16));
+        warpStatus.textStyle(style -> style.textColor(ACCENT).fontSize(10)
+                .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)
+                .textShadow(true));
+        warpStatus.setText(Component.translatable("gui.starboundmc.warping"));
+        warpStatus.setAllowHitTest(false);
+
         UIElement viewControls = new UIElement().addClass("starmap-view-controls")
                 .layout(layout -> layout.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                         .left(132).top(14).width(64).height(16)
@@ -91,7 +102,7 @@ final class StarmapChromeElement extends UIElement {
         // must not start a map drag or zoom the view behind the button.
         viewControls.stopInteractionEventsPropagation();
 
-        addChildren(frame, innerFrame, separator, levelLabel, viewControls, backHint);
+        addChildren(frame, innerFrame, separator, levelLabel, viewControls, backHint, warpStatus);
         refresh();
     }
 
@@ -106,6 +117,21 @@ final class StarmapChromeElement extends UIElement {
         backHint.setText(Component.translatable(canGoBack
                 ? "gui.starboundmc.starmap.redraw.back_hint"
                 : "gui.starboundmc.starmap.redraw.close_hint"));
+        updateWarpVisibility(ClientPlanetState.isWarping());
+    }
+
+    /** Pulses only the glyph alpha; element opacity would composite its entire rectangular box. */
+    void prepareFrame(double renderClock) {
+        boolean warping = ClientPlanetState.isWarping();
+        updateWarpVisibility(warping);
+        if (warping)
+            warpStatus.textStyle(style -> style.textColor(
+                    StarmapWarpIndicator.pulseColor(renderClock, ACCENT)));
+    }
+
+    private void updateWarpVisibility(boolean warping) {
+        if (warpStatus.isDisplayed() != warping)
+            warpStatus.setDisplay(warping);
     }
 
     private static void configureViewButton(Button button) {
