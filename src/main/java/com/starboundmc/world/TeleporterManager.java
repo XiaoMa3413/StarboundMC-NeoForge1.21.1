@@ -1,7 +1,6 @@
 package com.starboundmc.world;
 
 import com.starboundmc.block.ModBlocks;
-import com.starboundmc.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -12,6 +11,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -155,7 +155,7 @@ public class TeleporterManager extends SavedData
         player.stopRiding();
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
-        level.playSound(null, dest, ModSounds.TELEPORTER_USE.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        level.playSound(null, dest, SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
         return true;
     }
 

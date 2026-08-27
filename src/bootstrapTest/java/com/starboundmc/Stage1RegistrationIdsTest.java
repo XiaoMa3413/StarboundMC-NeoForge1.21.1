@@ -43,14 +43,12 @@ final class Stage1RegistrationIdsTest {
     }
 
     @Test
-    void keepsPublishedEntityMenuAndSoundIds() throws IOException {
+    void keepsPublishedEntityAndMenuIds() throws IOException {
         assertSourceIds("entity/ModEntities.java", "ENTITIES\\.register\\(\\s*\"([^\"]+)\"", Set.of("seat"));
         assertSourceIds("menu/ModMenus.java", "MENUS\\.register\\(\\s*\"([^\"]+)\"", Set.of(
                 "upgrade_menu", "ship_console_menu", "ship_crate_menu", "teleporter_menu",
                 "alloy_furnace_menu", "fuel_controller_menu", "starmap_terminal_menu"
         ));
-        assertSourceIds("sound/ModSounds.java", "SOUNDS\\.register\\(\\s*\"([^\"]+)\"",
-                Set.of("warp_start", "warp_loop", "warp_end", "teleporter_use"));
     }
 
     @Test

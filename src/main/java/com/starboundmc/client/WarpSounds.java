@@ -1,10 +1,10 @@
 package com.starboundmc.client;
 
-import com.starboundmc.sound.ModSounds;
 import com.starboundmc.warp.FlightPhase;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.sounds.SoundEvents;
 
 /** Phase-driven client warp audio. The flight snapshot, not wall-clock progress, owns timing. */
 public final class WarpSounds
@@ -59,7 +59,7 @@ public final class WarpSounds
     {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        loopInstance = SimpleSoundInstance.forMusic(ModSounds.WARP_LOOP.get());
+        loopInstance = SimpleSoundInstance.forMusic(SoundEvents.PORTAL_AMBIENT);
         mc.getSoundManager().play(loopInstance);
     }
 
@@ -68,6 +68,6 @@ public final class WarpSounds
         if (endPlayed) return;
         endPlayed = true;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level != null) mc.getSoundManager().play(SimpleSoundInstance.forAmbientAddition(ModSounds.WARP_END.get()));
+        if (mc.level != null) mc.getSoundManager().play(SimpleSoundInstance.forAmbientAddition(SoundEvents.PORTAL_TRAVEL));
     }
 }
