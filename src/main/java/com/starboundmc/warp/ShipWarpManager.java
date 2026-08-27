@@ -6,7 +6,6 @@ import com.starboundmc.network.SyncFuelPacket;
 import com.starboundmc.network.SyncPlanetPacket;
 import com.starboundmc.network.SyncStarStatePacket;
 import com.starboundmc.network.WarpStartPacket;
-import com.starboundmc.sound.ModSounds;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.Stage6TravelService;
@@ -18,6 +17,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.sounds.SoundEvents;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +96,7 @@ public final class ShipWarpManager
         revision++;
         broadcastAge = 0;
         persistFlight();
-        ship.playSound(null, Stage6TravelService.SHIP_POS, ModSounds.WARP_START.get(), SoundSource.BLOCKS, 1.0F, 1.0F);
+        ship.playSound(null, Stage6TravelService.SHIP_POS, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0F, 1.0F);
         player.displayClientMessage(Component.translatable("message.starboundmc.warp.start", Component.translatable(entry.getNameKey())), true);
         // A compatibility cue only: snapshots own position and progression.
         ModNetwork.sendToPlayersInDimension(ship,

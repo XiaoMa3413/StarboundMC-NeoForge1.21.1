@@ -76,11 +76,10 @@ final class Stage10ResourcesTest {
     }
 
     @Test
-    void soundsAndBothLocalesAreComplete() throws IOException {
-        JsonObject sounds = json(ASSETS.resolve("sounds.json"));
+    void customAudioIsAbsentAndBothLocalesAreComplete() throws IOException {
+        assertFalse(Files.exists(ASSETS.resolve("sounds.json")));
         for (String sound : List.of("warp_start", "warp_loop", "warp_end", "teleporter_use")) {
-            assertTrue(sounds.has(sound), sound);
-            assertTrue(Files.isRegularFile(ASSETS.resolve("sounds/" + sound + ".ogg")), sound);
+            assertFalse(Files.exists(ASSETS.resolve("sounds/" + sound + ".ogg")), sound);
         }
 
         Set<String> english = json(ASSETS.resolve("lang/en_us.json")).keySet();
