@@ -105,6 +105,8 @@ sourceSets {
             include 'com/starboundmc/client/*.java'
             include 'com/starboundmc/client/ui/*.java'
             include 'com/starboundmc/client/teleporter/*.java'
+            include 'com/starboundmc/client/fuel/*.java'
+            include 'com/starboundmc/client/storage/*.java'
             include 'com/starboundmc/client/starmap/*.java'
             include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
