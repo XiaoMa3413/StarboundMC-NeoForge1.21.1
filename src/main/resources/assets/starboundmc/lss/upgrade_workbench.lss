@@ -1,0 +1,97 @@
+// Matter Manipulator workbench: a topology-first blueprint UI.
+
+.upgrade-screen { background: rect(#A605080A); }
+
+.upgrade-shell {
+  background: group(rect(#0B1113), border(-1, #56676A));
+  overflow-clip: true;
+}
+
+.upgrade-header {
+  background: rect(#132124);
+}
+
+.upgrade-header-rail { background: #72CFC7; }
+
+.upgrade-title { font-size: 6; text-color: #EAF2F1; text-shadow: false; }
+.upgrade-header-hint { font-size: 5; text-color: #829797; text-shadow: false; }
+.upgrade-module-count { font-size: 5; text-color: #D7B66C; text-shadow: false; }
+
+.upgrade-blueprint {
+  background: group(rect(#070D0F), border(-1, #273B3E));
+}
+
+.upgrade-manipulator-socket {
+  background: group(rect(#091113), border(-1, #8AA4A5));
+}
+
+.upgrade-branch-label { font-size: 5; text-color: #8CA1A2; text-shadow: false; }
+.upgrade-branch-selected .upgrade-branch-label { text-color: #A6F1EB; }
+
+.upgrade-node:host {
+  base-background: group(rect(#10191B), border(-1, #526266));
+  hover-background: group(rect(#1A292B), border(-1, #9FC6C5));
+  pressed-background: group(rect(#0A1112), border(-1, #D6EEEA));
+}
+
+.upgrade-node-locked:host { base-background: group(rect(#101416), border(-1, #414B4D)); }
+
+.upgrade-node-unlocked:host {
+  base-background: group(rect(#397D75), border(-1, #7DC8BC));
+  hover-background: group(rect(#4D958B), border(-1, #B8EEE4));
+}
+
+.upgrade-node-ready:host {
+  base-background: group(rect(#A57D2E), border(-1, #E7C773));
+  hover-background: group(rect(#C39A3E), border(-1, #FFF0B0));
+}
+
+.upgrade-node-maxed:host {
+  base-background: group(rect(#6FAFA5), border(-1, #CCFFF5));
+  hover-background: group(rect(#7DC3B8), border(-1, #FFFFFF));
+}
+
+.upgrade-node-selected:host {
+  base-background: group(rect(#294442), border(-1, #A6F1EB));
+  hover-background: group(rect(#355B57), border(-1, #D2FFFA));
+}
+
+.upgrade-node-selected.upgrade-node-ready:host {
+  base-background: group(rect(#A57D2E), border(-1, #EFFFFB));
+  hover-background: group(rect(#C39A3E), border(-1, #FFFFFF));
+}
+
+.upgrade-detail {
+  background: rect(#151E20);
+}
+
+.upgrade-detail-accent { background: #73D1C8; }
+.upgrade-detail-top-line { background: #46595B; }
+.upgrade-detail-bottom-line { background: #263234; }
+.upgrade-detail-name { font-size: 6; text-color: #EDF5F4; text-shadow: false; }
+.upgrade-detail-level { font-size: 5; text-color: #91A4A5; text-shadow: false; }
+.upgrade-detail-cost { font-size: 5; text-color: #D3B36C; text-shadow: false; }
+
+.upgrade-main-action:host {
+  base-background: group(rect(#2D625D), border(-1, #8EDDD4));
+  hover-background: group(rect(#407E77), border(-1, #C4FFF7));
+  pressed-background: group(rect(#193A37), border(-1, #F0FFFC));
+}
+
+.upgrade-main-action .__button_text__ {
+  font-size: 6;
+  text-color: #F4FFFD;
+  text-shadow: false;
+}
+
+.upgrade-main-action.__disabled__:host {
+  base-background: group(rect(#1B2224), border(-1, #3C484A));
+  hover-background: group(rect(#1B2224), border(-1, #3C484A));
+  pressed-background: group(rect(#1B2224), border(-1, #3C484A));
+}
+
+.upgrade-main-action.__disabled__ .__button_text__ { text-color: #576466; }
+.upgrade-inventory-caption { font-size: 5; text-color: #7F9092; text-shadow: false; }
+.upgrade-slot-socket { background: group(rect(#080C0D), border(-1, #3D494B)); }
+.upgrade-player-socket { background: group(rect(#090E0F), border(-1, #3E4B4D)); }
+.upgrade-hotbar-socket { background: group(rect(#0D1415), border(-1, #5B6C6E)); }

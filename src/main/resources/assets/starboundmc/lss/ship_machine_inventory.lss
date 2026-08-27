@@ -1,0 +1,159 @@
+// Slot-backed ship machinery. Vanilla keeps ownership of every Slot; these
+// LDLib2 elements provide the panel, labels, controls and non-interactive sockets.
+
+.machine-inventory-screen {
+  background: rect(#9906090c);
+}
+
+.inventory-machine-shell {
+  overflow-clip: true;
+}
+
+.machine-inventory-title,
+.crate-title {
+  font-size: 8;
+  text-color: #edf1f1;
+  text-shadow: false;
+}
+
+.machine-inventory-caption {
+  font-size: 6;
+  text-color: #aeb5b7;
+  text-shadow: false;
+}
+
+.machine-slot-socket {
+  background: group(rect(#090c0e), border(-1, #465055));
+}
+
+.player-slot-socket {
+  background: group(rect(#0c1012), border(-1, #3d474b));
+}
+
+.hotbar-slot-socket {
+  background: group(rect(#111619), border(-1, #697478));
+}
+
+// Fuel controller: compact instrumentation with a cyan reserve channel and
+// restrained amber status accents.
+.fuel-controller-shell {
+  background: group(rect(#10161a), border(-1, #536168));
+}
+
+.fuel-controller-shell .machine-inventory-header {
+  background: rect(#181f23);
+}
+
+.fuel-header-rail {
+  background: #d59b4a;
+}
+
+.fuel-header-status {
+  font-size: 5;
+  text-color: #8fd0c8;
+  text-shadow: false;
+}
+
+.fuel-console {
+  background: group(rect(#171e22), border(-1, #3d484e));
+}
+
+.fuel-gauge-caption {
+  font-size: 5;
+  text-color: #8d999e;
+  text-shadow: false;
+}
+
+.fuel-gauge {
+  background: group(rect(#070a0c), border(-1, #68757a));
+}
+
+.fuel-gauge-fill {
+  background: group(rect(#3aa9ad), border(-1, #75d5d2));
+}
+
+.fuel-gauge-low .fuel-gauge-fill {
+  background: group(rect(#a56a32), border(-1, #dfa95b));
+}
+
+.fuel-gauge-full .fuel-gauge-fill {
+  background: group(rect(#56aaa1), border(-1, #a3ddd4));
+}
+
+.fuel-gauge-tick {
+  background: #70484f53;
+}
+
+.fuel-gauge-label {
+  font-size: 5;
+  text-color: #f0f3f3;
+  text-shadow: true;
+}
+
+.fuel-slot-socket {
+  background: group(rect(#080b0d), border(-1, #657177));
+}
+
+.fuel-refuel-button:host {
+  base-background: group(rect(#28363a), border(-1, #809196));
+  hover-background: group(rect(#385156), border(-1, #a7d8d6));
+  pressed-background: group(rect(#182326), border(-1, #d3e9e7));
+}
+
+.fuel-refuel-button .__button_text__ {
+  font-size: 6;
+  text-color: #e9efef;
+  text-shadow: false;
+}
+
+.fuel-refuel-button.__disabled__:host {
+  base-background: group(rect(#1c2225), border(-1, #424b4f));
+  hover-background: group(rect(#1c2225), border(-1, #424b4f));
+  pressed-background: group(rect(#1c2225), border(-1, #424b4f));
+}
+
+.fuel-refuel-button.__disabled__ .__button_text__ {
+  text-color: #60696c;
+}
+
+.fuel-cost-label {
+  font-size: 5;
+  text-color: #8e999d;
+  text-shadow: false;
+}
+
+.fuel-inventory-section {
+  background: group(rect(#101518), border(-1, #313b40));
+}
+
+// Ship crate: a dense cargo manifest. Muted olive indexing separates it from
+// the fuel console while keeping the slot grid easy to scan.
+.ship-crate-shell {
+  background: group(rect(#131614), border(-1, #5c625b));
+}
+
+.crate-header {
+  background: rect(#20241f);
+}
+
+.crate-header-index {
+  background: #a8a36e;
+}
+
+.crate-capacity {
+  font-size: 5;
+  text-color: #b9b995;
+  text-shadow: false;
+}
+
+.crate-cargo-section {
+  background: group(rect(#171a17), border(-1, #3f463f));
+}
+
+.cargo-slot-socket {
+  background: group(rect(#090b09), border(-1, #596058));
+}
+
+.crate-inventory-section {
+  background: group(rect(#111411), border(-1, #353b35));
+}
