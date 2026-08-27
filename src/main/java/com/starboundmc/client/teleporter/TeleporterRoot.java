@@ -30,15 +30,26 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /** LDLib2 component tree for the teleporter destination console. */
 public final class TeleporterRoot extends UIElement {
     private static final int MAX_NAME_LENGTH = 64;
 
     private final ScrollerView destinationList = new ScrollerView();
+    private final Map<String, DestinationRow> destinationRows = new LinkedHashMap<>();
+    private final Label emptyState = new Label();
     private final TextField nameField = new TextField();
     private final Label networkStatus = new Label();
+    private final UIElement detailIcon = new UIElement();
+    private final Label detailTitle = new Label();
+    private final Label detailType = new Label();
+    private final Label detailHint = new Label();
+    private final Button warpButton = new Button();
+    private String selectedDestinationKey;
 
     public TeleporterRoot() {
         addClass("machine-screen");
@@ -60,9 +71,9 @@ public final class TeleporterRoot extends UIElement {
                 .widthPercent(100)
                 .flex(1)
                 .paddingAll(5)
-                .gapAll(5)
-                .flexDirection(FlexDirection.COLUMN));
-        content.addChildren(buildDestinationSection(), buildRenameSection());
+                .gapAll(4)
+                .flexDirection(FlexDirection.ROW));
+        content.addChildren(buildDestinationSection(), buildDetailSection());
 
         shell.addChildren(header, content);
         addChild(shell);
@@ -78,35 +89,32 @@ public final class TeleporterRoot extends UIElement {
                 .alignItems(AlignItems.CENTER)
                 .flexDirection(FlexDirection.ROW));
 
-        var headerMark = new UIElement().addClass("teleporter-header-mark");
-        headerMark.setAllowHitTest(false);
-        headerMark.layout(layout -> layout.width(3).height(11).marginRight(6));
-
         var title = new Label();
         title.setText(Component.translatable("container.starboundmc.teleporter"));
         title.addClass("machine-title");
         title.layout(layout -> layout.flex(1).height(10));
         title.textStyle(style -> style.textAlignVertical(Vertical.CENTER));
 
-        var closeHint = new Label();
-        closeHint.setText(Component.translatable("gui.starboundmc.teleporter.close_hint"));
-        closeHint.addClass("machine-key-hint");
-        closeHint.layout(layout -> layout.width(48).height(15));
-        closeHint.textStyle(style -> style
-                .textAlignHorizontal(Horizontal.CENTER)
+        var status = new Label();
+        status.setText(Component.translatable("gui.starboundmc.teleporter.online"));
+        status.addClass("teleporter-header-status");
+        status.layout(layout -> layout.width(42).height(9));
+        status.textStyle(style -> style
+                .textAlignHorizontal(Horizontal.RIGHT)
                 .textAlignVertical(Vertical.CENTER));
 
-        header.addChildren(headerMark, title, closeHint);
+        header.addChildren(title, status);
         return header;
     }
 
     private UIElement buildDestinationSection() {
-        var section = new UIElement().addClass("machine-section");
+        var section = new UIElement().addClasses("teleporter-pane", "teleporter-destination-pane");
+        section.setOverflowVisible(false);
         section.layout(layout -> layout
-                .flex(1)
-                .widthPercent(100)
+                .width(88)
+                .heightPercent(100)
                 .paddingAll(4)
-                .gapAll(3)
+                .gapAll(4)
                 .flexDirection(FlexDirection.COLUMN));
 
         var headingRow = new UIElement();
@@ -122,22 +130,12 @@ public final class TeleporterRoot extends UIElement {
         heading.layout(layout -> layout.flex(1).height(9));
         heading.textStyle(style -> style.textAlignVertical(Vertical.CENTER));
 
-        var headingPlate = new UIElement().addClass("teleporter-section-tab");
-        headingPlate.layout(layout -> layout
-                .flex(1)
-                .height(9)
-                .paddingHorizontal(3)
-                .alignItems(AlignItems.CENTER)
-                .flexDirection(FlexDirection.ROW));
-        headingPlate.addChild(heading);
-
-        var networkLamp = new UIElement().addClass("teleporter-network-lamp");
-        networkLamp.layout(layout -> layout.width(3).height(3).marginHorizontal(3));
-
         networkStatus.addClass("machine-status");
-        networkStatus.layout(layout -> layout.width(55).height(8));
-        networkStatus.textStyle(style -> style.textAlignHorizontal(Horizontal.RIGHT));
-        headingRow.addChildren(headingPlate, networkLamp, networkStatus);
+        networkStatus.layout(layout -> layout.width(30).height(8));
+        networkStatus.textStyle(style -> style
+                .textAlignHorizontal(Horizontal.RIGHT)
+                .textAlignVertical(Vertical.CENTER));
+        headingRow.addChildren(heading, networkStatus);
 
         destinationList.addClass("teleporter-destination-list");
         destinationList.layout(layout -> layout.widthPercent(100).flex(1));
@@ -155,16 +153,136 @@ public final class TeleporterRoot extends UIElement {
                 .gapAll(2)
                 .flexDirection(FlexDirection.COLUMN)));
 
+        emptyState.setText(Component.translatable("gui.starboundmc.teleporter.empty"));
+        emptyState.addClass("machine-empty-state");
+        emptyState.setOverflowVisible(false);
+        emptyState.layout(layout -> layout.widthPercent(100).height(26));
+        emptyState.textStyle(style -> style
+                .adaptiveWidth(false)
+                .adaptiveHeight(false)
+                .textWrap(TextWrap.WRAP)
+                .textAlignHorizontal(Horizontal.CENTER)
+                .textAlignVertical(Vertical.CENTER));
+
         section.addChildren(headingRow, destinationList);
         return section;
     }
 
+    private UIElement buildDetailSection() {
+        var pane = new UIElement().addClasses("teleporter-pane", "teleporter-detail-pane");
+        pane.setOverflowVisible(false);
+        pane.layout(layout -> layout
+                .flex(1)
+                .heightPercent(100)
+                .paddingAll(4)
+                .gapAll(3)
+                .flexDirection(FlexDirection.COLUMN));
+
+        var heading = new Label();
+        heading.setText(Component.translatable("gui.starboundmc.teleporter.destination_details"));
+        heading.addClass("teleporter-detail-heading");
+        heading.layout(layout -> layout.widthPercent(100).height(8));
+
+        var identity = new UIElement().addClass("teleporter-detail-identity");
+        identity.layout(layout -> layout
+                .widthPercent(100)
+                .height(34)
+                .gapAll(5)
+                .alignItems(AlignItems.CENTER)
+                .flexDirection(FlexDirection.ROW));
+
+        detailIcon.addClass("teleporter-detail-icon");
+        detailIcon.setAllowHitTest(false);
+        detailIcon.layout(layout -> layout.width(26).height(26));
+
+        var copy = new UIElement();
+        copy.setOverflowVisible(false);
+        copy.layout(layout -> layout
+                .flex(1)
+                .height(26)
+                .justifyContent(AlignContent.CENTER)
+                .flexDirection(FlexDirection.COLUMN));
+
+        detailTitle.addClass("teleporter-detail-title");
+        detailTitle.setOverflowVisible(false);
+        detailTitle.layout(layout -> layout.widthPercent(100).height(17));
+        detailTitle.textStyle(style -> style
+                .adaptiveWidth(false)
+                .adaptiveHeight(false)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.WRAP));
+
+        detailType.addClass("teleporter-detail-type");
+        detailType.setOverflowVisible(false);
+        detailType.layout(layout -> layout.widthPercent(100).height(7));
+        detailType.textStyle(style -> style
+                .adaptiveWidth(false)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
+        copy.addChildren(detailTitle, detailType);
+        identity.addChildren(detailIcon, copy);
+
+        detailHint.setText(Component.translatable("gui.starboundmc.teleporter.select_destination"));
+        detailHint.addClass("teleporter-detail-hint");
+        detailHint.setOverflowVisible(false);
+        detailHint.layout(layout -> layout.widthPercent(100).height(24));
+        detailHint.textStyle(style -> style
+                .adaptiveWidth(false)
+                .adaptiveHeight(false)
+                .textAlignHorizontal(Horizontal.CENTER)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.WRAP));
+
+        warpButton.noText();
+        warpButton.addClasses("teleporter-console-button", "teleporter-transmit-button");
+        warpButton.setOverflowVisible(false);
+        warpButton.layout(layout -> layout
+                .widthPercent(100)
+                .height(20)
+                .paddingHorizontal(5)
+                .alignItems(AlignItems.CENTER)
+                .flexDirection(FlexDirection.ROW));
+
+        var transmitMarker = new UIElement().addClass("teleporter-action-marker");
+        transmitMarker.setAllowHitTest(false);
+        transmitMarker.layout(layout -> layout.width(2).height(10).marginRight(5));
+
+        var transmitLabel = buildButtonLabel(
+                Component.translatable("gui.starboundmc.teleporter.transmit"),
+                "teleporter-transmit-label");
+
+        var transmitArrow = new Label();
+        transmitArrow.setText(Component.literal(">"));
+        transmitArrow.addClass("teleporter-action-arrow");
+        transmitArrow.setAllowHitTest(false);
+        transmitArrow.setOverflowVisible(false);
+        transmitArrow.layout(layout -> layout.width(7).height(10).marginLeft(3));
+        transmitArrow.textStyle(style -> style
+                .adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.CENTER)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
+        warpButton.addChildren(transmitMarker, transmitLabel, transmitArrow);
+        warpButton.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && warpButton.isActive()) {
+                sendSelectedDestination();
+                event.stopPropagation();
+            }
+        });
+
+        var divider = new UIElement().addClass("teleporter-control-divider");
+        divider.setAllowHitTest(false);
+        divider.layout(layout -> layout.widthPercent(100).height(1));
+
+        pane.addChildren(heading, identity, detailHint, warpButton, divider, buildRenameSection());
+        return pane;
+    }
+
     private UIElement buildRenameSection() {
-        var section = new UIElement().addClasses("machine-section", "teleporter-rename-section");
+        var section = new UIElement().addClasses("teleporter-rename-section", "teleporter-subpane");
         section.layout(layout -> layout
                 .widthPercent(100)
-                .height(38)
-                .paddingAll(4)
+                .height(34)
                 .gapAll(2)
                 .flexDirection(FlexDirection.COLUMN));
 
@@ -180,12 +298,7 @@ public final class TeleporterRoot extends UIElement {
         nameLabel.addClasses("machine-field-label", "teleporter-field-caption");
         nameLabel.layout(layout -> layout.flex(1).height(8));
 
-        var online = new Label();
-        online.setText(Component.translatable("gui.starboundmc.teleporter.online"));
-        online.addClass("machine-online");
-        online.layout(layout -> layout.width(64).height(8));
-        online.textStyle(style -> style.textAlignHorizontal(Horizontal.RIGHT));
-        headingRow.addChildren(nameLabel, online);
+        headingRow.addChild(nameLabel);
 
         var inputRow = new UIElement();
         inputRow.layout(layout -> layout
@@ -212,12 +325,22 @@ public final class TeleporterRoot extends UIElement {
         });
 
         var save = new Button();
-        save.setText(Component.translatable("gui.starboundmc.teleporter.save"));
-        save.addClasses("machine-button", "machine-button-primary");
-        save.layout(layout -> layout.width(56).height(20));
-        save.setOnClick(event -> {
-            saveName();
-            event.stopPropagation();
+        save.noText();
+        save.addClasses("teleporter-console-button", "teleporter-save-button");
+        save.setOverflowVisible(false);
+        save.layout(layout -> layout
+                .width(38)
+                .height(20)
+                .paddingHorizontal(3)
+                .alignItems(AlignItems.CENTER));
+        save.addChild(buildButtonLabel(
+                Component.translatable("gui.starboundmc.teleporter.save"),
+                "teleporter-save-label"));
+        save.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                saveName();
+                event.stopPropagation();
+            }
         });
 
         inputRow.addChildren(nameField, save);
@@ -237,77 +360,189 @@ public final class TeleporterRoot extends UIElement {
         nameField.setText(ClientTeleporterState.getCurrentName(), false);
         networkStatus.setText(Component.translatable(
                 "gui.starboundmc.teleporter.link_count", destinations.size()));
-        rebuildDestinations(destinations);
+        if (selectedDestinationKey != null && destinations.stream()
+                .noneMatch(entry -> entry.key().equals(selectedDestinationKey))) {
+            selectedDestinationKey = null;
+        }
+        syncDestinationRows(destinations);
+        updateDetail(findSelected(destinations));
     }
 
-    private void rebuildDestinations(List<TeleporterListPacket.Entry> destinations) {
-        destinationList.clearAllScrollViewChildren();
-        if (destinations.isEmpty()) {
-            var empty = new Label();
-            empty.setText(Component.translatable("gui.starboundmc.teleporter.empty"));
-            empty.addClass("machine-empty-state");
-            empty.layout(layout -> layout.widthPercent(100).height(26));
-            empty.textStyle(style -> style
-                    .textAlignHorizontal(Horizontal.CENTER)
-                    .textAlignVertical(Vertical.CENTER));
-            destinationList.addScrollViewChild(empty);
+    private void syncDestinationRows(List<TeleporterListPacket.Entry> destinations) {
+        Map<String, TeleporterListPacket.Entry> incoming = new LinkedHashMap<>();
+        for (TeleporterListPacket.Entry entry : destinations) {
+            incoming.putIfAbsent(entry.key(), entry);
+        }
+
+        var staleRows = destinationRows.entrySet().iterator();
+        while (staleRows.hasNext()) {
+            var rowEntry = staleRows.next();
+            if (!incoming.containsKey(rowEntry.getKey())) {
+                destinationList.removeScrollViewChild(rowEntry.getValue().button);
+                staleRows.remove();
+            }
+        }
+
+        if (incoming.isEmpty()) {
+            if (!destinationList.hasScrollViewChild(emptyState)) {
+                destinationList.addScrollViewChild(emptyState);
+            }
+            destinationRows.clear();
             return;
         }
 
-        for (TeleporterListPacket.Entry entry : destinations) {
-            var button = new Button();
-            button.noText();
-            button.addClasses("machine-button", "teleporter-destination");
-            button.layout(layout -> layout
-                    .widthPercent(100)
-                    .height(24)
-                    .alignItems(AlignItems.CENTER)
-                    .justifyContent(AlignContent.FLEX_START));
-            button.style(style -> style.tooltips(destinationLabel(entry)));
+        destinationList.removeScrollViewChild(emptyState);
+        Map<String, DestinationRow> orderedRows = new LinkedHashMap<>();
+        int index = 0;
+        for (TeleporterListPacket.Entry entry : incoming.values()) {
+            DestinationRow row = destinationRows.get(entry.key());
+            if (row == null) {
+                row = createDestinationRow(entry);
+            } else if (!row.entry.equals(entry)) {
+                updateDestinationRow(row, entry);
+            }
 
-            var icon = buildDestinationIcon(entry.type());
+            List<UIElement> children = destinationList.viewContainer.getChildren();
+            if (!destinationList.hasScrollViewChild(row.button)) {
+                destinationList.addScrollViewChildAt(row.button, index);
+            } else if (index >= children.size() || children.get(index) != row.button) {
+                destinationList.removeScrollViewChild(row.button);
+                destinationList.addScrollViewChildAt(row.button, index);
+            }
+            orderedRows.put(entry.key(), row);
+            index++;
+        }
 
-            var textColumn = new UIElement().addClass("teleporter-destination-copy");
-            textColumn.layout(layout -> layout
-                    .flex(1)
-                    .height(18)
-                    .justifyContent(AlignContent.CENTER)
-                    .flexDirection(FlexDirection.COLUMN));
+        destinationRows.clear();
+        destinationRows.putAll(orderedRows);
+        updateSelectionClasses();
+    }
 
-            var nameLabel = new Label();
-            nameLabel.setText(destinationName(entry));
-            nameLabel.addClass("teleporter-destination-name");
-            nameLabel.layout(layout -> layout.widthPercent(100).height(10));
-            nameLabel.textStyle(style -> style
-                    .textAlignHorizontal(Horizontal.LEFT)
-                    .textAlignVertical(Vertical.CENTER)
-                    .textWrap(TextWrap.HOVER_ROLL)
-                    .rollSpeed(0.55F)
-                    .adaptiveWidth(false));
+    private DestinationRow createDestinationRow(TeleporterListPacket.Entry entry) {
+        var button = new Button();
+        button.noText();
+        button.setOverflowVisible(false);
+        button.addClasses("teleporter-destination", "teleporter-destination-row");
+        button.layout(layout -> layout
+                .widthPercent(100)
+                .height(27)
+                .alignItems(AlignItems.CENTER)
+                .justifyContent(AlignContent.FLEX_START));
 
-            var typeLabel = new Label();
-            typeLabel.setText(destinationType(entry));
-            typeLabel.addClass("teleporter-destination-type");
-            typeLabel.layout(layout -> layout.widthPercent(100).height(7));
-            typeLabel.textStyle(style -> style
-                    .textAlignHorizontal(Horizontal.LEFT)
-                    .textAlignVertical(Vertical.CENTER));
-            textColumn.addChildren(nameLabel, typeLabel);
+        var selectionMarker = new UIElement().addClass("teleporter-destination-marker");
+        selectionMarker.setAllowHitTest(false);
+        selectionMarker.layout(layout -> layout.width(2).height(19).marginRight(3));
 
-            var routeArrow = new Label();
-            routeArrow.setText(Component.literal(">"));
-            routeArrow.addClass("teleporter-route-arrow");
-            routeArrow.layout(layout -> layout.width(6).height(12).marginLeft(2));
-            routeArrow.textStyle(style -> style
-                    .textAlignHorizontal(Horizontal.CENTER)
-                    .textAlignVertical(Vertical.CENTER));
+        var icon = buildDestinationIcon(entry.type());
+        var textColumn = new UIElement().addClass("teleporter-destination-copy");
+        textColumn.setOverflowVisible(false);
+        textColumn.layout(layout -> layout
+                .flex(1)
+                .height(18)
+                .justifyContent(AlignContent.CENTER)
+                .flexDirection(FlexDirection.COLUMN));
 
-            button.addChildren(icon, textColumn, routeArrow);
-            button.setOnClick(event -> {
-                ModNetwork.sendToServer(new TeleporterUsePacket(entry.key()));
+        var nameLabel = new Label();
+        nameLabel.addClass("teleporter-destination-name");
+        nameLabel.setOverflowVisible(false);
+        nameLabel.layout(layout -> layout.widthPercent(100).height(10));
+        nameLabel.textStyle(style -> style
+                .adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
+
+        var typeLabel = new Label();
+        typeLabel.addClass("teleporter-destination-type");
+        typeLabel.setOverflowVisible(false);
+        typeLabel.layout(layout -> layout.widthPercent(100).height(7));
+        typeLabel.textStyle(style -> style
+                .adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.LEFT)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
+        textColumn.addChildren(nameLabel, typeLabel);
+
+        button.addChildren(selectionMarker, icon, textColumn);
+        button.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+                selectDestination(entry.key());
                 event.stopPropagation();
-            });
-            destinationList.addScrollViewChild(button);
+            }
+        });
+
+        var row = new DestinationRow(entry, button, nameLabel, typeLabel);
+        updateDestinationRow(row, entry);
+        return row;
+    }
+
+    private void updateDestinationRow(DestinationRow row, TeleporterListPacket.Entry entry) {
+        row.entry = entry;
+        row.nameLabel.setText(destinationName(entry));
+        row.typeLabel.setText(destinationType(entry));
+        row.button.style(style -> style.tooltips(destinationName(entry)));
+    }
+
+    private void selectDestination(String key) {
+        DestinationRow row = destinationRows.get(key);
+        if (row == null) return;
+        if (!Objects.equals(selectedDestinationKey, key)) {
+            selectedDestinationKey = key;
+            updateSelectionClasses();
+        }
+        updateDetail(row.entry);
+    }
+
+    private void updateSelectionClasses() {
+        for (var rowEntry : destinationRows.entrySet()) {
+            boolean selected = Objects.equals(rowEntry.getKey(), selectedDestinationKey);
+            Button button = rowEntry.getValue().button;
+            if (selected) {
+                button.addClass("teleporter-destination-selected");
+            } else {
+                button.removeClass("teleporter-destination-selected");
+            }
+        }
+    }
+
+    private TeleporterListPacket.Entry findSelected(List<TeleporterListPacket.Entry> destinations) {
+        if (selectedDestinationKey == null) return null;
+        return destinations.stream()
+                .filter(entry -> entry.key().equals(selectedDestinationKey))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void updateDetail(TeleporterListPacket.Entry entry) {
+        detailIcon.clearAllChildren();
+        if (entry == null) {
+            detailTitle.setText(Component.translatable("gui.starboundmc.teleporter.no_selection"));
+            detailType.setText(Component.empty());
+            detailHint.setText(Component.translatable("gui.starboundmc.teleporter.select_destination"));
+            warpButton.setActive(false);
+            return;
+        }
+
+        var icon = buildDestinationIcon(entry.type());
+        icon.removeClass("teleporter-destination-icon");
+        icon.addClass("teleporter-detail-glyph");
+        icon.layout(layout -> layout
+                .positionType(TaffyPosition.ABSOLUTE)
+                .left(3)
+                .top(3)
+                .width(20)
+                .height(20)
+                .marginRight(0));
+        detailIcon.addChild(icon);
+        detailTitle.setText(destinationName(entry));
+        detailType.setText(destinationType(entry));
+        detailHint.setText(Component.translatable("gui.starboundmc.teleporter.transmit_hint"));
+        warpButton.setActive(true);
+    }
+
+    private void sendSelectedDestination() {
+        if (selectedDestinationKey != null) {
+            ModNetwork.sendToServer(new TeleporterUsePacket(selectedDestinationKey));
         }
     }
 
@@ -318,7 +553,7 @@ public final class TeleporterRoot extends UIElement {
         icon.layout(layout -> layout
                 .width(20)
                 .height(20)
-                .marginRight(6));
+                .marginRight(4));
 
         switch (type) {
             case 0 -> buildShipIcon(icon);
@@ -376,11 +611,20 @@ public final class TeleporterRoot extends UIElement {
         return part;
     }
 
-    private static Component destinationLabel(TeleporterListPacket.Entry entry) {
-        return Component.empty()
-                .append(destinationType(entry))
-                .append("  ")
-                .append(destinationName(entry));
+    private static Label buildButtonLabel(Component text, String styleClass) {
+        var label = new Label();
+        label.setText(text);
+        label.addClasses("teleporter-button-label", styleClass);
+        label.setAllowHitTest(false);
+        label.setOverflowVisible(false);
+        label.layout(layout -> layout.flex(1).heightPercent(100));
+        label.textStyle(style -> style
+                .adaptiveWidth(false)
+                .adaptiveHeight(false)
+                .textAlignHorizontal(Horizontal.CENTER)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
+        return label;
     }
 
     private static Component destinationType(TeleporterListPacket.Entry entry) {
@@ -401,5 +645,20 @@ public final class TeleporterRoot extends UIElement {
 
     private void saveName() {
         ModNetwork.sendToServer(new TeleporterRenamePacket(nameField.getValue()));
+    }
+
+    private static final class DestinationRow {
+        private TeleporterListPacket.Entry entry;
+        private final Button button;
+        private final Label nameLabel;
+        private final Label typeLabel;
+
+        private DestinationRow(TeleporterListPacket.Entry entry, Button button,
+                               Label nameLabel, Label typeLabel) {
+            this.entry = entry;
+            this.button = button;
+            this.nameLabel = nameLabel;
+            this.typeLabel = typeLabel;
+        }
     }
 }

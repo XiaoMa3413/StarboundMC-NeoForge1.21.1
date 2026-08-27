@@ -142,18 +142,15 @@
   pressed-background: sdf(#63e2df, 2);
 }
 
-// Teleporter-only monochrome console: black surfaces, thin pale-grey framing,
-// and semantic destination thumbnails. Other machine screens do not inherit it.
+// Teleporter-only console skin. It deliberately uses LDLib2's image-backed
+// ui-mc sprites instead of the rounded SDF cards used by the starmap.
 .teleporter-shell {
-  background: sdf(#f2060708, 2, 1, #a3a6a8);
+  background: built-in(ui-mc:BORDER_1);
+  overflow-clip: true;
 }
 
 .teleporter-shell .machine-header {
-  background: sdf(#f0090a0b, 2, 1, #65686a);
-}
-
-.teleporter-header-mark {
-  background: sdf(#c8cbcc, 1);
+  background: built-in(ui-mc:RECT_BLACK);
 }
 
 .teleporter-shell .machine-title {
@@ -162,40 +159,35 @@
   text-shadow: false;
 }
 
-.teleporter-shell .machine-key-hint {
-  background: sdf(#0d0e0f, 1, 1, #5c6062);
-  font-size: 6;
-  text-color: #bfc2c3;
-}
-
 .teleporter-shell .machine-content {
-  background: sdf(#050607, 0);
+  background: built-in(ui-mc:RECT_BLACK);
 }
 
-.teleporter-shell .machine-section {
-  background: sdf(#ed090a0b, 1, 1, #55595b);
+.teleporter-header-status {
+  font-size: 5;
+  text-color: #aeb2b3;
+  text-shadow: false;
 }
 
-.teleporter-shell .teleporter-rename-section {
-  background: sdf(#f00b0c0d, 1, 1, #65696b);
+.teleporter-pane {
+  background: group(rect(#1a1d1f), border(1, #686e70));
 }
 
-.teleporter-section-tab {
-  background: sdf(#111315, 1, 0, #00000000);
+.teleporter-detail-pane {
+  background: group(rect(#1d2022), border(1, #747a7c));
 }
 
-.teleporter-shell .machine-section-title {
-  font-size: 6;
+.teleporter-shell .machine-section-title,
+.teleporter-detail-heading {
+  font-size: 5;
   text-color: #d8dad9;
-}
-
-.teleporter-network-lamp {
-  background: sdf(#c8cbcc, 1, 1, #3c3f41);
+  text-shadow: false;
 }
 
 .teleporter-shell .machine-status {
-  font-size: 6;
+  font-size: 5;
   text-color: #aeb1b2;
+  text-shadow: false;
 }
 
 .teleporter-shell .machine-field-label {
@@ -203,59 +195,146 @@
 }
 
 .teleporter-field-caption {
-  background: sdf(#111315, 1, 0, #00000000);
-  padding-left: 3;
+  background: empty;
+  padding-left: 0;
 }
 
 .teleporter-shell .machine-online {
+  font-size: 5;
   text-color: #bfc2c3;
+  text-shadow: false;
 }
 
 .teleporter-shell .machine-empty-state {
+  font-size: 6;
   text-color: #777b7d;
+  text-shadow: false;
 }
 
-.teleporter-shell .machine-button:host {
-  base-background: sdf(#0e1011, 1, 1, #626668);
-  hover-background: sdf(#1b1e20, 1, 1, #c3c7c8);
-  pressed-background: sdf(#050607, 1, 1, #f0f1f1);
-  focus-overlay: sdf(#00000000, 1, 1, #d9dcdd);
+.teleporter-destination-row:host {
+  base-background: rect(#25292b);
+  hover-background: group(rect(#34393b), border(1, #6f7779));
+  pressed-background: group(rect(#191c1e), border(1, #c4c9ca));
+  padding-horizontal: 3;
 }
 
-.teleporter-shell .machine-button .__button_text__ {
-  text-color: #e2e4e4;
+.teleporter-destination-selected:host {
+  base-background: group(rect(#3d4345), border(1, #aeb5b7));
+  hover-background: group(rect(#4a5153), border(1, #e1e4e5));
+  pressed-background: group(rect(#292e30), border(1, #f4f5f5));
 }
 
-.teleporter-shell .machine-button-primary:host {
-  base-background: sdf(#202325, 1, 1, #8d9294);
-  hover-background: sdf(#35393b, 1, 1, #e0e2e2);
-  pressed-background: sdf(#101213, 1, 1, #f4f5f5);
+.teleporter-shell .teleporter-destination-selected .teleporter-destination-name {
+  text-color: #ffffff;
 }
 
-.teleporter-shell .teleporter-destination:host {
-  base-background: sdf(#08090a, 1, 1, #3f4345);
-  hover-background: sdf(#151719, 1, 1, #aeb2b4);
-  pressed-background: sdf(#030404, 1, 1, #e3e5e5);
-  padding-horizontal: 4;
+.teleporter-shell .teleporter-destination-selected .teleporter-destination-type {
+  text-color: #c7cccd;
+}
+
+.teleporter-destination-marker {
+  background: #555c5e;
+}
+
+.teleporter-destination-row:hover .teleporter-destination-marker {
+  background: #aeb5b7;
+}
+
+.teleporter-destination-selected .teleporter-destination-marker {
+  background: #f1f3f3;
 }
 
 .teleporter-destination-icon {
-  background: sdf(#030404, 2, 1, #676b6d);
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.teleporter-detail-icon {
+  background: group(rect(#141719), border(-1, #777d7f));
+}
+
+.teleporter-detail-glyph {
+  background: empty;
+}
+
+.teleporter-detail-identity {
+  background: empty;
+  padding-all: 0;
+}
+
+.teleporter-detail-title {
+  font-size: 6;
+  text-color: #f0f1f1;
+  text-shadow: false;
+}
+
+.teleporter-detail-type {
+  font-size: 5;
+  text-color: #c4c8c9;
+  text-shadow: false;
+}
+
+.teleporter-detail-hint {
+  background: empty;
+  padding-all: 0;
+  font-size: 5;
+  text-color: #858b8d;
+  text-shadow: false;
+}
+
+.teleporter-console-button:host {
+  base-background: group(rect(#292d2f), border(1, #73797b));
+  hover-background: group(rect(#3b4143), border(1, #c8cdce));
+  pressed-background: group(rect(#171a1c), border(1, #f1f2f2));
+}
+
+.teleporter-transmit-button:host {
+  base-background: group(rect(#343a3c), border(1, #c2c8c9));
+  hover-background: group(rect(#4b5254), border(1, #ffffff));
+  pressed-background: group(rect(#202426), border(1, #d8dcdd));
+}
+
+.teleporter-button-label {
+  font-size: 6;
+  text-color: #e2e4e4;
+  text-shadow: false;
+}
+
+.teleporter-action-marker {
+  background: #e5e8e8;
+}
+
+.teleporter-action-arrow {
+  font-size: 6;
+  text-color: #e7eaea;
+  text-shadow: false;
+}
+
+.teleporter-console-button.__disabled__ .teleporter-button-label,
+.teleporter-console-button.__disabled__ .teleporter-action-arrow {
+  text-color: #686d6f;
+}
+
+.teleporter-console-button.__disabled__ .teleporter-action-marker {
+  background: #555b5d;
+}
+
+.teleporter-transmit-button.__disabled__:host {
+  base-background: group(rect(#202325), border(1, #555b5d));
+  hover-background: group(rect(#202325), border(1, #555b5d));
+  pressed-background: group(rect(#202325), border(1, #555b5d));
 }
 
 .teleporter-shell .teleporter-destination-type {
   font-size: 5;
+  background: empty;
+  padding-all: 0;
   text-color: #85898b;
   text-shadow: false;
 }
 
 .teleporter-shell .teleporter-destination-name {
-  text-color: #e4e6e5;
-}
-
-.teleporter-route-arrow {
   font-size: 6;
-  text-color: #aeb2b3;
+  text-color: #e4e6e5;
   text-shadow: false;
 }
 
@@ -295,17 +374,39 @@
   background: sdf(#9da1a3, 0);
 }
 
+.teleporter-icon-flag-pole {
+  background: sdf(#c9cccd, 0);
+}
+
+.teleporter-icon-flag-base {
+  background: sdf(#7f8486, 1);
+}
+
 .teleporter-shell .teleporter-name-field:host {
-  background: sdf(#030405, 1, 1, #666a6c);
-  focus-overlay: sdf(#00000000, 1, 1, #daddde);
+  background: built-in(ui-mc:RECT_5);
+  focus-overlay: built-in(ui-mc:RECT_6);
+}
+
+.teleporter-shell .teleporter-rename-section,
+.teleporter-subpane {
+  background: empty;
+}
+
+.teleporter-control-divider {
+  background: #565b5d;
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_view_vertical-scroller__ {
+  width: 5;
+  margin-left: 2;
 }
 
 .teleporter-shell .teleporter-destination-list .__scroller_scroll_container__ {
-  background: sdf(#050607, 1, 1, #303335);
+  background: built-in(ui-mc:RECT_BLACK);
 }
 
 .teleporter-shell .teleporter-destination-list .__scroller_scroll_bar__ {
-  base-background: sdf(#5d6163, 1);
-  hover-background: sdf(#9da1a3, 1);
-  pressed-background: sdf(#d9dbdc, 1);
+  base-background: built-in(ui-mc:SCROLLER_V);
+  hover-background: built-in(ui-mc:SCROLLER_V_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_V_DARK) color(#dddddd);
 }
