@@ -133,7 +133,6 @@ sourceSets {
             include 'com/starboundmc/world/starmap/*.java'
             include 'com/starboundmc/world/*.java'
             include 'com/starboundmc/menu/ModMenus.java'
-            include 'com/starboundmc/sound/ModSounds.java'
             include 'com/starboundmc/world/ModWorldgen.java'
         }
         resources {

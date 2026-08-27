@@ -150,11 +150,26 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 位于 [docs/archive](docs/archive/)，Forge 1.20.1 历史设计快照位于
 [docs/legacy-forge](docs/legacy-forge/)。
 
+## 参与开发
+
+StarboundMC 现已按 MIT License 开源，欢迎提交 Issue、改进代码、修复测试或完善文档。
+提交 Pull Request 前请先确认：
+
+- 新增的代码和原创素材可以按本项目许可证发布；
+- 第三方素材已经获得与用途匹配的许可，并在
+  [第三方素材说明](THIRD_PARTY_NOTICES.md) 中记录来源和署名要求；
+- 没有把本地依赖源码、构建缓存、运行存档、截图或日志提交进仓库；
+- `.\gradlew.bat test` 能够通过。
+
+如果改动涉及游戏存档、网络协议、注册 ID 或迁移兼容性，请在 PR 描述中说明影响范围。
+
 ## 许可与素材
 
 ### 项目代码与原创内容
 
-除下方明确列出的第三方素材外，StarboundMC 的源代码、原创 UI、模型、方块/物品纹理、文档和其他项目内容均为 **StarboundMC Team** 的保留权利内容，项目元数据声明为 **All Rights Reserved**。除非获得项目维护者的书面许可，不授予复制、修改、再发布、再许可或商业使用的权利。
+除下方明确列出的第三方素材外，StarboundMC 的源代码、原创 UI、模型、方块/物品纹理和文档均由 **StarboundMC Team** 按 [MIT License](LICENSE) 发布。
+
+MIT License 允许使用、复制、修改、合并、发布、再许可和销售这些项目内容，但再分发时必须保留版权声明和许可证文本。
 
 ### 第三方行星贴图
 
@@ -165,7 +180,7 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 - `textures/planet/frozen.png`：Eris fictional
 - `textures/planet/barren.png`：Mars
 
-使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。
+使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ### 运行时依赖与音频边界
 
