@@ -1,7 +1,8 @@
 # 星图重绘优化方案（实现文档）
 
-> 本文记录重构方案与实现依据。方案已于 2026-08-26 完成；最终结构以当前源码和
-> `docs/starmap-redraw-todo.md` 为准。重构保持已评审的公转速度模型与现有服务端跃迁逻辑。
+> **归档状态：已完成。** 本文记录重构方案与实现依据。方案已于 2026-08-26 完成；最终
+> 结构以当前源码和同目录的 [`starmap-redraw-todo.md`](starmap-redraw-todo.md) 为准。
+> 重构保持已评审的公转速度模型与现有服务端跃迁逻辑。
 
 ## 0. 背景与范围
 
@@ -21,7 +22,7 @@
 
 ## 1. 目标组件结构
 
-对应 `docs/starmap-redraw-requirements.md` 第 6 节推荐结构：
+对应同目录 [`starmap-redraw-requirements.md`](starmap-redraw-requirements.md) 第 6 节推荐结构：
 
 ```text
 StarmapTerminalScreen                       // AbstractContainerScreen（保持现状）
@@ -111,7 +112,8 @@ StarmapTerminalScreen                       // AbstractContainerScreen（保持�
 
 ## 4. 验证清单
 
-实现后必须满足（对应 `docs/starmap-redraw-requirements.md` 第 9 节验收标准）：
+实现后必须满足（对应同目录 [`starmap-redraw-requirements.md`](starmap-redraw-requirements.md)
+第 9 节验收标准）：
 
 - [x] 三个层级均可进入、返回，右键返回（深空星域忽略右键）和 `Esc` 关闭行为不变。
 - [x] 恒星系层级不能独立选中卫星;行星系统层级可以独立选中卫星。

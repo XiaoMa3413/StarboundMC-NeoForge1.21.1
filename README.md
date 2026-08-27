@@ -32,6 +32,7 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 | --- | --- |
 | Minecraft | `1.21.1` |
 | Mod Loader | NeoForge `21.1.248` 或同 Minecraft 版本的兼容 21.1.x 构建 |
+| 客户端前置 | LDLib2 `2.2.36.a` 或兼容版本 |
 | 模组版本 | `0.1-alpha` |
 | Java | 开发和独立服务器使用 64 位 Java 21 |
 | 安装侧 | 客户端与服务器均需安装 |
@@ -39,10 +40,11 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 ## 安装
 
 1. 安装 Minecraft 1.21.1 对应的 NeoForge。
-2. 从发布页或本地构建取得 StarboundMC JAR。
-3. 将 JAR 放入客户端的 `mods` 目录。
-4. 联机或开设专用服务器时，也将相同 JAR 放入服务器的 `mods` 目录。
-5. 启动前备份已有世界，尤其是从 Forge 1.20.1 升级的存档。
+2. 客户端安装 LDLib2 `2.2.36.a` 或模组元数据允许的兼容版本。
+3. 从发布页或本地构建取得 StarboundMC JAR。
+4. 将 LDLib2 和 StarboundMC JAR 放入客户端的 `mods` 目录。
+5. 联机或开设专用服务器时，在服务端安装相同版本的 StarboundMC；LDLib2 当前仅为客户端前置。
+6. 启动前备份已有世界，尤其是从 Forge 1.20.1 升级的存档。
 
 旧 Forge 存档的备份副本已实际完成 NeoForge 1.21.1 升级、保存和再次启动，但升级应视为单向操作。不要在没有备份的情况下试用，也不要将升级后的世界重新交给旧 Forge 版本打开。
 
@@ -52,7 +54,8 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 
 - 新玩家首次登录会获得物质枪和传送器，并被送往初始飞船。
 - 默认按 `H` 返回飞船；可在“控制 → 星际边界”中修改按键。
-- 与飞船驾驶台交互打开星图。先选择恒星系，再选择可达天体并确认跃迁。
+- 与飞船星图导航台交互打开星图。旧驾驶台仅为存档兼容保留，已标记为废弃。
+- 先选择恒星系，再选择可达天体并确认跃迁。
 - 星系内跃迁消耗 20 燃料，跨星系跃迁消耗 100 燃料；油箱上限为 1000。
 - 飞船的物理空间保持固定，星图和舷窗展示其在连续宇宙坐标中的航行过程。
 
@@ -133,15 +136,19 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 
 ## 验证状态
 
-- 默认测试套件：158 项，0 failures、0 errors、0 skipped。
+- 默认测试套件：195 项，0 failures、0 errors、0 skipped。
 - `runData` 和完整 `build` 通过。
 - 新世界已通过注册对象、设备规则、程序化飞船和四维度 RCON 烟测。
 - 两份 Forge 1.20.1 旧存档备份已完成 NeoForge 升级、保存和重启。
 - 客户端资源重载、声音引擎和纹理图集构建无 StarboundMC 资源错误。
 - 专用服务器可启动至 `Done`，并能正常保存全部维度后停服。
 - 同星系/跨星系跃迁、燃料扣除、航行动画和抵达状态已经真人复验通过。
+- LDLib2 三级星图和紧凑型传送器界面已完成客户端视觉与交互核验；其余普通机器界面按
+  [当前 UI 迁移计划](docs/machine-ui-ldlib2-plan.md) 逐项处理。
 
-更完整的迁移约束、技术决策和验证记录见 [NEOFORGE_MIGRATION_PLAN.md](NEOFORGE_MIGRATION_PLAN.md)。Forge 1.20.1 历史设计快照位于 [docs/legacy-forge](docs/legacy-forge/)。
+当前文档入口见 [docs/README.md](docs/README.md)。已完成的 NeoForge 迁移记录与星图重绘计划
+位于 [docs/archive](docs/archive/)，Forge 1.20.1 历史设计快照位于
+[docs/legacy-forge](docs/legacy-forge/)。
 
 ## 许可与素材
 
