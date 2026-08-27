@@ -12,6 +12,11 @@
 - [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：当前分支的唯一活动 UI 计划。
   传送器试验版已从 `main` 撤回，当前项仍是完善传送器。
 
+## 已知问题
+
+- [首次打开 LDLib2 界面时短暂卡顿](known-issues.md)：已复现；传送器整表重复构建已经消除，
+  目前继续评估 LDLib2 首次字体与渲染资源初始化成本。
+
 ## 已完成计划归档
 
 - [Forge → NeoForge 迁移计划](archive/neoforge-migration-plan.md)：阶段 0–11、旧存档升级与

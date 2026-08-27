@@ -1,0 +1,412 @@
+// Shared LDLib2 language for ship machinery. The individual screens compose
+// these primitives instead of painting fixed pixel rectangles in renderBg.
+.machine-screen {
+  background: sdf(#b8050911, 0);
+}
+
+.machine-shell {
+  background: sdf(#f20b141e, 5, 1, #365d6a);
+  overflow-clip: true;
+}
+
+.machine-header {
+  background: sdf(#f010202c, 5, 1, #294957);
+}
+
+.machine-signal {
+  background: sdf(#63e2df, 2);
+}
+
+.machine-title {
+  font-size: 9;
+  text-color: #eafaff;
+  text-shadow: true;
+}
+
+.machine-subtitle {
+  font-size: 6;
+  text-color: #7194a4;
+  text-shadow: false;
+}
+
+.machine-key-hint {
+  background: sdf(#142731, 4, 1, #345d6a);
+  font-size: 6;
+  text-color: #91aeb9;
+  text-shadow: false;
+}
+
+.machine-content {
+  background: sdf(#09121b, 0);
+}
+
+.machine-section {
+  background: sdf(#c80e1b25, 3, 1, #233f4b);
+}
+
+.machine-section-title {
+  font-size: 7;
+  text-color: #b9dce5;
+  text-shadow: false;
+}
+
+.machine-status {
+  font-size: 6;
+  text-color: #62d5d4;
+  text-shadow: false;
+}
+
+.machine-description {
+  font-size: 6;
+  text-color: #6f8b98;
+  text-shadow: false;
+  text-wrap: wrap;
+}
+
+.machine-field-label {
+  font-size: 6;
+  text-color: #90aab5;
+  text-shadow: false;
+}
+
+.machine-button:host {
+  base-background: sdf(#182a35, 3, 1, #315462);
+  hover-background: sdf(#21414c, 3, 1, #63e2df);
+  pressed-background: sdf(#10242d, 3, 1, #4bb7bd);
+  focus-overlay: sdf(#00000000, 3, 1, #8cf5f2);
+}
+
+.machine-button .__button_text__ {
+  font-size: 7;
+  text-color: #d9edf2;
+  text-shadow: false;
+}
+
+.machine-button-primary:host {
+  base-background: sdf(#17434b, 3, 1, #4c9ba2);
+  hover-background: sdf(#23606a, 3, 1, #8cf5f2);
+  pressed-background: sdf(#102f35, 3, 1, #63e2df);
+}
+
+.teleporter-destination:host {
+  base-background: sdf(#101e28, 3, 1, #223f4b);
+  hover-background: sdf(#183641, 3, 1, #5bcbd0);
+  pressed-background: sdf(#0c2028, 3, 1, #3e9da4);
+  padding-horizontal: 5;
+}
+
+.teleporter-destination-type {
+  background: sdf(#152d38, 2, 1, #315562);
+  font-size: 5;
+  text-color: #75c8cf;
+  text-shadow: false;
+}
+
+.teleporter-destination-name {
+  font-size: 7;
+  text-color: #c9e0e7;
+  text-shadow: false;
+}
+
+.teleporter-name-field:host {
+  background: sdf(#071119, 3, 1, #31515d);
+  focus-overlay: sdf(#00000000, 3, 1, #63e2df);
+  padding-horizontal: 4;
+}
+
+.machine-online {
+  font-size: 6;
+  text-color: #60d394;
+  text-shadow: false;
+}
+
+.machine-empty-state {
+  font-size: 7;
+  text-color: #647d88;
+  text-shadow: false;
+}
+
+.teleporter-destination-list .__scroller_view_vertical-scroller__ {
+  width: 5;
+  margin-left: 4;
+}
+
+.teleporter-destination-list .__scroller_scroll_container__ {
+  background: sdf(#09141d, 2);
+  padding-all: 1;
+}
+
+.teleporter-destination-list .__scroller_scroll_bar__ {
+  base-background: sdf(#315562, 2);
+  hover-background: sdf(#4c8991, 2);
+  pressed-background: sdf(#63e2df, 2);
+}
+
+// Teleporter-only console skin. It deliberately uses LDLib2's image-backed
+// ui-mc sprites instead of the rounded SDF cards used by the starmap.
+.teleporter-shell {
+  background: built-in(ui-mc:BORDER_1);
+  overflow-clip: true;
+}
+
+.teleporter-shell .machine-header {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.teleporter-shell .machine-title {
+  font-size: 8;
+  text-color: #eceeed;
+  text-shadow: false;
+}
+
+.teleporter-shell .machine-content {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.teleporter-header-status {
+  font-size: 5;
+  text-color: #aeb2b3;
+  text-shadow: false;
+}
+
+.teleporter-pane {
+  background: group(rect(#1a1d1f), border(1, #686e70));
+}
+
+.teleporter-detail-pane {
+  background: group(rect(#1d2022), border(1, #747a7c));
+}
+
+.teleporter-shell .machine-section-title,
+.teleporter-detail-heading {
+  font-size: 5;
+  text-color: #d8dad9;
+  text-shadow: false;
+}
+
+.teleporter-shell .machine-status {
+  font-size: 5;
+  text-color: #aeb1b2;
+  text-shadow: false;
+}
+
+.teleporter-shell .machine-field-label {
+  text-color: #afb2b3;
+}
+
+.teleporter-field-caption {
+  background: empty;
+  padding-left: 0;
+}
+
+.teleporter-shell .machine-online {
+  font-size: 5;
+  text-color: #bfc2c3;
+  text-shadow: false;
+}
+
+.teleporter-shell .machine-empty-state {
+  font-size: 6;
+  text-color: #777b7d;
+  text-shadow: false;
+}
+
+.teleporter-destination-row:host {
+  base-background: rect(#25292b);
+  hover-background: group(rect(#34393b), border(1, #6f7779));
+  pressed-background: group(rect(#191c1e), border(1, #c4c9ca));
+  padding-horizontal: 3;
+}
+
+.teleporter-destination-selected:host {
+  base-background: group(rect(#3d4345), border(1, #aeb5b7));
+  hover-background: group(rect(#4a5153), border(1, #e1e4e5));
+  pressed-background: group(rect(#292e30), border(1, #f4f5f5));
+}
+
+.teleporter-shell .teleporter-destination-selected .teleporter-destination-name {
+  text-color: #ffffff;
+}
+
+.teleporter-shell .teleporter-destination-selected .teleporter-destination-type {
+  text-color: #c7cccd;
+}
+
+.teleporter-destination-marker {
+  background: #555c5e;
+}
+
+.teleporter-destination-row:hover .teleporter-destination-marker {
+  background: #aeb5b7;
+}
+
+.teleporter-destination-selected .teleporter-destination-marker {
+  background: #f1f3f3;
+}
+
+.teleporter-destination-icon {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.teleporter-detail-icon {
+  background: group(rect(#141719), border(-1, #777d7f));
+}
+
+.teleporter-detail-glyph {
+  background: empty;
+}
+
+.teleporter-detail-identity {
+  background: empty;
+  padding-all: 0;
+}
+
+.teleporter-detail-title {
+  font-size: 6;
+  text-color: #f0f1f1;
+  text-shadow: false;
+}
+
+.teleporter-detail-type {
+  font-size: 5;
+  text-color: #c4c8c9;
+  text-shadow: false;
+}
+
+.teleporter-detail-hint {
+  background: empty;
+  padding-all: 0;
+  font-size: 5;
+  text-color: #858b8d;
+  text-shadow: false;
+}
+
+.teleporter-console-button:host {
+  base-background: group(rect(#292d2f), border(1, #73797b));
+  hover-background: group(rect(#3b4143), border(1, #c8cdce));
+  pressed-background: group(rect(#171a1c), border(1, #f1f2f2));
+}
+
+.teleporter-transmit-button:host {
+  base-background: group(rect(#343a3c), border(1, #c2c8c9));
+  hover-background: group(rect(#4b5254), border(1, #ffffff));
+  pressed-background: group(rect(#202426), border(1, #d8dcdd));
+}
+
+.teleporter-button-label {
+  font-size: 6;
+  text-color: #e2e4e4;
+  text-shadow: false;
+}
+
+.teleporter-action-marker {
+  background: #e5e8e8;
+}
+
+.teleporter-action-arrow {
+  font-size: 6;
+  text-color: #e7eaea;
+  text-shadow: false;
+}
+
+.teleporter-console-button.__disabled__ .teleporter-button-label,
+.teleporter-console-button.__disabled__ .teleporter-action-arrow {
+  text-color: #686d6f;
+}
+
+.teleporter-console-button.__disabled__ .teleporter-action-marker {
+  background: #555b5d;
+}
+
+.teleporter-transmit-button.__disabled__:host {
+  base-background: group(rect(#202325), border(1, #555b5d));
+  hover-background: group(rect(#202325), border(1, #555b5d));
+  pressed-background: group(rect(#202325), border(1, #555b5d));
+}
+
+.teleporter-shell .teleporter-destination-type {
+  font-size: 5;
+  background: empty;
+  padding-all: 0;
+  text-color: #85898b;
+  text-shadow: false;
+}
+
+.teleporter-shell .teleporter-destination-name {
+  font-size: 6;
+  text-color: #e4e6e5;
+  text-shadow: false;
+}
+
+.teleporter-icon-glyph {
+  background: sdf(#c9cccd, 0);
+}
+
+.teleporter-icon-ship-nose {
+  background: sdf(#edf0ef, 1);
+}
+
+.teleporter-icon-ship-body {
+  background: sdf(#c9cccd, 1);
+}
+
+.teleporter-icon-ship-wing-left {
+  background: sdf(#aeb2b3, 1);
+}
+
+.teleporter-icon-ship-wing-right {
+  background: sdf(#aeb2b3, 1);
+}
+
+.teleporter-icon-ship-tail {
+  background: sdf(#7f8486, 1);
+}
+
+.teleporter-icon-flag-top {
+  background: sdf(#e3e5e5, 0);
+}
+
+.teleporter-icon-flag-middle {
+  background: sdf(#c3c6c7, 0);
+}
+
+.teleporter-icon-flag-tip {
+  background: sdf(#9da1a3, 0);
+}
+
+.teleporter-icon-flag-pole {
+  background: sdf(#c9cccd, 0);
+}
+
+.teleporter-icon-flag-base {
+  background: sdf(#7f8486, 1);
+}
+
+.teleporter-shell .teleporter-name-field:host {
+  background: built-in(ui-mc:RECT_5);
+  focus-overlay: built-in(ui-mc:RECT_6);
+}
+
+.teleporter-shell .teleporter-rename-section,
+.teleporter-subpane {
+  background: empty;
+}
+
+.teleporter-control-divider {
+  background: #565b5d;
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_view_vertical-scroller__ {
+  width: 5;
+  margin-left: 2;
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_scroll_container__ {
+  background: built-in(ui-mc:RECT_BLACK);
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_scroll_bar__ {
+  base-background: built-in(ui-mc:SCROLLER_V);
+  hover-background: built-in(ui-mc:SCROLLER_V_DARK);
+  pressed-background: built-in(ui-mc:SCROLLER_V_DARK) color(#dddddd);
+}
