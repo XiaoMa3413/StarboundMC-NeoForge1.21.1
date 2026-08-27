@@ -143,8 +143,8 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 - 客户端资源重载、声音引擎和纹理图集构建无 StarboundMC 资源错误。
 - 专用服务器可启动至 `Done`，并能正常保存全部维度后停服。
 - 同星系/跨星系跃迁、燃料扣除、航行动画和抵达状态已经真人复验通过。
-- LDLib2 三级星图和紧凑型传送器界面已完成客户端视觉与交互核验；其余普通机器界面按
-  [当前 UI 迁移计划](docs/machine-ui-ldlib2-plan.md) 逐项处理。
+- LDLib2 三级星图已完成客户端视觉、交互与跃迁核验。普通机器界面仍使用旧实现，并按
+  [当前 UI 迁移计划](docs/machine-ui-ldlib2-plan.md) 在试验分支中逐项完善后再合入 `main`。
 
 当前文档入口见 [docs/README.md](docs/README.md)。已完成的 NeoForge 迁移记录与星图重绘计划
 位于 [docs/archive](docs/archive/)，Forge 1.20.1 历史设计快照位于
