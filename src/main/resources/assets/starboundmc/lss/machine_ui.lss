@@ -1,0 +1,299 @@
+// Shared LDLib2 language for ship machinery. The individual screens compose
+// these primitives instead of painting fixed pixel rectangles in renderBg.
+.machine-screen {
+  background: sdf(#b8050911, 0);
+}
+
+.machine-shell {
+  background: sdf(#f20b141e, 5, 1, #365d6a);
+  overflow-clip: true;
+}
+
+.machine-header {
+  background: sdf(#f010202c, 5, 1, #294957);
+}
+
+.machine-signal {
+  background: sdf(#63e2df, 2);
+}
+
+.machine-title {
+  font-size: 9;
+  text-color: #eafaff;
+  text-shadow: true;
+}
+
+.machine-subtitle {
+  font-size: 6;
+  text-color: #7194a4;
+  text-shadow: false;
+}
+
+.machine-key-hint {
+  background: sdf(#142731, 4, 1, #345d6a);
+  font-size: 6;
+  text-color: #91aeb9;
+  text-shadow: false;
+}
+
+.machine-content {
+  background: sdf(#09121b, 0);
+}
+
+.machine-section {
+  background: sdf(#c80e1b25, 3, 1, #233f4b);
+}
+
+.machine-section-title {
+  font-size: 7;
+  text-color: #b9dce5;
+  text-shadow: false;
+}
+
+.machine-status {
+  font-size: 6;
+  text-color: #62d5d4;
+  text-shadow: false;
+}
+
+.machine-description {
+  font-size: 6;
+  text-color: #6f8b98;
+  text-shadow: false;
+  text-wrap: wrap;
+}
+
+.machine-field-label {
+  font-size: 6;
+  text-color: #90aab5;
+  text-shadow: false;
+}
+
+.machine-button:host {
+  base-background: sdf(#182a35, 3, 1, #315462);
+  hover-background: sdf(#21414c, 3, 1, #63e2df);
+  pressed-background: sdf(#10242d, 3, 1, #4bb7bd);
+  focus-overlay: sdf(#00000000, 3, 1, #8cf5f2);
+}
+
+.machine-button .__button_text__ {
+  font-size: 7;
+  text-color: #d9edf2;
+  text-shadow: false;
+}
+
+.machine-button-primary:host {
+  base-background: sdf(#17434b, 3, 1, #4c9ba2);
+  hover-background: sdf(#23606a, 3, 1, #8cf5f2);
+  pressed-background: sdf(#102f35, 3, 1, #63e2df);
+}
+
+.teleporter-destination:host {
+  base-background: sdf(#101e28, 3, 1, #223f4b);
+  hover-background: sdf(#183641, 3, 1, #5bcbd0);
+  pressed-background: sdf(#0c2028, 3, 1, #3e9da4);
+  padding-horizontal: 5;
+}
+
+.teleporter-destination-type {
+  background: sdf(#152d38, 2, 1, #315562);
+  font-size: 5;
+  text-color: #75c8cf;
+  text-shadow: false;
+}
+
+.teleporter-destination-name {
+  font-size: 7;
+  text-color: #c9e0e7;
+  text-shadow: false;
+}
+
+.teleporter-name-field:host {
+  background: sdf(#071119, 3, 1, #31515d);
+  focus-overlay: sdf(#00000000, 3, 1, #63e2df);
+  padding-horizontal: 4;
+}
+
+.machine-online {
+  font-size: 6;
+  text-color: #60d394;
+  text-shadow: false;
+}
+
+.machine-empty-state {
+  font-size: 7;
+  text-color: #647d88;
+  text-shadow: false;
+}
+
+.teleporter-destination-list .__scroller_view_vertical-scroller__ {
+  width: 5;
+  margin-left: 4;
+}
+
+.teleporter-destination-list .__scroller_scroll_container__ {
+  background: sdf(#09141d, 2);
+  padding-all: 1;
+}
+
+.teleporter-destination-list .__scroller_scroll_bar__ {
+  base-background: sdf(#315562, 2);
+  hover-background: sdf(#4c8991, 2);
+  pressed-background: sdf(#63e2df, 2);
+}
+
+// Teleporter-only compact ship-equipment design. This changes composition as
+// well as colour: case spine, beacon, inset title plate and routed list rows.
+.teleporter-shell {
+  background: sdf(#f21a1c1f, 1, 1, #83786a);
+}
+
+.teleporter-case-spine {
+  background: sdf(#312e2a, 1, 1, #9a8a75);
+  z-index: 8;
+}
+
+.teleporter-case-fastener {
+  background: sdf(#d89b58, 1, 1, #17181a);
+}
+
+.teleporter-shell .machine-header {
+  background: sdf(#f02b2c2e, 1, 1, #817666);
+}
+
+.teleporter-beacon {
+  background: sdf(#17191b, 1, 1, #554f47);
+}
+
+.teleporter-beacon-bar {
+  background: sdf(#d99349, 0);
+}
+
+.teleporter-beacon-bar-low {
+  opacity: 0.5;
+}
+
+.teleporter-beacon-bar-mid {
+  opacity: 0.75;
+}
+
+.teleporter-title-plate {
+  background: sdf(#1b1d20, 1, 1, #4c4842);
+}
+
+.teleporter-shell .machine-title {
+  font-size: 8;
+  text-color: #f0e3cf;
+  text-shadow: false;
+}
+
+.teleporter-shell .machine-key-hint {
+  background: sdf(#353330, 1, 1, #8a7c69);
+  font-size: 6;
+  text-color: #d8cbb8;
+}
+
+.teleporter-shell .machine-content {
+  background: sdf(#141517, 0);
+}
+
+.teleporter-shell .machine-section {
+  background: sdf(#e0191b1d, 1, 1, #494640);
+}
+
+.teleporter-shell .teleporter-rename-section {
+  background: sdf(#ed202124, 1, 1, #61594e);
+}
+
+.teleporter-section-tab {
+  background: sdf(#302d29, 1, 0, #00000000);
+}
+
+.teleporter-shell .machine-section-title {
+  font-size: 6;
+  text-color: #e4d6c2;
+}
+
+.teleporter-network-lamp {
+  background: sdf(#72c383, 1, 1, #1c3722);
+}
+
+.teleporter-shell .machine-status {
+  font-size: 6;
+  text-color: #dca05d;
+}
+
+.teleporter-shell .machine-field-label {
+  text-color: #bdb2a3;
+}
+
+.teleporter-field-caption {
+  background: sdf(#292724, 1, 0, #00000000);
+  padding-left: 3;
+}
+
+.teleporter-shell .machine-online {
+  text-color: #8fc49a;
+}
+
+.teleporter-shell .machine-empty-state {
+  text-color: #8b857c;
+}
+
+.teleporter-shell .machine-button:host {
+  base-background: sdf(#292a2c, 1, 1, #635d55);
+  hover-background: sdf(#3a332c, 1, 1, #dda15f);
+  pressed-background: sdf(#201f1e, 1, 1, #ad6d39);
+  focus-overlay: sdf(#00000000, 1, 1, #f0ba78);
+}
+
+.teleporter-shell .machine-button .__button_text__ {
+  text-color: #eadfce;
+}
+
+.teleporter-shell .machine-button-primary:host {
+  base-background: sdf(#714827, 1, 1, #c98a4c);
+  hover-background: sdf(#88562e, 1, 1, #f1bd7c);
+  pressed-background: sdf(#4f321e, 1, 1, #a96735);
+}
+
+.teleporter-shell .teleporter-destination:host {
+  base-background: sdf(#202225, 0, 1, #3f3d39);
+  hover-background: sdf(#332f2a, 0, 1, #c88a4d);
+  pressed-background: sdf(#191a1b, 0, 1, #9b6235);
+  padding-horizontal: 4;
+}
+
+.teleporter-node-lamp {
+  background: sdf(#b9793e, 0);
+}
+
+.teleporter-shell .teleporter-destination-type {
+  background: sdf(#332e28, 1, 1, #675443);
+  text-color: #e0a25f;
+}
+
+.teleporter-shell .teleporter-destination-name {
+  text-color: #e6ded2;
+}
+
+.teleporter-route-arrow {
+  font-size: 6;
+  text-color: #9f8e7a;
+  text-shadow: false;
+}
+
+.teleporter-shell .teleporter-name-field:host {
+  background: sdf(#101214, 0, 1, #665e54);
+  focus-overlay: sdf(#00000000, 0, 1, #dda15f);
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_scroll_container__ {
+  background: sdf(#17181a, 0, 1, #383733);
+}
+
+.teleporter-shell .teleporter-destination-list .__scroller_scroll_bar__ {
+  base-background: sdf(#686057, 0);
+  hover-background: sdf(#b87942, 0);
+  pressed-background: sdf(#dfa05b, 0);
+}
