@@ -35,7 +35,7 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 | 客户端前置 | LDLib2 `2.2.36.a` 或兼容版本 |
 | 模组版本 | `0.1-alpha` |
 | Java | 开发和独立服务器使用 64 位 Java 21 |
-| 安装侧 | 客户端与服务器均需安装 |
+| 安装侧 | StarboundMC：客户端与服务器均需安装；LDLib2：仅客户端需安装 |
 
 ## 安装
 
@@ -44,10 +44,6 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 3. 从发布页或本地构建取得 StarboundMC JAR。
 4. 将 LDLib2 和 StarboundMC JAR 放入客户端的 `mods` 目录。
 5. 联机或开设专用服务器时，在服务端安装相同版本的 StarboundMC；LDLib2 当前仅为客户端前置。
-6. 启动前备份已有世界，尤其是从 Forge 1.20.1 升级的存档。
-
-旧 Forge 存档的备份副本已实际完成 NeoForge 1.21.1 升级、保存和再次启动，但升级应视为单向操作。不要在没有备份的情况下试用，也不要将升级后的世界重新交给旧 Forge 版本打开。
-
 ## 快速上手
 
 ### 飞船与星图
@@ -139,7 +135,6 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 - 默认测试套件：195 项，0 failures、0 errors、0 skipped。
 - `runData` 和完整 `build` 通过。
 - 新世界已通过注册对象、设备规则、程序化飞船和四维度 RCON 烟测。
-- 两份 Forge 1.20.1 旧存档备份已完成 NeoForge 升级、保存和重启。
 - 客户端资源重载、声音引擎和纹理图集构建无 StarboundMC 资源错误。
 - 专用服务器可启动至 `Done`，并能正常保存全部维度后停服。
 - 同星系/跨星系跃迁、燃料扣除、航行动画和抵达状态已经真人复验通过。
