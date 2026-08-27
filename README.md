@@ -152,15 +152,24 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 
 ## 许可与素材
 
-项目元数据声明为 **All Rights Reserved**。除另有明确说明外，不授予复制、修改或再分发项目代码和素材的许可。
+### 项目代码与原创内容
 
-四张 4096×2048 行星表面贴图基于 Solar System Scope 提供的素材，按 CC BY 4.0 使用：
+除下方明确列出的第三方素材外，StarboundMC 的源代码、原创 UI、模型、方块/物品纹理、文档和其他项目内容均为 **StarboundMC Team** 的保留权利内容，项目元数据声明为 **All Rights Reserved**。除非获得项目维护者的书面许可，不授予复制、修改、再发布、再许可或商业使用的权利。
 
-- `lush`：Earth day map 与 clouds 合成
-- `molten`：Venus surface
-- `frozen`：Eris fictional
-- `barren`：Mars
+### 第三方行星贴图
 
-来源：[Solar System Scope Textures](https://www.solarsystemscope.com/textures/)。
+以下四张 4096×2048 行星表面贴图基于 [Solar System Scope Textures](https://www.solarsystemscope.com/textures/) 提供的素材，按 [Creative Commons Attribution 4.0 International（CC BY 4.0）](https://creativecommons.org/licenses/by/4.0/) 使用：
 
-Starbound 来源的参考、解包素材、标志或声音不属于上述 CC BY 4.0 授权范围。公开发布或分发前，必须分别确认其来源、权利状态与使用许可。
+- `textures/planet/lush.png`：Earth day map 与 clouds 合成
+- `textures/planet/molten.png`：Venus surface
+- `textures/planet/frozen.png`：Eris fictional
+- `textures/planet/barren.png`：Mars
+
+使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。
+
+### 运行时依赖与音频边界
+
+- Minecraft、NeoForge、LDLib2 及其他开发/运行时依赖各自适用其原有许可证；本项目不重新授权这些依赖。
+- 跃迁和传送目前直接调用 Minecraft 原版 `SoundEvents`，仓库不包含或再分发对应的 Minecraft 音频文件。
+
+如果未来加入新的第三方素材，必须在提交前确认其许可证允许当前用途，并在本节补充来源、作者、许可证和修改说明。
