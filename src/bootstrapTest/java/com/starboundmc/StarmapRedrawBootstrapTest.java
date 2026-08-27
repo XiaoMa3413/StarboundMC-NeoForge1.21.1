@@ -65,7 +65,12 @@ final class StarmapRedrawBootstrapTest {
 
         String screen = Files.readString(Path.of(
                 "src/main/java/com/starboundmc/client/starmap/StarmapTerminalScreen.java"));
-        assertTrue(screen.contains("protected void init() {\n        disposeModularUi();"));
+        int initMethod = screen.indexOf("protected void init()");
+        int disposeCall = screen.indexOf("disposeModularUi();", initMethod);
+        int superInitCall = screen.indexOf("super.init();", initMethod);
+        assertTrue(initMethod >= 0, "screen init method");
+        assertTrue(disposeCall > initMethod && disposeCall < superInitCall,
+                "disposeModularUi must run before super.init regardless of line endings");
         assertTrue(screen.contains("modularUI.onRemoved()"));
         assertTrue(screen.contains("modularUI.setScreen(null)"));
     }
