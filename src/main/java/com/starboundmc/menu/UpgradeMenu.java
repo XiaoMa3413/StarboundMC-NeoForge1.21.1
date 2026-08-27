@@ -48,7 +48,7 @@ public class UpgradeMenu extends AbstractContainerMenu
         super(ModMenus.UPGRADE_MENU.get(), containerId);
         this.access = access;
 
-        this.addSlot(new Slot(manipulatorContainer, 0, 80, 16)
+        this.addSlot(new Slot(manipulatorContainer, 0, 152, 67)
         {
             @Override
             public boolean mayPlace(ItemStack stack)
@@ -61,12 +61,12 @@ public class UpgradeMenu extends AbstractContainerMenu
         {
             for (int col = 0; col < 9; col++)
             {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 8 + col * 18, 174 + row * 18));
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 79 + col * 18, 174 + row * 18));
             }
         }
         for (int col = 0; col < 9; col++)
         {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 228));
+            this.addSlot(new Slot(playerInventory, col, 79 + col * 18, 228));
         }
     }
 
