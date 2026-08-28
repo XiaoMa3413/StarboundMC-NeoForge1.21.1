@@ -119,7 +119,7 @@
   "gui.starboundmc.upgrade.modules_available": "可用组件：%1$s",
   "gui.starboundmc.upgrade.slot_label": "物质枪",
   "gui.starboundmc.upgrade.blueprint_hint": "选择升级节点以查看校准需求",
-  "gui.starboundmc.upgrade.manipulator_socket_hint": "将物质枪放入蓝图核心槽位",
+  "gui.starboundmc.upgrade.manipulator_socket_hint": "将物质枪放入下方校准槽位",
   "gui.starboundmc.upgrade.track_speed": "挖掘速度",
   "gui.starboundmc.upgrade.track_range": "激光射程",
   "gui.starboundmc.upgrade.track_mining": "挖掘能力",

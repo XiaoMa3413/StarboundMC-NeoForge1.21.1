@@ -33,7 +33,7 @@
   "gui.starboundmc.upgrade.modules_available": "MODULES: %1$s",
   "gui.starboundmc.upgrade.slot_label": "Manipulator",
   "gui.starboundmc.upgrade.blueprint_hint": "Select an upgrade node to inspect calibration requirements",
-  "gui.starboundmc.upgrade.manipulator_socket_hint": "Place the Matter Manipulator in the blueprint core slot",
+  "gui.starboundmc.upgrade.manipulator_socket_hint": "Place the Matter Manipulator in the calibration slot below",
   "gui.starboundmc.upgrade.track_speed": "Mining Speed",
   "gui.starboundmc.upgrade.track_range": "Laser Range",
   "gui.starboundmc.upgrade.track_mining": "Mining Power",

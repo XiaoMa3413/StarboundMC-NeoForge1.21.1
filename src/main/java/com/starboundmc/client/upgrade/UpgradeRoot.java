@@ -1,5 +1,6 @@
 package com.starboundmc.client.upgrade;
 
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
@@ -9,6 +10,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
+import com.starboundmc.StarboundMC;
 import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.item.MatterManipulatorModuleItem;
 import com.starboundmc.menu.UpgradeMenu;
@@ -16,6 +18,7 @@ import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.UpgradeMatterManipulatorPacket;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Vector2f;
@@ -30,6 +33,10 @@ public final class UpgradeRoot extends UIElement {
     public static final int PANEL_H = 250;
     private static final int BLUEPRINT_W = 312;
     private static final int BLUEPRINT_H = 102;
+    private static final int MANIPULATOR_BLUEPRINT_W = 144;
+    private static final int MANIPULATOR_BLUEPRINT_H = 76;
+    private static final ResourceLocation MANIPULATOR_BLUEPRINT = ResourceLocation.fromNamespaceAndPath(
+            StarboundMC.MODID, "textures/gui/upgrade/matter_manipulator_blueprint.png");
 
     private final UpgradeMenu menu;
     private final Inventory inventory;
@@ -54,7 +61,8 @@ public final class UpgradeRoot extends UIElement {
         var shell = positioned("upgrade-shell", left, top, PANEL_W, PANEL_H);
         shell.setOverflowVisible(false);
         shell.addChildren(
-                buildHeader(title), new BlueprintCanvas(), buildManipulatorSocket(),
+                positioned("upgrade-blueprint-sheet", 4, 3, 312, 156),
+                buildHeader(title), new BlueprintCanvas(),
                 buildTrack(UpgradeMenu.TRACK_SPEED, "speed", "gui.starboundmc.upgrade.track_speed",
                         MatterManipulatorItem.MAX_UPGRADES, 14, 35, true),
                 buildTrack(UpgradeMenu.TRACK_RANGE, "range", "gui.starboundmc.upgrade.track_range",
@@ -84,7 +92,7 @@ public final class UpgradeRoot extends UIElement {
     }
 
     private UIElement buildManipulatorSocket() {
-        var socket = positioned("upgrade-manipulator-socket", 151, 66, 18, 18);
+        var socket = positioned("upgrade-manipulator-socket", 195, 5, 18, 18);
         socket.style(style -> style.tooltips(
                 Component.translatable("gui.starboundmc.upgrade.manipulator_socket_hint")));
         return socket;
@@ -109,7 +117,7 @@ public final class UpgradeRoot extends UIElement {
         detailLevel.addClass("upgrade-detail-level");
         configureLabel(detailLevel, 9, 15, 94, 8);
         detailCost.addClass("upgrade-detail-cost");
-        configureLabel(detailCost, 105, 15, 105, 8);
+        configureLabel(detailCost, 105, 15, 80, 8);
 
         upgradeAction.setText(Component.translatable("gui.starboundmc.upgrade.execute"));
         upgradeAction.addClass("upgrade-main-action");
@@ -126,7 +134,8 @@ public final class UpgradeRoot extends UIElement {
                 event.stopPropagation();
             }
         });
-        detail.addChildren(detailName, detailLevel, detailCost, upgradeAction);
+        detail.addChildren(detailName, detailLevel, detailCost,
+                buildManipulatorSocket(), upgradeAction);
         return detail;
     }
 
@@ -249,8 +258,12 @@ public final class UpgradeRoot extends UIElement {
                 int visualIndex = pointsLeft ? maxLevel - 1 - index : index;
                 int nodeLeft = firstX + visualIndex * 20;
                 var node = new Button();
-                node.setText(Component.empty());
+                node.setText(Component.literal(Integer.toString(level)));
                 node.addClasses("upgrade-node", "upgrade-node-" + name);
+                node.text.setOverflowVisible(false);
+                node.textStyle(style -> style.adaptiveWidth(true)
+                        .textAlignHorizontal(Horizontal.CENTER)
+                        .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
                 node.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                         .left(nodeLeft).top(14).width(15).height(15));
                 node.addEventListener(UIEvents.CLICK, event -> {
@@ -303,6 +316,13 @@ public final class UpgradeRoot extends UIElement {
             setOverflowVisible(false);
             layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                     .left(4).top(24).width(BLUEPRINT_W).height(BLUEPRINT_H));
+            var manipulator = positioned("upgrade-manipulator-blueprint",
+                    (BLUEPRINT_W - MANIPULATOR_BLUEPRINT_W) / 2,
+                    (BLUEPRINT_H - MANIPULATOR_BLUEPRINT_H) / 2,
+                    MANIPULATOR_BLUEPRINT_W, MANIPULATOR_BLUEPRINT_H);
+            manipulator.style(style -> style.backgroundTexture(
+                    SpriteTexture.of(MANIPULATOR_BLUEPRINT)));
+            addChild(manipulator);
         }
 
         @Override
@@ -310,14 +330,17 @@ public final class UpgradeRoot extends UIElement {
             float x = getPositionX();
             float y = getPositionY();
             var graphics = context.graphics;
-            for (int gx = 8; gx < BLUEPRINT_W; gx += 12) {
+            for (int gx = 6; gx < BLUEPRINT_W; gx += 6) {
+                int color = gx % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
                 graphics.fill(Math.round(x + gx), Math.round(y), Math.round(x + gx + 1),
-                        Math.round(y + BLUEPRINT_H), 0x192B6670);
+                        Math.round(y + BLUEPRINT_H), color);
             }
-            for (int gy = 8; gy < BLUEPRINT_H; gy += 12) {
+            for (int gy = 6; gy < BLUEPRINT_H; gy += 6) {
+                int color = gy % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
                 graphics.fill(Math.round(x), Math.round(y + gy), Math.round(x + BLUEPRINT_W),
-                        Math.round(y + gy + 1), 0x192B6670);
+                        Math.round(y + gy + 1), color);
             }
+            drawRegistrationMarks(graphics, x, y);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_SPEED,
                     72, 32, 102, 32, 102, 43, 118, 43);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_RANGE,
@@ -326,51 +349,38 @@ public final class UpgradeRoot extends UIElement {
                     194, 43, 208, 43, 208, 32, 230, 32);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_FORTUNE,
                     194, 66, 210, 66, 210, 84, 230, 84);
-            int gunColor = lastManipulator.getItem() instanceof MatterManipulatorItem
-                    ? 0xFF8FE5D2 : 0xFF637B7C;
-            // Broad receiver and stepped barrel: close to the reference's
-            // recognisable silhouette while remaining an original line drawing.
-            drawPolyline(graphics, x, y, gunColor, 1.25F,
-                    108, 28, 157, 28, 169, 34, 185, 45, 202, 45,
-                    202, 63, 177, 63, 168, 70, 156, 70, 148, 66,
-                    126, 66, 115, 60, 108, 52, 108, 28);
-            // Upper casing inset and rear energy housing.
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 1.0F,
-                    118, 33, 153, 33, 163, 38, 177, 49, 177, 59,
-                    160, 59, 151, 54, 118, 54, 118, 33);
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 1.0F,
-                    108, 38, 97, 38, 90, 45, 90, 57, 100, 64,
-                    116, 64);
-
-            // Forward emitter sleeve and muzzle split.
-            drawPolyline(graphics, x, y, gunColor, 1.15F,
-                    177, 49, 208, 49, 208, 59, 177, 59);
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 1.0F,
-                    190, 49, 190, 59, 201, 59, 201, 49);
-
-            // Angled grip and lower power-cell cage.
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 1.0F,
-                    139, 66, 157, 66, 151, 75, 151, 91, 132, 91,
-                    132, 80, 139, 66);
-            drawPolyline(graphics, x, y, gunColor, 1.15F,
-                    132, 80, 116, 80, 110, 91, 145, 91);
-
-            // Vents, trigger and small diagnostic marks give the blueprint
-            // enough internal structure without using a texture copy.
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 0.9F,
-                    122, 58, 145, 58);
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 0.9F,
-                    119, 61, 142, 61);
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 0.9F,
-                    136, 72, 128, 72, 128, 78, 134, 78);
-            drawPolyline(graphics, x, y, 0xFF4F8F8F, 0.9F,
-                    158, 41, 164, 41, 164, 48, 158, 48, 158, 41);
             graphics.flush();
+        }
+
+        private void drawRegistrationMarks(net.minecraft.client.gui.GuiGraphics graphics,
+                                           float x, float y) {
+            int edge = 0x8A78E8A8;
+            int center = 0x5965D694;
+            int right = Math.round(x + BLUEPRINT_W);
+            int bottom = Math.round(y + BLUEPRINT_H);
+            int left = Math.round(x);
+            int top = Math.round(y);
+            for (int offset = 12; offset < BLUEPRINT_W; offset += 24) {
+                int px = Math.round(x + offset);
+                graphics.fill(px, top, px + 1, top + 3, edge);
+                graphics.fill(px, bottom - 3, px + 1, bottom, edge);
+            }
+            for (int offset = 12; offset < BLUEPRINT_H; offset += 24) {
+                int py = Math.round(y + offset);
+                graphics.fill(left, py, left + 3, py + 1, edge);
+                graphics.fill(right - 3, py, right, py + 1, edge);
+            }
+            int centerX = Math.round(x + BLUEPRINT_W / 2F);
+            int centerY = Math.round(y + BLUEPRINT_H / 2F);
+            graphics.fill(centerX - 7, centerY, centerX - 2, centerY + 1, center);
+            graphics.fill(centerX + 3, centerY, centerX + 8, centerY + 1, center);
+            graphics.fill(centerX, centerY - 7, centerX + 1, centerY - 2, center);
+            graphics.fill(centerX, centerY + 3, centerX + 1, centerY + 8, center);
         }
 
         private void drawConnector(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
                                    int track, float... points) {
-            int color = selectedTrack == track ? 0xFF89E7E2 : 0xFF657A7D;
+            int color = selectedTrack == track ? 0xFFB1FFD0 : 0xFF4E9F70;
             drawPolyline(graphics, x, y, color, selectedTrack == track ? 1.5F : 1.0F, points);
         }
 
