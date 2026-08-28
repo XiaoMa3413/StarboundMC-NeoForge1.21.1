@@ -35,7 +35,7 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 | 客户端前置 | LDLib2 `2.2.36.a` 或兼容版本 |
 | 模组版本 | `0.1-alpha` |
 | Java | 开发和独立服务器使用 64 位 Java 21 |
-| 安装侧 | 客户端与服务器均需安装 |
+| 安装侧 | StarboundMC：客户端与服务器均需安装；LDLib2：仅客户端需安装 |
 
 ## 安装
 
@@ -44,10 +44,6 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 3. 从发布页或本地构建取得 StarboundMC JAR。
 4. 将 LDLib2 和 StarboundMC JAR 放入客户端的 `mods` 目录。
 5. 联机或开设专用服务器时，在服务端安装相同版本的 StarboundMC；LDLib2 当前仅为客户端前置。
-6. 启动前备份已有世界，尤其是从 Forge 1.20.1 升级的存档。
-
-旧 Forge 存档的备份副本已实际完成 NeoForge 1.21.1 升级、保存和再次启动，但升级应视为单向操作。不要在没有备份的情况下试用，也不要将升级后的世界重新交给旧 Forge 版本打开。
-
 ## 快速上手
 
 ### 飞船与星图
@@ -139,7 +135,6 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 - 默认测试套件：195 项，0 failures、0 errors、0 skipped。
 - `runData` 和完整 `build` 通过。
 - 新世界已通过注册对象、设备规则、程序化飞船和四维度 RCON 烟测。
-- 两份 Forge 1.20.1 旧存档备份已完成 NeoForge 升级、保存和重启。
 - 客户端资源重载、声音引擎和纹理图集构建无 StarboundMC 资源错误。
 - 专用服务器可启动至 `Done`，并能正常保存全部维度后停服。
 - 同星系/跨星系跃迁、燃料扣除、航行动画和抵达状态已经真人复验通过。
@@ -150,17 +145,41 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 位于 [docs/archive](docs/archive/)，Forge 1.20.1 历史设计快照位于
 [docs/legacy-forge](docs/legacy-forge/)。
 
+## 参与开发
+
+StarboundMC 现已按 MIT License 开源，欢迎提交 Issue、改进代码、修复测试或完善文档。
+提交 Pull Request 前请先确认：
+
+- 新增的代码和原创素材可以按本项目许可证发布；
+- 第三方素材已经获得与用途匹配的许可，并在
+  [第三方素材说明](THIRD_PARTY_NOTICES.md) 中记录来源和署名要求；
+- 没有把本地依赖源码、构建缓存、运行存档、截图或日志提交进仓库；
+- `.\gradlew.bat test` 能够通过。
+
+如果改动涉及游戏存档、网络协议、注册 ID 或迁移兼容性，请在 PR 描述中说明影响范围。
+
 ## 许可与素材
 
-项目元数据声明为 **All Rights Reserved**。除另有明确说明外，不授予复制、修改或再分发项目代码和素材的许可。
+### 项目代码与原创内容
 
-四张 4096×2048 行星表面贴图基于 Solar System Scope 提供的素材，按 CC BY 4.0 使用：
+除下方明确列出的第三方素材外，StarboundMC 的源代码、原创 UI、模型、方块/物品纹理和文档均由 **StarboundMC Team** 按 [MIT License](LICENSE) 发布。
 
-- `lush`：Earth day map 与 clouds 合成
-- `molten`：Venus surface
-- `frozen`：Eris fictional
-- `barren`：Mars
+MIT License 允许使用、复制、修改、合并、发布、再许可和销售这些项目内容，但再分发时必须保留版权声明和许可证文本。
 
-来源：[Solar System Scope Textures](https://www.solarsystemscope.com/textures/)。
+### 第三方行星贴图
 
-Starbound 来源的参考、解包素材、标志或声音不属于上述 CC BY 4.0 授权范围。公开发布或分发前，必须分别确认其来源、权利状态与使用许可。
+以下四张 4096×2048 行星表面贴图基于 [Solar System Scope Textures](https://www.solarsystemscope.com/textures/) 提供的素材，按 [Creative Commons Attribution 4.0 International（CC BY 4.0）](https://creativecommons.org/licenses/by/4.0/) 使用：
+
+- `textures/planet/lush.png`：Earth day map 与 clouds 合成
+- `textures/planet/molten.png`：Venus surface
+- `textures/planet/frozen.png`：Eris fictional
+- `textures/planet/barren.png`：Mars
+
+使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+### 运行时依赖与音频边界
+
+- Minecraft、NeoForge、LDLib2 及其他开发/运行时依赖各自适用其原有许可证；本项目不重新授权这些依赖。
+- 跃迁和传送目前直接调用 Minecraft 原版 `SoundEvents`，仓库不包含或再分发对应的 Minecraft 音频文件。
+
+如果未来加入新的第三方素材，必须在提交前确认其许可证允许当前用途，并在本节补充来源、作者、许可证和修改说明。
