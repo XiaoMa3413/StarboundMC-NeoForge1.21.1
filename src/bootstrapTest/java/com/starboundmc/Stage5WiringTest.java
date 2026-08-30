@@ -55,8 +55,14 @@ final class Stage5WiringTest {
     @Test
     void reconnectsContainerDirtyHooksAndServerTickers() throws IOException {
         String blocks = source("block/Stage2Blocks.java");
-        assertTrue(blocks.contains("ShipDoorBlockEntity::tick"));
+        assertTrue(blocks.contains("useWithoutItem("));
+        assertTrue(blocks.contains("setOpen(level, pos, open)"));
+        assertFalse(blocks.contains("ShipDoorBlockEntity::tick"));
         assertTrue(blocks.contains("AlloyFurnaceBlockEntity::tick"));
+
+        String door = source("block/entity/ShipDoorBlockEntity.java");
+        assertFalse(door.contains("getEntitiesOfClass"));
+        assertFalse(door.contains("CHECK_INTERVAL"));
 
         String crate = source("block/entity/ShipCrateBlockEntity.java");
         String alloy = source("block/entity/AlloyFurnaceBlockEntity.java");

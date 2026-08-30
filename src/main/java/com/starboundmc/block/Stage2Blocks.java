@@ -19,6 +19,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -26,6 +28,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
@@ -39,6 +42,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
  * Stage 2 block implementations for systems whose full behavior belongs to a
@@ -223,6 +229,17 @@ public final class Stage2Blocks {
         public static final BooleanProperty OPEN = BlockStateProperties.OPEN;
         public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
+        // The airlock is a sliding bulkhead rather than a full cube. When open,
+        // only the two retracted side cassettes remain in the passage.
+        private static final VoxelShape CLOSED_NORTH_SOUTH = Block.box(0.0, 0.0, 5.0, 16.0, 16.0, 11.0);
+        private static final VoxelShape CLOSED_EAST_WEST = Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 16.0);
+        private static final VoxelShape OPEN_NORTH_SOUTH = Shapes.or(
+                Block.box(0.0, 0.0, 5.0, 2.0, 16.0, 11.0),
+                Block.box(14.0, 0.0, 5.0, 16.0, 16.0, 11.0));
+        private static final VoxelShape OPEN_EAST_WEST = Shapes.or(
+                Block.box(5.0, 0.0, 0.0, 11.0, 16.0, 2.0),
+                Block.box(5.0, 0.0, 14.0, 11.0, 16.0, 16.0));
+
         public ShipDoor(Properties properties) {
             super(properties);
             registerDefaultState(stateDefinition.any().setValue(OPEN, false).setValue(FACING, Direction.NORTH));
@@ -249,14 +266,30 @@ public final class Stage2Blocks {
         }
 
         @Override
-        public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
-                Level level, BlockState state, BlockEntityType<T> type) {
-            return createTickerHelper(type, ModBlockEntities.SHIP_DOOR.get(), ShipDoorBlockEntity::tick);
+        protected RenderShape getRenderShape(BlockState state) {
+            return RenderShape.MODEL;
         }
 
         @Override
-        protected RenderShape getRenderShape(BlockState state) {
-            return RenderShape.MODEL;
+        protected VoxelShape getShape(
+                BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            boolean northSouth = state.getValue(FACING).getAxis() == Direction.Axis.Z;
+            if (state.getValue(OPEN)) {
+                return northSouth ? OPEN_NORTH_SOUTH : OPEN_EAST_WEST;
+            }
+            return northSouth ? CLOSED_NORTH_SOUTH : CLOSED_EAST_WEST;
+        }
+
+        @Override
+        protected InteractionResult useWithoutItem(
+                BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+            boolean open = !state.getValue(OPEN);
+            if (!level.isClientSide) {
+                setOpen(level, pos, open);
+                level.playSound(null, pos, open ? SoundEvents.PISTON_CONTRACT : SoundEvents.PISTON_EXTEND,
+                        SoundSource.BLOCKS, 0.6F, 1.0F);
+            }
+            return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
         public static void setOpen(Level level, BlockPos pos, boolean open) {
