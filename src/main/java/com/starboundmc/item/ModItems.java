@@ -2,11 +2,20 @@ package com.starboundmc.item;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.block.ModBlocks;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.food.FoodConstants;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -62,6 +71,22 @@ public final class ModItems {
     public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
     public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
 
+    // Steak hunger with double steak saturation (8 * 1.6 * 2 = 25.6) and always edible;
+    // eats in 1.2s, three quarters of the vanilla 1.6s.
+    public static final DeferredItem<Item> EMERGENCY_FOOD_CAN = ITEMS.registerSimpleItem(
+            "emergency_food_can",
+            new Item.Properties().food(new FoodProperties(
+                    8, FoodConstants.saturationByModifier(8, 1.6F), true, 1.2F, Optional.empty(), List.of())));
+
+    // Fixed 5 attack damage shown in the tooltip (4 modifier + 1 player base) and a spam-friendly
+    // 3 swings per second (-1.0 vs the sword's -2.4), fast enough for click-spam combat without
+    // eating the vanilla attack cooldown damage penalty. No durability component, so the knife
+    // never takes damage; enchantment value stays 0, so it cannot be enchanted. The attack speed
+    // modifier works in combat but is kept out of the tooltip by SurvivalKnifeItem.
+    public static final DeferredItem<SurvivalKnifeItem> SURVIVAL_KNIFE = ITEMS.registerItem(
+            "survival_knife", SurvivalKnifeItem::new,
+            new Item.Properties().attributes(survivalKnifeAttributes().withTooltip(false)));
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> STARBOUNDMC_TAB =
             CREATIVE_MODE_TABS.register("starboundmc", () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.starboundmc"))
@@ -92,8 +117,21 @@ public final class ModItems {
                         output.accept(TITANIUM_INGOT);
                         output.accept(DURASTEEL_INGOT);
                         output.accept(STAR_CORE_FRAGMENT);
+                        output.accept(EMERGENCY_FOOD_CAN);
+                        output.accept(SURVIVAL_KNIFE);
                     })
                     .build());
+
+    private static ItemAttributeModifiers survivalKnifeAttributes() {
+        return ItemAttributeModifiers.builder()
+                .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                        ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "survival_knife_damage"),
+                        4.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
+                .add(Attributes.ATTACK_SPEED, new AttributeModifier(
+                        ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "survival_knife_speed"),
+                        -1.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
+                .build();
+    }
 
     private ModItems() {
     }

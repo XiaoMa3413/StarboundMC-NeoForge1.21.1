@@ -242,6 +242,8 @@
   "item.starboundmc.titanium_ingot": "Titanium Ingot",
   "item.starboundmc.durasteel_ingot": "Durasteel Ingot",
   "item.starboundmc.star_core_fragment": "Star Core Fragment",
+  "item.starboundmc.emergency_food_can": "Emergency Food Can",
+  "item.starboundmc.survival_knife": "Survival Knife",
   "key.categories.starboundmc": "StarboundMC",
   "key.starboundmc.return_to_ship": "Return to Ship"
 }

@@ -34,6 +34,7 @@ sourceSets {
             include 'com/starboundmc/item/MatterManipulatorUpgrades.java'
             include 'com/starboundmc/item/MatterManipulatorItem.java'
             include 'com/starboundmc/item/MatterManipulatorModuleItem.java'
+            include 'com/starboundmc/item/SurvivalKnifeItem.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
             include 'com/starboundmc/event/SpawnHandler.java'
             include 'com/starboundmc/event/NetherPortalHandler.java'
