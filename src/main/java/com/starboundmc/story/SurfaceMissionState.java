@@ -5,15 +5,22 @@ import java.util.Locale;
 /** Shared state of the introductory planetary-surface objective. */
 public enum SurfaceMissionState
 {
-    LOCKED("locked"),
-    ACTIVE("active"),
-    COMPLETE("complete");
+    LOCKED(0, "locked"),
+    ACTIVE(1, "active"),
+    COMPLETE(2, "complete");
 
+    private final int networkId;
     private final String id;
 
-    SurfaceMissionState(String id)
+    SurfaceMissionState(int networkId, String id)
     {
+        this.networkId = networkId;
         this.id = id;
+    }
+
+    public int networkId()
+    {
+        return networkId;
     }
 
     public String id()
@@ -32,5 +39,15 @@ public enum SurfaceMissionState
                 return state;
         }
         return fallback;
+    }
+
+    public static SurfaceMissionState fromNetworkId(int networkId)
+    {
+        for (SurfaceMissionState state : values())
+        {
+            if (state.networkId == networkId)
+                return state;
+        }
+        throw new IllegalArgumentException("Unknown surface mission state id " + networkId);
     }
 }

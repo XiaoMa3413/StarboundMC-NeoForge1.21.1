@@ -1,6 +1,8 @@
 package com.starboundmc.client;
 
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.shipai.ClientShipStoryState;
+import com.starboundmc.client.shipai.ClientShipAiTerminalState;
 import com.starboundmc.client.shipai.ShipAiTerminalRoot;
 import com.starboundmc.client.ui.StarboundModularScreen;
 import com.starboundmc.menu.ShipAiTerminalMenu;
@@ -13,11 +15,13 @@ public final class ShipAiTerminalScreen
         extends StarboundModularScreen<ShipAiTerminalMenu, ShipAiTerminalRoot> {
     public ShipAiTerminalScreen(ShipAiTerminalMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
+        ClientShipAiTerminalState.beginTerminalSession(menu.containerId);
+        ClientShipStoryState.beginContainer(menu.containerId);
     }
 
     @Override
     protected ShipAiTerminalRoot createRoot() {
-        return new ShipAiTerminalRoot();
+        return new ShipAiTerminalRoot(menu.containerId);
     }
 
     @Override

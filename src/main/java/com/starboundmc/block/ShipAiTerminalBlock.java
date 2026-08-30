@@ -2,6 +2,7 @@ package com.starboundmc.block;
 
 import com.mojang.serialization.MapCodec;
 import com.starboundmc.menu.ShipAiTerminalMenu;
+import com.starboundmc.story.ShipStoryService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -92,8 +93,9 @@ public final class ShipAiTerminalBlock extends Block {
         if (player instanceof ServerPlayer serverPlayer) {
             serverPlayer.openMenu(new SimpleMenuProvider(
                     (containerId, inventory, ignored) -> new ShipAiTerminalMenu(
-                            containerId, inventory, ContainerLevelAccess.create(level, pos)),
-                    Component.translatable("container.starboundmc.ship_ai_terminal")));
+                            containerId, inventory, ContainerLevelAccess.create(level, pos), pos),
+                    Component.translatable("container.starboundmc.ship_ai_terminal")))
+                    .ifPresent(containerId -> ShipStoryService.sendSnapshot(serverPlayer, containerId));
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

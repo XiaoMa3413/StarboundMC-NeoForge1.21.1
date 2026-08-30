@@ -30,4 +30,8 @@ public interface ServerPayloadActions {
 
     default void addFuel(ServerPlayer player) {
     }
+
+    default void shipAiAction(ServerPlayer player, int containerId, long requestId,
+                              ShipAiActionPacket.Action action, int argument) {
+    }
 }

@@ -1,6 +1,8 @@
 package com.starboundmc;
 
 import com.starboundmc.network.AddFuelPacket;
+import com.starboundmc.network.ShipAiActionPacket;
+import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.network.SyncFlightPacket;
 import com.starboundmc.network.SyncFuelPacket;
@@ -15,6 +17,10 @@ import com.starboundmc.network.WarpStartPacket;
 import com.starboundmc.space.SectorCoordinate;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.story.CoreState;
+import com.starboundmc.story.EngineState;
+import com.starboundmc.story.SituationTopic;
+import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.warp.FlightPhase;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -36,8 +42,9 @@ final class Stage3PayloadCodecTest {
                 SyncStarStatePacket.TYPE, SyncPlanetPacket.TYPE, WarpStartPacket.TYPE,
                 SyncFuelPacket.TYPE, TeleporterListPacket.TYPE, TeleporterUsePacket.TYPE,
                 TeleporterRenamePacket.TYPE, TeleportToShipPacket.TYPE,
-                AddFuelPacket.TYPE, SyncFlightPacket.TYPE);
-        assertEquals(12, Set.copyOf(types).size());
+                AddFuelPacket.TYPE, SyncFlightPacket.TYPE,
+                ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE);
+        assertEquals(14, Set.copyOf(types).size());
         assertTrue(types.stream().allMatch(type -> type.id().getNamespace().equals("starboundmc")));
     }
 
@@ -114,6 +121,22 @@ final class Stage3PayloadCodecTest {
                         new UniverseDelta(1.25, -0.5, 8.75),
                         45.0, -2.0, 3.5, 20, 400, "system:frozen"),
                 SyncFlightPacket.STREAM_CODEC);
+    }
+
+    @Test
+    void roundTripsShipAiAction() {
+        assertRoundTrip(ShipAiActionPacket.markSituationRead(17, 1L,
+                        SituationTopic.CURRENT_LOCATION),
+                ShipAiActionPacket.STREAM_CODEC);
+    }
+
+    @Test
+    void roundTripsShipStorySnapshot() {
+        assertRoundTrip(new ShipStorySnapshotPacket(
+                        17, 42L, 1, 9L, CoreState.ONLINE, SurfaceMissionState.ACTIVE,
+                        EngineState.DAMAGED, EngineState.DAMAGED, 0,
+                        1, 12L, true, SituationTopic.REQUIRED_MASK, 1, 0),
+                ShipStorySnapshotPacket.STREAM_CODEC);
     }
 
     private static <T extends CustomPacketPayload> void assertRoundTrip(

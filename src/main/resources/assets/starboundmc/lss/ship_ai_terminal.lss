@@ -7,7 +7,6 @@
 
 .ship-ai-shell {
   background: group(rect(#f3090d0f), border(1, #a3aaac));
-  overflow-clip: true;
 }
 
 .ship-ai-header {
@@ -72,7 +71,6 @@
 
 .ship-ai-history {
   background: rect(#b8040809);
-  overflow-clip: true;
 }
 
 .ship-ai-history-text {
@@ -101,26 +99,88 @@
   text-shadow: false;
 }
 
-.ship-ai-option-button:host {
-  base-background: group(rect(#111719), border(1, #596164));
-  hover-background: group(rect(#1c2729), border(1, #9da6a8));
-  pressed-background: group(rect(#071012), border(1, #79e3df));
+.ship-ai-primary-action:host {
+  base-background: group(rect(#152123), border(1, #79aaa8));
+  hover-background: group(rect(#213536), border(1, #a6efeb));
+  pressed-background: group(rect(#081314), border(1, #79e3df));
   padding-horizontal: 6;
 }
 
-.ship-ai-option-button .__button_text__ {
+.ship-ai-primary-action .__button_text__ {
   flex: 1;
   font-size: 6;
-  text-color: #e0e4e5;
+  text-color: #e5f3f2;
   text-shadow: false;
 }
 
-.ship-ai-option-button:hover .__button_text__ {
+.ship-ai-topic-button:host {
+  base-background: group(rect(#111719), border(1, #596164));
+  hover-background: group(rect(#1c2729), border(1, #9da6a8));
+  pressed-background: group(rect(#071012), border(1, #79e3df));
+  padding-horizontal: 4;
+}
+
+.ship-ai-topic-button .__button_text__ {
+  flex: 1;
+  font-size: 5;
+  text-color: #e0e4e5;
+  text-shadow: false;
+  text-wrap: hide;
+}
+
+.ship-ai-topic-button:hover .__button_text__ {
   text-color: #ffffff;
 }
 
-.ship-ai-option-button:disabled .__button_text__ {
+.ship-ai-topic-button:disabled .__button_text__ {
   text-color: #626a6c;
+}
+
+.ship-ai-topic-read:host {
+  base-background: group(rect(#11201f), border(1, #568a86));
+  hover-background: group(rect(#1a302f), border(1, #86d8d3));
+  pressed-background: group(rect(#071312), border(1, #79e3df));
+}
+
+.ship-ai-topic-current:host {
+  base-background: group(rect(#173133), border(1, #8cefeb));
+  hover-background: group(rect(#214244), border(1, #c5fffc));
+  pressed-background: group(rect(#0a2022), border(1, #ffffff));
+}
+
+/* Disabled is a distinct state from persistent read/current selection. */
+.ship-ai-topic-button:disabled:host {
+  base-background: group(rect(#0c1011), border(1, #3d4446));
+  hover-background: group(rect(#0c1011), border(1, #3d4446));
+  pressed-background: group(rect(#0c1011), border(1, #3d4446));
+}
+
+.ship-ai-topic-button:disabled:host .__button_text__ {
+  text-color: #687174;
+  text-shadow: false;
+}
+
+.ship-ai-next-button:host {
+  base-background: group(rect(#141b1d), border(1, #6d7779));
+  hover-background: group(rect(#202b2d), border(1, #b3bdbe));
+  pressed-background: group(rect(#091113), border(1, #79e3df));
+  padding-horizontal: 5;
+}
+
+.ship-ai-next-button .__button_text__ {
+  flex: 1;
+  font-size: 5;
+  text-color: #edf1f1;
+  text-shadow: false;
+  text-wrap: hide;
+}
+
+.ship-ai-next-button:disabled:host {
+  base-background: group(rect(#0c1011), border(1, #3d4446));
+}
+
+.ship-ai-next-button:disabled .__button_text__ {
+  text-color: #687174;
 }
 
 .ship-ai-history .__scroller_view_vertical-scroller__ {

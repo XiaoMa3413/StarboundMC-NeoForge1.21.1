@@ -1,6 +1,7 @@
 package com.starboundmc.network;
 
 import com.starboundmc.menu.FuelControllerMenu;
+import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
 import com.starboundmc.menu.WarpControlMenu;
@@ -62,6 +63,18 @@ final class ServerPayloadHandler {
                 && player.containerMenu instanceof FuelControllerMenu menu
                 && menu.stillValid(player)) {
             ModNetwork.serverActions().addFuel(player);
+        }
+    }
+
+    static void handle(ShipAiActionPacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null && !player.isSpectator()
+                && player.containerMenu instanceof ShipAiTerminalMenu menu
+                && menu.containerId == payload.containerId()
+                && menu.stillValid(player)) {
+            ModNetwork.serverActions().shipAiAction(
+                    player, payload.containerId(), payload.requestId(),
+                    payload.action(), payload.argument());
         }
     }
 
