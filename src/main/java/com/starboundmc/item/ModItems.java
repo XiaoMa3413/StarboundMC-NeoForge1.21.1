@@ -30,6 +30,8 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("ship_console", ModBlocks.SHIP_CONSOLE);
     public static final DeferredItem<BlockItem> STARMAP_TERMINAL_ITEM =
             ITEMS.registerSimpleBlockItem("starmap_terminal", ModBlocks.STARMAP_TERMINAL);
+    public static final DeferredItem<BlockItem> SHIP_AI_TERMINAL_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_ai_terminal", ModBlocks.SHIP_AI_TERMINAL);
     public static final DeferredItem<BlockItem> CAPTAIN_CHAIR_ITEM =
             ITEMS.registerSimpleBlockItem("captain_chair", ModBlocks.CAPTAIN_CHAIR);
     public static final DeferredItem<BlockItem> FUEL_CONTROLLER_ITEM =
@@ -71,6 +73,7 @@ public final class ModItems {
                         output.accept(TELEPORTER_ITEM);
                         output.accept(SHIP_CONSOLE_ITEM);
                         output.accept(STARMAP_TERMINAL_ITEM);
+                        output.accept(SHIP_AI_TERMINAL_ITEM);
                         output.accept(CAPTAIN_CHAIR_ITEM);
                         output.accept(FUEL_CONTROLLER_ITEM);
                         output.accept(SHIP_CRATE_ITEM);

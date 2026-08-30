@@ -1,0 +1,46 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "casing": "starboundmc:block/ship_console",
+    "screen": "starboundmc:block/ship_console_screen",
+    "particle": "starboundmc:block/ship_console"
+  },
+  "elements": [
+    {
+      "from": [2, 2, 12],
+      "to": [14, 14, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "from": [1, 2, 10],
+      "to": [15, 14, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#screen" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    },
+    {
+      "from": [3, 1, 9],
+      "to": [13, 3, 14],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "east": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "west": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "up": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "down": { "uv": [0, 0, 16, 16], "texture": "#casing" }
+      }
+    }
+  ]
+}
