@@ -3,6 +3,7 @@ package com.starboundmc.warp;
 import com.starboundmc.space.SectorCoordinate;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.story.SharedShipProgress;
 import com.starboundmc.world.Planet;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -34,6 +35,7 @@ public class ShipStateData extends SavedData
     private int fuel = MAX_FUEL;
     private final Set<String> visited = new LinkedHashSet<>();
     private String currentEntryId = null;
+    private SharedShipProgress storyProgress = SharedShipProgress.newWorld();
 
     // Virtual-flight state. Old saves have none and therefore load docked.
     private boolean flightActive = false;
@@ -75,6 +77,26 @@ public class ShipStateData extends SavedData
         {
             String entry = tag.getString("CurrentEntry");
             data.currentEntryId = safeEntryId(entry);
+        }
+        if (!tag.contains("Story"))
+        {
+            // Existing worlds predate the prologue and must retain all travel abilities.
+            data.storyProgress = SharedShipProgress.legacyUnlocked();
+            data.setDirty();
+        }
+        else if (tag.contains("Story", Tag.TAG_COMPOUND))
+        {
+            SharedShipProgress.LoadResult loadedStory =
+                    SharedShipProgress.load(tag.getCompound("Story"));
+            data.storyProgress = loadedStory.state();
+            if (loadedStory.requiresSave())
+                data.setDirty();
+        }
+        else
+        {
+            // A present but malformed Story tag is corruption, not a legacy save.
+            data.storyProgress = SharedShipProgress.newWorld();
+            data.setDirty();
         }
         data.flightActive = tag.getBoolean("FlightActive");
         data.flightTargetEntryId = tag.contains("FlightTarget", Tag.TAG_STRING)
@@ -134,6 +156,7 @@ public class ShipStateData extends SavedData
         }
         tag.put("Visited", visitedList);
         tag.putString("CurrentEntry", currentEntryId == null ? "" : currentEntryId);
+        tag.put("Story", storyProgress.save());
         tag.putBoolean("FlightActive", flightActive);
         tag.putString("FlightTarget", flightTargetEntryId == null ? "" : flightTargetEntryId);
         tag.putInt("FlightElapsed", flightElapsedTicks);
@@ -210,6 +233,41 @@ public class ShipStateData extends SavedData
     {
         this.currentEntryId = safeEntryId(entryId);
         this.setDirty();
+    }
+
+    public SharedShipProgress getStoryProgress()
+    {
+        return storyProgress;
+    }
+
+    public boolean beginCoreReboot(long gameTime, long durationTicks)
+    {
+        return applyStoryProgress(storyProgress.beginCoreReboot(gameTime, durationTicks));
+    }
+
+    public boolean finishCoreRebootIfDue(long gameTime)
+    {
+        return applyStoryProgress(storyProgress.finishCoreRebootIfDue(gameTime));
+    }
+
+    public boolean activateSurfaceMission()
+    {
+        return applyStoryProgress(storyProgress.activateSurfaceMission());
+    }
+
+    public boolean completeSurfaceMission()
+    {
+        return applyStoryProgress(storyProgress.completeSurfaceMission());
+    }
+
+    public boolean restoreSublightEngine()
+    {
+        return applyStoryProgress(storyProgress.restoreSublightEngine());
+    }
+
+    public boolean restoreHyperdrive()
+    {
+        return applyStoryProgress(storyProgress.restoreHyperdrive());
     }
 
     public boolean isFlightActive()
@@ -343,5 +401,14 @@ public class ShipStateData extends SavedData
     private static double finiteOrDefault(double value, double fallback)
     {
         return Double.isFinite(value) ? value : fallback;
+    }
+
+    private boolean applyStoryProgress(SharedShipProgress updated)
+    {
+        if (updated == storyProgress)
+            return false;
+        storyProgress = updated;
+        this.setDirty();
+        return true;
     }
 }

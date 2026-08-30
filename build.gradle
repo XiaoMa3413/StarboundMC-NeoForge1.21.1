@@ -114,6 +114,7 @@ sourceSets {
             include 'com/starboundmc/client/shipai/*.java'
             include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
+            include 'com/starboundmc/story/*.java'
             include 'com/starboundmc/space/SectorCoordinate.java'
             include 'com/starboundmc/space/UniverseDelta.java'
             include 'com/starboundmc/space/UniversePosition.java'
@@ -162,6 +163,7 @@ sourceSets {
             include 'com/starboundmc/client/*.java'
             include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
+            include 'com/starboundmc/story/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath

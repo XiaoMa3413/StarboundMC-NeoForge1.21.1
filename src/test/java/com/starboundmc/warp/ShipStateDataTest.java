@@ -3,6 +3,9 @@ package com.starboundmc.warp;
 import com.starboundmc.space.SectorCoordinate;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.story.CoreState;
+import com.starboundmc.story.EngineState;
+import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.world.Planet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.RegistryAccess;
@@ -80,6 +83,49 @@ class ShipStateDataTest
         assertEquals(100_025.0, saved.getDouble("ShipX"));
         assertEquals(-100_040.0, saved.getDouble("ShipY"));
         assertEquals(102.0, saved.getDouble("ShipZ"));
+    }
+
+    @Test
+    void newShipDataStartsInEmergencyButLegacySaveStaysUnlocked()
+    {
+        ShipStateData newWorld = new ShipStateData();
+        ShipStateData legacyWorld = ShipStateData.load(baseTag());
+
+        assertEquals(CoreState.OFFLINE, newWorld.getStoryProgress().core());
+        assertEquals(SurfaceMissionState.LOCKED, newWorld.getStoryProgress().surfaceMission());
+        assertEquals(CoreState.ONLINE, legacyWorld.getStoryProgress().core());
+        assertEquals(SurfaceMissionState.COMPLETE, legacyWorld.getStoryProgress().surfaceMission());
+        assertEquals(EngineState.ONLINE, legacyWorld.getStoryProgress().sublightEngine());
+        assertEquals(EngineState.ONLINE, legacyWorld.getStoryProgress().hyperdrive());
+    }
+
+    @Test
+    void storyStateRoundTripsInsideExistingShipSavedData()
+    {
+        ShipStateData original = new ShipStateData();
+        assertTrue(original.beginCoreReboot(100L, 40L));
+        assertTrue(original.finishCoreRebootIfDue(140L));
+        assertTrue(original.activateSurfaceMission());
+
+        ShipStateData restored = ShipStateData.load(
+                original.save(new CompoundTag(), RegistryAccess.EMPTY));
+
+        assertEquals(CoreState.ONLINE, restored.getStoryProgress().core());
+        assertEquals(SurfaceMissionState.ACTIVE, restored.getStoryProgress().surfaceMission());
+        assertEquals(original.getStoryProgress().revision(), restored.getStoryProgress().revision());
+    }
+
+    @Test
+    void malformedStoryTagDoesNotReceiveLegacyUnlocks()
+    {
+        CompoundTag malformed = baseTag();
+        malformed.putString("Story", "not-a-compound");
+
+        ShipStateData restored = ShipStateData.load(malformed);
+
+        assertEquals(CoreState.OFFLINE, restored.getStoryProgress().core());
+        assertEquals(EngineState.DAMAGED, restored.getStoryProgress().sublightEngine());
+        assertEquals(EngineState.DAMAGED, restored.getStoryProgress().hyperdrive());
     }
 
     private static CompoundTag baseTag()
