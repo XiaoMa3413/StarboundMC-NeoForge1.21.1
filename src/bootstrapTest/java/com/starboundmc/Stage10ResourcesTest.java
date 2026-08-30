@@ -25,7 +25,8 @@ final class Stage10ResourcesTest {
     private static final List<String> BLOCKS = List.of(
             "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
             "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
-            "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace");
+            "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
+            "ship_ai_terminal");
 
     private static final List<String> ITEMS = List.of(
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
@@ -33,7 +34,7 @@ final class Stage10ResourcesTest {
             "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
             "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
             "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
-            "durasteel_ingot", "star_core_fragment");
+            "durasteel_ingot", "star_core_fragment", "ship_ai_terminal");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {

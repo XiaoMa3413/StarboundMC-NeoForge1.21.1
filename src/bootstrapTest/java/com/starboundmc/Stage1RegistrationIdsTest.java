@@ -17,7 +17,7 @@ final class Stage1RegistrationIdsTest {
                 "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
                 "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
                 "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
-                "starmap_terminal"
+                "starmap_terminal", "ship_ai_terminal"
         ));
     }
 
@@ -36,7 +36,7 @@ final class Stage1RegistrationIdsTest {
                 "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
                 "star_core_ore", "titanium_alloy_furnace", "starmap_terminal", "raw_tungsten", "raw_titanium",
                 "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
-                "durasteel_ingot", "star_core_fragment"
+                "durasteel_ingot", "star_core_fragment", "ship_ai_terminal"
         ));
         assertSourceIds("item/ModItems.java", "CREATIVE_MODE_TABS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("starboundmc"));
@@ -47,7 +47,8 @@ final class Stage1RegistrationIdsTest {
         assertSourceIds("entity/ModEntities.java", "ENTITIES\\.register\\(\\s*\"([^\"]+)\"", Set.of("seat"));
         assertSourceIds("menu/ModMenus.java", "MENUS\\.register\\(\\s*\"([^\"]+)\"", Set.of(
                 "upgrade_menu", "ship_console_menu", "ship_crate_menu", "teleporter_menu",
-                "alloy_furnace_menu", "fuel_controller_menu", "starmap_terminal_menu"
+                "alloy_furnace_menu", "fuel_controller_menu", "starmap_terminal_menu",
+                "ship_ai_terminal_menu"
         ));
     }
 
