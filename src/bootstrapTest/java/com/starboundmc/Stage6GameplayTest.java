@@ -39,6 +39,8 @@ final class Stage6GameplayTest {
         assertTrue(actions.contains("menu.pos.equals(source)"));
         assertTrue(actions.contains("getBlockState(source).is(ModBlocks.TELEPORTER.get())"));
         assertTrue(actions.contains("instanceof FuelControllerMenu menu && menu.stillValid(player)"));
+        assertTrue(actions.contains("ShipEnvironmentService.isCoreOnline"));
+        assertTrue(actions.contains("message.starboundmc.warp.core_offline"));
     }
 
     @Test

@@ -6,8 +6,13 @@ import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.ShipAiActionPacket;
 import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.warp.ShipStateData;
+import com.starboundmc.world.BarrenPlanet;
+import com.starboundmc.world.FrozenPlanet;
+import com.starboundmc.world.MoltenPlanet;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 
 /** Server-main-thread authority for terminal actions and owner-specific snapshots. */
 public final class ShipStoryService
@@ -26,6 +31,7 @@ public final class ShipStoryService
         if (server == null)
             return;
 
+        ShipStoryBroadcastService.onTerminalOpened(player);
         SharedShipProgress shared = ShipStateData.get(server).getStoryProgress();
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
         ModNetwork.sendToPlayer(player, snapshotFor(
@@ -117,6 +123,7 @@ public final class ShipStoryService
         if (sharedChanged)
         {
             syncOpenTerminalOwners(server, player, requestId);
+            ShipEnvironmentService.syncOpenMenus(server);
         }
         else
             sendAcknowledgement(player, containerId, requestId);
@@ -126,7 +133,60 @@ public final class ShipStoryService
     {
         ShipStateData ship = ShipStateData.get(server);
         if (ship.finishCoreRebootIfDue(server.overworld().getGameTime()))
+        {
+            ShipStoryBroadcastService.onCoreOnline(server);
             syncOpenTerminalOwners(server, null, 0L);
+            ShipEnvironmentService.syncOpenMenus(server);
+        }
+        ShipStoryBroadcastService.tick(server);
+    }
+
+    /**
+     * Called only after a server-authoritative teleporter operation has placed
+     * the player on a planet surface. The tutorial is personal; the mission
+     * completion is shared by every player on the ship.
+     */
+    public static void onPlanetSurfaceArrival(ServerPlayer player)
+    {
+        if (player == null || player.isSpectator() || player.getServer() == null
+                || !isPlanetSurface(player.level().dimension()))
+            return;
+
+        MinecraftServer server = player.getServer();
+        ShipStateData ship = ShipStateData.get(server);
+        SharedShipProgress shared = ship.getStoryProgress();
+        boolean missionChanged = shared.surfaceMission() == SurfaceMissionState.ACTIVE
+                && ship.completeSurfaceMission();
+
+        PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
+        if (personal.isWritable() && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
+            ShipStoryBroadcastService.scheduleMatterManipulatorTutorial(player);
+
+        // Mission completion is shared, but the arrival confirmation is a
+        // personal cue so every player gets the same first sentence once.
+        ShipStoryBroadcastService.sendSurfaceArrivalOnce(player);
+        if (missionChanged)
+        {
+            syncOpenTerminalOwners(server, null, 0L);
+            ShipEnvironmentService.syncOpenMenus(server);
+        }
+    }
+
+    static boolean isPlanetSurface(ResourceKey<Level> dimension)
+    {
+        return Level.OVERWORLD.equals(dimension)
+                || MoltenPlanet.MOLTEN_LEVEL.equals(dimension)
+                || FrozenPlanet.FROZEN_LEVEL.equals(dimension)
+                || BarrenPlanet.BARREN_LEVEL.equals(dimension);
+    }
+
+    /** Refreshes all open story-aware screens after an admin/debug state change. */
+    public static void syncOpenScreens(MinecraftServer server)
+    {
+        if (server == null)
+            return;
+        syncOpenTerminalOwners(server, null, 0L);
+        ShipEnvironmentService.syncOpenMenus(server);
     }
 
     private static void storePersonalIfChanged(ServerPlayer player,

@@ -48,7 +48,6 @@ public class SpawnHandler
     private static void giveStarterKit(ServerPlayer player)
     {
         give(player, new ItemStack(ModItems.MATTER_MANIPULATOR.get()));
-        give(player, new ItemStack(ModItems.TELEPORTER_ITEM.get()));
     }
 
     private static void give(ServerPlayer player, ItemStack stack)

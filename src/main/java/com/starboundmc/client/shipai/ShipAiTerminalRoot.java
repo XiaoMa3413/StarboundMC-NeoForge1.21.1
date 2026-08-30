@@ -35,7 +35,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private static final int NOVA_COLOR = 0xFF8CF5F2;
     private static final int PLAYER_COLOR = 0xFFE4E7E8;
     private static final int SYSTEM_COLOR = 0xFF7E939A;
-    private static final int BODY_COLOR = 0xFFC6D3D6;
+    private static final int BODY_COLOR = 0xFFFFFFFF;
 
     private static final String TOPIC_READ_CLASS = "ship-ai-topic-read";
     private static final String TOPIC_CURRENT_CLASS = "ship-ai-topic-current";

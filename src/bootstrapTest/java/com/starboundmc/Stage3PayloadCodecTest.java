@@ -2,6 +2,7 @@ package com.starboundmc;
 
 import com.starboundmc.network.AddFuelPacket;
 import com.starboundmc.network.ShipAiActionPacket;
+import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
 import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.network.SyncFlightPacket;
@@ -43,8 +44,9 @@ final class Stage3PayloadCodecTest {
                 SyncFuelPacket.TYPE, TeleporterListPacket.TYPE, TeleporterUsePacket.TYPE,
                 TeleporterRenamePacket.TYPE, TeleportToShipPacket.TYPE,
                 AddFuelPacket.TYPE, SyncFlightPacket.TYPE,
-                ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE);
-        assertEquals(14, Set.copyOf(types).size());
+                ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE,
+                ShipEnvironmentSnapshotPacket.TYPE);
+        assertEquals(15, Set.copyOf(types).size());
         assertTrue(types.stream().allMatch(type -> type.id().getNamespace().equals("starboundmc")));
     }
 
@@ -137,6 +139,14 @@ final class Stage3PayloadCodecTest {
                         EngineState.DAMAGED, EngineState.DAMAGED, 0,
                         1, 12L, true, SituationTopic.REQUIRED_MASK, 1, 0),
                 ShipStorySnapshotPacket.STREAM_CODEC);
+    }
+
+    @Test
+    void roundTripsShipEnvironmentSnapshot() {
+        assertRoundTrip(new ShipEnvironmentSnapshotPacket(
+                        17, 1, 9L, CoreState.REBOOTING,
+                        EngineState.DAMAGED, EngineState.DAMAGED, 23),
+                ShipEnvironmentSnapshotPacket.STREAM_CODEC);
     }
 
     private static <T extends CustomPacketPayload> void assertRoundTrip(

@@ -11,6 +11,8 @@ final class StarmapActionAvailability {
         BODY_LOCKED,
         WARP_IN_PROGRESS,
         CURRENT_DESTINATION,
+        SUBLIGHT_OFFLINE,
+        HYPERDRIVE_OFFLINE,
         INSUFFICIENT_FUEL
     }
 
@@ -38,6 +40,22 @@ final class StarmapActionAvailability {
 
     static Result planet(boolean hasSelection, boolean reachable, boolean warping,
                          boolean currentDestination, int fuel, int cost) {
+        // Compatibility overload used by the original map tests and callers.
+        // It models a fully repaired propulsion system.
+        return planet(hasSelection, reachable, warping, currentDestination,
+                true, true, true, fuel, cost);
+    }
+
+    /**
+     * Evaluates a planetary jump with the propulsion stage included. The
+     * caller supplies whether the target belongs to the ship's current star
+     * system; unknown topology is intentionally treated as a cross-system
+     * route and therefore requires the stricter gate.
+     */
+    static Result planet(boolean hasSelection, boolean reachable, boolean warping,
+                         boolean currentDestination, boolean sameSystem,
+                         boolean sublightOnline, boolean hyperdriveOnline,
+                         int fuel, int cost) {
         if (!hasSelection)
             return unavailable(Reason.NO_SELECTION);
         if (!reachable)
@@ -46,6 +64,10 @@ final class StarmapActionAvailability {
             return unavailable(Reason.WARP_IN_PROGRESS);
         if (currentDestination)
             return unavailable(Reason.CURRENT_DESTINATION);
+        if (!sublightOnline)
+            return unavailable(Reason.SUBLIGHT_OFFLINE);
+        if (!sameSystem && !hyperdriveOnline)
+            return unavailable(Reason.HYPERDRIVE_OFFLINE);
         if (fuel < cost)
             return new Result(false, Reason.INSUFFICIENT_FUEL, cost, fuel);
         return available(cost, fuel);

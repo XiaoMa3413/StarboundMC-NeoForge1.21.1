@@ -15,7 +15,8 @@ final class Stage3NetworkWiringTest {
         String network = source("network/ModNetwork.java");
         assertTrue(network.contains("PROTOCOL_VERSION = \"2\""));
         assertEquals(7, occurrences(network, "playToServer("));
-        assertEquals(7, occurrences(network, "playToClient("));
+        assertEquals(8, occurrences(network, "playToClient("));
+        assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayersInDimension"));
@@ -32,6 +33,7 @@ final class Stage3NetworkWiringTest {
         assertTrue(client.contains("ClientPlanetState.setFuel"));
         assertTrue(client.contains("ClientPlanetState.applyFlightSnapshot"));
         assertTrue(client.contains("ClientShipStoryState.apply"));
+        assertTrue(client.contains("ClientShipEnvironmentState.apply"));
         assertTrue(server.contains("instanceof ServerPlayer"));
         assertTrue(server.contains("containerMenu instanceof"));
         assertTrue(server.contains("menu.containerId == payload.containerId()"));

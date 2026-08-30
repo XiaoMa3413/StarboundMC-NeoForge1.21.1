@@ -33,6 +33,10 @@ class PlayerStoryStateTest
                 .confirmIdentity()
                 .withReadTopic(SituationTopic.NOVA_IDENTITY)
                 .withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR)
+                .withFlag(PlayerStoryFlag.INITIAL_WAKE_BROADCAST)
+                .withFlag(PlayerStoryFlag.TERMINAL_CONTACTED)
+                .withFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST)
+                .withFlag(PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST)
                 .withDismissedHint(0x01);
 
         Tag encoded = PlayerStoryState.CODEC.encodeStart(NbtOps.INSTANCE, expected).getOrThrow();
@@ -42,18 +46,35 @@ class PlayerStoryStateTest
         assertTrue(restored.identityConfirmed());
         assertTrue(restored.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR));
         assertTrue(restored.hasDismissedHint(0x01));
+        assertTrue(restored.hasSeenBroadcast(PlayerStoryFlag.INITIAL_WAKE_BROADCAST));
+        assertTrue(restored.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        assertTrue(restored.hasFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST));
+        assertTrue(restored.hasFlag(PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST));
+        assertEquals(8L, restored.revision());
     }
 
     @Test
     void malformedNegativeMasksFailClosed()
     {
-        PlayerStoryState malformed = new PlayerStoryState(0, -12L, false, -1, -1, -1);
+        PlayerStoryState malformed = new PlayerStoryState(0, -12L, false, -1, -1, -1, -1);
 
         assertEquals(PlayerStoryState.CURRENT_SCHEMA_VERSION, malformed.schemaVersion());
         assertEquals(0L, malformed.revision());
         assertEquals(0, malformed.readSituationMask());
         assertEquals(0, malformed.tutorialMask());
         assertEquals(0, malformed.dismissedHintMask());
+        assertEquals(0, malformed.flagsMask());
         assertFalse(malformed.hasReadAllRequiredTopics());
+    }
+
+    @Test
+    void futureSchemaCannotBeDowngradedByLocalFlagHelpers()
+    {
+        PlayerStoryState future = new PlayerStoryState(
+                PlayerStoryState.CURRENT_SCHEMA_VERSION + 1, 4L, false, 0, 0, 0,
+                PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask());
+
+        assertSame(future, future.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        assertSame(future, future.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
     }
 }

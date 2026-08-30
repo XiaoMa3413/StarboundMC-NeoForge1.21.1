@@ -48,6 +48,10 @@ final class StarmapRedrawBootstrapTest {
         assertFalse(root.contains("nearestSystemEntry("));
         assertFalse(root.contains("nearestPlanetTarget("));
         assertTrue(screen.contains("GLFW_KEY_ESCAPE"));
+        assertTrue(root.contains("ClientShipEnvironmentState.isLocked"));
+        assertTrue(root.contains("isSystemRevealed"));
+        assertTrue(root.contains("Sublight"));
+        assertTrue(scene.contains("isRouteRevealed"));
     }
 
     @Test

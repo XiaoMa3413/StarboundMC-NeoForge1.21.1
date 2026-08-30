@@ -83,7 +83,7 @@ final class ServerPayloadHandler {
     }
 
     private static boolean validTeleporterMenu(ServerPlayer player, TeleporterMenu menu) {
-        return !menu.pos.equals(BlockPos.ZERO) && menu.stillValid(player);
+        return menu.isBoundToBlock() && !menu.pos.equals(BlockPos.ZERO) && menu.stillValid(player);
     }
 
     private static boolean validDestinationKey(String key) {

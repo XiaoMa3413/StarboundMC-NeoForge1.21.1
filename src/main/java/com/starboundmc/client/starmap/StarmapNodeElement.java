@@ -42,6 +42,13 @@ final class StarmapNodeElement extends UIElement {
     private void onMouseDown(UIEvent event) {
         if (event.button != 0)
             return;
+        if (entry == null && root.getLevel() == StarmapLevel.GALAXY
+                && !root.isSystemSelectable(systemRef.system())) {
+            // A pre-hyperdrive system is rendered as a signal trace only; it
+            // must not become a hidden selection path through the node layer.
+            event.stopPropagation();
+            return;
+        }
         // A system overview shows moons as orientation dots only. They must
         // not turn into a second selection target when the user clicks them;
         // the root maps the click to the owning planet instead.
@@ -71,6 +78,9 @@ final class StarmapNodeElement extends UIElement {
     @Override
     public boolean isIntersectWithPoint(double localX, double localY) {
         if (!renderPlacement.visible())
+            return false;
+        if (entry == null && root.getLevel() == StarmapLevel.GALAXY
+                && !root.isSystemSelectable(systemRef.system()))
             return false;
         float centerX = root.getPositionX() + renderPlacement.x();
         float centerY = root.getPositionY() + renderPlacement.y();
@@ -140,8 +150,12 @@ final class StarmapNodeElement extends UIElement {
         GuiGraphics graphics = context.graphics;
         graphics.pose().pushPose();
         graphics.pose().translate(dx, dy, 0);
-        if (entry == null && root.getLevel() == StarmapLevel.GALAXY)
-            drawGeminiSpark(graphics);
+        if (entry == null && root.getLevel() == StarmapLevel.GALAXY) {
+            if (root.isSystemRevealed(systemRef.system()))
+                drawGeminiSpark(graphics);
+            else
+                drawUnknownSignal(graphics);
+        }
         graphics.pose().popPose();
     }
 
@@ -170,6 +184,19 @@ final class StarmapNodeElement extends UIElement {
         graphics.fill(centerX - 2, centerY - 2, centerX + 3, centerY + 3, 0xFFFFFFFF);
     }
 
+    /** A quiet, non-interactive trace used for systems hidden by the hyperdrive gate. */
+    private void drawUnknownSignal(GuiGraphics graphics) {
+        int centerX = Math.round(getPositionX() + getSizeWidth() / 2F);
+        int centerY = Math.round(getPositionY() + getSizeHeight() / 2F);
+        float radius = Math.max(5.0F, getSizeWidth() * 0.46F);
+        int color = 0x8A81909A;
+        StarmapVectorDrawing.drawOrbit(graphics, centerX, centerY, radius, color, true);
+        StarmapVectorDrawing.drawDashedLine(graphics, centerX - radius * 0.72F, centerY,
+                centerX + radius * 0.72F, centerY, color);
+        StarmapVectorDrawing.drawDashedLine(graphics, centerX, centerY - radius * 0.72F,
+                centerX, centerY + radius * 0.72F, color);
+    }
+
     private void updateStyle(float size, boolean selected) {
         ResourceLocation texture = entry == null ? null : root.nodeTexture(entry);
         if (styleInitialized && styledSize == size && styledSelected == selected
@@ -181,6 +208,11 @@ final class StarmapNodeElement extends UIElement {
         styleInitialized = true;
         if (selected) addClass("starmap-node-selected");
         else removeClass("starmap-node-selected");
+        if (entry == null && root.getLevel() == StarmapLevel.GALAXY
+                && !root.isSystemRevealed(systemRef.system()))
+            addClass("starmap-node-unknown");
+        else
+            removeClass("starmap-node-unknown");
         if (entry != null) {
             style(style -> style.backgroundTexture(root.bodyTexture(entry, size, texture)));
         } else {

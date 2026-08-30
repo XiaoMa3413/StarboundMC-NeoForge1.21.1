@@ -48,6 +48,8 @@ public final class ModNetwork {
                 SyncFlightPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipStorySnapshotPacket.TYPE,
                 ShipStorySnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(ShipEnvironmentSnapshotPacket.TYPE,
+                ShipEnvironmentSnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
     }
 
     public static void installServerActions(ServerPayloadActions actions) {

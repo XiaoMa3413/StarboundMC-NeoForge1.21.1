@@ -3,6 +3,7 @@ package com.starboundmc.block;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.TeleporterListPacketHelper;
+import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -38,7 +39,8 @@ public class TeleporterBlock extends Block
         }
         if (player instanceof ServerPlayer serverPlayer)
         {
-            serverPlayer.openMenu(getMenuProvider(state, level, pos));
+            serverPlayer.openMenu(getMenuProvider(state, level, pos))
+                    .ifPresent(containerId -> ShipEnvironmentService.sendSnapshot(serverPlayer, containerId));
             ModNetwork.sendToPlayer(serverPlayer,
                     TeleporterListPacketHelper.build(serverPlayer.getServer(), level.dimension(), pos));
         }

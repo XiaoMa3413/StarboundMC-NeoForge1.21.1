@@ -2,6 +2,7 @@ package com.starboundmc.client;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.teleporter.TeleporterRoot;
+import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.ui.StarboundModularScreen;
 import com.starboundmc.menu.TeleporterMenu;
 import net.minecraft.network.chat.Component;
@@ -17,7 +18,8 @@ public final class TeleporterScreen
 
     @Override
     protected TeleporterRoot createRoot() {
-        return new TeleporterRoot();
+        ClientShipEnvironmentState.beginContainer(menu.containerId);
+        return new TeleporterRoot(menu.containerId);
     }
 
     @Override
@@ -32,5 +34,11 @@ public final class TeleporterScreen
         if (root != null) {
             root.refreshIfDirty();
         }
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        ClientShipEnvironmentState.endContainer(menu.containerId);
     }
 }

@@ -4,6 +4,7 @@ import com.starboundmc.block.ModBlocks;
 import com.starboundmc.menu.FuelControllerMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
+import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.Stage6TravelService;
 import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
@@ -24,6 +25,10 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
         if (!validOpenTeleporter(player, source)) {
             return;
         }
+        if (!ShipEnvironmentService.isCoreOnline(player.getServer())) {
+            ShipEnvironmentService.sendSnapshot(player, player.containerMenu.containerId);
+            return;
+        }
         if (destinationKey.equals("ship")) {
             Stage6TravelService.teleportToShip(player);
         } else if (destinationKey.equals("planet")) {
@@ -38,6 +43,10 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
         if (!validOpenTeleporter(player, source)) {
             return;
         }
+        if (!ShipEnvironmentService.isCoreOnline(player.getServer())) {
+            ShipEnvironmentService.sendSnapshot(player, player.containerMenu.containerId);
+            return;
+        }
         MinecraftServer server = player.getServer();
         TeleporterManager.setName(server, player.level().dimension(), source, name);
         ModNetwork.sendToPlayer(player,
@@ -46,8 +55,11 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
 
     @Override
     public void teleportToShip(ServerPlayer player) {
-        if (!player.isSpectator()) {
+        if (!player.isSpectator() && ShipEnvironmentService.isCoreOnline(player.getServer())) {
             Stage6TravelService.teleportToShip(player);
+        } else if (!player.isSpectator()) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.starboundmc.warp.core_offline"), true);
         }
     }
 
@@ -61,6 +73,7 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
     private static boolean validOpenTeleporter(ServerPlayer player, BlockPos source) {
         return player.getServer() != null
                 && player.containerMenu instanceof TeleporterMenu menu
+                && menu.isBoundToBlock()
                 && menu.pos.equals(source)
                 && menu.stillValid(player)
                 && player.level().getBlockState(source).is(ModBlocks.TELEPORTER.get());

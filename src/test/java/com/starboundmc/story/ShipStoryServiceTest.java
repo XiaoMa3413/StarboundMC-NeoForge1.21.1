@@ -1,6 +1,7 @@
 package com.starboundmc.story;
 
 import com.starboundmc.network.ShipStorySnapshotPacket;
+import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
@@ -60,5 +61,24 @@ class ShipStoryServiceTest
                 current, futurePersonal));
         assertFalse(ShipStoryService.terminalActionsSupported(
                 futureShared, PlayerStoryState.DEFAULT));
+    }
+
+    @Test
+    void environmentSnapshotUsesTheSharedRevisionAndClampsRemainingTicks()
+    {
+        SharedShipProgress rebooting = SharedShipProgress.newWorld()
+                .beginCoreReboot(100L, 50L);
+
+        ShipEnvironmentSnapshotPacket during = ShipEnvironmentService.snapshotFor(
+                12, rebooting, 120L);
+        ShipEnvironmentSnapshotPacket after = ShipEnvironmentService.snapshotFor(
+                12, rebooting, 200L);
+
+        assertEquals(12, during.containerId());
+        assertEquals(rebooting.schemaVersion(), during.schemaVersion());
+        assertEquals(rebooting.revision(), during.revision());
+        assertEquals(CoreState.REBOOTING, during.core());
+        assertEquals(30, during.rebootTicksRemaining());
+        assertEquals(0, after.rebootTicksRemaining());
     }
 }

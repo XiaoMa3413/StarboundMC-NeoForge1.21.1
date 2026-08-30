@@ -29,5 +29,6 @@ public final class ClientConnectionEvents {
         ClientNetworkState.resetConnectionState();
         ClientShipAiTerminalState.resetConnectionState();
         ClientShipStoryState.resetConnectionState();
+        ClientShipEnvironmentState.resetConnectionState();
     }
 }

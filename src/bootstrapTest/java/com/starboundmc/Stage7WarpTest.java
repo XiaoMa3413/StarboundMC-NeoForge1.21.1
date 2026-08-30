@@ -89,6 +89,8 @@ final class Stage7WarpTest {
         assertTrue(manager.contains("player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)"));
         assertTrue(manager.contains("entry == null || !entry.isReachable()"));
         assertTrue(manager.contains("getFuel() < cost"));
+        assertTrue(manager.contains("canTravelWithinSystem(server)"));
+        assertTrue(manager.contains("canTravelBetweenSystems(server)"));
         assertTrue(manager.contains("SNAPSHOT_INTERVAL = 5"));
         assertTrue(events.contains("ServerTickEvent.Post"));
         assertTrue(events.contains("ServerStartedEvent"));

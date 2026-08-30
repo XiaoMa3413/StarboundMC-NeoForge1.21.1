@@ -2,6 +2,7 @@ package com.starboundmc.world;
 
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncPlanetPacket;
+import com.starboundmc.story.ShipStoryService;
 import com.starboundmc.warp.ShipFuelService;
 import com.starboundmc.warp.ShipWarpManager;
 import net.minecraft.core.BlockPos;
@@ -62,6 +63,9 @@ public final class Stage6TravelService {
                 case LUSH -> throw new IllegalStateException("Lush must use the overworld");
             }
         }
+        // Mission progression and the personal tutorial are driven only after
+        // the authoritative teleport has placed the player in a surface level.
+        ShipStoryService.onPlanetSurfaceArrival(player);
         syncState(player);
         return true;
     }

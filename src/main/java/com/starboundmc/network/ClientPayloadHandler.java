@@ -2,9 +2,12 @@ package com.starboundmc.network;
 
 import com.starboundmc.client.ClientPlanetState;
 import com.starboundmc.client.ClientTeleporterState;
+import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.WarpSounds;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.menu.ShipAiTerminalMenu;
+import com.starboundmc.menu.StarmapTerminalMenu;
+import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.world.Planet;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -59,6 +62,14 @@ public final class ClientPayloadHandler {
     public static void handle(ShipStorySnapshotPacket payload, IPayloadContext context) {
         if (context.player().containerMenu instanceof ShipAiTerminalMenu menu) {
             ClientShipStoryState.apply(menu.containerId, payload);
+        }
+    }
+
+    public static void handle(ShipEnvironmentSnapshotPacket payload, IPayloadContext context) {
+        if (context.player().containerMenu instanceof StarmapTerminalMenu menu) {
+            ClientShipEnvironmentState.apply(menu.containerId, payload);
+        } else if (context.player().containerMenu instanceof TeleporterMenu menu) {
+            ClientShipEnvironmentState.apply(menu.containerId, payload);
         }
     }
 
