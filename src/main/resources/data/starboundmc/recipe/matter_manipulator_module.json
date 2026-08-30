@@ -2,22 +2,16 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    " T ",
-    "SDS",
-    " R "
+    " I ",
+    "ILI",
+    " I "
   ],
   "key": {
-    "T": {
-      "item": "starboundmc:titanium_ingot"
+    "I": {
+      "item": "minecraft:iron_ingot"
     },
-    "S": {
-      "item": "starboundmc:star_core_fragment"
-    },
-    "D": {
-      "item": "starboundmc:durasteel_ingot"
-    },
-    "R": {
-      "item": "minecraft:redstone"
+    "L": {
+      "item": "minecraft:lapis_lazuli"
     }
   },
   "result": {

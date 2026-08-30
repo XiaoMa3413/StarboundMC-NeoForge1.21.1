@@ -260,6 +260,24 @@ public class ShipStateData extends SavedData
         return applyStoryProgress(storyProgress.completeSurfaceMission());
     }
 
+    public boolean beginMineralScan(long gameTime, long delayTicks)
+    {
+        return applyStoryProgress(storyProgress.beginMineralScan(gameTime, delayTicks));
+    }
+
+    public boolean advanceMineralScanIfDue(long gameTime,
+                                           long resultDelayTicks,
+                                           long conclusionDelayTicks)
+    {
+        return applyStoryProgress(storyProgress.advanceMineralScanIfDue(
+                gameTime, resultDelayTicks, conclusionDelayTicks));
+    }
+
+    public boolean replayMineralScan(long gameTime, long delayTicks)
+    {
+        return applyStoryProgress(storyProgress.replayMineralScan(gameTime, delayTicks));
+    }
+
     public boolean restoreSublightEngine()
     {
         return applyStoryProgress(storyProgress.restoreSublightEngine());

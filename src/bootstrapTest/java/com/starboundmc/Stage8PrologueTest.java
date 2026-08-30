@@ -35,18 +35,27 @@ final class Stage8PrologueTest
         assertTrue(events.contains("restore_engine"));
         assertTrue(events.contains("restoreSublightEngine"));
         assertTrue(events.contains("restoreHyperdrive"));
+        assertTrue(events.contains("replay_mineral_scan"));
+        assertTrue(events.contains("replayMineralScan"));
         assertTrue(events.contains("syncOpenScreens"));
         assertTrue(story.contains("ShipStoryBroadcastService.tick"));
         assertTrue(service.contains("INITIAL_WAKE_DELAY_TICKS"));
         assertTrue(service.contains("TERMINAL_REMINDER_DELAY_TICKS"));
         assertTrue(service.contains("SURFACE_TUTORIAL_DELAY_TICKS = 120L"));
+        assertTrue(service.contains("MINERAL_SCAN_START_DELAY_TICKS = 300L"));
+        assertTrue(service.contains("MINERAL_SCAN_RESULT_DELAY_TICKS = 100L"));
+        assertTrue(service.contains("MINERAL_SCAN_CONCLUSION_DELAY_TICKS = 120L"));
+        assertTrue(service.contains("beginMineralScan"));
+        assertTrue(service.contains("advanceMineralScanIfDue"));
         assertTrue(service.contains("isPlanetSurface"));
         assertTrue(service.contains("scheduleMatterManipulatorTutorial"));
         assertTrue(service.contains("withTutorialSeen"));
         assertTrue(service.contains("novaMessage"));
         assertTrue(service.contains("ChatFormatting.AQUA"));
         assertTrue(service.contains("ChatFormatting.WHITE"));
-        assertTrue(service.contains("displayClientMessage"));
+        assertTrue(service.contains("new NovaBroadcastPacket"));
+        assertTrue(service.contains("ModNetwork.sendToPlayer"));
+        assertFalse(service.contains("player.displayClientMessage"));
     }
 
     @Test
@@ -95,7 +104,10 @@ final class Stage8PrologueTest
                 "message.starboundmc.nova.prologue.core_online",
                 "message.starboundmc.nova.prologue.first_landing_complete",
                 "message.starboundmc.nova.tutorial.matter_manipulator",
-                "message.starboundmc.nova.tutorial.wood_acquired"})
+                "message.starboundmc.nova.tutorial.wood_acquired",
+                "message.starboundmc.nova.prologue.mineral_scan_started",
+                "message.starboundmc.nova.prologue.mineral_scan_result",
+                "message.starboundmc.nova.prologue.mineral_scan_sublight_hint"})
         {
             assertTrue(english.contains("\"" + key + "\""), key + " en_us");
             assertTrue(chinese.contains("\"" + key + "\""), key + " zh_cn");
@@ -106,8 +118,19 @@ final class Stage8PrologueTest
         assertFalse(chinese.contains("左键不会执行普通挖掘"));
         assertFalse(english.contains("Left-click mining is disabled"));
         assertFalse(chinese.contains("左键无法挖掘"));
-        assertTrue(chinese.contains("通讯链路已连接"));
-        assertTrue(chinese.contains("存活概率上升了17个百分点"));
+        assertTrue(chinese.contains("通信链路现已恢复"));
+        assertTrue(chinese.contains("生存概率提高了 17 个百分点"));
+        assertTrue(chinese.contains("地层矿物扫描中................"));
+        assertTrue(english.contains("Mineral survey in progress................"));
+        assertTrue(chinese.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
+                + "核心系统重启中................\""));
+        assertTrue(english.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
+                + "Restarting core systems................\""));
+        assertTrue(chinese.contains("少量钻石"));
+        assertTrue(chinese.contains("幸运的是，我们目前位于一颗宜居星球的轨道上"));
+        assertTrue(chinese.contains("核▒心状▓态：#%/无法读取"));
+        assertFalse(chinese.contains("确认你仍然存活"));
+        assertFalse(chinese.contains("恭喜你获得了木材"));
     }
 
     @Test
@@ -116,6 +139,59 @@ final class Stage8PrologueTest
     {
         String terminal = source("client/shipai/ShipAiTerminalRoot.java");
         assertTrue(terminal.contains("BODY_COLOR = 0xFFFFFFFF"));
+    }
+
+    @Test
+    void longStatusDotsUseProgressCadence()
+            throws IOException
+    {
+        String broadcastState = source("client/shipai/ClientNovaBroadcastState.java");
+        String terminal = source("client/shipai/ShipAiTerminalRoot.java");
+
+        assertTrue(broadcastState.contains("MIN_PROGRESS_DOTS = 6"));
+        assertTrue(broadcastState.contains("isProgressDot(active.body(), revealed)"));
+        assertTrue(terminal.contains("gui.starboundmc.ship_ai.prologue.boot.restarting"));
+    }
+
+    @Test
+    void terminalProvidesDynamicSharedStatus()
+            throws IOException
+    {
+        String terminal = source("client/shipai/ShipAiTerminalRoot.java");
+        String english = Files.readString(Path.of(
+                "src/main/resources/assets/starboundmc/lang/en_us.json"));
+        String chinese = Files.readString(Path.of(
+                "src/main/resources/assets/starboundmc/lang/zh_cn.json"));
+
+        assertFalse(terminal.contains("reviewMatterManipulatorTutorial"));
+        assertTrue(terminal.contains("shared.sublightEngine().id()"));
+        assertTrue(terminal.contains("shared.hyperdrive().id()"));
+        for (String key : new String[]{
+                "gui.starboundmc.ship_ai.status.sublight.damaged",
+                "gui.starboundmc.ship_ai.status.sublight.online",
+                "gui.starboundmc.ship_ai.status.hyperdrive.damaged",
+                "gui.starboundmc.ship_ai.status.hyperdrive.online"})
+        {
+            assertTrue(english.contains("\"" + key + "\""), key + " en_us");
+            assertTrue(chinese.contains("\"" + key + "\""), key + " zh_cn");
+        }
+    }
+
+    @Test
+    void earlyManipulatorModuleRecipeSupportsTheDiamondObjective()
+            throws IOException
+    {
+        String recipe = Files.readString(Path.of(
+                "src/main/resources/data/starboundmc/recipe/matter_manipulator_module.json"));
+
+        assertTrue(recipe.contains("\" I \""));
+        assertTrue(recipe.contains("\"ILI\""));
+        assertTrue(recipe.contains("minecraft:iron_ingot"));
+        assertTrue(recipe.contains("minecraft:lapis_lazuli"));
+        assertTrue(recipe.contains("\"count\": 2"));
+        assertFalse(recipe.contains("starboundmc:titanium_ingot"));
+        assertFalse(recipe.contains("starboundmc:durasteel_ingot"));
+        assertFalse(recipe.contains("starboundmc:star_core_fragment"));
     }
 
     private static String source(String relativePath) throws IOException

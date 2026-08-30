@@ -12,7 +12,7 @@ import java.util.Objects;
  */
 public final class SharedShipProgress
 {
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
 
     private static final String VERSION_TAG = "Version";
     private static final String REVISION_TAG = "Revision";
@@ -21,6 +21,8 @@ public final class SharedShipProgress
     private static final String SUBLIGHT_ENGINE_TAG = "SublightEngine";
     private static final String HYPERDRIVE_TAG = "Hyperdrive";
     private static final String REBOOT_COMPLETE_AT_TAG = "RebootCompleteAt";
+    private static final String MINERAL_SCAN_TAG = "MineralScan";
+    private static final String MINERAL_SCAN_NEXT_CUE_AT_TAG = "MineralScanNextCueAt";
 
     private final int schemaVersion;
     private final long revision;
@@ -29,11 +31,14 @@ public final class SharedShipProgress
     private final EngineState sublightEngine;
     private final EngineState hyperdrive;
     private final long rebootCompleteGameTime;
+    private final MineralScanState mineralScan;
+    private final long mineralScanNextCueGameTime;
     private final CompoundTag preservedFutureData;
 
     private SharedShipProgress(int schemaVersion, long revision, CoreState core,
                                SurfaceMissionState surfaceMission, EngineState sublightEngine,
                                EngineState hyperdrive, long rebootCompleteGameTime,
+                               MineralScanState mineralScan, long mineralScanNextCueGameTime,
                                CompoundTag preservedFutureData)
     {
         this.schemaVersion = schemaVersion;
@@ -43,6 +48,8 @@ public final class SharedShipProgress
         this.sublightEngine = Objects.requireNonNull(sublightEngine, "sublightEngine");
         this.hyperdrive = Objects.requireNonNull(hyperdrive, "hyperdrive");
         this.rebootCompleteGameTime = Math.max(0L, rebootCompleteGameTime);
+        this.mineralScan = Objects.requireNonNull(mineralScan, "mineralScan");
+        this.mineralScanNextCueGameTime = Math.max(0L, mineralScanNextCueGameTime);
         this.preservedFutureData = preservedFutureData == null ? null : preservedFutureData.copy();
     }
 
@@ -50,14 +57,16 @@ public final class SharedShipProgress
     public static SharedShipProgress newWorld()
     {
         return current(0L, CoreState.OFFLINE, SurfaceMissionState.LOCKED,
-                EngineState.DAMAGED, EngineState.DAMAGED, 0L);
+                EngineState.DAMAGED, EngineState.DAMAGED, 0L,
+                MineralScanState.LOCKED, 0L);
     }
 
     /** Existing worlds without a Story tag retain every previously available travel feature. */
     public static SharedShipProgress legacyUnlocked()
     {
         return current(1L, CoreState.ONLINE, SurfaceMissionState.COMPLETE,
-                EngineState.ONLINE, EngineState.ONLINE, 0L);
+                EngineState.ONLINE, EngineState.ONLINE, 0L,
+                MineralScanState.COMPLETE, 0L);
     }
 
     public static LoadResult load(CompoundTag tag)
@@ -68,7 +77,8 @@ public final class SharedShipProgress
         {
             SharedShipProgress protectedState = new SharedShipProgress(
                     version, 0L, CoreState.OFFLINE, SurfaceMissionState.LOCKED,
-                    EngineState.DAMAGED, EngineState.DAMAGED, 0L, tag);
+                    EngineState.DAMAGED, EngineState.DAMAGED, 0L,
+                    MineralScanState.LOCKED, 0L, tag);
             return new LoadResult(protectedState, false);
         }
 
@@ -112,6 +122,34 @@ public final class SharedShipProgress
             requiresSave = true;
         }
 
+        MineralScanState mineralScan;
+        long mineralScanNextCueAt;
+        if (version >= 2)
+        {
+            mineralScan = MineralScanState.fromId(tag.getString(MINERAL_SCAN_TAG), null);
+            if (mineralScan == null)
+            {
+                mineralScan = MineralScanState.LOCKED;
+                requiresSave = true;
+            }
+            mineralScanNextCueAt = tag.contains(MINERAL_SCAN_NEXT_CUE_AT_TAG, Tag.TAG_LONG)
+                    ? tag.getLong(MINERAL_SCAN_NEXT_CUE_AT_TAG) : 0L;
+            if (mineralScanNextCueAt < 0L)
+            {
+                mineralScanNextCueAt = 0L;
+                requiresSave = true;
+            }
+        }
+        else
+        {
+            // Worlds already beyond sublight repair must not replay an earlier
+            // survey. Damaged ships may opt into the new scene on the next log pickup.
+            mineralScan = sublight == EngineState.ONLINE
+                    ? MineralScanState.COMPLETE : MineralScanState.LOCKED;
+            mineralScanNextCueAt = 0L;
+            requiresSave = true;
+        }
+
         // A server interruption must not leave the shared ship permanently rebooting.
         if (core == CoreState.REBOOTING)
         {
@@ -135,6 +173,8 @@ public final class SharedShipProgress
                 mission = SurfaceMissionState.LOCKED;
                 sublight = EngineState.DAMAGED;
                 hyperdrive = EngineState.DAMAGED;
+                mineralScan = MineralScanState.LOCKED;
+                mineralScanNextCueAt = 0L;
                 requiresSave = true;
             }
         }
@@ -150,8 +190,34 @@ public final class SharedShipProgress
             hyperdrive = EngineState.DAMAGED;
             requiresSave = true;
         }
+        if (mission != SurfaceMissionState.COMPLETE
+                && (mineralScan != MineralScanState.LOCKED || mineralScanNextCueAt != 0L))
+        {
+            mineralScan = MineralScanState.LOCKED;
+            mineralScanNextCueAt = 0L;
+            requiresSave = true;
+        }
+        if (sublight == EngineState.ONLINE && mineralScan != MineralScanState.COMPLETE)
+        {
+            mineralScan = MineralScanState.COMPLETE;
+            mineralScanNextCueAt = 0L;
+            requiresSave = true;
+        }
+        if (mineralScan.isInProgress() && mineralScanNextCueAt == 0L)
+        {
+            // An incomplete scheduled record cannot safely infer which chat
+            // line was delivered. Reset it so a later log pickup can retry.
+            mineralScan = MineralScanState.LOCKED;
+            requiresSave = true;
+        }
+        else if (!mineralScan.isInProgress() && mineralScanNextCueAt != 0L)
+        {
+            mineralScanNextCueAt = 0L;
+            requiresSave = true;
+        }
 
-        return new LoadResult(current(revision, core, mission, sublight, hyperdrive, rebootCompleteAt),
+        return new LoadResult(current(revision, core, mission, sublight, hyperdrive,
+                        rebootCompleteAt, mineralScan, mineralScanNextCueAt),
                 requiresSave);
     }
 
@@ -168,6 +234,8 @@ public final class SharedShipProgress
         tag.putString(SUBLIGHT_ENGINE_TAG, sublightEngine.id());
         tag.putString(HYPERDRIVE_TAG, hyperdrive.id());
         tag.putLong(REBOOT_COMPLETE_AT_TAG, rebootCompleteGameTime);
+        tag.putString(MINERAL_SCAN_TAG, mineralScan.id());
+        tag.putLong(MINERAL_SCAN_NEXT_CUE_AT_TAG, mineralScanNextCueGameTime);
         return tag;
     }
 
@@ -202,13 +270,53 @@ public final class SharedShipProgress
         return changed(core, SurfaceMissionState.COMPLETE, sublightEngine, hyperdrive, 0L);
     }
 
+    public SharedShipProgress beginMineralScan(long gameTime, long delayTicks)
+    {
+        if (!isWritable() || core != CoreState.ONLINE
+                || surfaceMission != SurfaceMissionState.COMPLETE
+                || mineralScan != MineralScanState.LOCKED)
+            return this;
+        return changedScan(MineralScanState.PENDING,
+                safeAdd(Math.max(0L, gameTime), Math.max(1L, delayTicks)));
+    }
+
+    /** Admin-only replay hook; it deliberately leaves every engine untouched. */
+    public SharedShipProgress replayMineralScan(long gameTime, long delayTicks)
+    {
+        if (!isWritable() || core != CoreState.ONLINE
+                || surfaceMission != SurfaceMissionState.COMPLETE)
+            return this;
+        return changedScan(MineralScanState.PENDING,
+                safeAdd(Math.max(0L, gameTime), Math.max(1L, delayTicks)));
+    }
+
+    public SharedShipProgress advanceMineralScanIfDue(long gameTime,
+                                                       long resultDelayTicks,
+                                                       long conclusionDelayTicks)
+    {
+        if (!isWritable() || !mineralScan.isInProgress()
+                || gameTime < mineralScanNextCueGameTime)
+            return this;
+        return switch (mineralScan)
+        {
+            case PENDING -> changedScan(MineralScanState.SCANNING,
+                    safeAdd(gameTime, Math.max(1L, resultDelayTicks)));
+            case SCANNING -> changedScan(MineralScanState.RESULT_REPORTED,
+                    safeAdd(gameTime, Math.max(1L, conclusionDelayTicks)));
+            case RESULT_REPORTED -> changedScan(MineralScanState.COMPLETE, 0L);
+            default -> this;
+        };
+    }
+
     public SharedShipProgress restoreSublightEngine()
     {
         if (!isWritable() || core != CoreState.ONLINE
                 || surfaceMission != SurfaceMissionState.COMPLETE
                 || sublightEngine == EngineState.ONLINE)
             return this;
-        return changed(core, surfaceMission, EngineState.ONLINE, hyperdrive, 0L);
+        return current(increment(revision), core, surfaceMission,
+                EngineState.ONLINE, hyperdrive, 0L,
+                MineralScanState.COMPLETE, 0L);
     }
 
     public SharedShipProgress restoreHyperdrive()
@@ -254,6 +362,16 @@ public final class SharedShipProgress
         return rebootCompleteGameTime;
     }
 
+    public MineralScanState mineralScan()
+    {
+        return mineralScan;
+    }
+
+    public long mineralScanNextCueGameTime()
+    {
+        return mineralScanNextCueGameTime;
+    }
+
     public boolean isWritable()
     {
         return preservedFutureData == null;
@@ -284,15 +402,27 @@ public final class SharedShipProgress
                                        long nextRebootCompleteAt)
     {
         return current(increment(revision), nextCore, nextMission, nextSublight, nextHyperdrive,
-                nextRebootCompleteAt);
+                nextRebootCompleteAt, mineralScan, mineralScanNextCueGameTime);
+    }
+
+    private SharedShipProgress changedScan(MineralScanState nextScan, long nextCueAt)
+    {
+        return current(increment(revision), core, surfaceMission, sublightEngine, hyperdrive,
+                rebootCompleteGameTime, nextScan, nextCueAt);
     }
 
     private static SharedShipProgress current(long revision, CoreState core,
                                               SurfaceMissionState mission, EngineState sublight,
-                                              EngineState hyperdrive, long rebootCompleteAt)
+                                              EngineState hyperdrive, long rebootCompleteAt,
+                                              MineralScanState mineralScan, long mineralScanNextCueAt)
     {
         return new SharedShipProgress(CURRENT_SCHEMA_VERSION, revision, core, mission, sublight,
-                hyperdrive, rebootCompleteAt, null);
+                hyperdrive, rebootCompleteAt, mineralScan, mineralScanNextCueAt, null);
+    }
+
+    private static long safeAdd(long value, long delta)
+    {
+        return value > Long.MAX_VALUE - delta ? Long.MAX_VALUE : value + delta;
     }
 
     private static long increment(long value)

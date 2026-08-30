@@ -2,6 +2,7 @@ package com.starboundmc.network;
 
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.story.TutorialTopic;
@@ -21,6 +22,7 @@ public record ShipStorySnapshotPacket(
         SurfaceMissionState surfaceMission,
         EngineState sublightEngine,
         EngineState hyperdrive,
+        MineralScanState mineralScan,
         int rebootTicksRemaining,
         int playerSchemaVersion,
         long playerRevision,
@@ -46,6 +48,7 @@ public record ShipStorySnapshotPacket(
         Objects.requireNonNull(surfaceMission, "surfaceMission");
         Objects.requireNonNull(sublightEngine, "sublightEngine");
         Objects.requireNonNull(hyperdrive, "hyperdrive");
+        Objects.requireNonNull(mineralScan, "mineralScan");
         if (readSituationMask < 0
                 || (readSituationMask & ~SituationTopic.REQUIRED_MASK) != 0)
             throw new IllegalArgumentException("Unknown situation read bits " + readSituationMask);
@@ -64,6 +67,7 @@ public record ShipStorySnapshotPacket(
                 requireMission(buffer.readUtf(MAX_STATE_ID_LENGTH)),
                 requireEngine(buffer.readUtf(MAX_STATE_ID_LENGTH)),
                 requireEngine(buffer.readUtf(MAX_STATE_ID_LENGTH)),
+                requireMineralScan(buffer.readUtf(MAX_STATE_ID_LENGTH)),
                 buffer.readVarInt(), buffer.readVarInt(), buffer.readVarLong(),
                 buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt());
     }
@@ -78,6 +82,7 @@ public record ShipStorySnapshotPacket(
         buffer.writeUtf(surfaceMission.id(), MAX_STATE_ID_LENGTH);
         buffer.writeUtf(sublightEngine.id(), MAX_STATE_ID_LENGTH);
         buffer.writeUtf(hyperdrive.id(), MAX_STATE_ID_LENGTH);
+        buffer.writeUtf(mineralScan.id(), MAX_STATE_ID_LENGTH);
         buffer.writeVarInt(rebootTicksRemaining);
         buffer.writeVarInt(playerSchemaVersion);
         buffer.writeVarLong(playerRevision);
@@ -114,6 +119,14 @@ public record ShipStorySnapshotPacket(
         EngineState state = EngineState.fromId(id, null);
         if (state == null)
             throw new IllegalArgumentException("Unknown engine state " + id);
+        return state;
+    }
+
+    private static MineralScanState requireMineralScan(String id)
+    {
+        MineralScanState state = MineralScanState.fromId(id, null);
+        if (state == null)
+            throw new IllegalArgumentException("Unknown mineral scan state " + id);
         return state;
     }
 }
