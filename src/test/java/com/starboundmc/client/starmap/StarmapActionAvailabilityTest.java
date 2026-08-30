@@ -50,6 +50,18 @@ final class StarmapActionAvailabilityTest {
         assertEquals(StarmapActionAvailability.Reason.NONE, available.reason());
     }
 
+    @Test
+    void planetActionRequiresTheMatchingPropulsionStage() {
+        assertReason(StarmapActionAvailability.Reason.SUBLIGHT_OFFLINE,
+                StarmapActionAvailability.planet(true, true, false, false,
+                        true, false, true, 100, 20));
+        assertReason(StarmapActionAvailability.Reason.HYPERDRIVE_OFFLINE,
+                StarmapActionAvailability.planet(true, true, false, false,
+                        false, true, false, 100, 20));
+        assertTrue(StarmapActionAvailability.planet(true, true, false, false,
+                true, true, false, 100, 20).available());
+    }
+
     private static void assertReason(StarmapActionAvailability.Reason expected,
                                      StarmapActionAvailability.Result result) {
         assertFalse(result.available());

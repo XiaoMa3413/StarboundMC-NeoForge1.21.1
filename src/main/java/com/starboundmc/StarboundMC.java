@@ -9,6 +9,7 @@ import com.starboundmc.item.ModDataComponents;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.Stage7ServerPayloadActions;
+import com.starboundmc.story.ModAttachments;
 import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.WorldgenRotationWarmup;
 import net.neoforged.bus.api.IEventBus;
@@ -31,6 +32,7 @@ public final class StarboundMC {
         ModBlockEntities.register(modEventBus);
         ModEntities.register(modEventBus);
         ModDataComponents.register(modEventBus);
+        ModAttachments.register(modEventBus);
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
 

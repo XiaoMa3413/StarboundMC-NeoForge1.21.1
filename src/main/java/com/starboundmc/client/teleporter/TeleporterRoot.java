@@ -17,7 +17,9 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.ClientPlanetState;
+import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.ClientTeleporterState;
+import com.starboundmc.client.ui.ShipSystemLockOverlay;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.TeleporterListPacket;
 import com.starboundmc.network.TeleporterRenamePacket;
@@ -49,9 +51,18 @@ public final class TeleporterRoot extends UIElement {
     private final Label detailType = new Label();
     private final Label detailHint = new Label();
     private final Button warpButton = new Button();
+    private final ShipSystemLockOverlay environmentLock;
+    private final int containerId;
+    private boolean environmentLockInitialized;
+    private boolean environmentLocked;
     private String selectedDestinationKey;
 
     public TeleporterRoot() {
+        this(-1);
+    }
+
+    public TeleporterRoot(int containerId) {
+        this.containerId = containerId;
         addClass("machine-screen");
         layout(layout -> layout
                 .widthPercent(100)
@@ -77,7 +88,10 @@ public final class TeleporterRoot extends UIElement {
 
         shell.addChildren(header, content);
         addChild(shell);
+        environmentLock = new ShipSystemLockOverlay();
+        addChild(environmentLock);
         refreshFromClient();
+        refreshEnvironmentLock();
     }
 
     private UIElement buildHeader() {
@@ -264,7 +278,8 @@ public final class TeleporterRoot extends UIElement {
                 .textWrap(TextWrap.HIDE));
         warpButton.addChildren(transmitMarker, transmitLabel, transmitArrow);
         warpButton.addEventListener(UIEvents.CLICK, event -> {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && warpButton.isActive()) {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && warpButton.isActive()
+                    && !isEnvironmentLocked()) {
                 sendSelectedDestination();
                 event.stopPropagation();
             }
@@ -350,9 +365,33 @@ public final class TeleporterRoot extends UIElement {
 
     /** Applies a newly received destination snapshot without rebuilding the whole screen. */
     public void refreshIfDirty() {
+        refreshEnvironmentLock();
         if (ClientTeleporterState.consumeDirty()) {
             refreshFromClient();
         }
+    }
+
+    private boolean isEnvironmentLocked() {
+        return ClientShipEnvironmentState.isLocked(containerId);
+    }
+
+    private void refreshEnvironmentLock() {
+        boolean locked = isEnvironmentLocked();
+        if (!environmentLockInitialized || environmentLocked != locked) {
+            environmentLockInitialized = true;
+            environmentLocked = locked;
+            environmentLock.setLocked(locked);
+            if (!locked)
+                updateDetail(findSelected(ClientTeleporterState.getDestinations()));
+            else
+                warpButton.setActive(false);
+        } else {
+            environmentLock.setLocked(locked);
+        }
+    }
+
+    int containerId() {
+        return containerId;
     }
 
     private void refreshFromClient() {
@@ -484,6 +523,8 @@ public final class TeleporterRoot extends UIElement {
     }
 
     private void selectDestination(String key) {
+        if (isEnvironmentLocked())
+            return;
         DestinationRow row = destinationRows.get(key);
         if (row == null) return;
         if (!Objects.equals(selectedDestinationKey, key)) {
@@ -537,11 +578,11 @@ public final class TeleporterRoot extends UIElement {
         detailTitle.setText(destinationName(entry));
         detailType.setText(destinationType(entry));
         detailHint.setText(Component.translatable("gui.starboundmc.teleporter.transmit_hint"));
-        warpButton.setActive(true);
+            warpButton.setActive(!isEnvironmentLocked());
     }
 
     private void sendSelectedDestination() {
-        if (selectedDestinationKey != null) {
+        if (!isEnvironmentLocked() && selectedDestinationKey != null) {
             ModNetwork.sendToServer(new TeleporterUsePacket(selectedDestinationKey));
         }
     }
@@ -644,7 +685,8 @@ public final class TeleporterRoot extends UIElement {
     }
 
     private void saveName() {
-        ModNetwork.sendToServer(new TeleporterRenamePacket(nameField.getValue()));
+        if (!isEnvironmentLocked())
+            ModNetwork.sendToServer(new TeleporterRenamePacket(nameField.getValue()));
     }
 
     private static final class DestinationRow {

@@ -1,4 +1,4 @@
-// Matter Manipulator workbench: a topology-first blueprint UI.
+// Matter Manipulator workbench: green engineering blueprint above an unchanged inventory.
 
 .upgrade-screen { background: rect(#A605080A); }
 
@@ -7,90 +7,119 @@
   overflow-clip: true;
 }
 
-.upgrade-header {
-  background: rect(#132124);
+.upgrade-blueprint-sheet {
+  background: group(rect(#071A11), border(-1, #477F5D));
 }
 
-.upgrade-header-rail { background: #72CFC7; }
+.upgrade-header {
+  background: group(rect(#0A2418), border(-1, #315F45));
+}
 
-.upgrade-title { font-size: 6; text-color: #EAF2F1; text-shadow: false; }
-.upgrade-header-hint { font-size: 5; text-color: #829797; text-shadow: false; }
-.upgrade-module-count { font-size: 5; text-color: #D7B66C; text-shadow: false; }
+.upgrade-header-rail { background: #83E3A2; }
+
+.upgrade-title { font-size: 6; text-color: #C8FFD8; text-shadow: false; }
+.upgrade-header-hint { font-size: 5; text-color: #70A985; text-shadow: false; }
+.upgrade-module-count { font-size: 5; text-color: #B8F47A; text-shadow: false; }
 
 .upgrade-blueprint {
-  background: group(rect(#070D0F), border(-1, #273B3E));
+  background: group(rect(#06170F), border(-1, #3D7856));
 }
 
 .upgrade-manipulator-socket {
-  background: group(rect(#091113), border(-1, #8AA4A5));
+  background: group(rect(#06150E), border(-1, #7DD49A));
 }
 
-.upgrade-branch-label { font-size: 5; text-color: #8CA1A2; text-shadow: false; }
-.upgrade-branch-selected .upgrade-branch-label { text-color: #A6F1EB; }
+.upgrade-branch-label { font-size: 5; text-color: #73AC86; text-shadow: false; }
+.upgrade-branch-selected .upgrade-branch-label { text-color: #C5FFD6; }
 
 .upgrade-node:host {
-  base-background: group(rect(#10191B), border(-1, #526266));
-  hover-background: group(rect(#1A292B), border(-1, #9FC6C5));
-  pressed-background: group(rect(#0A1112), border(-1, #D6EEEA));
+  base-background: group(rect(#07170F), border(-1, #4A8B63));
+  hover-background: group(rect(#103621), border(-1, #A0E9B7));
+  pressed-background: group(rect(#1A5332), border(-1, #E1FFEA));
 }
 
-.upgrade-node-locked:host { base-background: group(rect(#101416), border(-1, #414B4D)); }
+.upgrade-node .__button_text__ {
+  font-size: 7;
+  text-color: #639976;
+  text-shadow: false;
+}
+
+.upgrade-node-locked:host { base-background: group(rect(#08150F), border(-1, #355E45)); }
+.upgrade-node-locked .__button_text__ { text-color: #41684F; }
 
 .upgrade-node-unlocked:host {
-  base-background: group(rect(#397D75), border(-1, #7DC8BC));
-  hover-background: group(rect(#4D958B), border(-1, #B8EEE4));
+  base-background: group(rect(#1F7040), border(-1, #8CE5A8));
+  hover-background: group(rect(#2D8B51), border(-1, #D4FFE0));
 }
+.upgrade-node-unlocked .__button_text__ { text-color: #E4FFEB; }
 
 .upgrade-node-ready:host {
-  base-background: group(rect(#A57D2E), border(-1, #E7C773));
-  hover-background: group(rect(#C39A3E), border(-1, #FFF0B0));
+  base-background: group(rect(#4E7C27), border(-1, #B8F47A));
+  hover-background: group(rect(#689B36), border(-1, #EAFFC4));
 }
+.upgrade-node-ready .__button_text__ { text-color: #F2FFD7; }
 
 .upgrade-node-maxed:host {
-  base-background: group(rect(#6FAFA5), border(-1, #CCFFF5));
-  hover-background: group(rect(#7DC3B8), border(-1, #FFFFFF));
+  base-background: group(rect(#3B9960), border(-1, #C7FFDA));
+  hover-background: group(rect(#52B574), border(-1, #FFFFFF));
 }
+.upgrade-node-maxed .__button_text__ { text-color: #FFFFFF; }
 
 .upgrade-node-selected:host {
-  base-background: group(rect(#294442), border(-1, #A6F1EB));
-  hover-background: group(rect(#355B57), border(-1, #D2FFFA));
+  base-background: group(rect(#174B2D), border(-1, #C8FFD8));
+  hover-background: group(rect(#226A3D), border(-1, #F0FFF4));
+}
+.upgrade-node-selected .__button_text__ { text-color: #F0FFF4; }
+
+.upgrade-node-selected.upgrade-node-locked:host {
+  base-background: group(rect(#10271A), border(-1, #8BC79D));
+}
+
+.upgrade-node-selected.upgrade-node-unlocked:host {
+  base-background: group(rect(#287F49), border(-1, #D0FFDD));
 }
 
 .upgrade-node-selected.upgrade-node-ready:host {
-  base-background: group(rect(#A57D2E), border(-1, #EFFFFB));
-  hover-background: group(rect(#C39A3E), border(-1, #FFFFFF));
+  base-background: group(rect(#557F2B), border(-1, #E9FFC0));
+  hover-background: group(rect(#70A43C), border(-1, #FFFFFF));
+}
+
+.upgrade-node-selected.upgrade-node-maxed:host {
+  base-background: group(rect(#46A669), border(-1, #E4FFEC));
 }
 
 .upgrade-detail {
-  background: rect(#151E20);
+  background: rect(#0B2619);
 }
 
-.upgrade-detail-accent { background: #73D1C8; }
-.upgrade-detail-top-line { background: #46595B; }
-.upgrade-detail-bottom-line { background: #263234; }
-.upgrade-detail-name { font-size: 6; text-color: #EDF5F4; text-shadow: false; }
-.upgrade-detail-level { font-size: 5; text-color: #91A4A5; text-shadow: false; }
-.upgrade-detail-cost { font-size: 5; text-color: #D3B36C; text-shadow: false; }
+.upgrade-detail-accent { background: #82E7A2; }
+.upgrade-detail-top-line { background: #4E9368; }
+.upgrade-detail-bottom-line { background: #294D38; }
+.upgrade-detail-name { font-size: 6; text-color: #D7FFE2; text-shadow: false; }
+.upgrade-detail-level { font-size: 5; text-color: #80B792; text-shadow: false; }
+.upgrade-detail-cost { font-size: 5; text-color: #B8F47A; text-shadow: false; }
 
 .upgrade-main-action:host {
-  base-background: group(rect(#2D625D), border(-1, #8EDDD4));
-  hover-background: group(rect(#407E77), border(-1, #C4FFF7));
-  pressed-background: group(rect(#193A37), border(-1, #F0FFFC));
+  base-background: group(rect(#1D6339), border(-1, #92E8AB));
+  hover-background: group(rect(#2B804A), border(-1, #D0FFDD));
+  pressed-background: group(rect(#104528), border(-1, #F0FFF4));
 }
 
 .upgrade-main-action .__button_text__ {
   font-size: 6;
-  text-color: #F4FFFD;
+  text-color: #F2FFF5;
   text-shadow: false;
 }
 
 .upgrade-main-action.__disabled__:host {
-  base-background: group(rect(#1B2224), border(-1, #3C484A));
-  hover-background: group(rect(#1B2224), border(-1, #3C484A));
-  pressed-background: group(rect(#1B2224), border(-1, #3C484A));
+  base-background: group(rect(#102018), border(-1, #355542));
+  hover-background: group(rect(#102018), border(-1, #355542));
+  pressed-background: group(rect(#102018), border(-1, #355542));
 }
 
-.upgrade-main-action.__disabled__ .__button_text__ { text-color: #576466; }
+.upgrade-main-action.__disabled__ .__button_text__ { text-color: #4A7258; }
+
+// Player inventory intentionally keeps the existing neutral machine styling.
 .upgrade-inventory-caption { font-size: 5; text-color: #7F9092; text-shadow: false; }
 .upgrade-slot-socket { background: group(rect(#080C0D), border(-1, #3D494B)); }
 .upgrade-player-socket { background: group(rect(#090E0F), border(-1, #3E4B4D)); }

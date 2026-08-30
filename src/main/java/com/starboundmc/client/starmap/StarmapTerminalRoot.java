@@ -5,6 +5,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.client.ClientPlanetState;
+import com.starboundmc.client.ClientShipEnvironmentState;
+import com.starboundmc.client.ui.ShipSystemLockOverlay;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.warp.ShipWarpManager;
@@ -41,6 +43,8 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapTransitionOverlayElement transitionOverlay;
     private final StarmapChromeElement chrome;
     private final StarmapInfoPanelElement infoPanel;
+    private final ShipSystemLockOverlay environmentLock;
+    private final int containerId;
     private final List<StarmapNodeElement> nodes = new ArrayList<>();
     /** Accumulated simulation ticks. Rendering adds a partial tick below. */
     private double orbitClock;
@@ -58,11 +62,22 @@ public final class StarmapTerminalRoot extends UIElement {
     private float viewDragStartOffsetY;
 
     public StarmapTerminalRoot() {
-        this(StarmapGalaxyGraphResources.load(), StarmapBodyTextureResolver.clientResources());
+        this(-1);
+    }
+
+    public StarmapTerminalRoot(int containerId) {
+        this(containerId, StarmapGalaxyGraphResources.load(),
+                StarmapBodyTextureResolver.clientResources());
     }
 
     StarmapTerminalRoot(StarmapGalaxyGraph galaxyGraph,
                         StarmapBodyTextureResolver bodyTextures) {
+        this(-1, galaxyGraph, bodyTextures);
+    }
+
+    StarmapTerminalRoot(int containerId, StarmapGalaxyGraph galaxyGraph,
+                        StarmapBodyTextureResolver bodyTextures) {
+        this.containerId = containerId;
         this.galaxyGraph = java.util.Objects.requireNonNull(galaxyGraph, "galaxyGraph");
         this.bodyTextures = java.util.Objects.requireNonNull(bodyTextures, "bodyTextures");
         addClass("starmap-redraw-root");
@@ -92,7 +107,10 @@ public final class StarmapTerminalRoot extends UIElement {
         transitionOverlay = new StarmapTransitionOverlayElement();
         chrome = new StarmapChromeElement(this);
         infoPanel = new StarmapInfoPanelElement(this);
-        addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel);
+        environmentLock = new ShipSystemLockOverlay();
+        addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel,
+                environmentLock);
+        refreshEnvironmentLock();
         addEventListener(UIEvents.TICK, event -> {
             orbitClock += 1.0D;
             renderOrbitClock = orbitClock;
@@ -101,6 +119,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void refreshComponents() {
+        refreshEnvironmentLock();
         nodes.forEach(StarmapNodeElement::refresh);
         selectionOverlay.refresh();
         chrome.refresh();
@@ -108,6 +127,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void onMouseDown(UIEvent event) {
+        if (isEnvironmentLocked()) {
+            event.stopPropagation();
+            return;
+        }
         if (event.button == GLFW.GLFW_MOUSE_BUTTON_RIGHT) {
             goBack();
             event.stopPropagation();
@@ -133,6 +156,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void onClick(UIEvent event) {
+        if (isEnvironmentLocked()) {
+            event.stopPropagation();
+            return;
+        }
         if (event.button != GLFW.GLFW_MOUSE_BUTTON_LEFT || !viewDragStarted)
             return;
         if (!viewDragMoved) {
@@ -145,6 +172,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void onMouseWheel(UIEvent event) {
+        if (isEnvironmentLocked()) {
+            event.stopPropagation();
+            return;
+        }
         float width = getSizeWidth();
         float height = getSizeHeight();
         float localX = event.x - getPositionX();
@@ -159,7 +190,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     boolean dragView(float mouseX, float mouseY) {
-        if (!viewDragStarted)
+        if (isEnvironmentLocked() || !viewDragStarted)
             return false;
         float deltaX = mouseX - viewDragStartMouseX;
         float deltaY = mouseY - viewDragStartMouseY;
@@ -189,11 +220,58 @@ public final class StarmapTerminalRoot extends UIElement {
             focusedPlanet = null;
     }
 
+    private boolean isEnvironmentLocked() {
+        return ClientShipEnvironmentState.isLocked(containerId);
+    }
+
+    /** The ship's current system is the only deep-space signal available before hyperdrive repair. */
+    private String currentSystemId() {
+        String entryId = ClientPlanetState.getCurrentEntryId();
+        String systemId = StarSystems.systemIdOfEntry(entryId);
+        if (systemId != null)
+            return systemId;
+        StarSystem current = StarSystems.systemOfPlanet(ClientPlanetState.getCurrent());
+        return current == null ? null : current.getSystemId();
+    }
+
+    boolean isSublightOnline() {
+        return ClientShipEnvironmentState.canTravelWithinSystem(containerId);
+    }
+
+    boolean isHyperdriveOnline() {
+        return ClientShipEnvironmentState.canTravelBetweenSystems(containerId);
+    }
+
+    /**
+     * Before the hyperdrive is repaired, render the current system and an
+     * incomplete signal for every other system, without exposing selectable
+     * bodies or details from those systems.
+     */
+    boolean isSystemRevealed(StarSystem system) {
+        if (system == null || isEnvironmentLocked())
+            return false;
+        return isHyperdriveOnline() || java.util.Objects.equals(system.getSystemId(), currentSystemId());
+    }
+
+    boolean isSystemSelectable(StarSystem system) {
+        return isSystemRevealed(system);
+    }
+
+    boolean isRouteRevealed(StarmapGalaxyGraph.Route route) {
+        return route != null && isHyperdriveOnline();
+    }
+
+    private void refreshEnvironmentLock() {
+        environmentLock.setLocked(isEnvironmentLocked());
+    }
+
     private boolean isInsideInfoPanel(float localX, float localY) {
         return isInfoPanelVisible() && infoPanel.containsLocalPoint(localX, localY);
     }
 
     public void goBack() {
+        if (isEnvironmentLocked())
+            return;
         StarmapNavigationState current = navigationState();
         StarmapNavigationState next = current.goBack();
         if (!next.equals(current)) {
@@ -208,6 +286,7 @@ public final class StarmapTerminalRoot extends UIElement {
     /** Prepare continuous visual positions before LDLib2 performs hit testing. */
     void prepareFrame(float partialTick) {
         renderOrbitClock = orbitClock + partialTick;
+        refreshEnvironmentLock();
         int width = Math.max(1, Math.round(getSizeWidth()));
         int height = Math.max(1, Math.round(getSizeHeight()));
         if (width <= 1 || height <= 1)
@@ -225,6 +304,10 @@ public final class StarmapTerminalRoot extends UIElement {
 
     StarmapLevel getLevel() {
         return level;
+    }
+
+    int containerId() {
+        return containerId;
     }
 
     StarSystem getSelectedSystem() {
@@ -265,7 +348,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     boolean canFocusView() {
-        return isInfoPanelVisible();
+        return !isEnvironmentLocked() && isInfoPanelVisible();
     }
 
     boolean isViewReset() {
@@ -273,6 +356,8 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void resetView() {
+        if (isEnvironmentLocked())
+            return;
         if (viewTransform.reset()) {
             infoPanelSide = null;
             refreshComponents();
@@ -280,6 +365,8 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void focusSelectedView() {
+        if (isEnvironmentLocked())
+            return;
         int width = Math.max(1, Math.round(getSizeWidth()));
         int height = Math.max(1, Math.round(getSizeHeight()));
         SelectedVisual selected = selectedVisual(width, height, renderOrbitClock);
@@ -299,7 +386,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void selectSystem(StarSystem system) {
-        if (system == null)
+        if (isEnvironmentLocked() || !isSystemSelectable(system))
             return;
         selectedSystem = system;
         selectedEntry = null;
@@ -308,7 +395,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void enterSystem(StarSystem system) {
-        if (system == null)
+        if (isEnvironmentLocked() || !isSystemSelectable(system))
             return;
         StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(system);
         if (graphNode == null || !graphNode.available())
@@ -320,7 +407,8 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void selectCentralStar(StarSystem system) {
-        if (system == null || level != StarmapLevel.SYSTEM || system != selectedSystem)
+        if (isEnvironmentLocked() || system == null || level != StarmapLevel.SYSTEM
+                || system != selectedSystem)
             return;
         selectedEntry = null;
         focusedPlanet = null;
@@ -329,7 +417,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void selectEntry(PlanetEntry entry) {
-        if (entry == null)
+        if (isEnvironmentLocked() || entry == null)
             return;
         if (level == StarmapLevel.SYSTEM) {
             if (entry.isMoon())
@@ -350,15 +438,18 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     void performActionFromUi() {
+        if (isEnvironmentLocked())
+            return;
         performAction();
     }
 
     boolean isActionAvailable() {
-        return actionAvailability().available();
+        return !isEnvironmentLocked() && actionAvailability().available();
     }
 
     boolean canEnterSelectedSystem() {
-        return level == StarmapLevel.GALAXY && actionAvailability().available();
+        return !isEnvironmentLocked()
+                && level == StarmapLevel.GALAXY && actionAvailability().available();
     }
 
     boolean isInfoPanelVisible() {
@@ -392,6 +483,10 @@ public final class StarmapTerminalRoot extends UIElement {
             case WARP_IN_PROGRESS -> Component.translatable("gui.starboundmc.warping");
             case CURRENT_DESTINATION -> Component.translatable(
                     "gui.starboundmc.starmap.current");
+            case SUBLIGHT_OFFLINE -> Component.translatable(
+                    "gui.starboundmc.starmap.sublight_offline");
+            case HYPERDRIVE_OFFLINE -> Component.translatable(
+                    "gui.starboundmc.starmap.hyperdrive_offline");
             case INSUFFICIENT_FUEL -> Component.translatable(
                     "gui.starboundmc.starmap.action.insufficient_fuel_detail",
                     availability.requiredFuel(), availability.availableFuel());
@@ -434,8 +529,10 @@ public final class StarmapTerminalRoot extends UIElement {
         if (entry == null) {
             if (level == StarmapLevel.GALAXY) {
                 float[] point = galaxyPointF(system, 0, 0, width, height);
+                boolean revealed = isSystemRevealed(system);
                 return new StarmapNodeElement.NodePlacement(point[0], point[1],
-                        viewTransform.scaleLength(system == selectedSystem ? 22 : 16),
+                        viewTransform.scaleLength(system == selectedSystem ? 22
+                                : revealed ? 16 : 12),
                         true, system == selectedSystem);
             }
             if (level == StarmapLevel.SYSTEM && system == selectedSystem) {
@@ -642,9 +739,13 @@ public final class StarmapTerminalRoot extends UIElement {
         int fuel = ClientPlanetState.getFuel();
         int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
                 selectedEntry.getEntryId());
+        String currentSystem = currentSystemId();
+        String targetSystem = StarSystems.systemIdOfEntry(selectedEntry.getEntryId());
+        boolean sameSystem = currentSystem != null && currentSystem.equals(targetSystem);
         return StarmapActionAvailability.planet(true, selectedEntry.isReachable(),
                 ClientPlanetState.isWarping(),
                 selectedEntry.getDestination() == ClientPlanetState.getCurrent(),
+                sameSystem, isSublightOnline(), isHyperdriveOnline(),
                 fuel, cost);
     }
 

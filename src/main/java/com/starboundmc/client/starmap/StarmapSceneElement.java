@@ -51,8 +51,16 @@ final class StarmapSceneElement extends UIElement {
                 continue;
             float[] start = root.galaxyPointF(from.system(), x, y, width, height);
             float[] end = root.galaxyPointF(to.system(), x, y, width, height);
-            StarmapVectorDrawing.drawDashedLine(graphics, start[0], start[1], end[0], end[1],
-                    route.available() ? MUTED : 0x66566B75);
+            int color;
+            if (!route.available())
+                color = 0x66566B75;
+            else if (root.isRouteRevealed(route))
+                color = MUTED;
+            else
+                // Keep the dormant lane legible as an incomplete signal,
+                // without presenting it as a usable hyperspace route.
+                color = 0x3A66717B;
+            StarmapVectorDrawing.drawDashedLine(graphics, start[0], start[1], end[0], end[1], color);
         }
     }
 

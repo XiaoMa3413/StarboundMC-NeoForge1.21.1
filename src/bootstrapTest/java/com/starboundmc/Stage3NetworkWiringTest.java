@@ -13,9 +13,10 @@ final class Stage3NetworkWiringTest {
     @Test
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
-        assertTrue(network.contains("PROTOCOL_VERSION = \"1\""));
-        assertEquals(6, occurrences(network, "playToServer("));
-        assertEquals(6, occurrences(network, "playToClient("));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"2\""));
+        assertEquals(7, occurrences(network, "playToServer("));
+        assertEquals(8, occurrences(network, "playToClient("));
+        assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayersInDimension"));
@@ -31,9 +32,21 @@ final class Stage3NetworkWiringTest {
         assertTrue(client.contains("ClientPlanetState.startWarp"));
         assertTrue(client.contains("ClientPlanetState.setFuel"));
         assertTrue(client.contains("ClientPlanetState.applyFlightSnapshot"));
+        assertTrue(client.contains("ClientShipStoryState.apply"));
+        assertTrue(client.contains("ClientShipEnvironmentState.apply"));
         assertTrue(server.contains("instanceof ServerPlayer"));
         assertTrue(server.contains("containerMenu instanceof"));
+        assertTrue(server.contains("menu.containerId == payload.containerId()"));
         assertTrue(server.contains("validDestinationKey"));
+    }
+
+    @Test
+    void keepsPersonalStoryStateOutOfBroadcastAndAttachmentSync() throws IOException {
+        String attachments = source("story/ModAttachments.java");
+        String service = source("story/ShipStoryService.java");
+        assertFalse(attachments.contains(".sync("));
+        assertTrue(service.contains("ModNetwork.sendToPlayer"));
+        assertFalse(service.contains("sendToPlayersInDimension"));
     }
 
     @Test

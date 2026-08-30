@@ -1,6 +1,7 @@
 package com.starboundmc.block;
 
 import com.starboundmc.menu.StarmapTerminalMenu;
+import com.starboundmc.story.ShipEnvironmentService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -70,9 +71,9 @@ public final class StarmapTerminalBlock extends Block {
                 public net.minecraft.world.inventory.AbstractContainerMenu createMenu(
                         int containerId, net.minecraft.world.entity.player.Inventory inventory, Player ignored) {
                     return new StarmapTerminalMenu(containerId, inventory,
-                            ContainerLevelAccess.create(level, pos));
+                            ContainerLevelAccess.create(level, pos), pos);
                 }
-            });
+            }).ifPresent(containerId -> ShipEnvironmentService.sendSnapshot(serverPlayer, containerId));
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

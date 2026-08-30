@@ -24,6 +24,7 @@ public final class Stage2ClientRegistrar {
         event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);
         event.register(ModMenus.SHIP_CONSOLE_MENU.get(), ShipConsoleScreen::new);
         event.register(ModMenus.STARMAP_TERMINAL_MENU.get(), StarmapTerminalScreen::new);
+        event.register(ModMenus.SHIP_AI_TERMINAL_MENU.get(), ShipAiTerminalScreen::new);
         event.register(ModMenus.SHIP_CRATE_MENU.get(), ShipCrateScreen::new);
         event.register(ModMenus.TELEPORTER_MENU.get(), TeleporterScreen::new);
         event.register(ModMenus.ALLOY_FURNACE_MENU.get(), AlloyFurnaceScreen::new);

@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.starboundmc.menu.StarmapTerminalMenu;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.ClientShipEnvironmentState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -27,7 +28,8 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
     protected void init() {
         disposeModularUi();
         super.init();
-        root = new StarmapTerminalRoot();
+        ClientShipEnvironmentState.beginContainer(menu.containerId);
+        root = new StarmapTerminalRoot(menu.containerId);
         modularUI = ModularUI.of(UI.of(root, ResourceLocation.fromNamespaceAndPath(
                         StarboundMC.MODID, "lss/starmap_redraw.lss")),
                 Minecraft.getInstance().player);
@@ -87,6 +89,7 @@ public final class StarmapTerminalScreen extends AbstractContainerScreen<Starmap
     @Override
     public void removed() {
         disposeModularUi();
+        ClientShipEnvironmentState.endContainer(menu.containerId);
         super.removed();
     }
 

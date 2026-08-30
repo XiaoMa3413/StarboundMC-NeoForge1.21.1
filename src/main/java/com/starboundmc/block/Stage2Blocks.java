@@ -13,6 +13,7 @@ import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.TeleporterListPacketHelper;
+import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -160,7 +161,8 @@ public final class Stage2Blocks {
                 serverPlayer.openMenu(new SimpleMenuProvider(
                         (containerId, inventory, ignored) -> new TeleporterMenu(containerId, inventory,
                                 ContainerLevelAccess.create(level, pos), pos),
-                        Component.translatable("container.starboundmc.teleporter")));
+                        Component.translatable("container.starboundmc.teleporter")))
+                        .ifPresent(containerId -> ShipEnvironmentService.sendSnapshot(serverPlayer, containerId));
                 ModNetwork.sendToPlayer(serverPlayer,
                         TeleporterListPacketHelper.build(serverPlayer.getServer(), level.dimension(), pos));
             }

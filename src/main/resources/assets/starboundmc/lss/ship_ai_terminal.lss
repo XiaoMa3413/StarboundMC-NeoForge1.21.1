@@ -1,0 +1,199 @@
+// Shipboard AI terminal: a compact, embedded glass-and-metal console.
+// Straight edges and restrained framing keep it visually distinct from the
+// rounded starmap and from the image-backed teleporter skin.
+.ship-ai-screen {
+  background: rect(#b8020507);
+}
+
+.ship-ai-shell {
+  background: group(rect(#f3090d0f), border(1, #a3aaac));
+}
+
+.ship-ai-header {
+  background: group(rect(#f20d1214), border(-1, #485052));
+}
+
+.ship-ai-title {
+  font-size: 9;
+  text-color: #eef2f2;
+  text-shadow: false;
+}
+
+.ship-ai-subtitle {
+  font-size: 6;
+  text-color: #7f898b;
+  text-shadow: false;
+}
+
+.ship-ai-link-status {
+  font-size: 6;
+  text-color: #79e3df;
+  text-shadow: false;
+}
+
+.ship-ai-body {
+  background: rect(#f006090b);
+}
+
+.ship-ai-portrait-pane {
+  background: group(rect(#e9090f11), border(-1, #4b5355));
+}
+
+.ship-ai-portrait-stage {
+  background: rect(#d7050b0d);
+}
+
+.nova-portrait {
+  background: rect(#a6061012);
+}
+
+.ship-ai-portrait-identity {
+  font-size: 7;
+  text-color: #dce1e2;
+  text-shadow: false;
+}
+
+.ship-ai-portrait-state {
+  font-size: 5;
+  text-color: #70cfcc;
+  text-shadow: false;
+}
+
+.ship-ai-conversation-pane {
+  background: rect(#ed080c0e);
+}
+
+.ship-ai-section-title {
+  font-size: 7;
+  text-color: #bfc6c8;
+  text-shadow: false;
+}
+
+.ship-ai-history {
+  background: rect(#b8040809);
+}
+
+.ship-ai-history-text {
+  font-size: 6;
+  text-color: #c6d3d6;
+  text-shadow: false;
+  text-wrap: wrap;
+}
+
+.ship-ai-option-hint {
+  font-size: 6;
+  text-color: #697476;
+  text-shadow: false;
+}
+
+.ship-ai-return-button:host {
+  base-background: group(rect(#151a1c), border(1, #646d6f));
+  hover-background: group(rect(#222a2c), border(1, #aeb6b8));
+  pressed-background: group(rect(#0b0f10), border(1, #79e3df));
+}
+
+.ship-ai-return-button .__button_text__ {
+  flex: 1;
+  font-size: 5;
+  text-color: #c7cdce;
+  text-shadow: false;
+}
+
+.ship-ai-primary-action:host {
+  base-background: group(rect(#152123), border(1, #79aaa8));
+  hover-background: group(rect(#213536), border(1, #a6efeb));
+  pressed-background: group(rect(#081314), border(1, #79e3df));
+  padding-horizontal: 6;
+}
+
+.ship-ai-primary-action .__button_text__ {
+  flex: 1;
+  font-size: 6;
+  text-color: #e5f3f2;
+  text-shadow: false;
+}
+
+.ship-ai-topic-button:host {
+  base-background: group(rect(#111719), border(1, #596164));
+  hover-background: group(rect(#1c2729), border(1, #9da6a8));
+  pressed-background: group(rect(#071012), border(1, #79e3df));
+  padding-horizontal: 4;
+}
+
+.ship-ai-topic-button .__button_text__ {
+  flex: 1;
+  font-size: 5;
+  text-color: #e0e4e5;
+  text-shadow: false;
+  text-wrap: hide;
+}
+
+.ship-ai-topic-button:hover .__button_text__ {
+  text-color: #ffffff;
+}
+
+.ship-ai-topic-button:disabled .__button_text__ {
+  text-color: #626a6c;
+}
+
+.ship-ai-topic-read:host {
+  base-background: group(rect(#11201f), border(1, #568a86));
+  hover-background: group(rect(#1a302f), border(1, #86d8d3));
+  pressed-background: group(rect(#071312), border(1, #79e3df));
+}
+
+.ship-ai-topic-current:host {
+  base-background: group(rect(#173133), border(1, #8cefeb));
+  hover-background: group(rect(#214244), border(1, #c5fffc));
+  pressed-background: group(rect(#0a2022), border(1, #ffffff));
+}
+
+/* Disabled is a distinct state from persistent read/current selection. */
+.ship-ai-topic-button:disabled:host {
+  base-background: group(rect(#0c1011), border(1, #3d4446));
+  hover-background: group(rect(#0c1011), border(1, #3d4446));
+  pressed-background: group(rect(#0c1011), border(1, #3d4446));
+}
+
+.ship-ai-topic-button:disabled:host .__button_text__ {
+  text-color: #687174;
+  text-shadow: false;
+}
+
+.ship-ai-next-button:host {
+  base-background: group(rect(#141b1d), border(1, #6d7779));
+  hover-background: group(rect(#202b2d), border(1, #b3bdbe));
+  pressed-background: group(rect(#091113), border(1, #79e3df));
+  padding-horizontal: 5;
+}
+
+.ship-ai-next-button .__button_text__ {
+  flex: 1;
+  font-size: 5;
+  text-color: #edf1f1;
+  text-shadow: false;
+  text-wrap: hide;
+}
+
+.ship-ai-next-button:disabled:host {
+  base-background: group(rect(#0c1011), border(1, #3d4446));
+}
+
+.ship-ai-next-button:disabled .__button_text__ {
+  text-color: #687174;
+}
+
+.ship-ai-history .__scroller_view_vertical-scroller__ {
+  width: 4;
+  margin-left: 3;
+}
+
+.ship-ai-history .__scroller_scroll_container__ {
+  background: rect(#161c1e);
+}
+
+.ship-ai-history .__scroller_scroll_bar__ {
+  base-background: rect(#626b6d);
+  hover-background: rect(#a0aaac);
+  pressed-background: rect(#79e3df);
+}

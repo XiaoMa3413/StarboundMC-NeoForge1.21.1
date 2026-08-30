@@ -7,6 +7,7 @@ import com.starboundmc.network.SyncPlanetPacket;
 import com.starboundmc.network.SyncStarStatePacket;
 import com.starboundmc.network.WarpStartPacket;
 import com.starboundmc.space.UniverseDelta;
+import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.Stage6TravelService;
 import com.starboundmc.world.starmap.PlanetEntry;
@@ -82,6 +83,27 @@ public final class ShipWarpManager
                 || !player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)) return false;
         PlanetEntry entry = StarSystems.entryById(entryId);
         if (entry == null || !entry.isReachable() || entry.getDestination() == getCurrentPlanet()) return false;
+        String currentSystem = StarSystems.systemIdOfEntry(state.getCurrentEntryId());
+        String targetSystem = StarSystems.systemIdOfEntry(entryId);
+        boolean sameSystem = currentSystem != null && currentSystem.equals(targetSystem);
+        if (!ShipEnvironmentService.isCoreOnline(server))
+        {
+            player.displayClientMessage(Component.translatable(
+                    "message.starboundmc.warp.core_offline"), true);
+            return false;
+        }
+        if (sameSystem && !ShipEnvironmentService.canTravelWithinSystem(server))
+        {
+            player.displayClientMessage(Component.translatable(
+                    "message.starboundmc.warp.sublight_offline"), true);
+            return false;
+        }
+        if (!sameSystem && !ShipEnvironmentService.canTravelBetweenSystems(server))
+        {
+            player.displayClientMessage(Component.translatable(
+                    "message.starboundmc.warp.hyperdrive_offline"), true);
+            return false;
+        }
         ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship == null) return false;
         int cost = warpFuelCost(state.getCurrentEntryId(), entryId);

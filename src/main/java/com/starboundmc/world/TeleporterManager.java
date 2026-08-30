@@ -1,6 +1,7 @@
 package com.starboundmc.world;
 
 import com.starboundmc.block.ModBlocks;
+import com.starboundmc.story.ShipStoryService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -156,6 +157,7 @@ public class TeleporterManager extends SavedData
         player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
                 player.getYRot(), player.getXRot());
         level.playSound(null, dest, SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
+        ShipStoryService.onPlanetSurfaceArrival(player);
         return true;
     }
 

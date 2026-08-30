@@ -2,6 +2,7 @@ package com.starboundmc.world;
 
 import com.starboundmc.block.CaptainChairBlock;
 import com.starboundmc.block.ModBlocks;
+import com.starboundmc.block.ShipAiTerminalBlock;
 import com.starboundmc.block.ShipEngineBlock;
 import com.starboundmc.block.StarmapTerminalBlock;
 import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
@@ -39,20 +40,35 @@ public class ShipStructure
 
     /** Unified teleporter at the center of the shared cabin. */
     public static final BlockPos SHIP_TELEPORTER_POS = new BlockPos(0, FLOOR_Y + 1, 0);
+    /** Shipboard AI terminal at the cabin's forward edge, facing the cockpit. */
+    public static final BlockPos SHIP_AI_TERMINAL_POS = new BlockPos(0, FLOOR_Y + 1, 3);
+    public static final Direction SHIP_AI_TERMINAL_FACING = Direction.SOUTH;
 
     private static final int ENGINE_BULKHEAD_Z = -3;
 
-    private static final BlockState FLOOR = Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
-    private static final BlockState CEIL = Blocks.WHITE_CONCRETE.defaultBlockState();
-    private static final BlockState HULL = Blocks.WHITE_CONCRETE.defaultBlockState();
-    private static final BlockState TRIM = Blocks.GRAY_CONCRETE.defaultBlockState();
-    private static final BlockState ACCENT = Blocks.CYAN_CONCRETE.defaultBlockState();
-    private static final BlockState GLASS = Blocks.TINTED_GLASS.defaultBlockState();
-    private static final BlockState LAMP = Blocks.SEA_LANTERN.defaultBlockState();
-    private static final BlockState IRON = Blocks.IRON_BLOCK.defaultBlockState();
-    /** Engine front faces into the ship (+Z), leaving the nozzle texture visible from the stern. */
-    private static final BlockState ENGINE = ModBlocks.SHIP_ENGINE.get().defaultBlockState()
-            .setValue(ShipEngineBlock.FACING, Direction.SOUTH);
+    /**
+     * Block states are resolved only when the procedural structure is placed.
+     * This keeps geometry constants usable from data-only tests and avoids
+     * touching Minecraft registries during class loading.
+     */
+    private static final class Palette
+    {
+        private static final BlockState FLOOR = Blocks.LIGHT_GRAY_CONCRETE.defaultBlockState();
+        private static final BlockState CEIL = Blocks.WHITE_CONCRETE.defaultBlockState();
+        private static final BlockState HULL = Blocks.WHITE_CONCRETE.defaultBlockState();
+        private static final BlockState TRIM = Blocks.GRAY_CONCRETE.defaultBlockState();
+        private static final BlockState ACCENT = Blocks.CYAN_CONCRETE.defaultBlockState();
+        private static final BlockState GLASS = Blocks.TINTED_GLASS.defaultBlockState();
+        private static final BlockState LAMP = Blocks.SEA_LANTERN.defaultBlockState();
+        private static final BlockState IRON = Blocks.IRON_BLOCK.defaultBlockState();
+        /** Engine front faces into the ship (+Z), leaving the nozzle texture visible from the stern. */
+        private static final BlockState ENGINE = ModBlocks.SHIP_ENGINE.get().defaultBlockState()
+                .setValue(ShipEngineBlock.FACING, Direction.SOUTH);
+
+        private Palette()
+        {
+        }
+    }
 
     public static int placeInChunk(ChunkAccess chunk)
     {
@@ -77,7 +93,7 @@ public class ShipStructure
                     else if (StarterShipHullProfile.containsEnginePod(x, y, z))
                         count += place(chunk, x, y, z, enginePodBlock(x, y, z));
                     else if (StarterShipHullProfile.isKeel(x, y, z))
-                        count += place(chunk, x, y, z, ACCENT);
+                        count += place(chunk, x, y, z, Palette.ACCENT);
                 }
         return count;
     }
@@ -86,7 +102,7 @@ public class ShipStructure
     {
         StarterShipHullProfile.Slice slice = StarterShipHullProfile.sliceAt(z);
         if (slice == null)
-            return HULL;
+            return Palette.HULL;
 
         int absX = Math.abs(x);
         boolean side = absX == slice.halfWidth();
@@ -94,34 +110,34 @@ public class ShipStructure
         boolean rearFace = !StarterShipHullProfile.containsMainVolume(x, y, z - 1);
 
         if (z == MIN_Z && y >= 102 && y <= 104)
-            return ENGINE;
+            return Palette.ENGINE;
 
         if (isCockpitGlass(x, y, z, slice, side, forwardFace))
-            return GLASS;
+            return Palette.GLASS;
 
         if (side && z >= -2 && z <= 3 && y >= 102 && y <= 103)
-            return GLASS;
+            return Palette.GLASS;
 
         if (y == slice.floorY())
-            return FLOOR;
+            return Palette.FLOOR;
 
         if (y == slice.roofY())
         {
             if (side || forwardFace || rearFace)
-                return ACCENT;
-            return CEIL;
+                return Palette.ACCENT;
+            return Palette.CEIL;
         }
 
         if (y == slice.floorY() + 1 && (side || forwardFace || rearFace))
-            return TRIM;
+            return Palette.TRIM;
 
         if (side && y == 104 && z >= -4 && z <= 3)
-            return ACCENT;
+            return Palette.ACCENT;
 
         if (forwardFace || rearFace)
-            return TRIM;
+            return Palette.TRIM;
 
-        return HULL;
+        return Palette.HULL;
     }
 
     private static boolean isCockpitGlass(int x, int y, int z,
@@ -138,14 +154,14 @@ public class ShipStructure
     private static BlockState enginePodBlock(int x, int y, int z)
     {
         if (z == -8 && y >= 102 && y <= 104)
-            return ENGINE;
+            return Palette.ENGINE;
         if (z == -4)
-            return ACCENT;
+            return Palette.ACCENT;
         if (y == 100 || y == 106)
-            return TRIM;
+            return Palette.TRIM;
         if (Math.abs(x) == 6 && y == 103)
-            return ACCENT;
-        return HULL;
+            return Palette.ACCENT;
+        return Palette.HULL;
     }
 
     /** One narrow automatic bulkhead isolates the engineering section. */
@@ -160,11 +176,11 @@ public class ShipStructure
                     state = ModBlocks.SHIP_DOOR.get().defaultBlockState()
                             .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH);
                 else if (y == FLOOR_Y + 3 && Math.abs(x) <= 1)
-                    state = GLASS;
+                    state = Palette.GLASS;
                 else if (y == FLOOR_Y + 4)
-                    state = ACCENT;
+                    state = Palette.ACCENT;
                 else
-                    state = Math.abs(x) == 1 ? TRIM : HULL;
+                    state = Math.abs(x) == 1 ? Palette.TRIM : Palette.HULL;
                 count += place(chunk, x, y, ENGINE_BULKHEAD_Z, state);
             }
         return count;
@@ -178,7 +194,7 @@ public class ShipStructure
         {
             StarterShipHullProfile.Slice slice = StarterShipHullProfile.sliceAt(z);
             if (slice != null)
-                count += place(chunk, 0, slice.roofY(), z, LAMP);
+                count += place(chunk, 0, slice.roofY(), z, Palette.LAMP);
         }
         return count;
     }
@@ -189,20 +205,21 @@ public class ShipStructure
 
         // Engineering aisle.
         for (int z = -7; z <= -4; z++)
-            count += place(chunk, 0, FLOOR_Y, z, ACCENT);
+                    count += place(chunk, 0, FLOOR_Y, z, Palette.ACCENT);
 
         // Compact 3x3 teleporter marking instead of the old 5x5 pad.
         for (int x = -1; x <= 1; x++)
             for (int z = -1; z <= 1; z++)
                 if (x != 0 || z != 0)
-                    count += place(chunk, x, FLOOR_Y, z, ACCENT);
+                    count += place(chunk, x, FLOOR_Y, z, Palette.ACCENT);
 
         // Five-wide raised cockpit platform.
         for (int x = -2; x <= 2; x++)
             for (int z = 4; z <= 7; z++)
             {
                 boolean border = Math.abs(x) == 2 || z == 4 || z == 7;
-                count += place(chunk, x, FLOOR_Y + 1, z, border ? ACCENT : FLOOR);
+                count += place(chunk, x, FLOOR_Y + 1, z,
+                        border ? Palette.ACCENT : Palette.FLOOR);
             }
         return count;
     }
@@ -212,17 +229,21 @@ public class ShipStructure
         int count = 0;
 
         // Engineering: small exposed reactor with two fuel crates.
-        count += place(chunk, 0, FLOOR_Y + 2, -6, LAMP);
-        count += place(chunk, 0, FLOOR_Y + 1, -6, IRON);
-        count += place(chunk, 0, FLOOR_Y + 3, -6, IRON);
-        count += place(chunk, -1, FLOOR_Y + 2, -6, IRON);
-        count += place(chunk, 1, FLOOR_Y + 2, -6, IRON);
+        count += place(chunk, 0, FLOOR_Y + 2, -6, Palette.LAMP);
+        count += place(chunk, 0, FLOOR_Y + 1, -6, Palette.IRON);
+        count += place(chunk, 0, FLOOR_Y + 3, -6, Palette.IRON);
+        count += place(chunk, -1, FLOOR_Y + 2, -6, Palette.IRON);
+        count += place(chunk, 1, FLOOR_Y + 2, -6, Palette.IRON);
         count += place(chunk, -2, FLOOR_Y + 1, -5, crateFacing(-2));
         count += place(chunk, 2, FLOOR_Y + 1, -5, crateFacing(2));
 
         // Shared cabin: every function remains, but wall equipment replaces open floor area.
         count += place(chunk, SHIP_TELEPORTER_POS.getX(), SHIP_TELEPORTER_POS.getY(), SHIP_TELEPORTER_POS.getZ(),
                 ModBlocks.TELEPORTER.get().defaultBlockState());
+        count += place(chunk, SHIP_AI_TERMINAL_POS.getX(), SHIP_AI_TERMINAL_POS.getY(),
+                SHIP_AI_TERMINAL_POS.getZ(),
+                ModBlocks.SHIP_AI_TERMINAL.get().defaultBlockState()
+                        .setValue(ShipAiTerminalBlock.FACING, SHIP_AI_TERMINAL_FACING));
         count += place(chunk, -3, FLOOR_Y + 1, -1, crateFacing(-3));
         count += place(chunk, 3, FLOOR_Y + 1, -1, crateFacing(3));
         count += place(chunk, -3, FLOOR_Y + 1, 2,
