@@ -35,12 +35,17 @@ sourceSets {
             include 'com/starboundmc/item/MatterManipulatorItem.java'
             include 'com/starboundmc/item/MatterManipulatorModuleItem.java'
             include 'com/starboundmc/item/SurvivalKnifeItem.java'
+            include 'com/starboundmc/item/VoxelItem.java'
+            include 'com/starboundmc/loot/VoxelDropLootModifier.java'
+            include 'com/starboundmc/loot/VoxelLootModifiers.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
             include 'com/starboundmc/event/SpawnHandler.java'
             include 'com/starboundmc/event/NetherPortalHandler.java'
             include 'com/starboundmc/event/ShipWarpEvents.java'
             include 'com/starboundmc/event/ShipStoryEvents.java'
             include 'com/starboundmc/event/ShipPlacementHandler.java'
+            include 'com/starboundmc/event/VoxelWalletEvents.java'
+            include 'com/starboundmc/economy/*.java'
             include 'com/starboundmc/entity/ModEntities.java'
             include 'com/starboundmc/entity/SeatEntity.java'
             include 'com/starboundmc/block/CaptainChairBlock.java'
@@ -167,6 +172,7 @@ sourceSets {
             include 'com/starboundmc/client/space/*.java'
             include 'com/starboundmc/network/*.java'
             include 'com/starboundmc/story/*.java'
+            include 'com/starboundmc/economy/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath

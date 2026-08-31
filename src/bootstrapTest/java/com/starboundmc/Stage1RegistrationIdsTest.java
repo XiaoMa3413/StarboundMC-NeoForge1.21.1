@@ -37,7 +37,7 @@ final class Stage1RegistrationIdsTest {
                 "star_core_ore", "titanium_alloy_furnace", "starmap_terminal", "raw_tungsten", "raw_titanium",
                 "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
                 "durasteel_ingot", "star_core_fragment", "ship_ai_terminal",
-                "emergency_food_can", "survival_knife"
+                "emergency_food_can", "survival_knife", "voxel"
         ));
         assertSourceIds("item/ModItems.java", "CREATIVE_MODE_TABS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("starboundmc"));

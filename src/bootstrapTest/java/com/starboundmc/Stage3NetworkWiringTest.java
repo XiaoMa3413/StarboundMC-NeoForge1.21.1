@@ -15,7 +15,7 @@ final class Stage3NetworkWiringTest {
         String network = source("network/ModNetwork.java");
         assertTrue(network.contains("PROTOCOL_VERSION = \"2\""));
         assertEquals(7, occurrences(network, "playToServer("));
-        assertEquals(8, occurrences(network, "playToClient("));
+        assertEquals(9, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayer"));

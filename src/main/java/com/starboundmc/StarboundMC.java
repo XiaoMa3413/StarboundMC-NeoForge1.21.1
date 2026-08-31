@@ -6,6 +6,7 @@ import com.starboundmc.block.ModBlocks;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.item.ModItems;
 import com.starboundmc.item.ModDataComponents;
+import com.starboundmc.loot.VoxelLootModifiers;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.Stage7ServerPayloadActions;
@@ -32,9 +33,10 @@ public final class StarboundMC {
         ModBlockEntities.register(modEventBus);
         ModEntities.register(modEventBus);
         ModDataComponents.register(modEventBus);
-        ModAttachments.register(modEventBus);
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
+        ModAttachments.register(modEventBus);
+        VoxelLootModifiers.register(modEventBus);
 
         LOGGER.info("{} NeoForge registry layer loaded (version {}).", MODID,
                 modContainer.getModInfo().getVersion());

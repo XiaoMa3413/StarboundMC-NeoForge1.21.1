@@ -71,6 +71,11 @@ public final class ModItems {
     public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
     public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
 
+    // Currency-grade matter unit. 99 is the vanilla hard cap: item counts
+    // above 99 cannot pass the creative-mode slot packet (range [1;99]).
+    public static final DeferredItem<VoxelItem> VOXEL = ITEMS.registerItem(
+            "voxel", VoxelItem::new, new Item.Properties().stacksTo(99));
+
     // Steak hunger with double steak saturation (8 * 1.6 * 2 = 25.6) and always edible;
     // eats in 1.2s, three quarters of the vanilla 1.6s.
     public static final DeferredItem<Item> EMERGENCY_FOOD_CAN = ITEMS.registerSimpleItem(
@@ -113,6 +118,7 @@ public final class ModItems {
                         output.accept(RAW_TITANIUM);
                         output.accept(RAW_DURASTEEL);
                         output.accept(RAW_STAR_CORE);
+                        output.accept(VOXEL);
                         output.accept(TUNGSTEN_INGOT);
                         output.accept(TITANIUM_INGOT);
                         output.accept(DURASTEEL_INGOT);

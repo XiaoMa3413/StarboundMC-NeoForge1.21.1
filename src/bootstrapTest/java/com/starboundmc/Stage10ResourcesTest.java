@@ -34,7 +34,7 @@ final class Stage10ResourcesTest {
             "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
             "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
             "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
-            "durasteel_ingot", "star_core_fragment", "ship_ai_terminal");
+            "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {

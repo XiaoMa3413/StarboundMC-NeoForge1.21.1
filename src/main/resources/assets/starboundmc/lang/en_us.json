@@ -244,6 +244,11 @@
   "item.starboundmc.star_core_fragment": "Star Core Fragment",
   "item.starboundmc.emergency_food_can": "Emergency Food Can",
   "item.starboundmc.survival_knife": "Survival Knife",
+  "item.starboundmc.voxel": "Voxel",
+  "tooltip.starboundmc.voxel.unit": "The fundamental unit of all matter.",
+  "tooltip.starboundmc.voxel.currency": "The common currency of starfarers.",
+  "tooltip.starboundmc.voxel.wallet": "Deposits into your wallet when picked up or used.",
+  "gui.starboundmc.voxel_wallet": "Voxels: %1$s",
   "key.categories.starboundmc": "StarboundMC",
   "key.starboundmc.return_to_ship": "Return to Ship"
 }

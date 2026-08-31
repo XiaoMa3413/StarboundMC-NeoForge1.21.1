@@ -46,6 +46,8 @@ public final class ModNetwork {
                 TeleporterListPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(SyncFlightPacket.TYPE,
                 SyncFlightPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncVoxelWalletPacket.TYPE,
+                SyncVoxelWalletPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipStorySnapshotPacket.TYPE,
                 ShipStorySnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipEnvironmentSnapshotPacket.TYPE,
