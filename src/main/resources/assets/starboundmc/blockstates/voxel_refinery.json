@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "starboundmc:block/voxel_refinery" },
+    "facing=east": { "model": "starboundmc:block/voxel_refinery", "y": 90 },
+    "facing=south": { "model": "starboundmc:block/voxel_refinery", "y": 180 },
+    "facing=west": { "model": "starboundmc:block/voxel_refinery", "y": 270 }
+  }
+}

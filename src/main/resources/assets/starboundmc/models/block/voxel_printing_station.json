@@ -1,0 +1,59 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "casing": "minecraft:block/white_concrete",
+    "screen": "starboundmc:block/voxel_printing_station_screen",
+    "accent": "minecraft:block/yellow_concrete",
+    "particle": "minecraft:block/white_concrete"
+  },
+  "elements": [
+    {
+      "from": [1, 4, 11],
+      "to": [15, 15, 16],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#screen" },
+        "east": { "uv": [0, 0, 4, 11], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "west": { "uv": [0, 0, 4, 11], "texture": "#casing" },
+        "up": { "uv": [0, 0, 16, 6], "texture": "#casing" },
+        "down": { "uv": [0, 0, 16, 6], "texture": "#casing" }
+      }
+    },
+    {
+      "from": [2, 5, 9],
+      "to": [14, 14, 11],
+      "faces": {
+        "north": { "uv": [0, 0, 16, 16], "texture": "#screen" },
+        "east": { "uv": [0, 0, 2, 9], "texture": "#casing" },
+        "south": { "uv": [0, 0, 16, 16], "texture": "#casing" },
+        "west": { "uv": [0, 0, 2, 9], "texture": "#casing" },
+        "up": { "uv": [0, 0, 12, 2], "texture": "#casing" },
+        "down": { "uv": [0, 0, 12, 2], "texture": "#casing" }
+      }
+    },
+    {
+      "from": [0, 6, 10],
+      "to": [2, 9, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "east": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "south": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "west": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "up": { "uv": [0, 0, 2, 2], "texture": "#accent" },
+        "down": { "uv": [0, 0, 2, 2], "texture": "#accent" }
+      }
+    },
+    {
+      "from": [14, 6, 10],
+      "to": [16, 9, 12],
+      "faces": {
+        "north": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "east": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "south": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "west": { "uv": [0, 0, 2, 3], "texture": "#accent" },
+        "up": { "uv": [0, 0, 2, 2], "texture": "#accent" },
+        "down": { "uv": [0, 0, 2, 2], "texture": "#accent" }
+      }
+    }
+  ]
+}

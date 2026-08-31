@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "top": "starboundmc:block/voxel_refinery_top",
+    "front": "starboundmc:block/voxel_refinery_front",
+    "side": "starboundmc:block/voxel_refinery_side"
+  }
+}

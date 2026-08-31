@@ -5,6 +5,8 @@ import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
 import com.starboundmc.block.entity.FuelControllerBlockEntity;
 import com.starboundmc.block.entity.ShipCrateBlockEntity;
 import com.starboundmc.block.entity.ShipDoorBlockEntity;
+import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
+import com.starboundmc.block.entity.VoxelRefineryBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.bus.api.IEventBus;
@@ -27,6 +29,12 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FuelControllerBlockEntity>> FUEL_CONTROLLER =
             BLOCK_ENTITIES.register("fuel_controller", () -> BlockEntityType.Builder.of(
                     FuelControllerBlockEntity::new, ModBlocks.FUEL_CONTROLLER.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<VoxelRefineryBlockEntity>> VOXEL_REFINERY =
+            BLOCK_ENTITIES.register("voxel_refinery", () -> BlockEntityType.Builder.of(
+                    VoxelRefineryBlockEntity::new, ModBlocks.VOXEL_REFINERY.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<VoxelPrintingStationBlockEntity>> VOXEL_PRINTING_STATION =
+            BLOCK_ENTITIES.register("voxel_printing_station", () -> BlockEntityType.Builder.of(
+                    VoxelPrintingStationBlockEntity::new, ModBlocks.VOXEL_PRINTING_STATION.get()).build(null));
 
     private ModBlockEntities() {
     }

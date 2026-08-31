@@ -26,7 +26,7 @@ final class Stage10ResourcesTest {
             "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
             "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
             "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
-            "ship_ai_terminal");
+            "ship_ai_terminal", "voxel_refinery", "voxel_printing_station");
 
     private static final List<String> ITEMS = List.of(
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
@@ -34,7 +34,8 @@ final class Stage10ResourcesTest {
             "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
             "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
             "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
-            "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel");
+            "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel",
+            "voxel_refinery", "voxel_printing_station");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {
@@ -66,7 +67,7 @@ final class Stage10ResourcesTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(4, files.size());
+            assertEquals(5, files.size());
             for (Path path : files) {
                 JsonObject result = json(path).getAsJsonObject("result");
                 assertNotNull(result, path.toString());

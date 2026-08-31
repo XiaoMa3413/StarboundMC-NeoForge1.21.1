@@ -61,6 +61,10 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("star_core_ore", ModBlocks.STAR_CORE_ORE);
     public static final DeferredItem<BlockItem> TITANIUM_ALLOY_FURNACE_ITEM =
             ITEMS.registerSimpleBlockItem("titanium_alloy_furnace", ModBlocks.TITANIUM_ALLOY_FURNACE);
+    public static final DeferredItem<BlockItem> VOXEL_REFINERY_ITEM =
+            ITEMS.registerSimpleBlockItem("voxel_refinery", ModBlocks.VOXEL_REFINERY);
+    public static final DeferredItem<BlockItem> VOXEL_PRINTING_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("voxel_printing_station", ModBlocks.VOXEL_PRINTING_STATION);
 
     public static final DeferredItem<Item> RAW_TUNGSTEN = ITEMS.registerSimpleItem("raw_tungsten");
     public static final DeferredItem<Item> RAW_TITANIUM = ITEMS.registerSimpleItem("raw_titanium");
@@ -114,6 +118,8 @@ public final class ModItems {
                         output.accept(DURASTEEL_ORE_ITEM);
                         output.accept(STAR_CORE_ORE_ITEM);
                         output.accept(TITANIUM_ALLOY_FURNACE_ITEM);
+                        output.accept(VOXEL_REFINERY_ITEM);
+                        output.accept(VOXEL_PRINTING_STATION_ITEM);
                         output.accept(RAW_TUNGSTEN);
                         output.accept(RAW_TITANIUM);
                         output.accept(RAW_DURASTEEL);

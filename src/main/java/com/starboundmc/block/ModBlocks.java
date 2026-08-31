@@ -55,6 +55,20 @@ public final class ModBlocks {
     public static final DeferredBlock<Stage2Blocks.AlloyFurnace> TITANIUM_ALLOY_FURNACE = BLOCKS.registerBlock(
             "titanium_alloy_furnace", Stage2Blocks.AlloyFurnace::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(5.0F, 6.0F));
+    public static final DeferredBlock<VoxelRefineryBlock> VOXEL_REFINERY = BLOCKS.registerBlock(
+            "voxel_refinery", VoxelRefineryBlock::new,
+            BlockBehaviour.Properties.of()
+                    .strength(3.5F, 6.0F)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()
+                    .lightLevel(state -> 4));
+    public static final DeferredBlock<VoxelPrintingStationBlock> VOXEL_PRINTING_STATION = BLOCKS.registerBlock(
+            "voxel_printing_station", VoxelPrintingStationBlock::new,
+            BlockBehaviour.Properties.of()
+                    .strength(3.5F, 6.0F)
+                    .sound(SoundType.METAL)
+                    .noOcclusion()
+                    .lightLevel(state -> 6));
 
     private ModBlocks() {
     }

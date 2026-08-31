@@ -249,6 +249,10 @@
   "tooltip.starboundmc.voxel.currency": "The common currency of starfarers.",
   "tooltip.starboundmc.voxel.wallet": "Deposits into your wallet when picked up or used.",
   "gui.starboundmc.voxel_wallet": "Voxels: %1$s",
+  "block.starboundmc.voxel_refinery": "Voxel Refinery",
+  "container.starboundmc.voxel_refinery": "Voxel Refinery",
+  "block.starboundmc.voxel_printing_station": "Voxel Printing Station",
+  "container.starboundmc.voxel_printing_station": "Voxel Printing Station",
   "key.categories.starboundmc": "StarboundMC",
   "key.starboundmc.return_to_ship": "Return to Ship"
 }
