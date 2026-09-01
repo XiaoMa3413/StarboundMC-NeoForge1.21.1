@@ -9,6 +9,7 @@ import com.starboundmc.item.ModDataComponents;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.Stage7ServerPayloadActions;
+import com.starboundmc.sound.ModSounds;
 import com.starboundmc.story.ModAttachments;
 import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.WorldgenRotationWarmup;
@@ -35,6 +36,7 @@ public final class StarboundMC {
         ModAttachments.register(modEventBus);
         ModItems.register(modEventBus);
         ModMenus.register(modEventBus);
+        ModSounds.register(modEventBus);
 
         LOGGER.info("{} NeoForge registry layer loaded (version {}).", MODID,
                 modContainer.getModInfo().getVersion());

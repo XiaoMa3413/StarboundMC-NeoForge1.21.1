@@ -3,6 +3,7 @@ package com.starboundmc.client.shipai;
 import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.PlayerStoryState;
 import com.starboundmc.story.SharedShipProgress;
 import com.starboundmc.story.SurfaceMissionState;
@@ -58,7 +59,8 @@ public final class ClientShipStoryState
         {
             shared = new SharedView(snapshot.sharedSchemaVersion(), snapshot.sharedRevision(),
                     snapshot.core(), snapshot.surfaceMission(), snapshot.sublightEngine(),
-                    snapshot.hyperdrive(), snapshot.rebootTicksRemaining());
+                    snapshot.hyperdrive(), snapshot.mineralScan(),
+                    snapshot.rebootTicksRemaining());
         }
         else if (snapshot.sharedRevision() == shared.revision()
                 && snapshot.sharedSchemaVersion() == shared.schemaVersion())
@@ -122,7 +124,8 @@ public final class ClientShipStoryState
 
     public record SharedView(int schemaVersion, long revision, CoreState core,
                              SurfaceMissionState surfaceMission, EngineState sublightEngine,
-                             EngineState hyperdrive, int rebootTicksRemaining)
+                             EngineState hyperdrive, MineralScanState mineralScan,
+                             int rebootTicksRemaining)
     {
         public boolean schemaSupported()
         {
@@ -132,7 +135,7 @@ public final class ClientShipStoryState
         SharedView withRebootTicksRemaining(int remainingTicks)
         {
             return new SharedView(schemaVersion, revision, core, surfaceMission,
-                    sublightEngine, hyperdrive, remainingTicks);
+                    sublightEngine, hyperdrive, mineralScan, remainingTicks);
         }
     }
 

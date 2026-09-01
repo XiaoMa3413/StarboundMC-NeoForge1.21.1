@@ -5,6 +5,7 @@ import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.world.Planet;
 import net.minecraft.nbt.CompoundTag;
@@ -112,6 +113,7 @@ class ShipStateDataTest
 
         assertEquals(CoreState.ONLINE, restored.getStoryProgress().core());
         assertEquals(SurfaceMissionState.ACTIVE, restored.getStoryProgress().surfaceMission());
+        assertEquals(MineralScanState.LOCKED, restored.getStoryProgress().mineralScan());
         assertEquals(original.getStoryProgress().revision(), restored.getStoryProgress().revision());
     }
 

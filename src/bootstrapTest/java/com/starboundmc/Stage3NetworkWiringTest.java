@@ -13,10 +13,11 @@ final class Stage3NetworkWiringTest {
     @Test
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
-        assertTrue(network.contains("PROTOCOL_VERSION = \"2\""));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"3\""));
         assertEquals(7, occurrences(network, "playToServer("));
-        assertEquals(8, occurrences(network, "playToClient("));
+        assertEquals(9, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
+        assertTrue(network.contains("NovaBroadcastPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayersInDimension"));

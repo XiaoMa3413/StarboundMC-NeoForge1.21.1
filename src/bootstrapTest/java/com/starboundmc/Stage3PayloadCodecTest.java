@@ -1,6 +1,7 @@
 package com.starboundmc;
 
 import com.starboundmc.network.AddFuelPacket;
+import com.starboundmc.network.NovaBroadcastPacket;
 import com.starboundmc.network.ShipAiActionPacket;
 import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
 import com.starboundmc.network.ShipStorySnapshotPacket;
@@ -20,6 +21,7 @@ import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.warp.FlightPhase;
@@ -45,8 +47,8 @@ final class Stage3PayloadCodecTest {
                 TeleporterRenamePacket.TYPE, TeleportToShipPacket.TYPE,
                 AddFuelPacket.TYPE, SyncFlightPacket.TYPE,
                 ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE,
-                ShipEnvironmentSnapshotPacket.TYPE);
-        assertEquals(15, Set.copyOf(types).size());
+                ShipEnvironmentSnapshotPacket.TYPE, NovaBroadcastPacket.TYPE);
+        assertEquals(16, Set.copyOf(types).size());
         assertTrue(types.stream().allMatch(type -> type.id().getNamespace().equals("starboundmc")));
     }
 
@@ -136,7 +138,7 @@ final class Stage3PayloadCodecTest {
     void roundTripsShipStorySnapshot() {
         assertRoundTrip(new ShipStorySnapshotPacket(
                         17, 42L, 1, 9L, CoreState.ONLINE, SurfaceMissionState.ACTIVE,
-                        EngineState.DAMAGED, EngineState.DAMAGED, 0,
+                        EngineState.DAMAGED, EngineState.DAMAGED, MineralScanState.LOCKED, 0,
                         1, 12L, true, SituationTopic.REQUIRED_MASK, 1, 0),
                 ShipStorySnapshotPacket.STREAM_CODEC);
     }
@@ -147,6 +149,13 @@ final class Stage3PayloadCodecTest {
                         17, 1, 9L, CoreState.REBOOTING,
                         EngineState.DAMAGED, EngineState.DAMAGED, 23),
                 ShipEnvironmentSnapshotPacket.STREAM_CODEC);
+    }
+
+    @Test
+    void roundTripsNovaBroadcast() {
+        assertRoundTrip(new NovaBroadcastPacket(
+                        "message.starboundmc.nova.prologue.mineral_scan_started"),
+                NovaBroadcastPacket.STREAM_CODEC);
     }
 
     private static <T extends CustomPacketPayload> void assertRoundTrip(

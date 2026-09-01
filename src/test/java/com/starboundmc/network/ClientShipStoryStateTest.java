@@ -3,6 +3,7 @@ package com.starboundmc.network;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SurfaceMissionState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,11 +119,11 @@ class ClientShipStoryStateTest
     {
         ClientShipStoryState.apply(7, new ShipStorySnapshotPacket(
                 7, 0L, 1, 5L, CoreState.REBOOTING, SurfaceMissionState.LOCKED,
-                EngineState.DAMAGED, EngineState.DAMAGED, 20,
+                EngineState.DAMAGED, EngineState.DAMAGED, MineralScanState.LOCKED, 20,
                 1, 1L, false, 0, 0, 0));
         ClientShipStoryState.apply(7, new ShipStorySnapshotPacket(
                 7, 0L, 1, 5L, CoreState.OFFLINE, SurfaceMissionState.COMPLETE,
-                EngineState.ONLINE, EngineState.ONLINE, 12,
+                EngineState.ONLINE, EngineState.ONLINE, MineralScanState.COMPLETE, 12,
                 1, 1L, true, 0, 0, 0));
 
         ClientShipStoryState.SharedView shared = ClientShipStoryState.snapshot(7).shared();
@@ -139,6 +140,7 @@ class ClientShipStoryStateTest
     {
         return new ShipStorySnapshotPacket(containerId, 0L, 1, sharedRevision, core,
                 SurfaceMissionState.LOCKED, EngineState.DAMAGED, EngineState.DAMAGED,
+                MineralScanState.LOCKED,
                 core == CoreState.REBOOTING ? 20 : 0,
                 1, playerRevision, identityConfirmed, 0, 0, 0);
     }
@@ -151,6 +153,7 @@ class ClientShipStoryStateTest
     {
         return new ShipStorySnapshotPacket(containerId, ack, 1, sharedRevision, core,
                 SurfaceMissionState.LOCKED, EngineState.DAMAGED, EngineState.DAMAGED,
+                MineralScanState.LOCKED,
                 core == CoreState.REBOOTING ? 20 : 0,
                 1, playerRevision, identityConfirmed, 0, 0, 0);
     }

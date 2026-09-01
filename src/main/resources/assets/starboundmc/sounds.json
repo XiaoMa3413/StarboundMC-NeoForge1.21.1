@@ -1,0 +1,10 @@
+{
+  "nova_text": {
+    "sounds": [
+      {
+        "name": "starboundmc:ui/nova_text",
+        "stream": false
+      }
+    ]
+  }
+}

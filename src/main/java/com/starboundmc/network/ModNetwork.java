@@ -10,7 +10,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /** NeoForge 1.21.1 play-payload protocol. Incompatible with Forge protocol 4. */
 public final class ModNetwork {
-    public static final String PROTOCOL_VERSION = "2";
+    public static final String PROTOCOL_VERSION = "3";
     private static volatile ServerPayloadActions serverActions = ServerPayloadActions.NONE;
 
     private ModNetwork() {
@@ -50,6 +50,8 @@ public final class ModNetwork {
                 ShipStorySnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipEnvironmentSnapshotPacket.TYPE,
                 ShipEnvironmentSnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(NovaBroadcastPacket.TYPE,
+                NovaBroadcastPacket.STREAM_CODEC, ClientPayloadHandler::handle);
     }
 
     public static void installServerActions(ServerPayloadActions actions) {

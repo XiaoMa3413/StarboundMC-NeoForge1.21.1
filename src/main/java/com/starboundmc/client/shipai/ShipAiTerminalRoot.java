@@ -14,6 +14,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.ShipAiActionPacket;
 import com.starboundmc.story.CoreState;
+import com.starboundmc.story.EngineState;
+import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.PrologueDialogueNode;
 import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
@@ -42,6 +44,7 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private final int containerId;
     private final NovaPortraitElement portrait = new NovaPortraitElement();
+    private final NovaDialogueSounds dialogueSounds = new NovaDialogueSounds();
     private final Label portraitState = new Label();
     private final Label linkStatus = new Label();
     private final ScrollerView history = new ScrollerView();
@@ -402,11 +405,6 @@ public final class ShipAiTerminalRoot extends UIElement
         }
 
         configureButton(progressionButton, "ship-ai-next-button", Horizontal.CENTER);
-        progressionButton.layout(layout -> layout
-                .widthPercent(100)
-                .height(17)
-                .minHeight(14)
-                .flexShrink(1));
         progressionButton.addEventListener(UIEvents.CLICK, event ->
         {
             if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && progressionButton.isActive())
@@ -415,6 +413,11 @@ public final class ShipAiTerminalRoot extends UIElement
                 event.stopPropagation();
             }
         });
+        progressionButton.layout(layout -> layout
+                .widthPercent(100)
+                .height(17)
+                .minHeight(14)
+                .flexShrink(1));
 
         topicControls.addChildren(topicGrid, progressionButton);
         section.addChildren(optionHint, singleAction, topicControls);
@@ -440,7 +443,13 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
         int previousStreamingIndex = session.streamingIndex();
+        int revealedCodePoint = session.nextUnrevealedCodePoint();
         ClientShipAiTerminalState.CompletionIntent completed = session.advanceStream();
+        if (revealedCodePoint >= 0)
+        {
+            portrait.onTextAdvanced();
+            dialogueSounds.onCodePointRevealed(revealedCodePoint);
+        }
 
         syncTranscriptViews();
         if (previousStreamingIndex >= 0 && previousStreamingIndex < transcriptLabels.size())
@@ -555,6 +564,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private void enqueueBootSequence()
     {
         String[] keys = {
+                "gui.starboundmc.ship_ai.prologue.boot.restarting",
                 "gui.starboundmc.ship_ai.prologue.boot.restore_power",
                 "gui.starboundmc.ship_ai.prologue.boot.navigation_index_failed",
                 "gui.starboundmc.ship_ai.prologue.boot.personality_matrix",
@@ -720,6 +730,7 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         syncTranscriptViews();
         boolean transmitting = session.isTransmitting();
+        portrait.setCoreState(isCompatible() ? authoritativeSnapshot.shared().core() : null);
         portrait.setSpeaking(transmitting);
         portraitState.setText(portraitStatusText(transmitting));
         linkStatus.setText(linkStatusText());
@@ -814,10 +825,13 @@ public final class ShipAiTerminalRoot extends UIElement
         SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
         int readCount = Integer.bitCount(readMask & SituationTopic.REQUIRED_MASK);
         boolean allRead = hasReadAllRequiredTopics(readMask);
-        Component nextText = mission == SurfaceMissionState.LOCKED && !allRead
-                ? Component.translatable(
-                        "gui.starboundmc.ship_ai.prologue.option.next_locked", readCount)
-                : Component.translatable("gui.starboundmc.ship_ai.prologue.option.next");
+        Component nextText = mission == SurfaceMissionState.LOCKED
+                ? allRead
+                        ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.next")
+                        : Component.translatable(
+                                "gui.starboundmc.ship_ai.prologue.option.next_locked", readCount)
+                : Component.translatable(
+                        "gui.starboundmc.ship_ai.prologue.option.current_status");
         progressionButton.setText(nextText);
         progressionButton.style(style -> style.tooltips(nextText));
         progressionButton.setActive(canSelectProgression());
@@ -872,16 +886,53 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private String currentStatusCueId()
     {
-        return authoritativeSnapshot.shared().surfaceMission() == SurfaceMissionState.COMPLETE
-                ? "surface_mission_complete" : "surface_mission_active";
+        ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
+        return "current_status_" + shared.surfaceMission().id()
+                + "_" + shared.sublightEngine().id()
+                + "_" + shared.hyperdrive().id()
+                + "_scan_" + mineralScanCueCategory(shared.mineralScan());
     }
 
     private Component currentStatusText()
     {
-        return Component.translatable(
-                authoritativeSnapshot.shared().surfaceMission() == SurfaceMissionState.COMPLETE
+        ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
+        Component objective = Component.translatable(
+                shared.surfaceMission() == SurfaceMissionState.COMPLETE
                         ? "gui.starboundmc.ship_ai.prologue.current_status.complete"
                         : "gui.starboundmc.ship_ai.prologue.current_objective.summary");
+        Component sublight = Component.translatable(
+                shared.sublightEngine() == EngineState.ONLINE
+                        ? "gui.starboundmc.ship_ai.status.sublight.online"
+                        : "gui.starboundmc.ship_ai.status.sublight.damaged");
+        Component hyperdrive = Component.translatable(
+                shared.hyperdrive() == EngineState.ONLINE
+                        ? "gui.starboundmc.ship_ai.status.hyperdrive.online"
+                        : "gui.starboundmc.ship_ai.status.hyperdrive.damaged");
+        var summary = Component.empty().append(objective);
+        if (shared.surfaceMission() == SurfaceMissionState.COMPLETE)
+        {
+            Component mineralScan = Component.translatable(switch (shared.mineralScan())
+            {
+                case LOCKED -> "gui.starboundmc.ship_ai.status.mineral_scan.waiting";
+                case COMPLETE -> "gui.starboundmc.ship_ai.status.mineral_scan.complete";
+                default -> "gui.starboundmc.ship_ai.status.mineral_scan.in_progress";
+            });
+            summary = summary.append(Component.literal("\n")).append(mineralScan);
+        }
+        return summary.append(Component.literal("\n"))
+                .append(sublight)
+                .append(Component.literal("\n"))
+                .append(hyperdrive);
+    }
+
+    private static String mineralScanCueCategory(MineralScanState state)
+    {
+        return switch (state)
+        {
+            case LOCKED -> "locked";
+            case COMPLETE -> "complete";
+            default -> "in_progress";
+        };
     }
 
     private static boolean hasReadAllRequiredTopics(int readMask)

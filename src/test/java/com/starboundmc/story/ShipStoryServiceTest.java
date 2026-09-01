@@ -29,6 +29,7 @@ class ShipStoryServiceTest
         assertEquals(rebooting.revision(), during.sharedRevision());
         assertEquals(personal.revision(), during.playerRevision());
         assertEquals(personal.readSituationMask(), during.readSituationMask());
+        assertEquals(MineralScanState.LOCKED, during.mineralScan());
         assertEquals(30, during.rebootTicksRemaining());
         assertEquals(0, after.rebootTicksRemaining());
     }

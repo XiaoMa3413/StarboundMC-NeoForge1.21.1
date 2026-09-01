@@ -77,7 +77,10 @@ public final class ShipStoryEvents
                                 .then(Commands.literal("all")
                                         .executes(context -> restoreEngines(
                                                 context.getSource(), true, true,
-                                                "command.starboundmc.debug.engine.all_restored"))))));
+                                                "command.starboundmc.debug.engine.all_restored"))))
+                        .then(Commands.literal("replay_mineral_scan")
+                                .executes(context -> replayMineralScan(
+                                        context.getSource())))));
     }
 
     private static int restoreEngines(CommandSourceStack source,
@@ -102,6 +105,25 @@ public final class ShipStoryEvents
 
         ShipStoryService.syncOpenScreens(server);
         source.sendSuccess(() -> Component.translatable(successTranslationKey), true);
+        return 1;
+    }
+
+    private static int replayMineralScan(CommandSourceStack source)
+    {
+        MinecraftServer server = source.getServer();
+        boolean changed = ShipStateData.get(server).replayMineralScan(
+                server.overworld().getGameTime(),
+                ShipStoryBroadcastService.MINERAL_SCAN_START_DELAY_TICKS);
+        if (!changed)
+        {
+            source.sendFailure(Component.translatable(
+                    "command.starboundmc.debug.mineral_scan.unavailable"));
+            return 0;
+        }
+
+        ShipStoryService.syncOpenScreens(server);
+        source.sendSuccess(() -> Component.translatable(
+                "command.starboundmc.debug.mineral_scan.replaying"), true);
         return 1;
     }
 }

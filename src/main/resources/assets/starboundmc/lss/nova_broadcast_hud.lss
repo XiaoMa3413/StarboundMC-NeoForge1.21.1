@@ -1,0 +1,40 @@
+// Compact N.O.V.A. remote communication window.
+// One outer frame and one portrait recess keep the hierarchy readable without box nesting.
+.nova-remote-panel {
+  background: group(rect(#ed070b0d), border(1, #899294));
+}
+
+.nova-remote-portrait-stage {
+  background: group(rect(#dc040a0c), border(1, #3d6668));
+}
+
+.nova-remote-portrait-stage .nova-portrait {
+  background: rect(#a6040d10);
+}
+
+.nova-remote-text-pane {
+  background: rect(#00000000);
+}
+
+.nova-remote-header {
+  background: rect(#00000000);
+}
+
+.nova-remote-speaker {
+  font-size: 7;
+  text-color: #8cf5f2;
+  text-shadow: false;
+}
+
+.nova-remote-link {
+  font-size: 5;
+  text-color: #7f898b;
+  text-shadow: false;
+}
+
+.nova-remote-body {
+  font-size: 6;
+  text-color: #ffffff;
+  text-shadow: false;
+  text-wrap: wrap;
+}
