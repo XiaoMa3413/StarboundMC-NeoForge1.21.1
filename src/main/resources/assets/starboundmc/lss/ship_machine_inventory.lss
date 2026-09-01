@@ -270,6 +270,10 @@
   text-shadow: false;
 }
 
+.voxel-quantity-button .__button_text__ {
+  font-size: 6;
+}
+
 .voxel-quantity-button.__disabled__:host,
 .voxel-queue-cancel.__disabled__:host {
   base-background: group(rect(#171d1f), border(-1, #364145));
@@ -292,6 +296,10 @@
   font-size: 6;
   text-color: #e7eeee;
   text-shadow: false;
+}
+
+.voxel-printing-action .__button_text__ {
+  font-size: 7;
 }
 
 .voxel-machine-action.voxel-refinery-stop:host {
@@ -400,31 +408,33 @@
   text-shadow: false;
 }
 
-.voxel-printing-result-icon {
-  background: group(rect(#080d10), border(-1, #5f7479));
-}
-
 .voxel-printing-detail-name {
-  font-size: 6;
+  font-size: 7;
   text-color: #edf2f1;
   text-shadow: false;
 }
 
 .voxel-printing-detail-output,
 .voxel-printing-detail-meta {
-  font-size: 5;
+  font-size: 6;
   text-color: #9eb2b7;
   text-shadow: false;
 }
 
+.voxel-printing-detail-description {
+  font-size: 6;
+  text-color: #82979c;
+  text-shadow: false;
+}
+
 .voxel-printing-detail-status {
-  font-size: 5;
+  font-size: 6;
   text-color: #71d4bd;
   text-shadow: false;
 }
 
 .voxel-printing-quantity {
-  font-size: 5;
+  font-size: 6;
   text-color: #f0da72;
   text-shadow: false;
   background: group(rect(#0a1013), border(-1, #3d5056));
@@ -434,6 +444,10 @@
   font-size: 5;
   text-color: #6e7c80;
   text-shadow: false;
+}
+
+.voxel-queue-title {
+  font-size: 4;
 }
 
 .voxel-queue-row {
@@ -446,7 +460,7 @@
 }
 
 .voxel-queue-state {
-  font-size: 5;
+  font-size: 4;
   text-color: #d9e4e4;
   text-shadow: false;
 }
@@ -466,25 +480,19 @@
 }
 
 .voxel-requirement-count {
-  font-size: 5;
+  font-size: 6;
   text-color: #8ed1bb;
   text-shadow: false;
+}
+
+.voxel-detail-title {
+  font-size: 6;
 }
 
 .voxel-requirement-count.voxel-requirement-missing {
   text-color: #e98276;
 }
 
-.voxel-printing-material-socket {
-  background: group(rect(#070b0d), border(-1, #64787e));
-}
-
 .voxel-printing-output-socket {
   background: group(rect(#13130d), border(-1, #aa9845));
-}
-
-.voxel-printing-output-arrow {
-  font-size: 7;
-  text-color: #77cdd0;
-  text-shadow: false;
 }

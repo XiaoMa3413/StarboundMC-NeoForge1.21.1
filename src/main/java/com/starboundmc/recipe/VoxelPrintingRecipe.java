@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -17,9 +18,8 @@ import net.minecraft.world.level.Level;
 
 /**
  * Printing recipe: up to three material ingredients (each with a required
- * count, aggregated across the machine's material slots) plus a voxel wallet
- * cost. Materials are consumed from the slots and voxels are deducted from
- * the operator's wallet when the print starts.
+ * count, aggregated across the operator inventory) plus a voxel wallet cost.
+ * Materials and voxels are reserved when work enters the print queue.
  */
 public final class VoxelPrintingRecipe implements Recipe<MachineRecipeInput> {
     public static final int MAX_INGREDIENTS = 3;
@@ -86,6 +86,24 @@ public final class VoxelPrintingRecipe implements Recipe<MachineRecipeInput> {
 
     public List<MaterialEntry> materials() {
         return materials;
+    }
+
+    /**
+     * Consumes one craft from a list of working-copy stacks. Unrelated inventory
+     * contents are ignored; matching stacks are consumed in source order.
+     *
+     * <p>The working copies may be partially changed when the result is empty.
+     * Callers must discard a failed simulation rather than applying it.</p>
+     */
+    public Optional<List<ItemStack>> reserveMaterials(List<ItemStack> simulatedSources) {
+        return MaterialReservationPlanner.reserve(
+                simulatedSources,
+                materials,
+                MaterialEntry::count,
+                (entry, stack) -> !stack.isEmpty() && entry.ingredient().test(stack),
+                ItemStack::getCount,
+                ItemStack::shrink,
+                ItemStack::copyWithCount);
     }
 
     /**

@@ -71,13 +71,15 @@ final class Stage3NetworkWiringTest {
 
         assertTrue(refineryMenu.contains("matchingRecipe(stack, player.level()).isPresent()"));
         assertTrue(refineryMenu.contains("moveItemStackTo(stack, MACHINE_START, PLAYER_START, false)"));
-        assertTrue(printingMenu.contains("isPrintingMaterial(stack, player.level())"));
-        assertTrue(printingMenu.contains("VoxelPrintingStationBlockEntity.MATERIAL_SLOTS, false"));
+        assertTrue(printingMenu.contains("HIDDEN_SLOT_POSITION"));
+        assertTrue(printingMenu.contains("public boolean isActive()"));
+        assertTrue(printingMenu.contains("station.returnLegacyMaterials(inventory.player)"));
+        assertFalse(printingMenu.contains("isPrintingMaterial("));
         assertTrue(refineryScreen.contains("startButton.setActive(canStart)"));
         assertTrue(refineryScreen.contains("StopRefinementPacket"));
         assertTrue(refineryScreen.contains("startButton.style(style -> style.tooltips(startHint))"));
         assertTrue(printingScreen.contains("printButton.setActive(canPrint)"));
-        assertTrue(printingScreen.contains("printButton.style(style -> style.tooltips(reason))"));
+        assertTrue(printingScreen.contains("printButton.style(style -> style.tooltips(reasonTooltip))"));
         assertTrue(actions.contains("message.starboundmc.voxel_refinery.unsupported"));
         assertTrue(actions.contains("message.starboundmc.voxel_printing.materials"));
     }
@@ -110,6 +112,8 @@ final class Stage3NetworkWiringTest {
         String printingRoot = source("client/voxel/VoxelPrintingStationRoot.java");
         String renderer = source("client/VoxelPrintingStationRenderer.java");
         String registrar = source("client/Stage2ClientRegistrar.java");
+        String station = source("block/entity/VoxelPrintingStationBlockEntity.java");
+        String printingRecipe = source("recipe/VoxelPrintingRecipe.java");
 
         assertTrue(refineryScreen.contains("extends StarboundModularScreen"));
         assertTrue(printingScreen.contains("extends StarboundModularScreen"));
@@ -119,9 +123,25 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("voxel-recipe-unavailable"));
         assertTrue(printingRoot.contains("updateRequirementCounts"));
         assertTrue(printingRoot.contains("printButton.setActive(canPrint)"));
+        assertTrue(printingRoot.contains("detailDescription"));
+        assertTrue(printingRoot.contains("getTooltipLines"));
+        assertTrue(printingRoot.contains("ghostResultTexture"));
+        assertTrue(printingRoot.contains("setColor(0x66FFFFFF)"));
+        assertTrue(printingRoot.contains("outputPreview.setVisible"));
+        assertFalse(printingRoot.contains("resultIcon"));
+        assertFalse(printingRoot.contains("voxel-printing-material-socket"));
         assertTrue(renderer.contains("snapshot.resultItemId()"));
         assertTrue(renderer.contains("station.getLevel().getGameTime() + partialTick"));
         assertTrue(renderer.contains("renderOverheadProbes"));
+        assertTrue(printingRoot.contains("player.getInventory().items"));
+        assertTrue(station.contains("operator.getInventory().items"));
+        assertTrue(printingRecipe.contains("reserveMaterials"));
+        int simulateBackpack = station.indexOf("simulated.add(stack.copy())");
+        int spendVoxels = station.indexOf("VoxelWalletService.trySpend");
+        int applyBackpack = station.indexOf("operator.getInventory().items.set");
+        assertTrue(simulateBackpack >= 0 && spendVoxels > simulateBackpack
+                && applyBackpack > spendVoxels,
+                "Backpack materials must remain simulated until every resource check succeeds");
         assertTrue(registrar.contains("registerBlockEntityRenderer"));
     }
 
@@ -176,9 +196,12 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("maxCraftsForMaterials"));
         assertTrue(printingRoot.contains("target = Math.min(target, selectedQuantityCeiling())"));
         assertTrue(printingRoot.contains("PANEL_H = 234"));
-        assertTrue(printingRoot.contains("\"voxel-inventory-section\", 38, 147, 172, 84"));
+        assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 4, 26, 106, 119"));
+        assertTrue(printingRoot.contains("\"voxel-printing-detail-pane\", 112, 26, 160, 119"));
+        assertTrue(printingRoot.contains("\"voxel-printing-queue-pane\", 274, 26, 86, 205"));
+        assertTrue(printingRoot.contains("\"voxel-inventory-section\", 52, 147, 172, 84"));
         assertTrue(printingScreen.contains("PANEL_H = 234"));
-        assertTrue(printingMenu.contains("addPlayerInventory(inventory, 42, 157)"));
+        assertTrue(printingMenu.contains("addPlayerInventory(inventory, 56, 157)"));
         assertTrue(printingRoot.contains("syncQueueRows"));
         assertTrue(printingRoot.contains("queue.active_progress"));
         assertTrue(printingRoot.contains("CancelPrintQueuePacket"));

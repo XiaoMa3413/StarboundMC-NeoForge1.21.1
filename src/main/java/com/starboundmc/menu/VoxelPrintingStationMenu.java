@@ -2,7 +2,6 @@ package com.starboundmc.menu;
 
 import com.starboundmc.block.ModBlocks;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
-import com.starboundmc.recipe.VoxelPrintingRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
@@ -11,15 +10,15 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.SimpleContainer;
 
 /**
- * Server boundary for the voxel printing station: three material input
- * slots plus one output slot. Wallet-backed printing arrives with M2/M3.
+ * Server boundary for the voxel printing station. Printing materials come
+ * directly from the operator's inventory; the old material storage remains as
+ * hidden menu slots only so existing block-entity saves keep their slot layout.
  */
 public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
-    private static final int MACHINE_START = 0;
+    private static final int HIDDEN_SLOT_POSITION = -10_000;
     private static final int PLAYER_START = VoxelPrintingStationBlockEntity.TOTAL_SLOTS;
     private static final int PLAYER_INVENTORY_END = PLAYER_START + 27;
     private static final int PLAYER_END = PLAYER_START + 36;
@@ -55,26 +54,35 @@ public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
         this.blockPos = blockPos.immutable();
         this.boundToBlock = boundToBlock;
 
+        if (station != null) {
+            station.returnLegacyMaterials(inventory.player);
+        }
+
         // The client-side menu is created without the server block entity.
         // Keep the same machine-slot count/order there so container content
         // packets cannot index past the client's slot list.
         net.minecraft.world.Container slotContainer = station != null
                 ? station : new SimpleContainer(VoxelPrintingStationBlockEntity.TOTAL_SLOTS);
         for (int i = 0; i < VoxelPrintingStationBlockEntity.MATERIAL_SLOTS; i++) {
-            addSlot(new Slot(slotContainer, i, 134 + i * 18, 73) {
+            addSlot(new Slot(slotContainer, i, HIDDEN_SLOT_POSITION, HIDDEN_SLOT_POSITION) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
-                    return isPrintingMaterial(stack, inventory.player.level());
+                    return false;
+                }
+
+                @Override
+                public boolean isActive() {
+                    return false;
                 }
             });
         }
-        addSlot(new Slot(slotContainer, VoxelPrintingStationBlockEntity.OUTPUT_SLOT, 217, 73) {
+        addSlot(new Slot(slotContainer, VoxelPrintingStationBlockEntity.OUTPUT_SLOT, 118, 39) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
-        addPlayerInventory(inventory, 42, 157);
+        addPlayerInventory(inventory, 56, 157);
     }
 
     private void addPlayerInventory(Inventory inventory, int x, int y) {
@@ -104,11 +112,6 @@ public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
             if (!moveItemStackTo(stack, PLAYER_START, PLAYER_END, true)) {
                 return ItemStack.EMPTY;
             }
-        } else if (isPrintingMaterial(stack, player.level())) {
-            if (!moveItemStackTo(stack, MACHINE_START,
-                    VoxelPrintingStationBlockEntity.MATERIAL_SLOTS, false)) {
-                return ItemStack.EMPTY;
-            }
         } else if (index < PLAYER_INVENTORY_END) {
             if (!moveItemStackTo(stack, PLAYER_INVENTORY_END, PLAYER_END, false)) {
                 return ItemStack.EMPTY;
@@ -127,15 +130,6 @@ public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
         }
         slot.onTake(player, stack);
         return original;
-    }
-
-    private static boolean isPrintingMaterial(ItemStack stack, Level level) {
-        if (stack.isEmpty()) {
-            return false;
-        }
-        return level.getRecipeManager().getAllRecipesFor(VoxelPrintingRecipe.TYPE).stream()
-                .flatMap(holder -> holder.value().materials().stream())
-                .anyMatch(material -> material.ingredient().test(stack));
     }
 
     @Override

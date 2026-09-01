@@ -5,7 +5,6 @@ import com.starboundmc.economy.VoxelWalletService;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncPrintQueuePacket;
 import com.starboundmc.network.SyncVoxelMachinePacket;
-import com.starboundmc.recipe.MachineRecipeInput;
 import com.starboundmc.recipe.VoxelPrintingRecipe;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -34,10 +33,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Voxel printing station logic: consumes matched materials from the three
- * input slots, deducts the voxel cost from the operator's wallet up front,
- * then produces the recipe result after the print duration. One job at a
- * time; output waits in the output slot until taken.
+ * Voxel printing station logic: reserves matched materials directly from the
+ * operator's inventory, deducts the voxel cost up front, then produces the
+ * recipe result after the print duration. The legacy material storage indices
+ * remain for save compatibility; new print jobs do not read or write them.
  */
 public final class VoxelPrintingStationBlockEntity extends BlockEntity implements Container {
     public static final int MATERIAL_SLOTS = 3;
@@ -135,13 +134,13 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
             return PrintEnqueueResult.QUEUE_FULL;
         }
         VoxelPrintingRecipe printing = recipe.value();
-        ItemStack[] simulated = new ItemStack[MATERIAL_SLOTS];
-        for (int slot = 0; slot < MATERIAL_SLOTS; slot++) {
-            simulated[slot] = items[slot].copy();
+        List<ItemStack> simulated = new ArrayList<>(operator.getInventory().items.size());
+        for (ItemStack stack : operator.getInventory().items) {
+            simulated.add(stack.copy());
         }
         List<ReservedCraft> reservations = new ArrayList<>(quantity);
         for (int craft = 0; craft < quantity; craft++) {
-            ReservedCraft reserved = reserveOneCraft(printing, simulated, level);
+            ReservedCraft reserved = reserveOneCraft(printing, simulated);
             if (reserved == null) {
                 return PrintEnqueueResult.MISSING_MATERIALS;
             }
@@ -155,9 +154,10 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
         }
 
         ItemStack result = printing.getResultItem(level.registryAccess());
-        for (int slot = 0; slot < MATERIAL_SLOTS; slot++) {
-            items[slot] = simulated[slot];
+        for (int slot = 0; slot < operator.getInventory().items.size(); slot++) {
+            operator.getInventory().items.set(slot, simulated.get(slot));
         }
+        operator.getInventory().setChanged();
         printQueue.addLast(new PrintQueueEntry(UUID.randomUUID(), operator.getUUID(),
                 operator.getGameProfile().getName(), recipe.id(), printing.voxelCost(),
                 printing.printSeconds() * 20, result, reservations));
@@ -167,31 +167,10 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
         return PrintEnqueueResult.QUEUED;
     }
 
-    private static ReservedCraft reserveOneCraft(
-            VoxelPrintingRecipe recipe, ItemStack[] simulated, ServerLevel level) {
-        MachineRecipeInput input = new MachineRecipeInput(
-                simulated[0], simulated[1], simulated[2]);
-        if (!recipe.matches(input, level)) {
-            return null;
-        }
-        List<ItemStack> materials = new ArrayList<>();
-        for (VoxelPrintingRecipe.MaterialEntry entry : recipe.materials()) {
-            int stillNeeded = entry.count();
-            for (int slot = 0; slot < MATERIAL_SLOTS && stillNeeded > 0; slot++) {
-                ItemStack stack = simulated[slot];
-                if (stack.isEmpty() || !entry.ingredient().test(stack)) {
-                    continue;
-                }
-                int taken = Math.min(stillNeeded, stack.getCount());
-                materials.add(stack.copyWithCount(taken));
-                stack.shrink(taken);
-                stillNeeded -= taken;
-            }
-            if (stillNeeded > 0) {
-                return null;
-            }
-        }
-        return new ReservedCraft(materials);
+    private static ReservedCraft reserveOneCraft(VoxelPrintingRecipe recipe, List<ItemStack> simulated) {
+        return recipe.reserveMaterials(simulated)
+                .map(ReservedCraft::new)
+                .orElse(null);
     }
 
     private boolean canAcceptResult(ItemStack result) {
@@ -385,6 +364,24 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
             Level level, double x, double y, double z, List<ItemStack> materials) {
         for (ItemStack stack : materials) {
             net.minecraft.world.Containers.dropItemStack(level, x, y, z, stack.copy());
+        }
+    }
+
+    /** Returns material stacks left by the retired manual-input UI. */
+    public void returnLegacyMaterials(Player player) {
+        boolean returnedAny = false;
+        for (int slot = 0; slot < MATERIAL_SLOTS; slot++) {
+            ItemStack legacy = items[slot];
+            if (legacy.isEmpty()) {
+                continue;
+            }
+            items[slot] = ItemStack.EMPTY;
+            player.getInventory().placeItemBackInInventory(legacy);
+            returnedAny = true;
+        }
+        if (returnedAny) {
+            player.getInventory().setChanged();
+            setChanged();
         }
     }
 
