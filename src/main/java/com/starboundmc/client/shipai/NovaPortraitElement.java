@@ -34,6 +34,16 @@ public final class NovaPortraitElement extends UIElement {
     private final boolean eyeLayerPresent;
     private final boolean portraitAssetPresent;
     private int ticks;
+    private int blinkSequence;
+    private int blinkStartTick = Integer.MIN_VALUE;
+    private int nextBlinkTick = 78;
+    private int gazeSequence;
+    private int gazeTransitionStartTick;
+    private int nextGazeTick = 52;
+    private float gazeFromX;
+    private float gazeFromY;
+    private float gazeToX;
+    private float gazeToY;
     private boolean speaking;
     private CoreState coreState;
     private int textPulseStep = -1;
@@ -86,6 +96,8 @@ public final class NovaPortraitElement extends UIElement {
     public void screenTick() {
         super.screenTick();
         ticks++;
+        updateBlinkSchedule();
+        updateGazeSchedule();
     }
 
     @Override
@@ -112,6 +124,10 @@ public final class NovaPortraitElement extends UIElement {
         float breathe = 1F + Mth.sin(time * TWO_PI / 62F) * 0.006F * onlineActivity;
         float jitterX = projectionJitter(time);
         float textPulse = textPulse(context.partialTick);
+        int gazeX = Math.round(NovaEyeMotion.gazeOffset(
+                gazeFromX, gazeToX, time, gazeTransitionStartTick));
+        int gazeY = Math.round(NovaEyeMotion.gazeOffset(
+                gazeFromY, gazeToY, time, gazeTransitionStartTick));
 
         float portraitAlpha;
         if (coreState == null) {
@@ -146,9 +162,31 @@ public final class NovaPortraitElement extends UIElement {
                             : 0.92F + Mth.sin(time * TWO_PI / 72F) * 0.05F;
                 };
             }
-            drawEyes(context, x + jitterX, y + hoverY, width, height,
-                    breathe, blinkScale(time), eyesAlpha);
+            drawEyes(context, x + jitterX + gazeX, y + hoverY + gazeY, width, height,
+                    breathe, NovaEyeMotion.blinkScale(time, blinkStartTick), eyesAlpha);
         }
+    }
+
+    private void updateBlinkSchedule() {
+        if (ticks < nextBlinkTick)
+            return;
+        blinkStartTick = ticks;
+        blinkSequence++;
+        nextBlinkTick = ticks + NovaEyeMotion.BLINK_DURATION_TICKS
+                + NovaEyeMotion.blinkDelayTicks(blinkSequence);
+    }
+
+    private void updateGazeSchedule() {
+        if (ticks < nextGazeTick)
+            return;
+        gazeFromX = gazeToX;
+        gazeFromY = gazeToY;
+        gazeToX = NovaEyeMotion.gazeX(gazeSequence);
+        gazeToY = NovaEyeMotion.gazeY(gazeSequence);
+        gazeSequence++;
+        gazeTransitionStartTick = ticks;
+        nextGazeTick = ticks + NovaEyeMotion.GAZE_TRANSITION_TICKS
+                + NovaEyeMotion.gazeDelayTicks(gazeSequence);
     }
 
     private float textPulse(float partialTick) {
@@ -165,14 +203,6 @@ public final class NovaPortraitElement extends UIElement {
         if (coreState == CoreState.ONLINE && ticks % 241 < 2)
             return ticks % 2 == 0 ? 0.35F : -0.35F;
         return 0F;
-    }
-
-    private static float blinkScale(float time) {
-        float phase = time % 127F;
-        if (phase >= 4F)
-            return 1F;
-        float distanceFromClosed = Math.abs(phase - 2F) / 2F;
-        return 0.12F + Mth.clamp(distanceFromClosed, 0F, 1F) * 0.88F;
     }
 
     private static void drawScaled(GUIContext context, SpriteTexture texture,
