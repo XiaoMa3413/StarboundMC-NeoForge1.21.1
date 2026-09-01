@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleMenuProvider;
@@ -21,6 +22,8 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -100,6 +103,9 @@ public final class VoxelPrintingStationBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof VoxelPrintingStationBlockEntity station) {
                 Containers.dropContents(level, pos, station);
+                if (level instanceof ServerLevel serverLevel) {
+                    station.dropReservedResources(serverLevel, pos);
+                }
             }
             super.onRemove(state, level, pos, newState, moving);
         }
@@ -131,6 +137,17 @@ public final class VoxelPrintingStationBlock extends BaseEntityBlock {
         return new VoxelPrintingStationBlockEntity(pos, state);
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide) {
+            return null;
+        }
+        return createTickerHelper(type, ModBlockEntities.VOXEL_PRINTING_STATION.get(),
+                VoxelPrintingStationBlockEntity::tick);
+    }
+
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                                                BlockHitResult hit) {
@@ -140,7 +157,8 @@ public final class VoxelPrintingStationBlock extends BaseEntityBlock {
                         (containerId, inventory, ignored) -> new VoxelPrintingStationMenu(
                                 containerId, inventory, station,
                                 ContainerLevelAccess.create(level, pos)),
-                        Component.translatable("container.starboundmc.voxel_printing_station")));
+                        Component.translatable("container.starboundmc.voxel_printing_station")), pos);
+                station.syncTo(serverPlayer);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }

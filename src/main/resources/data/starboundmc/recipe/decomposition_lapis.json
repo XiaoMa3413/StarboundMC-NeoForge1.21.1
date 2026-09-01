@@ -1,0 +1,7 @@
+﻿{
+  "type": "starboundmc:voxel_decomposition",
+  "input": {
+    "item": "minecraft:lapis_lazuli"
+  },
+  "voxels": 4
+}

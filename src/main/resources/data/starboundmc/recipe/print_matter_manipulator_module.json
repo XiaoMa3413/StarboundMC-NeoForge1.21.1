@@ -1,0 +1,23 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "minecraft:lapis_lazuli"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:iron_ingot"
+      },
+      "count": 4
+    }
+  ],
+  "voxel_cost": 100,
+  "print_seconds": 5,
+  "result": {
+    "id": "starboundmc:matter_manipulator_module",
+    "count": 2
+  }
+}

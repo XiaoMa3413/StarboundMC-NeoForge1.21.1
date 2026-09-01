@@ -30,5 +30,8 @@ public final class ClientConnectionEvents {
         ClientShipAiTerminalState.resetConnectionState();
         ClientShipStoryState.resetConnectionState();
         ClientShipEnvironmentState.resetConnectionState();
+        ClientVoxelMachineState.reset();
+        ClientPrintQueueState.reset();
+        ClientVoxelWalletState.reset();
     }
 }

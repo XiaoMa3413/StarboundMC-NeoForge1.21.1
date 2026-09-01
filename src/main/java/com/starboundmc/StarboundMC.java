@@ -10,6 +10,7 @@ import com.starboundmc.loot.VoxelLootModifiers;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.Stage7ServerPayloadActions;
+import com.starboundmc.recipe.ModRecipes;
 import com.starboundmc.story.ModAttachments;
 import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.WorldgenRotationWarmup;
@@ -37,6 +38,7 @@ public final class StarboundMC {
         ModMenus.register(modEventBus);
         ModAttachments.register(modEventBus);
         VoxelLootModifiers.register(modEventBus);
+        ModRecipes.register(modEventBus);
 
         LOGGER.info("{} NeoForge registry layer loaded (version {}).", MODID,
                 modContainer.getModInfo().getVersion());

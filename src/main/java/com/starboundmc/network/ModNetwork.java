@@ -4,13 +4,14 @@ import java.util.Objects;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-/** NeoForge 1.21.1 play-payload protocol. Incompatible with Forge protocol 4. */
+/** NeoForge 1.21.1 play-payload protocol. */
 public final class ModNetwork {
-    public static final String PROTOCOL_VERSION = "2";
+    public static final String PROTOCOL_VERSION = "5";
     private static volatile ServerPayloadActions serverActions = ServerPayloadActions.NONE;
 
     private ModNetwork() {
@@ -31,6 +32,16 @@ public final class ModNetwork {
                 TeleportToShipPacket.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(AddFuelPacket.TYPE,
                 AddFuelPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(StartRefinementPacket.TYPE,
+                StartRefinementPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(StopRefinementPacket.TYPE,
+                StopRefinementPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(ClaimRefinedVoxelsPacket.TYPE,
+                ClaimRefinedVoxelsPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(StartPrintPacket.TYPE,
+                StartPrintPacket.STREAM_CODEC, ServerPayloadHandler::handle);
+        registrar.playToServer(CancelPrintQueuePacket.TYPE,
+                CancelPrintQueuePacket.STREAM_CODEC, ServerPayloadHandler::handle);
         registrar.playToServer(ShipAiActionPacket.TYPE,
                 ShipAiActionPacket.STREAM_CODEC, ServerPayloadHandler::handle);
 
@@ -48,6 +59,10 @@ public final class ModNetwork {
                 SyncFlightPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(SyncVoxelWalletPacket.TYPE,
                 SyncVoxelWalletPacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncVoxelMachinePacket.TYPE,
+                SyncVoxelMachinePacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(SyncPrintQueuePacket.TYPE,
+                SyncPrintQueuePacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipStorySnapshotPacket.TYPE,
                 ShipStorySnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipEnvironmentSnapshotPacket.TYPE,
@@ -72,5 +87,10 @@ public final class ModNetwork {
 
     public static void sendToPlayersInDimension(ServerLevel level, CustomPacketPayload payload) {
         PacketDistributor.sendToPlayersInDimension(level, payload);
+    }
+
+    public static void sendToPlayersTrackingChunk(
+            ServerLevel level, ChunkPos chunk, CustomPacketPayload payload) {
+        PacketDistributor.sendToPlayersTrackingChunk(level, chunk, payload);
     }
 }

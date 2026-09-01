@@ -3,6 +3,7 @@ package com.starboundmc.block;
 import com.mojang.serialization.MapCodec;
 import com.starboundmc.block.entity.VoxelRefineryBlockEntity;
 import com.starboundmc.menu.VoxelRefineryMenu;
+import com.starboundmc.economy.VoxelWalletService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -27,8 +28,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Ground voxel refinery. Decomposes matching materials into voxels that are
- * deposited directly into the operator's wallet.
+ * Ground voxel refinery. Decomposes matching materials into a public output
+ * that players claim explicitly from the machine interface.
  */
 public final class VoxelRefineryBlock extends BaseEntityBlock {
     public static final MapCodec<VoxelRefineryBlock> CODEC = simpleCodec(VoxelRefineryBlock::new);
@@ -66,12 +67,23 @@ public final class VoxelRefineryBlock extends BaseEntityBlock {
         return new VoxelRefineryBlockEntity(pos, state);
     }
 
+    @Nullable
+    @Override
+    public <T extends BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        if (level.isClientSide) {
+            return null;
+        }
+        return createTickerHelper(type, ModBlockEntities.VOXEL_REFINERY.get(), VoxelRefineryBlockEntity::tick);
+    }
+
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                                                BlockHitResult hit) {
         if (level.getBlockEntity(pos) instanceof VoxelRefineryBlockEntity refinery) {
             if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.openMenu(getMenuProvider(refinery, level, pos));
+                serverPlayer.openMenu(getMenuProvider(refinery, level, pos), pos);
+                refinery.syncTo(serverPlayer);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
@@ -91,6 +103,9 @@ public final class VoxelRefineryBlock extends BaseEntityBlock {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof VoxelRefineryBlockEntity refinery) {
                 Containers.dropContents(level, pos, refinery);
+                VoxelWalletService.dropVoxels(level,
+                        pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                        refinery.drainPendingVoxelsForDrop());
             }
             super.onRemove(state, level, pos, newState, moving);
         }

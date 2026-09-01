@@ -3,7 +3,11 @@ package com.starboundmc.economy;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncVoxelWalletPacket;
 import com.starboundmc.story.ModAttachments;
+import com.starboundmc.item.ModItems;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Containers;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 /** Server-authoritative voxel wallet mutations with client synchronization. */
 public final class VoxelWalletService {
@@ -37,5 +41,16 @@ public final class VoxelWalletService {
 
     public static void sync(ServerPlayer player) {
         ModNetwork.sendToPlayer(player, new SyncVoxelWalletPacket(balanceOf(player)));
+    }
+
+    /** Drops a recoverable voxel refund split to the item's legal stack size. */
+    public static void dropVoxels(Level level, double x, double y, double z, int amount) {
+        int remaining = Math.max(0, amount);
+        int stackLimit = ModItems.VOXEL.get().getDefaultMaxStackSize();
+        while (remaining > 0) {
+            int count = Math.min(stackLimit, remaining);
+            Containers.dropItemStack(level, x, y, z, new ItemStack(ModItems.VOXEL.get(), count));
+            remaining -= count;
+        }
     }
 }

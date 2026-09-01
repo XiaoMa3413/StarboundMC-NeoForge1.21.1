@@ -34,4 +34,20 @@ public interface ServerPayloadActions {
     default void shipAiAction(ServerPlayer player, int containerId, long requestId,
                               ShipAiActionPacket.Action action, int argument) {
     }
+
+    default void startRefinement(ServerPlayer player, BlockPos pos) {
+    }
+
+    default void stopRefinement(ServerPlayer player, BlockPos pos) {
+    }
+
+    default void claimRefinedVoxels(ServerPlayer player, BlockPos pos) {
+    }
+
+    default void startPrint(ServerPlayer player, BlockPos pos,
+                            net.minecraft.resources.ResourceLocation recipeId, int quantity) {
+    }
+
+    default void cancelPrintQueue(ServerPlayer player, BlockPos pos, java.util.UUID queueId) {
+    }
 }
