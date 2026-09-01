@@ -3,6 +3,7 @@ package com.starboundmc;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -100,6 +102,24 @@ final class Stage10ResourcesTest {
             assertTrue(Files.isRegularFile(
                     ASSETS.resolve("textures/gui/ship_ai/" + texture + ".png")), texture);
         }
+    }
+
+    @Test
+    void shipAiTerminalUsesDedicatedAnimatedTextures() throws IOException {
+        JsonObject textures = json(ASSETS.resolve("models/block/ship_ai_terminal.json"))
+                .getAsJsonObject("textures");
+        for (String texture : List.of("casing", "frame", "controls", "screen")) {
+            assertEquals("starboundmc:block/ship_ai_terminal_" + texture,
+                    textures.get(texture).getAsString(), texture);
+        }
+        assertFalse(textures.toString().contains("ship_console"));
+
+        Path screen = ASSETS.resolve("textures/block/ship_ai_terminal_screen.png");
+        BufferedImage image = ImageIO.read(screen.toFile());
+        assertNotNull(image);
+        assertEquals(16, image.getWidth());
+        assertEquals(48, image.getHeight());
+        assertTrue(Files.isRegularFile(Path.of(screen + ".mcmeta")));
     }
 
     @Test
