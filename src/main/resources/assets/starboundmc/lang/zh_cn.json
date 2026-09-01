@@ -32,7 +32,7 @@
   "gui.starboundmc.ship_ai.demo.option.projection": "说明当前投影。",
   "gui.starboundmc.ship_ai.demo.option.status": "报告终端状态。",
   "gui.starboundmc.ship_ai.demo.response.identity": "我是 N.O.V.A.，全称为 Navigation, Operations & Vessel Assistant（导航、运行与舰船助理）。当前原型使用本地预设对话。",
-  "gui.starboundmc.ship_ai.demo.response.projection": "这是一套青白色合成视觉界面。眼部光带与信号稳定度用于表示我的当前状态。",
+  "gui.starboundmc.ship_ai.demo.response.projection": "这是一套青白色合成视觉界面。眼部亮度与投影稳定度用于表示我的当前状态。",
   "gui.starboundmc.ship_ai.demo.response.status": "终端当前运行于本地原型模式。剧情进度与共享飞船状态尚未接入。",
   "gui.starboundmc.ship_ai.status.offline": "● 核心离线",
   "gui.starboundmc.ship_ai.status.rebooting": "◐ 正在重启",

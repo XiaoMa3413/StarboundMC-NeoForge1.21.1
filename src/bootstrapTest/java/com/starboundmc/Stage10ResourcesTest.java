@@ -91,6 +91,14 @@ final class Stage10ResourcesTest {
     }
 
     @Test
+    void shipAiPortraitTextureIsPackaged() {
+        for (String texture : List.of("nova_bust", "nova_body", "nova_eyes")) {
+            assertTrue(Files.isRegularFile(
+                    ASSETS.resolve("textures/gui/ship_ai/" + texture + ".png")), texture);
+        }
+    }
+
+    @Test
     void shipRegistryResourcesComeFromDatagen() {
         assertTrue(Files.isRegularFile(GENERATED.resolve("dimension/ship.json")));
         assertTrue(Files.isRegularFile(GENERATED.resolve("dimension_type/ship.json")));

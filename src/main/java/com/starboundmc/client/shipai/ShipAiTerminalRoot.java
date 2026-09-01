@@ -442,7 +442,10 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
         int previousStreamingIndex = session.streamingIndex();
+        boolean textAdvanced = session.hasUnrevealedCodePoint();
         ClientShipAiTerminalState.CompletionIntent completed = session.advanceStream();
+        if (textAdvanced)
+            portrait.onTextAdvanced();
 
         syncTranscriptViews();
         if (previousStreamingIndex >= 0 && previousStreamingIndex < transcriptLabels.size())
@@ -723,6 +726,7 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         syncTranscriptViews();
         boolean transmitting = session.isTransmitting();
+        portrait.setCoreState(isCompatible() ? authoritativeSnapshot.shared().core() : null);
         portrait.setSpeaking(transmitting);
         portraitState.setText(portraitStatusText(transmitting));
         linkStatus.setText(linkStatusText());

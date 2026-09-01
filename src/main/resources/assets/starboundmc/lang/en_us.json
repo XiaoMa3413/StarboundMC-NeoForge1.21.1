@@ -38,7 +38,7 @@
   "gui.starboundmc.ship_ai.demo.option.projection": "Explain this projection.",
   "gui.starboundmc.ship_ai.demo.option.status": "Report terminal status.",
   "gui.starboundmc.ship_ai.demo.response.identity": "I am N.O.V.A.: Navigation, Operations & Vessel Assistant. This prototype uses scripted local dialogue.",
-  "gui.starboundmc.ship_ai.demo.response.projection": "This cyan-white construct is a synthetic visual interface. Its eye band and signal stability indicate my current state.",
+  "gui.starboundmc.ship_ai.demo.response.projection": "This cyan-white construct is a synthetic visual interface. Its eye brightness and projection stability indicate my current state.",
   "gui.starboundmc.ship_ai.demo.response.status": "The terminal is operating in local prototype mode. Story progression and shared ship state remain disconnected.",
   "gui.starboundmc.ship_ai.status.offline": "● CORE OFFLINE",
   "gui.starboundmc.ship_ai.status.rebooting": "◐ REBOOTING",
