@@ -59,4 +59,46 @@ class NovaEyeMotionTest {
         assertEquals(0.5F, NovaEyeMotion.gazeOffset(0F, 1F, 24F, 20), EPSILON);
         assertEquals(1F, NovaEyeMotion.gazeOffset(0F, 1F, 28F, 20), EPSILON);
     }
+
+    @Test
+    void activityPulseRisesOnceAndSettles() {
+        int startTick = 40;
+        assertEquals(0F, NovaEyeMotion.activityPulse(39F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.activityPulse(40F, startTick), EPSILON);
+        assertEquals(0.5F, NovaEyeMotion.activityPulse(42F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.activityPulse(44F, startTick), EPSILON);
+        assertTrue(NovaEyeMotion.activityPulse(50F, startTick) < 1F);
+        assertEquals(0F, NovaEyeMotion.activityPulse(
+                startTick + NovaEyeMotion.ACTIVITY_PULSE_DURATION_TICKS, startTick), EPSILON);
+    }
+
+    @Test
+    void scanningGazeSweepsBetweenSinglePixelEndpoints() {
+        int startTick = 60;
+        assertEquals(0F, NovaEyeMotion.scanningGazeX(71F, startTick), EPSILON);
+        assertEquals(-1F, NovaEyeMotion.scanningGazeX(72F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.scanningGazeX(81F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.scanningGazeX(90F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.scanningGazeX(99F, startTick), EPSILON);
+        assertEquals(-1F, NovaEyeMotion.scanningGazeX(108F, startTick), EPSILON);
+    }
+
+    @Test
+    void scanningPanelWaitsThenUnfoldsOverOneSecond() {
+        int startTick = 30;
+        assertEquals(false, NovaEyeMotion.scanningPanelActive(41F, startTick));
+        assertEquals(true, NovaEyeMotion.scanningPanelActive(42F, startTick));
+        assertEquals(0F, NovaEyeMotion.scanningPanelWidthReveal(42F, startTick), EPSILON);
+        assertEquals(0.5F, NovaEyeMotion.scanningPanelWidthReveal(46F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.scanningPanelWidthReveal(50F, startTick), EPSILON);
+
+        assertEquals(0F, NovaEyeMotion.scanningPanelHeightReveal(48F, startTick), EPSILON);
+        assertEquals(0.5F, NovaEyeMotion.scanningPanelHeightReveal(53F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.scanningPanelHeightReveal(58F, startTick), EPSILON);
+
+        assertEquals(0F, NovaEyeMotion.scanningPanelDataReveal(55F, startTick), EPSILON);
+        assertEquals(0.5F, NovaEyeMotion.scanningPanelDataReveal(58.5F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.scanningPanelDataReveal(62F, startTick), EPSILON);
+        assertEquals(1F, NovaEyeMotion.scanningPanelDataReveal(90F, startTick), EPSILON);
+    }
 }

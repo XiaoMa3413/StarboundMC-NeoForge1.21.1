@@ -495,7 +495,10 @@ public final class ShipAiTerminalRoot extends UIElement
             return false;
         if (!ClientShipStoryState.consumeAcknowledgement(containerId, pending.requestId()))
             return false;
-        return session.acknowledge(containerId, pending.requestId());
+        boolean acknowledged = session.acknowledge(containerId, pending.requestId());
+        if (acknowledged)
+            portrait.triggerConfirmation();
+        return acknowledged;
     }
 
     private void enqueueAutomaticCues()
@@ -731,6 +734,7 @@ public final class ShipAiTerminalRoot extends UIElement
         syncTranscriptViews();
         boolean transmitting = session.isTransmitting();
         portrait.setCoreState(isCompatible() ? authoritativeSnapshot.shared().core() : null);
+        portrait.setActivity(portraitActivity());
         portrait.setSpeaking(transmitting);
         portraitState.setText(portraitStatusText(transmitting));
         linkStatus.setText(linkStatusText());
@@ -882,6 +886,17 @@ public final class ShipAiTerminalRoot extends UIElement
                     ? "gui.starboundmc.ship_ai.portrait.idle"
                     : "gui.starboundmc.ship_ai.portrait.prototype";
         });
+    }
+
+    private NovaPortraitActivity portraitActivity()
+    {
+        if (!isCompatible())
+            return NovaPortraitActivity.IDLE;
+        ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
+        if (shared.core() != CoreState.ONLINE)
+            return NovaPortraitActivity.WARNING;
+        return shared.mineralScan() == MineralScanState.SCANNING
+                ? NovaPortraitActivity.SCANNING : NovaPortraitActivity.IDLE;
     }
 
     private String currentStatusCueId()

@@ -8,8 +8,17 @@ final class NovaEyeMotion {
     static final int MAX_BLINK_DELAY_TICKS = 120;
     static final int MIN_GAZE_DELAY_TICKS = 44;
     static final int MAX_GAZE_DELAY_TICKS = 84;
+    static final int ACTIVITY_PULSE_DURATION_TICKS = 22;
+    static final int SCANNING_PANEL_IDLE_DELAY_TICKS = 12;
+    static final int SCANNING_PANEL_WIDTH_REVEAL_TICKS = 8;
+    static final int SCANNING_PANEL_HEIGHT_REVEAL_DELAY_TICKS = 6;
+    static final int SCANNING_PANEL_HEIGHT_REVEAL_TICKS = 10;
+    static final int SCANNING_PANEL_DATA_REVEAL_DELAY_TICKS = 13;
+    static final int SCANNING_PANEL_DATA_REVEAL_TICKS = 7;
 
     private static final float MIN_BLINK_SCALE = 0.12F;
+    private static final int ACTIVITY_PULSE_RISE_TICKS = 4;
+    private static final float SCANNING_GAZE_PERIOD_TICKS = 36F;
     private static final int[] GAZE_X = {1, 0, 0, -1, 0, 1, 0, -1};
     private static final int[] GAZE_Y = {0, 0, -1, 0, 1, -1, 0, 1};
 
@@ -51,12 +60,75 @@ final class NovaEyeMotion {
 
     static float gazeOffset(float from, float to, float time, int transitionStartTick) {
         float progress = clamp((time - transitionStartTick) / GAZE_TRANSITION_TICKS, 0F, 1F);
-        float eased = progress * progress * (3F - 2F * progress);
+        float eased = smoothStep(progress);
         return lerp(from, to, eased);
+    }
+
+    static float activityPulse(float time, int activityStartTick) {
+        float phase = time - activityStartTick;
+        if (activityStartTick < 0 || phase < 0F || phase >= ACTIVITY_PULSE_DURATION_TICKS)
+            return 0F;
+        if (phase < ACTIVITY_PULSE_RISE_TICKS)
+            return smoothStep(phase / ACTIVITY_PULSE_RISE_TICKS);
+        float fallProgress = (phase - ACTIVITY_PULSE_RISE_TICKS)
+                / (ACTIVITY_PULSE_DURATION_TICKS - ACTIVITY_PULSE_RISE_TICKS);
+        return 1F - smoothStep(fallProgress);
+    }
+
+    static float scanningGazeX(float time, int activityStartTick) {
+        if (!scanningPanelActive(time, activityStartTick))
+            return 0F;
+        float phase = positiveModulo(time - activityStartTick - SCANNING_PANEL_IDLE_DELAY_TICKS,
+                SCANNING_GAZE_PERIOD_TICKS);
+        float halfPeriod = SCANNING_GAZE_PERIOD_TICKS * 0.5F;
+        if (phase < halfPeriod)
+            return lerp(-1F, 1F, smoothStep(phase / halfPeriod));
+        return lerp(1F, -1F, smoothStep((phase - halfPeriod) / halfPeriod));
+    }
+
+    static float scanningPanelWidthReveal(float time, int activityStartTick) {
+        return timedReveal(time, activityStartTick, SCANNING_PANEL_IDLE_DELAY_TICKS,
+                SCANNING_PANEL_WIDTH_REVEAL_TICKS);
+    }
+
+    static float scanningPanelHeightReveal(float time, int activityStartTick) {
+        return timedReveal(time, activityStartTick,
+                SCANNING_PANEL_IDLE_DELAY_TICKS
+                        + SCANNING_PANEL_HEIGHT_REVEAL_DELAY_TICKS,
+                SCANNING_PANEL_HEIGHT_REVEAL_TICKS);
+    }
+
+    static float scanningPanelDataReveal(float time, int activityStartTick) {
+        return timedReveal(time, activityStartTick,
+                SCANNING_PANEL_IDLE_DELAY_TICKS
+                        + SCANNING_PANEL_DATA_REVEAL_DELAY_TICKS,
+                SCANNING_PANEL_DATA_REVEAL_TICKS);
+    }
+
+    static boolean scanningPanelActive(float time, int activityStartTick) {
+        return activityStartTick >= 0
+                && time - activityStartTick >= SCANNING_PANEL_IDLE_DELAY_TICKS;
+    }
+
+    private static float timedReveal(float time, int startTick, int delayTicks,
+                                     int durationTicks) {
+        if (startTick < 0)
+            return 0F;
+        return smoothStep((time - startTick - delayTicks) / durationTicks);
     }
 
     private static float lerp(float from, float to, float progress) {
         return from + (to - from) * progress;
+    }
+
+    private static float smoothStep(float progress) {
+        float clamped = clamp(progress, 0F, 1F);
+        return clamped * clamped * (3F - 2F * clamped);
+    }
+
+    private static float positiveModulo(float value, float modulus) {
+        float result = value % modulus;
+        return result < 0F ? result + modulus : result;
     }
 
     private static float clamp(float value, float min, float max) {
