@@ -19,6 +19,7 @@ class SharedShipProgressTest
         assertEquals(SurfaceMissionState.LOCKED, state.surfaceMission());
         assertEquals(EngineState.DAMAGED, state.sublightEngine());
         assertEquals(EngineState.DAMAGED, state.hyperdrive());
+        assertEquals(MineralScanState.LOCKED, state.mineralScan());
         assertFalse(state.canUseTeleporter());
         assertFalse(state.canBrowseCurrentSystem());
         assertFalse(state.canTravelWithinSystem());
@@ -66,6 +67,70 @@ class SharedShipProgressTest
         assertEquals(EngineState.DAMAGED, sublight.hyperdrive());
         assertTrue(hyperdrive.canTravelWithinSystem());
         assertTrue(hyperdrive.canTravelBetweenSystems());
+    }
+
+    @Test
+    void mineralScanUsesPersistedFifteenFiveSixSecondPhases()
+    {
+        SharedShipProgress missionComplete = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission();
+
+        SharedShipProgress pending = missionComplete.beginMineralScan(100L, 300L);
+        assertEquals(MineralScanState.PENDING, pending.mineralScan());
+        assertEquals(400L, pending.mineralScanNextCueGameTime());
+        assertSame(pending, pending.advanceMineralScanIfDue(399L, 100L, 120L));
+
+        SharedShipProgress scanning = pending.advanceMineralScanIfDue(400L, 100L, 120L);
+        assertEquals(MineralScanState.SCANNING, scanning.mineralScan());
+        assertEquals(500L, scanning.mineralScanNextCueGameTime());
+
+        SharedShipProgress reported = scanning.advanceMineralScanIfDue(500L, 100L, 120L);
+        assertEquals(MineralScanState.RESULT_REPORTED, reported.mineralScan());
+        assertEquals(620L, reported.mineralScanNextCueGameTime());
+
+        SharedShipProgress complete = reported.advanceMineralScanIfDue(620L, 100L, 120L);
+        assertEquals(MineralScanState.COMPLETE, complete.mineralScan());
+        assertEquals(0L, complete.mineralScanNextCueGameTime());
+        assertSame(complete, complete.advanceMineralScanIfDue(1_000L, 100L, 120L));
+    }
+
+    @Test
+    void inProgressMineralScanRoundTripsWithoutLosingItsDeadline()
+    {
+        SharedShipProgress pending = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission()
+                .beginMineralScan(1_000L, 300L);
+
+        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(pending.save());
+
+        assertEquals(MineralScanState.PENDING, loaded.state().mineralScan());
+        assertEquals(1_300L, loaded.state().mineralScanNextCueGameTime());
+        assertFalse(loaded.requiresSave());
+    }
+
+    @Test
+    void versionOneDamagedShipCanEnterTheNewMineralScanScene()
+    {
+        CompoundTag old = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission()
+                .save();
+        old.putInt("Version", 1);
+        old.remove("MineralScan");
+        old.remove("MineralScanNextCueAt");
+
+        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(old);
+
+        assertEquals(MineralScanState.LOCKED, loaded.state().mineralScan());
+        assertTrue(loaded.requiresSave());
     }
 
     @Test

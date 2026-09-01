@@ -3,6 +3,7 @@ package com.starboundmc;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,8 +96,12 @@ final class Stage10ResourcesTest {
     }
 
     @Test
-    void customAudioIsAbsentAndBothLocalesAreComplete() throws IOException {
-        assertFalse(Files.exists(ASSETS.resolve("sounds.json")));
+    void onlyOriginalNovaAudioIsPresentAndBothLocalesAreComplete() throws IOException {
+        JsonObject sounds = json(ASSETS.resolve("sounds.json"));
+        assertEquals(Set.of("nova_text"), sounds.keySet());
+        assertEquals("starboundmc:ui/nova_text", sounds.getAsJsonObject("nova_text")
+                .getAsJsonArray("sounds").get(0).getAsJsonObject().get("name").getAsString());
+        assertTrue(Files.isRegularFile(ASSETS.resolve("sounds/ui/nova_text.ogg")));
         for (String sound : List.of("warp_start", "warp_loop", "warp_end", "teleporter_use")) {
             assertFalse(Files.exists(ASSETS.resolve("sounds/" + sound + ".ogg")), sound);
         }
@@ -105,6 +111,33 @@ final class Stage10ResourcesTest {
         assertEquals(new HashSet<>(english), new HashSet<>(chinese));
         assertTrue(english.contains("message.starboundmc.warp.no_fuel"));
         assertTrue(english.contains("gui.starboundmc.starmap.detail.navigation"));
+    }
+
+    @Test
+    void shipAiPortraitTextureIsPackaged() {
+        for (String texture : List.of("nova_bust", "nova_body", "nova_eyes")) {
+            assertTrue(Files.isRegularFile(
+                    ASSETS.resolve("textures/gui/ship_ai/" + texture + ".png")), texture);
+        }
+        assertTrue(Files.isRegularFile(ASSETS.resolve("lss/nova_broadcast_hud.lss")));
+    }
+
+    @Test
+    void shipAiTerminalUsesDedicatedAnimatedTextures() throws IOException {
+        JsonObject textures = json(ASSETS.resolve("models/block/ship_ai_terminal.json"))
+                .getAsJsonObject("textures");
+        for (String texture : List.of("casing", "frame", "controls", "screen")) {
+            assertEquals("starboundmc:block/ship_ai_terminal_" + texture,
+                    textures.get(texture).getAsString(), texture);
+        }
+        assertFalse(textures.toString().contains("ship_console"));
+
+        Path screen = ASSETS.resolve("textures/block/ship_ai_terminal_screen.png");
+        BufferedImage image = ImageIO.read(screen.toFile());
+        assertNotNull(image);
+        assertEquals(16, image.getWidth());
+        assertEquals(48, image.getHeight());
+        assertTrue(Files.isRegularFile(Path.of(screen + ".mcmeta")));
     }
 
     @Test

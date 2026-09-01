@@ -49,6 +49,24 @@ class ClientShipAiTerminalStateTest
     }
 
     @Test
+    void streamingStateReportsOnlyActualCharacterAdvances()
+    {
+        ClientShipAiTerminalState.Session session = ClientShipAiTerminalState.current();
+        session.selectOption(
+                Component.literal("question"),
+                Component.literal("AB"),
+                ClientShipAiTerminalState.CompletionIntent.NONE,
+                null);
+
+        assertEquals('A', session.nextUnrevealedCodePoint());
+        assertTrue(session.advanceStream().isNone());
+        assertEquals('B', session.nextUnrevealedCodePoint());
+        session.advanceStream();
+        assertFalse(session.hasUnrevealedCodePoint());
+        assertEquals(-1, session.nextUnrevealedCodePoint());
+    }
+
+    @Test
     void anAutomaticCueIsQueuedOnlyOnceAcrossRootRebuilds()
     {
         ClientShipAiTerminalState.Session session = ClientShipAiTerminalState.current();

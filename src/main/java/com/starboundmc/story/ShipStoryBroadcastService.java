@@ -1,5 +1,7 @@
 package com.starboundmc.story;
 
+import com.starboundmc.network.ModNetwork;
+import com.starboundmc.network.NovaBroadcastPacket;
 import com.starboundmc.warp.ShipStateData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -13,7 +15,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Server-side scheduler for personal N.O.V.A. broadcasts.
+ * Server-side scheduler for personal and shared N.O.V.A. broadcasts.
  *
  * <p>Broadcast delivery is deliberately separate from the terminal menu. A
  * player may close the menu, move around the ship, or reconnect without
@@ -27,6 +29,12 @@ public final class ShipStoryBroadcastService
     public static final long TERMINAL_REMINDER_DELAY_TICKS = 120L;
     /** Give the player time to arrive and orient before the surface tutorial appears. */
     public static final long SURFACE_TUTORIAL_DELAY_TICKS = 120L;
+    /** Leave a clear pause after the wood response before the shared survey begins. */
+    public static final long MINERAL_SCAN_START_DELAY_TICKS = 300L;
+    /** The orbital survey needs a short, visible analysis interval. */
+    public static final long MINERAL_SCAN_RESULT_DELAY_TICKS = 100L;
+    /** Let the mineral report settle before introducing the engine-repair lead. */
+    public static final long MINERAL_SCAN_CONCLUSION_DELAY_TICKS = 120L;
 
     private static final Map<UUID, Long> wakeDueAt = new HashMap<>();
     private static final Map<UUID, Long> reminderDueAt = new HashMap<>();
@@ -108,12 +116,19 @@ public final class ShipStoryBroadcastService
                 || !ShipStoryService.isPlanetSurface(player.level().dimension()))
             return false;
 
-        SharedShipProgress shared = ShipStateData.get(player.getServer()).getStoryProgress();
+        ShipStateData ship = ShipStateData.get(player.getServer());
+        SharedShipProgress shared = ship.getStoryProgress();
         if (!shared.isWritable() || shared.surfaceMission() != SurfaceMissionState.COMPLETE)
             return false;
 
-        return sendOnce(player, PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST,
+        boolean personalCueSent = sendOnce(player, PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST,
                 "message.starboundmc.nova.tutorial.wood_acquired");
+        boolean scanStarted = ship.beginMineralScan(
+                player.getServer().overworld().getGameTime(),
+                MINERAL_SCAN_START_DELAY_TICKS);
+        if (scanStarted)
+            ShipStoryService.syncOpenScreens(player.getServer());
+        return personalCueSent || scanStarted;
     }
 
     /** Sends the immediate first-arrival confirmation once per player. */
@@ -148,6 +163,7 @@ public final class ShipStoryBroadcastService
             return;
 
         long now = server.overworld().getGameTime();
+        tickMineralScan(server, now);
         for (ServerPlayer player : server.getPlayerList().getPlayers())
         {
             UUID id = player.getUUID();
@@ -219,13 +235,44 @@ public final class ShipStoryBroadcastService
                         .withStyle(ChatFormatting.WHITE));
     }
 
+    private static void tickMineralScan(MinecraftServer server, long gameTime)
+    {
+        ShipStateData ship = ShipStateData.get(server);
+        SharedShipProgress before = ship.getStoryProgress();
+        MineralScanState phase = before.mineralScan();
+        if (!ship.advanceMineralScanIfDue(gameTime,
+                MINERAL_SCAN_RESULT_DELAY_TICKS,
+                MINERAL_SCAN_CONCLUSION_DELAY_TICKS))
+            return;
+
+        String translationKey = switch (phase)
+        {
+            case PENDING -> "message.starboundmc.nova.prologue.mineral_scan_started";
+            case SCANNING -> "message.starboundmc.nova.prologue.mineral_scan_result";
+            case RESULT_REPORTED -> "message.starboundmc.nova.prologue.mineral_scan_sublight_hint";
+            default -> null;
+        };
+        if (translationKey != null)
+            broadcastNova(server, translationKey);
+        ShipStoryService.syncOpenScreens(server);
+    }
+
+    private static void broadcastNova(MinecraftServer server, String translationKey)
+    {
+        for (ServerPlayer player : server.getPlayerList().getPlayers())
+        {
+            if (!player.isSpectator())
+                sendNova(player, translationKey);
+        }
+    }
+
     private static boolean sendOnce(ServerPlayer player, PlayerStoryFlag flag, String translationKey)
     {
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
         if (!personal.isWritable() || personal.hasFlag(flag))
             return false;
         player.setData(ModAttachments.PLAYER_STORY, personal.withFlag(flag));
-        player.displayClientMessage(novaMessage(translationKey), false);
+        sendNova(player, translationKey);
         return true;
     }
 
@@ -236,9 +283,13 @@ public final class ShipStoryBroadcastService
             return false;
         player.setData(ModAttachments.PLAYER_STORY,
                 personal.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
-        player.displayClientMessage(novaMessage(
-                "message.starboundmc.nova.tutorial.matter_manipulator"), false);
+        sendNova(player, "message.starboundmc.nova.tutorial.matter_manipulator");
         return true;
+    }
+
+    private static void sendNova(ServerPlayer player, String translationKey)
+    {
+        ModNetwork.sendToPlayer(player, new NovaBroadcastPacket(translationKey));
     }
 
     private static void clearPending(UUID id)

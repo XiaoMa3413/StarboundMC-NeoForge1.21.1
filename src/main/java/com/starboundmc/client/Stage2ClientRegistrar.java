@@ -4,6 +4,7 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.menu.ModMenus;
+import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
 import com.starboundmc.client.starmap.StarmapTerminalScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -12,6 +13,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 import net.minecraft.resources.ResourceLocation;
 
 /** Client-only registrations for menus, entity renderers and dimension effects. */
@@ -51,6 +53,9 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.CHAT,
+                ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "nova_remote_broadcast"),
+                NovaBroadcastHudLayer.INSTANCE);
         event.registerAboveAll(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "warp_flash"),
                 WarpFlashOverlay.FLASH);
     }

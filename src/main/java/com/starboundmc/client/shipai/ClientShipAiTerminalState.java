@@ -172,6 +172,22 @@ public final class ClientShipAiTerminalState
             return streamingIndex;
         }
 
+        boolean hasUnrevealedCodePoint()
+        {
+            return nextUnrevealedCodePoint() >= 0;
+        }
+
+        int nextUnrevealedCodePoint()
+        {
+            if (!isStreaming())
+                return -1;
+            String body = localizedBody(streamingIndex);
+            int length = body.codePointCount(0, body.length());
+            if (revealedCodePoints >= length)
+                return -1;
+            return body.codePointAt(body.offsetByCodePoints(0, revealedCodePoints));
+        }
+
         SituationTopic selectedTopic()
         {
             return selectedTopic;

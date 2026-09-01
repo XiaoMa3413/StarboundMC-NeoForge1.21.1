@@ -57,6 +57,7 @@ public final class ShipStoryService
                 shared.surfaceMission(),
                 shared.sublightEngine(),
                 shared.hyperdrive(),
+                shared.mineralScan(),
                 remainingTicks,
                 personal.schemaVersion(),
                 personal.revision(),
