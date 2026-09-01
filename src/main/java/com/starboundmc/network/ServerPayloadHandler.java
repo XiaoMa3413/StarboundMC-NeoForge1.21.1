@@ -66,6 +66,43 @@ final class ServerPayloadHandler {
         }
     }
 
+    static void handle(StartRefinementPacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null) {
+            ModNetwork.serverActions().startRefinement(player, payload.pos());
+        }
+    }
+
+    static void handle(StopRefinementPacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null) {
+            ModNetwork.serverActions().stopRefinement(player, payload.pos());
+        }
+    }
+
+    static void handle(ClaimRefinedVoxelsPacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null) {
+            ModNetwork.serverActions().claimRefinedVoxels(player, payload.pos());
+        }
+    }
+
+    static void handle(StartPrintPacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null && payload.recipeId() != null
+                && payload.quantity() >= 1 && payload.quantity() <= 64) {
+            ModNetwork.serverActions().startPrint(
+                    player, payload.pos(), payload.recipeId(), payload.quantity());
+        }
+    }
+
+    static void handle(CancelPrintQueuePacket payload, IPayloadContext context) {
+        ServerPlayer player = sender(context);
+        if (player != null && payload.queueId() != null) {
+            ModNetwork.serverActions().cancelPrintQueue(player, payload.pos(), payload.queueId());
+        }
+    }
+
     static void handle(ShipAiActionPacket payload, IPayloadContext context) {
         ServerPlayer player = sender(context);
         if (player != null && !player.isSpectator()

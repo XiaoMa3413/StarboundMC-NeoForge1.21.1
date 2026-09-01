@@ -61,6 +61,10 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("star_core_ore", ModBlocks.STAR_CORE_ORE);
     public static final DeferredItem<BlockItem> TITANIUM_ALLOY_FURNACE_ITEM =
             ITEMS.registerSimpleBlockItem("titanium_alloy_furnace", ModBlocks.TITANIUM_ALLOY_FURNACE);
+    public static final DeferredItem<BlockItem> VOXEL_REFINERY_ITEM =
+            ITEMS.registerSimpleBlockItem("voxel_refinery", ModBlocks.VOXEL_REFINERY);
+    public static final DeferredItem<BlockItem> VOXEL_PRINTING_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("voxel_printing_station", ModBlocks.VOXEL_PRINTING_STATION);
 
     public static final DeferredItem<Item> RAW_TUNGSTEN = ITEMS.registerSimpleItem("raw_tungsten");
     public static final DeferredItem<Item> RAW_TITANIUM = ITEMS.registerSimpleItem("raw_titanium");
@@ -70,6 +74,11 @@ public final class ModItems {
     public static final DeferredItem<Item> TITANIUM_INGOT = ITEMS.registerSimpleItem("titanium_ingot");
     public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
     public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
+
+    // Currency-grade matter unit. 99 is the vanilla hard cap: item counts
+    // above 99 cannot pass the creative-mode slot packet (range [1;99]).
+    public static final DeferredItem<VoxelItem> VOXEL = ITEMS.registerItem(
+            "voxel", VoxelItem::new, new Item.Properties().stacksTo(99));
 
     // Steak hunger with double steak saturation (8 * 1.6 * 2 = 25.6) and always edible;
     // eats in 1.2s, three quarters of the vanilla 1.6s.
@@ -109,10 +118,13 @@ public final class ModItems {
                         output.accept(DURASTEEL_ORE_ITEM);
                         output.accept(STAR_CORE_ORE_ITEM);
                         output.accept(TITANIUM_ALLOY_FURNACE_ITEM);
+                        output.accept(VOXEL_REFINERY_ITEM);
+                        output.accept(VOXEL_PRINTING_STATION_ITEM);
                         output.accept(RAW_TUNGSTEN);
                         output.accept(RAW_TITANIUM);
                         output.accept(RAW_DURASTEEL);
                         output.accept(RAW_STAR_CORE);
+                        output.accept(VOXEL);
                         output.accept(TUNGSTEN_INGOT);
                         output.accept(TITANIUM_INGOT);
                         output.accept(DURASTEEL_INGOT);

@@ -38,6 +38,12 @@ public final class ModMenus {
     public static final DeferredHolder<MenuType<?>, MenuType<FuelControllerMenu>> FUEL_CONTROLLER_MENU =
             MENUS.register("fuel_controller_menu", () -> IMenuTypeExtension.create(
                     (id, inventory, buffer) -> new FuelControllerMenu(id, inventory)));
+    public static final DeferredHolder<MenuType<?>, MenuType<VoxelRefineryMenu>> VOXEL_REFINERY_MENU =
+            MENUS.register("voxel_refinery_menu", () -> IMenuTypeExtension.create(
+                    VoxelRefineryMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<VoxelPrintingStationMenu>> VOXEL_PRINTING_STATION_MENU =
+            MENUS.register("voxel_printing_station_menu", () -> IMenuTypeExtension.create(
+                    VoxelPrintingStationMenu::new));
 
     private ModMenus() {
     }

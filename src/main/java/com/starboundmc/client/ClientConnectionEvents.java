@@ -34,5 +34,8 @@ public final class ClientConnectionEvents {
         ClientNovaBroadcastState.resetConnectionState();
         NovaBroadcastHudLayer.INSTANCE.resetConnectionState();
         ClientShipEnvironmentState.resetConnectionState();
+        ClientVoxelMachineState.reset();
+        ClientPrintQueueState.reset();
+        ClientVoxelWalletState.reset();
     }
 }

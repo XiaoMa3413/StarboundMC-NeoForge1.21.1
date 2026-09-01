@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "entries": [
+    "starboundmc:passive_voxel_drops",
+    "starboundmc:hostile_voxel_drops"
+  ]
+}

@@ -60,6 +60,19 @@ public final class ClientPayloadHandler {
                 emptyToNull(payload.targetEntryId()));
     }
 
+    public static void handle(SyncVoxelWalletPacket payload, IPayloadContext context) {
+        com.starboundmc.client.ClientVoxelWalletState.set(payload.balance());
+    }
+
+    public static void handle(SyncVoxelMachinePacket payload, IPayloadContext context) {
+        com.starboundmc.client.ClientVoxelMachineState.apply(
+                payload, context.player().level().getGameTime());
+    }
+
+    public static void handle(SyncPrintQueuePacket payload, IPayloadContext context) {
+        com.starboundmc.client.ClientPrintQueueState.apply(payload);
+    }
+
     public static void handle(ShipStorySnapshotPacket payload, IPayloadContext context) {
         if (context.player().containerMenu instanceof ShipAiTerminalMenu menu) {
             ClientShipStoryState.apply(menu.containerId, payload);

@@ -1,0 +1,7 @@
+﻿{
+  "type": "starboundmc:voxel_decomposition",
+  "input": {
+    "item": "minecraft:gold_ingot"
+  },
+  "voxels": 40
+}

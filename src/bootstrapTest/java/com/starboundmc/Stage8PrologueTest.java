@@ -188,16 +188,16 @@ final class Stage8PrologueTest
     }
 
     @Test
-    void earlyManipulatorModuleRecipeSupportsTheDiamondObjective()
+    void earlyPrintedManipulatorModuleSupportsTheDiamondObjective()
             throws IOException
     {
         String recipe = Files.readString(Path.of(
-                "src/main/resources/data/starboundmc/recipe/matter_manipulator_module.json"));
+                "src/main/resources/data/starboundmc/recipe/print_matter_manipulator_module.json"));
 
-        assertTrue(recipe.contains("\" I \""));
-        assertTrue(recipe.contains("\"ILI\""));
+        assertTrue(recipe.contains("starboundmc:voxel_printing"));
         assertTrue(recipe.contains("minecraft:iron_ingot"));
         assertTrue(recipe.contains("minecraft:lapis_lazuli"));
+        assertTrue(recipe.contains("starboundmc:matter_manipulator_module"));
         assertTrue(recipe.contains("\"count\": 2"));
         assertFalse(recipe.contains("starboundmc:titanium_ingot"));
         assertFalse(recipe.contains("starboundmc:durasteel_ingot"));

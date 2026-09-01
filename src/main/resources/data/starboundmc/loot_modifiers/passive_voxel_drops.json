@@ -1,0 +1,13 @@
+{
+  "type": "starboundmc:add_voxel_drop",
+  "amount": 5,
+  "conditions": [
+    {
+      "condition": "minecraft:entity_properties",
+      "entity": "this",
+      "predicate": {
+        "type": "#starboundmc:passive_voxel_drop"
+      }
+    }
+  ]
+}

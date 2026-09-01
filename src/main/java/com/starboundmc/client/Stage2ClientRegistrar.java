@@ -1,6 +1,7 @@
 package com.starboundmc.client;
 
 import com.starboundmc.StarboundMC;
+import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
@@ -31,11 +32,15 @@ public final class Stage2ClientRegistrar {
         event.register(ModMenus.TELEPORTER_MENU.get(), TeleporterScreen::new);
         event.register(ModMenus.ALLOY_FURNACE_MENU.get(), AlloyFurnaceScreen::new);
         event.register(ModMenus.FUEL_CONTROLLER_MENU.get(), FuelControllerScreen::new);
+        event.register(ModMenus.VOXEL_REFINERY_MENU.get(), VoxelRefineryScreen::new);
+        event.register(ModMenus.VOXEL_PRINTING_STATION_MENU.get(), VoxelPrintingStationScreen::new);
     }
 
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SEAT.get(), SeatRenderer::new);
+        event.registerBlockEntityRenderer(
+                ModBlockEntities.VOXEL_PRINTING_STATION.get(), VoxelPrintingStationRenderer::new);
     }
 
     @SubscribeEvent

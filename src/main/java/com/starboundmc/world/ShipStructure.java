@@ -43,6 +43,9 @@ public class ShipStructure
     /** Shipboard AI terminal at the cabin's forward edge, facing the cockpit. */
     public static final BlockPos SHIP_AI_TERMINAL_POS = new BlockPos(0, FLOOR_Y + 1, 3);
     public static final Direction SHIP_AI_TERMINAL_FACING = Direction.SOUTH;
+    /** Wall-mounted voxel printing station on the port-side cabin wall. */
+    public static final BlockPos SHIP_VOXEL_PRINTING_STATION_POS = new BlockPos(-4, FLOOR_Y + 1, 1);
+    public static final Direction SHIP_VOXEL_PRINTING_STATION_FACING = Direction.EAST;
 
     private static final int ENGINE_BULKHEAD_Z = -3;
 
@@ -253,6 +256,11 @@ public class ShipStructure
                 ModBlocks.TITANIUM_ALLOY_FURNACE.get().defaultBlockState()
                         .setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
         count += place(chunk, -3, FLOOR_Y + 1, 3, Blocks.POTTED_CACTUS.defaultBlockState());
+        count += place(chunk, SHIP_VOXEL_PRINTING_STATION_POS.getX(), SHIP_VOXEL_PRINTING_STATION_POS.getY(),
+                SHIP_VOXEL_PRINTING_STATION_POS.getZ(),
+                ModBlocks.VOXEL_PRINTING_STATION.get().defaultBlockState()
+                        .setValue(com.starboundmc.block.VoxelPrintingStationBlock.FACING,
+                                SHIP_VOXEL_PRINTING_STATION_FACING));
 
         // Cockpit: chair and all controls fit on one compact raised deck.
         count += place(chunk, 0, FLOOR_Y + 2, 5,
@@ -294,6 +302,8 @@ public class ShipStructure
             chunk.setBlockEntity(new FuelControllerBlockEntity(blockPos, state));
         else if (state.getBlock() == ModBlocks.TITANIUM_ALLOY_FURNACE.get())
             chunk.setBlockEntity(new AlloyFurnaceBlockEntity(blockPos, state));
+        else if (state.getBlock() == ModBlocks.VOXEL_PRINTING_STATION.get())
+            chunk.setBlockEntity(new com.starboundmc.block.entity.VoxelPrintingStationBlockEntity(blockPos, state));
         return 1;
     }
 }
