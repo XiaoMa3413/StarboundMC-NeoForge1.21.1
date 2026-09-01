@@ -44,6 +44,7 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private final int containerId;
     private final NovaPortraitElement portrait = new NovaPortraitElement();
+    private final NovaDialogueSounds dialogueSounds = new NovaDialogueSounds();
     private final Label portraitState = new Label();
     private final Label linkStatus = new Label();
     private final ScrollerView history = new ScrollerView();
@@ -442,10 +443,13 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
         int previousStreamingIndex = session.streamingIndex();
-        boolean textAdvanced = session.hasUnrevealedCodePoint();
+        int revealedCodePoint = session.nextUnrevealedCodePoint();
         ClientShipAiTerminalState.CompletionIntent completed = session.advanceStream();
-        if (textAdvanced)
+        if (revealedCodePoint >= 0)
+        {
             portrait.onTextAdvanced();
+            dialogueSounds.onCodePointRevealed(revealedCodePoint);
+        }
 
         syncTranscriptViews();
         if (previousStreamingIndex >= 0 && previousStreamingIndex < transcriptLabels.size())

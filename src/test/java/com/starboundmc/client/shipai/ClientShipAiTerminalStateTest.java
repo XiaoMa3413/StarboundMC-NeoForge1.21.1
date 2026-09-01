@@ -58,11 +58,12 @@ class ClientShipAiTerminalStateTest
                 ClientShipAiTerminalState.CompletionIntent.NONE,
                 null);
 
-        assertTrue(session.hasUnrevealedCodePoint());
+        assertEquals('A', session.nextUnrevealedCodePoint());
         assertTrue(session.advanceStream().isNone());
-        assertTrue(session.hasUnrevealedCodePoint());
+        assertEquals('B', session.nextUnrevealedCodePoint());
         session.advanceStream();
         assertFalse(session.hasUnrevealedCodePoint());
+        assertEquals(-1, session.nextUnrevealedCodePoint());
     }
 
     @Test

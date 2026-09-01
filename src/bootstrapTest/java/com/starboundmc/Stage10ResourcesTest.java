@@ -77,8 +77,12 @@ final class Stage10ResourcesTest {
     }
 
     @Test
-    void customAudioIsAbsentAndBothLocalesAreComplete() throws IOException {
-        assertFalse(Files.exists(ASSETS.resolve("sounds.json")));
+    void onlyOriginalNovaAudioIsPresentAndBothLocalesAreComplete() throws IOException {
+        JsonObject sounds = json(ASSETS.resolve("sounds.json"));
+        assertEquals(Set.of("nova_text"), sounds.keySet());
+        assertEquals("starboundmc:ui/nova_text", sounds.getAsJsonObject("nova_text")
+                .getAsJsonArray("sounds").get(0).getAsJsonObject().get("name").getAsString());
+        assertTrue(Files.isRegularFile(ASSETS.resolve("sounds/ui/nova_text.ogg")));
         for (String sound : List.of("warp_start", "warp_loop", "warp_end", "teleporter_use")) {
             assertFalse(Files.exists(ASSETS.resolve("sounds/" + sound + ".ogg")), sound);
         }
