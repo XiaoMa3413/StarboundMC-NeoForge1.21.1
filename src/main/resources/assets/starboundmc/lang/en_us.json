@@ -30,6 +30,7 @@
   "gui.starboundmc.ship_ai.return_latest": "LATEST",
   "gui.starboundmc.ship_ai.receiving": "Receiving transmission...",
   "gui.starboundmc.ship_ai.speaker.nova": "N.O.V.A.",
+  "gui.starboundmc.ship_ai.remote_link": "REMOTE LINK",
   "gui.starboundmc.ship_ai.speaker.player": "YOU",
   "gui.starboundmc.ship_ai.speaker.system": "SYSTEM",
   "gui.starboundmc.ship_ai.demo.notice": "Local interaction prototype. Story and ship state are not connected.",

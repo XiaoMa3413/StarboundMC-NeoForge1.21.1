@@ -102,6 +102,7 @@ final class Stage10ResourcesTest {
             assertTrue(Files.isRegularFile(
                     ASSETS.resolve("textures/gui/ship_ai/" + texture + ".png")), texture);
         }
+        assertTrue(Files.isRegularFile(ASSETS.resolve("lss/nova_broadcast_hud.lss")));
     }
 
     @Test

@@ -24,6 +24,7 @@
   "gui.starboundmc.ship_ai.return_latest": "回到最新",
   "gui.starboundmc.ship_ai.receiving": "正在接收传输……",
   "gui.starboundmc.ship_ai.speaker.nova": "N.O.V.A.",
+  "gui.starboundmc.ship_ai.remote_link": "远程链路",
   "gui.starboundmc.ship_ai.speaker.player": "你",
   "gui.starboundmc.ship_ai.speaker.system": "系统",
   "gui.starboundmc.ship_ai.demo.notice": "本地交互原型；尚未接入剧情与飞船状态。",

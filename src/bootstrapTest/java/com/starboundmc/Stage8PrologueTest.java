@@ -146,10 +146,20 @@ final class Stage8PrologueTest
             throws IOException
     {
         String broadcastState = source("client/shipai/ClientNovaBroadcastState.java");
+        String timeline = source("client/shipai/NovaBroadcastTimeline.java");
+        String hud = source("client/shipai/NovaBroadcastHudLayer.java");
+        String root = source("client/shipai/NovaBroadcastHudRoot.java");
+        String registrar = source("client/Stage2ClientRegistrar.java");
         String terminal = source("client/shipai/ShipAiTerminalRoot.java");
 
-        assertTrue(broadcastState.contains("MIN_PROGRESS_DOTS = 6"));
-        assertTrue(broadcastState.contains("isProgressDot(active.body(), revealed)"));
+        assertTrue(timeline.contains("MIN_PROGRESS_DOTS = 6"));
+        assertTrue(timeline.contains("isProgressDot(active.body(), revealed)"));
+        assertFalse(broadcastState.contains("rescaleChat"));
+        assertTrue(broadcastState.contains("addMessage(historyMessage"));
+        assertTrue(hud.contains("implements ModularHudLayer"));
+        assertTrue(root.contains("new NovaPortraitElement()"));
+        assertTrue(registrar.contains("VanillaGuiLayers.CHAT"));
+        assertTrue(registrar.contains("NovaBroadcastHudLayer.INSTANCE"));
         assertTrue(terminal.contains("gui.starboundmc.ship_ai.prologue.boot.restarting"));
     }
 

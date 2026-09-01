@@ -4,6 +4,7 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.shipai.ClientShipAiTerminalState;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
+import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
 import com.starboundmc.network.ClientNetworkState;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -31,6 +32,7 @@ public final class ClientConnectionEvents {
         ClientShipAiTerminalState.resetConnectionState();
         ClientShipStoryState.resetConnectionState();
         ClientNovaBroadcastState.resetConnectionState();
+        NovaBroadcastHudLayer.INSTANCE.resetConnectionState();
         ClientShipEnvironmentState.resetConnectionState();
     }
 }

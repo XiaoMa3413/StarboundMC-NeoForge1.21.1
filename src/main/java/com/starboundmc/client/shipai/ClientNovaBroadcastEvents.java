@@ -6,7 +6,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
-/** Advances N.O.V.A. chat transmissions independently from terminal screens. */
+/** Advances N.O.V.A. remote HUD transmissions independently from terminal screens. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public final class ClientNovaBroadcastEvents
 {
