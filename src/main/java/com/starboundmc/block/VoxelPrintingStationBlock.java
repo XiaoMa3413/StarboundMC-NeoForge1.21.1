@@ -38,19 +38,21 @@ import java.util.EnumMap;
 import java.util.Map;
 
 /**
- * Wall-mounted voxel printing station. Prints tech components from raw
- * materials plus the opener's voxel wallet balance (Subnautica-fabricator
- * style). The thin body hugs the wall it is placed against and drops when
- * that wall disappears.
+ * Wall-mounted open voxel fabrication bay. Prints tech components from raw
+ * materials plus the shared voxel balance. The rear housing, printing bed,
+ * and twin probes form a real chamber that drops when its support disappears.
  */
 public final class VoxelPrintingStationBlock extends BaseEntityBlock {
     public static final MapCodec<VoxelPrintingStationBlock> CODEC = simpleCodec(VoxelPrintingStationBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    /** Base model faces north, mounted flush against the south wall edge. */
+    /** Base model faces north, with its rear housing against the south wall. */
     private static final VoxelShape NORTH_SHAPE = Shapes.or(
-            Block.box(1.0, 4.0, 11.0, 15.0, 15.0, 16.0),
-            Block.box(2.0, 5.0, 9.0, 14.0, 14.0, 11.0));
+            Block.box(1.0, 2.0, 13.25, 15.0, 15.5, 16.0),
+            Block.box(2.5, 2.0, 4.0, 13.5, 5.5, 13.5),
+            Block.box(1.0, 5.5, 7.0, 3.85, 15.5, 13.5),
+            Block.box(12.15, 5.5, 7.0, 15.0, 15.5, 13.5),
+            Block.box(3.85, 13.5, 7.0, 12.15, 15.5, 13.5));
     private static final Map<Direction, VoxelShape> SHAPES = new EnumMap<>(Direction.class);
 
     static {

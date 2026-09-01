@@ -1,3 +1,20 @@
 {
-  "parent": "starboundmc:block/voxel_printing_station"
+  "parent": "starboundmc:block/voxel_printing_station",
+  "display": {
+    "gui": {
+      "rotation": [25, 225, 0],
+      "translation": [0, -0.5, 0],
+      "scale": [0.72, 0.72, 0.72]
+    },
+    "ground": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 2.5, 0],
+      "scale": [0.36, 0.36, 0.36]
+    },
+    "fixed": {
+      "rotation": [0, 180, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.46, 0.46, 0.46]
+    }
+  }
 }

@@ -64,7 +64,8 @@ public final class ClientPayloadHandler {
     }
 
     public static void handle(SyncVoxelMachinePacket payload, IPayloadContext context) {
-        com.starboundmc.client.ClientVoxelMachineState.apply(payload);
+        com.starboundmc.client.ClientVoxelMachineState.apply(
+                payload, context.player().level().getGameTime());
     }
 
     public static void handle(SyncPrintQueuePacket payload, IPayloadContext context) {

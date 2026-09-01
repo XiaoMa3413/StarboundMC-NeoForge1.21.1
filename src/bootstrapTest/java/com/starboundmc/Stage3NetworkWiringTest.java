@@ -120,7 +120,8 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("updateRequirementCounts"));
         assertTrue(printingRoot.contains("printButton.setActive(canPrint)"));
         assertTrue(renderer.contains("snapshot.resultItemId()"));
-        assertTrue(renderer.contains("station.getLevel().getGameTime() / 4L"));
+        assertTrue(renderer.contains("station.getLevel().getGameTime() + partialTick"));
+        assertTrue(renderer.contains("renderOverheadProbes"));
         assertTrue(registrar.contains("registerBlockEntityRenderer"));
     }
 

@@ -58,4 +58,20 @@ class SyncVoxelMachinePacketTest {
         ClientVoxelMachineState.apply(new SyncVoxelMachinePacket(POS, 0, 20, 0));
         assertEquals(0, ClientVoxelMachineState.snapshotAt(POS).voxels());
     }
+
+    @Test
+    void interpolatesBetweenSparseProgressSnapshotsWithoutTickSawteeth() {
+        ClientVoxelMachineState.apply(new SyncVoxelMachinePacket(POS, 90, 100, 0), 200L);
+
+        assertEquals(90.0F,
+                ClientVoxelMachineState.interpolatedRemainingTicksAt(POS, 200L, 0.0F), 0.001F);
+        assertEquals(85.5F,
+                ClientVoxelMachineState.interpolatedRemainingTicksAt(POS, 204L, 0.5F), 0.001F);
+        assertEquals(80.0F,
+                ClientVoxelMachineState.interpolatedRemainingTicksAt(POS, 210L, 0.0F), 0.001F);
+
+        ClientVoxelMachineState.apply(new SyncVoxelMachinePacket(POS, 80, 100, 0), 210L);
+        assertEquals(79.5F,
+                ClientVoxelMachineState.interpolatedRemainingTicksAt(POS, 210L, 0.5F), 0.001F);
+    }
 }
