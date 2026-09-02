@@ -112,7 +112,10 @@ public final class VoxelPrintingStationRoot extends UIElement {
         header.addClass("voxel-machine-header");
         header.addChildren(
                 VoxelUiSupport.positioned("voxel-printing-rail", 0, 0, 3, 21),
-                VoxelUiSupport.label(title, "machine-inventory-title", 8, 5, 230, 10));
+                VoxelUiSupport.label(title, "machine-inventory-title", 8, 2, 230, 9),
+                VoxelUiSupport.label(Component.translatable(
+                                "gui.starboundmc.voxel_printing.subtitle"),
+                        "voxel-printing-subtitle", 8, 11, 230, 7));
 
         wallet.addClass("voxel-printing-wallet");
         wallet.setAllowHitTest(false);

@@ -120,7 +120,16 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingScreen.contains("extends StarboundModularScreen"));
         assertTrue(refineryRoot.contains("ClaimRefinedVoxelsPacket"));
         assertTrue(refineryRoot.contains("snapshotAt(menu.blockPos())"));
+        String walletHud = source("client/VoxelWalletHud.java");
+        assertTrue(walletHud.contains("ModItems.VOXEL.get()"));
+        assertTrue(walletHud.contains("gui.starboundmc.voxel_wallet.label"));
+        assertTrue(walletHud.contains("screen.getXSize() + SIDE_GAP"));
+        assertTrue(walletHud.contains("screen.getGuiLeft() - SIDE_GAP"));
+        assertTrue(walletHud.contains("screen.getYSize() + SIDE_GAP"));
+        assertTrue(walletHud.contains("return null;"));
         assertTrue(printingRoot.contains("new ScrollerView()"));
+        assertTrue(printingRoot.contains("gui.starboundmc.voxel_printing.subtitle"));
+        assertTrue(printingRoot.contains("voxel-printing-subtitle"));
         assertTrue(printingRoot.contains("voxel-recipe-unavailable"));
         assertTrue(printingRoot.contains("updateRequirementCounts"));
         assertTrue(printingRoot.contains("printButton.setActive(canPrint)"));
