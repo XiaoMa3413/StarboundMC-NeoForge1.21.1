@@ -101,4 +101,28 @@ class NovaEyeMotionTest {
         assertEquals(1F, NovaEyeMotion.scanningPanelDataReveal(62F, startTick), EPSILON);
         assertEquals(1F, NovaEyeMotion.scanningPanelDataReveal(90F, startTick), EPSILON);
     }
+
+    @Test
+    void faultGlitchUsesShortBurstsSeparatedByQuietFrames() {
+        int startTick = 20;
+        assertEquals(0F, NovaEyeMotion.faultGlitchIntensity(19F, startTick), EPSILON);
+        assertEquals(0.75F, NovaEyeMotion.faultGlitchIntensity(20F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.faultGlitchIntensity(26F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.faultGlitchIntensity(44F, startTick), EPSILON);
+        assertEquals(0.82F, NovaEyeMotion.faultGlitchIntensity(48F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.faultGlitchIntensity(52F, startTick), EPSILON);
+        assertEquals(0.62F, NovaEyeMotion.faultGlitchIntensity(72F, startTick), EPSILON);
+        assertEquals(0F, NovaEyeMotion.faultGlitchIntensity(77F, startTick), EPSILON);
+        assertEquals(0.75F, NovaEyeMotion.faultGlitchIntensity(
+                startTick + NovaEyeMotion.FAULT_GLITCH_CYCLE_TICKS, startTick), EPSILON);
+
+        int activeFrames = 0;
+        for (int tick = 0; tick < NovaEyeMotion.FAULT_GLITCH_CYCLE_TICKS; tick++) {
+            float intensity = NovaEyeMotion.faultGlitchIntensity(startTick + tick, startTick);
+            assertTrue(intensity >= 0F && intensity <= 0.82F);
+            if (intensity > 0F)
+                activeFrames++;
+        }
+        assertTrue(activeFrames <= 20);
+    }
 }

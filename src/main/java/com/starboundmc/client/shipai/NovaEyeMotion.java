@@ -15,6 +15,7 @@ final class NovaEyeMotion {
     static final int SCANNING_PANEL_HEIGHT_REVEAL_TICKS = 10;
     static final int SCANNING_PANEL_DATA_REVEAL_DELAY_TICKS = 13;
     static final int SCANNING_PANEL_DATA_REVEAL_TICKS = 7;
+    static final int FAULT_GLITCH_CYCLE_TICKS = 72;
 
     private static final float MIN_BLINK_SCALE = 0.12F;
     private static final int ACTIVITY_PULSE_RISE_TICKS = 4;
@@ -103,6 +104,20 @@ final class NovaEyeMotion {
                 SCANNING_PANEL_IDLE_DELAY_TICKS
                         + SCANNING_PANEL_DATA_REVEAL_DELAY_TICKS,
                 SCANNING_PANEL_DATA_REVEAL_TICKS);
+    }
+
+    static float faultGlitchIntensity(float time, int activityStartTick) {
+        if (activityStartTick < 0)
+            return 0F;
+        float phase = positiveModulo(time - activityStartTick, FAULT_GLITCH_CYCLE_TICKS);
+        if (phase < 6F)
+            return 0.75F * (1F - smoothStep(phase / 6F));
+        if (phase >= 24F && phase < 32F)
+            return 0.82F * smoothStep((phase - 24F) / 4F)
+                    * (1F - smoothStep((phase - 28F) / 4F));
+        if (phase >= 52F && phase < 57F)
+            return 0.62F * (1F - smoothStep((phase - 52F) / 5F));
+        return 0F;
     }
 
     static boolean scanningPanelActive(float time, int activityStartTick) {

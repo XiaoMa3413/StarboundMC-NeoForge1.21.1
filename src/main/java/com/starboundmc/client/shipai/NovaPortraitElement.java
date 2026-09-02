@@ -130,6 +130,7 @@ public final class NovaPortraitElement extends UIElement {
         } else {
             drawPrototypePlaceholder(context.graphics, x, y, width, height);
         }
+        drawFaultGlitch(context.graphics, x, y, width, height, ticks + context.partialTick);
         drawHologramOverlay(context, x, y, width, height);
     }
 
@@ -333,6 +334,43 @@ public final class NovaPortraitElement extends UIElement {
         int cursorX = left + 2 + Math.floorMod(Mth.floor(time * 0.72F), cursorRange);
         graphics.fill(cursorX, top + 1, Math.min(right - 1, cursorX + 2), top + 2,
                 colorWithAlpha(0xE8FFFF, 0.88F * dataReveal));
+    }
+
+    private void drawFaultGlitch(GuiGraphics graphics, int x, int y,
+                                 int width, int height, float time) {
+        if (activity != NovaPortraitActivity.WARNING)
+            return;
+        float intensity = NovaEyeMotion.faultGlitchIntensity(time, activityStartTick);
+        if (intensity <= 0F)
+            return;
+
+        int frame = Mth.floor(time * 0.8F);
+        int[] colors = {0x6BE8E8, 0xB8FFFF, 0x3D93A1, 0xD47BAF};
+        for (int band = 0; band < 6; band++) {
+            int selector = Math.floorMod(frame * 5 + band * 11, 17);
+            if (selector > 8)
+                continue;
+            int bandY = y + Math.floorMod(frame * (band + 3) + band * 13,
+                    Math.max(1, height - 2));
+            int bandHeight = 1 + Math.floorMod(frame + band, 2);
+            int bandWidth = Math.max(2, Math.round(width
+                    * (0.16F + Math.floorMod(frame + band * 7, 6) * 0.08F)));
+            int bandX = x + Math.floorMod(frame * 3 + band * 17,
+                    Math.max(1, width - bandWidth + 1));
+            int color = colorWithAlpha(colors[Math.floorMod(frame + band, colors.length)],
+                    intensity * (band % 3 == 0 ? 0.68F : 0.42F));
+            graphics.fill(bandX, bandY,
+                    Math.min(x + width, bandX + bandWidth),
+                    Math.min(y + height, bandY + bandHeight), color);
+        }
+
+        int tearY = y + Math.floorMod(frame * 7 + 5, Math.max(1, height - 2));
+        int tearWidth = Math.max(3, Math.round(width * 0.62F));
+        int tearX = x + Math.floorMod(frame * 5 + 9,
+                Math.max(1, width - tearWidth + 1));
+        graphics.fill(tearX, tearY, Math.min(x + width, tearX + tearWidth),
+                Math.min(y + height, tearY + 1),
+                colorWithAlpha(0xE8FFFF, intensity * 0.72F));
     }
 
     private static void drawPanelCorners(GuiGraphics graphics,

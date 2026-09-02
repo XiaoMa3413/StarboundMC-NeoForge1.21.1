@@ -85,6 +85,8 @@
   "message.starboundmc.nova.prologue.first_landing_complete": "I have confirmed your arrival on the planet surface. The communications link is restored.",
   "message.starboundmc.nova.tutorial.matter_manipulator": "Explore the surrounding area and use the Matter Manipulator to gather basic resources. Hold right-click to activate the mining laser.",
   "message.starboundmc.nova.tutorial.wood_acquired": "Good. You have acquired wood. It is a versatile basic resource; based on current data, your survival probability has increased by 17 percentage points.",
+  "message.starboundmc.nova.tutorial.voxel_intro": "New usable resource detected: voxel. It is a standardized unit of matter and a common medium of exchange across settled space.",
+  "message.starboundmc.nova.tutorial.voxel_use": "In material printing, base resources provide the primary substance while voxels complete the blueprint and construct precision structures that conventional processing cannot easily produce. With basic materials and a small amount of voxels, a printing station can fabricate complex components and tools.",
   "message.starboundmc.nova.prologue.mineral_scan_started": "Orbital scanners are online. Mineral survey in progress................",
   "message.starboundmc.nova.prologue.mineral_scan_result": "The preliminary scan is complete. Coal, copper, and iron are present in the upper strata; deeper layers also contain lapis lazuli, redstone, and sparse diamond deposits.",
   "message.starboundmc.nova.prologue.mineral_scan_sublight_hint": "Diamond's crystalline structure may be suitable for replacing the damaged focusing crystal in the sublight engine's ignition array. I still need to verify the complete repair plan. Until then, continue gathering basic resources.",

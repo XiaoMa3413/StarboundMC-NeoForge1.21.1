@@ -79,6 +79,8 @@
   "message.starboundmc.nova.prologue.first_landing_complete": "已确认你抵达星球表面，通信链路现已恢复。",
   "message.starboundmc.nova.tutorial.matter_manipulator": "建议先探索附近区域，并使用物质枪收集基础资源。按住右键即可启动采矿激光。",
   "message.starboundmc.nova.tutorial.wood_acquired": "很好，你已经获得了木材。这是一种用途广泛的基础资源。根据当前数据，你的生存概率提高了 17 个百分点。",
+  "message.starboundmc.nova.tutorial.voxel_intro": "检测到新的可用资源：体素。它是一种经过标准化编码的基础物质单位，也是星际社会常用的交换媒介。",
+  "message.starboundmc.nova.tutorial.voxel_use": "在物质打印中，基础原料提供物品的主要材质，体素则按照蓝图补全所需成分，并构造常规加工难以实现的精密结构。只需基础原料和少量体素，打印站就能制造复杂元件与工具。",
   "message.starboundmc.nova.prologue.mineral_scan_started": "轨道扫描设备已启动。地层矿物扫描中................",
   "message.starboundmc.nova.prologue.mineral_scan_result": "初步扫描已经完成。浅层地层中分布着煤、铜和铁；更深处还检测到青金石、红石，以及少量钻石。",
   "message.starboundmc.nova.prologue.mineral_scan_sublight_hint": "钻石的晶体结构或许可以替代亚光速引擎点火阵列中损坏的聚焦晶体。我还需要核对完整的修复方案。在此之前，请继续收集基础资源。",
