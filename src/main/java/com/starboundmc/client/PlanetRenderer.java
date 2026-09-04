@@ -77,6 +77,9 @@ public class PlanetRenderer
     private static final float STAR_DISTANCE = 200.0F;
     private static final float STAR_SIZE_SCALE = 0.85F;
 
+    /** Planet hand-off is cut at the hyperspace boundary; no departure fade. */
+    private static final float ARRIVAL_PLANET_FADE_FRACTION = 0.08F;
+
     // ---- Streak tunnel ----
     private static final int STREAK_COUNT = 220;
     /** Close, bright streaks that provide speed parallax near the cockpit. */
@@ -443,10 +446,14 @@ public class PlanetRenderer
     }
 
     private static void renderVisiblePlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
-                                             StarSystemResolver.ResolvedStarField stars)
+                                              StarSystemResolver.ResolvedStarField stars)
     {
-        if (space.flightPhase() == FlightPhase.HYPERSPACE)
-            return;
+        boolean longRoute = space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS;
+        float warpProgress = space.warpProgress();
+        float hyperspaceStart = longRoute
+                ? (ShipFlightController.TURN_TICKS + ShipFlightController.ACCEL_TICKS)
+                    / (float) Math.max(1, space.warpDurationTicks())
+                : 0.0F;
         UniversePosition ship = space.universePosition();
         for (int i = 0; i < PLANET_DRAW_ORDER.length; i++)
             PLANET_DISTANCE_SQ[i] = ShipSpace.universeBodyPosition(PLANET_DRAW_ORDER[i]).distanceToSqr(ship);
@@ -472,12 +479,37 @@ public class PlanetRenderer
         {
             StarSystem system = StarSystems.systemOfPlanet(body);
             float systemVisibility = stellarVisibility(stars, system);
-            boolean arrivingTarget = space.warping() && body == space.targetBody()
-                    && space.warpProgress() >= WarpVisualTiming.ARRIVAL_FADE_START;
-            if (systemVisibility <= 0.20F && !arrivingTarget)
+            StarSystem sourceSystem = space.currentBody() == null
+                    ? null : StarSystems.systemOfPlanet(space.currentBody());
+            StarSystem targetSystem = space.targetBody() == null
+                    ? null : StarSystems.systemOfPlanet(space.targetBody());
+            boolean departingSystemBody = space.warping() && longRoute
+                    && warpProgress < WarpVisualTiming.ARRIVAL_FADE_START
+                    && sourceSystem != null && system == sourceSystem;
+            boolean arrivingSystemBody = space.warping() && longRoute
+                    && warpProgress >= WarpVisualTiming.ARRIVAL_FADE_START
+                    && targetSystem != null && system == targetSystem;
+            // Keep the entire source system during the departure leg. This
+            // preserves the primary/companion relationship (for example the
+            // lush world and its molten moon) instead of dropping every body
+            // except the one the ship is docked at.
+            if (longRoute && space.warping() && !departingSystemBody && !arrivingSystemBody)
                 continue;
-            renderVirtualPlanet(pose, camera, body, space);
+            if (systemVisibility <= 0.20F && !arrivingSystemBody && !departingSystemBody)
+                continue;
+            float alpha = 1.0F;
+            if (arrivingSystemBody)
+            {
+                alpha = arrivalPlanetAlpha(warpProgress);
+            }
+            if (alpha > 0.002F)
+                renderVirtualPlanet(pose, camera, body, space, alpha);
         }
+    }
+    static float arrivalPlanetAlpha(float warpProgress)
+    {
+        return smoothstep((warpProgress - WarpVisualTiming.ARRIVAL_FADE_START)
+                / ARRIVAL_PLANET_FADE_FRACTION);
     }
 
     private static float stellarVisibility(StarSystemResolver.ResolvedStarField stars, StarSystem system)
@@ -494,7 +526,8 @@ public class PlanetRenderer
     }
 
     /** Draw one body at true near distance or angularly projected on the sky shell. */
-    private static void renderVirtualPlanet(PoseStack pose, Camera camera, Planet body, SpaceRenderContext space)
+    private static void renderVirtualPlanet(PoseStack pose, Camera camera, Planet body,
+                                            SpaceRenderContext space, float alpha)
     {
         Vec3 bodyCenter = virtualToView(ShipSpace.universeBodyPosition(body), space);
         float bodyScale = (float) (ShipSpace.radius(body) / PLANET_RADIUS);
@@ -508,11 +541,11 @@ public class PlanetRenderer
         float renderedRadius = PLANET_RADIUS * bodyScale;
         if (renderedRadius < MIN_PLANET_SKY_RADIUS)
             return;
-        renderPlanet(pose, camera, body, bodyScale, 1.0F,
+        renderPlanet(pose, camera, body, bodyScale, alpha,
                 (float) bodyCenter.x, (float) bodyCenter.y, (float) bodyCenter.z,
                 (float) space.yaw(), (float) space.pitch());
         if (renderedRadius >= 0.45F)
-            renderAtmosphereGlow(pose, body, bodyScale, 1.0F,
+            renderAtmosphereGlow(pose, body, bodyScale, alpha,
                     (float) bodyCenter.x, (float) bodyCenter.y, (float) bodyCenter.z);
     }
 
