@@ -32,8 +32,9 @@ public final class Stage6TravelService {
         if (ship == null) {
             teleportToOverworldSpawn(player, false);
         } else {
+            BlockPos destination = ShipDimensions.shipTeleporterDestination(ship);
             player.stopRiding();
-            player.teleportTo(ship, SHIP_POS.getX() + 0.5, SHIP_POS.getY(), SHIP_POS.getZ() + 0.5,
+            player.teleportTo(ship, destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5,
                     player.getYRot(), player.getXRot());
         }
         syncState(player);

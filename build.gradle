@@ -147,7 +147,6 @@ sourceSets {
             include 'com/starboundmc/world/ShipDimensions.java'
             include 'com/starboundmc/world/ShipChunkGenerator.java'
             include 'com/starboundmc/world/ShipStructure.java'
-            include 'com/starboundmc/world/StarterShipHullProfile.java'
             include 'com/starboundmc/world/FilteredBiomeSource.java'
             include 'com/starboundmc/world/BarrenChunkGenerator.java'
             include 'com/starboundmc/world/MoltenChunkGenerator.java'
@@ -191,6 +190,12 @@ sourceSets {
 }
 
 // Minecraft 1.21.1 and NeoForge 21.1 require Java 21.
+// Opt-in runtime checks live outside the shipped mod sources/resources.
+if (project.hasProperty('shipGameTests')) {
+    sourceSets.main.java.srcDir('src/gameTest/java')
+    sourceSets.main.resources.srcDir('src/gameTest/resources')
+}
+
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
@@ -218,6 +223,7 @@ neoForge {
 
         gameTestServer {
             type = 'gameTestServer'
+            gameDirectory = file('run-shuttle-gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 

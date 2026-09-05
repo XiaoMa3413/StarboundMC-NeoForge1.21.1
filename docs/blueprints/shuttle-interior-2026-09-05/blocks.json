@@ -1,0 +1,12101 @@
+{
+  "coordinate_frame": "world",
+  "blocks": [
+    {
+      "pos": [
+        -11,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -11,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -11,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -11,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -10,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -9,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -8,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -7,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -6,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -5,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -4,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        101,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        102,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        103,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -3,
+        104,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        100,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -14
+      ],
+      "state": {
+        "Properties": {
+          "facing": "north"
+        },
+        "Name": "starboundmc:ship_engine"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        10
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        11
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        12
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        13
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        101,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -10
+      ],
+      "state": {
+        "Properties": {
+          "facing": "east"
+        },
+        "Name": "starboundmc:fuel_controller"
+      },
+      "nbt_snbt": "{FuelItems: [{}, {}, {}, {}, {}], keepPacked: 0b, x: -2, y: 102, z: -10, id: \"starboundmc:fuel_controller\"}"
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "facing": "east"
+        },
+        "Name": "starboundmc:voxel_printing_station"
+      },
+      "nbt_snbt": "{keepPacked: 0b, x: -2, y: 102, z: 3, id: \"starboundmc:voxel_printing_station\", items: []}"
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        102,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "facing": "east"
+        },
+        "Name": "starboundmc:ship_crate"
+      },
+      "nbt_snbt": "{keepPacked: 0b, x: -2, y: 103, Items: [], z: 3, id: \"starboundmc:ship_crate\"}"
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        103,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        104,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -2,
+        105,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        100,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        -1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        0
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        5
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        10
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "half": "bottom",
+          "shape": "straight",
+          "facing": "east"
+        },
+        "Name": "minecraft:polished_andesite_stairs"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        11
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "half": "bottom",
+          "shape": "straight",
+          "facing": "east"
+        },
+        "Name": "minecraft:polished_andesite_stairs"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:polished_andesite"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        13
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        101,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        102,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        103,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        104,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        -1,
+        105,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        100,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "starboundmc:teleporter"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        -1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        0
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        5
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:polished_andesite"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:polished_andesite"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:polished_andesite"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        13
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        101,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        10
+      ],
+      "state": {
+        "Properties": {
+          "facing": "south"
+        },
+        "Name": "starboundmc:captain_chair"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        12
+      ],
+      "state": {
+        "Properties": {
+          "facing": "north"
+        },
+        "Name": "starboundmc:starmap_terminal"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        102,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        103,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        -14
+      ],
+      "state": {
+        "Properties": {
+          "facing": "north"
+        },
+        "Name": "starboundmc:ship_engine"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "half": "top",
+          "shape": "straight",
+          "facing": "south"
+        },
+        "Name": "minecraft:polished_andesite_stairs"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        0,
+        104,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:sea_lantern"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        105,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        106,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        107,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        108,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        109,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        0,
+        110,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        0,
+        110,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        0,
+        110,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        0,
+        110,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        0,
+        110,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        100,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        -1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        0
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        1
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        2
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        4
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        5
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        6
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        7
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        8
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:quartz_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        10
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "half": "bottom",
+          "shape": "straight",
+          "facing": "west"
+        },
+        "Name": "minecraft:polished_andesite_stairs"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        11
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "half": "bottom",
+          "shape": "straight",
+          "facing": "west"
+        },
+        "Name": "minecraft:polished_andesite_stairs"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:polished_andesite"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        13
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        16
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        101,
+        17
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        102,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        103,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        1,
+        104,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        1,
+        105,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        100,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -14
+      ],
+      "state": {
+        "Properties": {
+          "facing": "north"
+        },
+        "Name": "starboundmc:ship_engine"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        9
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        10
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        11
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        12
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        13
+      ],
+      "state": {
+        "Properties": {
+          "waterlogged": "false",
+          "type": "bottom"
+        },
+        "Name": "minecraft:polished_andesite_slab"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        101,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        14
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        102,
+        15
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        3
+      ],
+      "state": {
+        "Properties": {
+          "facing": "west"
+        },
+        "Name": "starboundmc:ship_ai_terminal"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        103,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        2,
+        104,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        2,
+        105,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        100,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        101,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -15
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -14
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -13
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        102,
+        13
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        11
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        103,
+        12
+      ],
+      "state": {
+        "Name": "minecraft:gray_stained_glass"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -12
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        3,
+        104,
+        9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        100,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        4,
+        101,
+        6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        100,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        5,
+        101,
+        4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        100,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        6,
+        101,
+        2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        100,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -11
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        -1
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        7,
+        101,
+        0
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        100,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -3
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        8,
+        101,
+        -2
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        100,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:orange_terracotta"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -5
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        9,
+        101,
+        -4
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        100,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        100,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        100,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        101,
+        -10
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        101,
+        -7
+      ],
+      "state": {
+        "Name": "minecraft:white_concrete"
+      }
+    },
+    {
+      "pos": [
+        10,
+        101,
+        -6
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        11,
+        100,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        11,
+        100,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        11,
+        101,
+        -9
+      ],
+      "state": {
+        "Name": "minecraft:light_gray_concrete"
+      }
+    },
+    {
+      "pos": [
+        11,
+        101,
+        -8
+      ],
+      "state": {
+        "Name": "minecraft:gray_concrete"
+      }
+    }
+  ]
+}
