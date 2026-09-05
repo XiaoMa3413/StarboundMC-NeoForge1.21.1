@@ -213,13 +213,14 @@ public final class ShipFlightController
     /** Bank into turns, derived from the same smoothed heading used for yaw. */
     public static double sampleRoll(Planet from,Planet to,int total,double tick)
     {
-        if (tick <= total * 0.12 || tick >= total * 0.88)
-            return 0.0;
         double half = 4.0;
         double before = sampleYaw(from, to, total, tick - half);
         double after = sampleYaw(from, to, total, tick + half);
         double delta = Math.IEEEremainder(after - before, 360.0) / (2.0 * half);
-        return Math.max(-MAX_ROLL_DEGREES, Math.min(MAX_ROLL_DEGREES, delta * ROLL_GAIN));
+        double raw = Math.max(-MAX_ROLL_DEGREES, Math.min(MAX_ROLL_DEGREES, delta * ROLL_GAIN));
+        double gateIn = smoother((tick - total * 0.12) / (total * 0.06));
+        double gateOut = smoother((total * 0.88 - tick) / (total * 0.06));
+        return raw * gateIn * gateOut;
     }
 
     // ---- Route (planar obstacle avoidance) -----------------------------------
