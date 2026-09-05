@@ -43,7 +43,9 @@ public final class ShipSpace
         // every trip. Molten still keeps Lush over 100 degrees away from its
         // disc at dock, so the primary and moon never overlap visually.
         YAW_DOCK.put(Planet.MOLTEN, 330.0);
-        YAW_DOCK.put(Planet.FROZEN, 25.0);
+        // Frozen berth faces the planet while offsetting the stellar vector
+        // enough to leave a readable crescent instead of a near-black new moon.
+        YAW_DOCK.put(Planet.FROZEN, 90.0);
         YAW_DOCK.put(Planet.BARREN, 335.0);
 
         V_DOCK.put(Planet.LUSH, new Vec3(0.0, 102.0, 0.0));
@@ -131,7 +133,7 @@ public final class ShipSpace
         StarSystem system = StarSystems.systemOfPlanet(planet);
         if (system == null)
             throw new IllegalArgumentException("Unknown planet: " + planet);
-        return universeBodyPosition(planet).deltaTo(system.getStellarVisual().getUniversePosition()).toVec3().normalize();
+        return system.getLightingDirection();
     }
 
     public static double flightDistance(Planet from, Planet to)

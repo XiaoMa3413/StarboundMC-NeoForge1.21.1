@@ -39,6 +39,10 @@ public final class ShipStoryBroadcastService
     private static final Map<UUID, Long> wakeDueAt = new HashMap<>();
     private static final Map<UUID, Long> reminderDueAt = new HashMap<>();
     private static final Map<UUID, Long> tutorialDueAt = new HashMap<>();
+    private static final String VOXEL_INTRO_KEY =
+            "message.starboundmc.nova.tutorial.voxel_intro";
+    private static final String VOXEL_USE_KEY =
+            "message.starboundmc.nova.tutorial.voxel_use";
 
     private ShipStoryBroadcastService()
     {
@@ -79,6 +83,9 @@ public final class ShipStoryBroadcastService
                 && personal.isWritable()
                 && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             scheduleMatterManipulatorTutorial(player);
+
+        if (shared.core() == CoreState.ONLINE)
+            sendVoxelIntroductionOnce(player);
     }
 
     /** Stops pending timers when a player leaves the server. */
@@ -129,6 +136,24 @@ public final class ShipStoryBroadcastService
         if (scanStarted)
             ShipStoryService.syncOpenScreens(player.getServer());
         return personalCueSent || scanStarted;
+    }
+
+    /** Records the player's first voxel acquisition and introduces it once N.O.V.A. is online. */
+    public static boolean onVoxelAcquired(ServerPlayer player, int amount)
+    {
+        if (player == null || amount <= 0 || player.getServer() == null || player.isSpectator())
+            return false;
+        PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
+        if (!personal.isWritable())
+            return false;
+        if (!personal.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED))
+        {
+            personal = personal.withFlag(PlayerStoryFlag.VOXEL_DISCOVERED);
+            player.setData(ModAttachments.PLAYER_STORY, personal);
+        }
+
+        SharedShipProgress shared = ShipStateData.get(player.getServer()).getStoryProgress();
+        return shared.core() == CoreState.ONLINE && sendVoxelIntroductionOnce(player);
     }
 
     /** Sends the immediate first-arrival confirmation once per player. */
@@ -216,6 +241,7 @@ public final class ShipStoryBroadcastService
         {
             sendOnce(player, PlayerStoryFlag.CORE_ONLINE_BROADCAST,
                     "message.starboundmc.nova.prologue.core_online");
+            sendVoxelIntroductionOnce(player);
         }
     }
 
@@ -284,6 +310,19 @@ public final class ShipStoryBroadcastService
         player.setData(ModAttachments.PLAYER_STORY,
                 personal.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
         sendNova(player, "message.starboundmc.nova.tutorial.matter_manipulator");
+        return true;
+    }
+
+    private static boolean sendVoxelIntroductionOnce(ServerPlayer player)
+    {
+        PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
+        if (!personal.isWritable() || !personal.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED)
+                || personal.hasFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST))
+            return false;
+        player.setData(ModAttachments.PLAYER_STORY,
+                personal.withFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST));
+        sendNova(player, VOXEL_INTRO_KEY);
+        sendNova(player, VOXEL_USE_KEY);
         return true;
     }
 

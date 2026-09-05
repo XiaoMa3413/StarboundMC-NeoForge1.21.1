@@ -34,6 +34,19 @@ public final class NovaPortraitElement extends UIElement {
     private final boolean eyeLayerPresent;
     private final boolean portraitAssetPresent;
     private int ticks;
+    private int blinkSequence;
+    private int blinkStartTick = Integer.MIN_VALUE;
+    private int nextBlinkTick = 78;
+    private int gazeSequence;
+    private int gazeTransitionStartTick;
+    private int nextGazeTick = 52;
+    private float gazeFromX;
+    private float gazeFromY;
+    private float gazeToX;
+    private float gazeToY;
+    private NovaPortraitActivity activity = NovaPortraitActivity.IDLE;
+    private int activityStartTick = Integer.MIN_VALUE;
+    private int confirmationStartTick = Integer.MIN_VALUE;
     private boolean speaking;
     private CoreState coreState;
     private int textPulseStep = -1;
@@ -70,6 +83,18 @@ public final class NovaPortraitElement extends UIElement {
         this.speaking = speaking;
     }
 
+    void setActivity(NovaPortraitActivity activity) {
+        NovaPortraitActivity next = activity == null ? NovaPortraitActivity.IDLE : activity;
+        if (this.activity == next)
+            return;
+        this.activity = next;
+        activityStartTick = ticks;
+    }
+
+    void triggerConfirmation() {
+        confirmationStartTick = ticks;
+    }
+
     /** Advances the continuous brightness wave when one code point becomes visible. */
     public void onTextAdvanced() {
         textPulseStep = NovaTextPulse.nextStep(textPulseStep);
@@ -79,6 +104,8 @@ public final class NovaPortraitElement extends UIElement {
     }
 
     public void setCoreState(CoreState coreState) {
+        if (this.coreState == CoreState.REBOOTING && coreState == CoreState.ONLINE)
+            triggerConfirmation();
         this.coreState = coreState;
     }
 
@@ -86,6 +113,8 @@ public final class NovaPortraitElement extends UIElement {
     public void screenTick() {
         super.screenTick();
         ticks++;
+        updateBlinkSchedule();
+        updateGazeSchedule();
     }
 
     @Override
@@ -101,6 +130,7 @@ public final class NovaPortraitElement extends UIElement {
         } else {
             drawPrototypePlaceholder(context.graphics, x, y, width, height);
         }
+        drawFaultGlitch(context.graphics, x, y, width, height, ticks + context.partialTick);
         drawHologramOverlay(context, x, y, width, height);
     }
 
@@ -112,6 +142,23 @@ public final class NovaPortraitElement extends UIElement {
         float breathe = 1F + Mth.sin(time * TWO_PI / 62F) * 0.006F * onlineActivity;
         float jitterX = projectionJitter(time);
         float textPulse = textPulse(context.partialTick);
+        float warningPulse = activity == NovaPortraitActivity.WARNING
+                ? NovaEyeMotion.activityPulse(time, activityStartTick) : 0F;
+        int activeConfirmationStart = activity == NovaPortraitActivity.CONFIRMATION
+                ? Math.max(activityStartTick, confirmationStartTick) : confirmationStartTick;
+        float confirmationPulse = activity == NovaPortraitActivity.WARNING
+                || activity == NovaPortraitActivity.SCANNING
+                ? 0F : NovaEyeMotion.activityPulse(time, activeConfirmationStart);
+        boolean scanningActive = activity == NovaPortraitActivity.SCANNING
+                && NovaEyeMotion.scanningPanelActive(time, activityStartTick);
+        int gazeX = scanningActive
+                ? Math.round(NovaEyeMotion.scanningGazeX(time, activityStartTick))
+                : Math.round(NovaEyeMotion.gazeOffset(
+                gazeFromX, gazeToX, time, gazeTransitionStartTick));
+        int gazeY = Math.round(NovaEyeMotion.gazeOffset(
+                gazeFromY, gazeToY, time, gazeTransitionStartTick));
+        if (confirmationPulse >= 0.45F)
+            gazeY--;
 
         float portraitAlpha;
         if (coreState == null) {
@@ -146,9 +193,41 @@ public final class NovaPortraitElement extends UIElement {
                             : 0.92F + Mth.sin(time * TWO_PI / 72F) * 0.05F;
                 };
             }
-            drawEyes(context, x + jitterX, y + hoverY, width, height,
-                    breathe, blinkScale(time), eyesAlpha);
+            if (scanningActive)
+                eyesAlpha += 0.03F + 0.03F * Mth.sin(time * TWO_PI / 28F);
+            eyesAlpha = Mth.clamp(eyesAlpha
+                    + warningPulse * 0.14F + confirmationPulse * 0.12F, 0F, 1F);
+            float activityScale = 1F + warningPulse * 0.05F
+                    + confirmationPulse * 0.025F;
+            drawEyes(context, x + jitterX + gazeX, y + hoverY + gazeY, width, height,
+                    breathe, activityScale,
+                    NovaEyeMotion.blinkScale(time, blinkStartTick), eyesAlpha);
+            if (activity == NovaPortraitActivity.SCANNING)
+                drawScanningDataPanel(context, x + jitterX, y + hoverY,
+                        width, height, time);
         }
+    }
+
+    private void updateBlinkSchedule() {
+        if (ticks < nextBlinkTick)
+            return;
+        blinkStartTick = ticks;
+        blinkSequence++;
+        nextBlinkTick = ticks + NovaEyeMotion.BLINK_DURATION_TICKS
+                + NovaEyeMotion.blinkDelayTicks(blinkSequence);
+    }
+
+    private void updateGazeSchedule() {
+        if (ticks < nextGazeTick)
+            return;
+        gazeFromX = gazeToX;
+        gazeFromY = gazeToY;
+        gazeToX = NovaEyeMotion.gazeX(gazeSequence);
+        gazeToY = NovaEyeMotion.gazeY(gazeSequence);
+        gazeSequence++;
+        gazeTransitionStartTick = ticks;
+        nextGazeTick = ticks + NovaEyeMotion.GAZE_TRANSITION_TICKS
+                + NovaEyeMotion.gazeDelayTicks(gazeSequence);
     }
 
     private float textPulse(float partialTick) {
@@ -167,14 +246,6 @@ public final class NovaPortraitElement extends UIElement {
         return 0F;
     }
 
-    private static float blinkScale(float time) {
-        float phase = time % 127F;
-        if (phase >= 4F)
-            return 1F;
-        float distanceFromClosed = Math.abs(phase - 2F) / 2F;
-        return 0.12F + Mth.clamp(distanceFromClosed, 0F, 1F) * 0.88F;
-    }
-
     private static void drawScaled(GUIContext context, SpriteTexture texture,
                                    float x, float y, float width, float height,
                                    float scale, float alpha) {
@@ -187,9 +258,10 @@ public final class NovaPortraitElement extends UIElement {
     }
 
     private void drawEyes(GUIContext context, float x, float y, float width, float height,
-                          float overallScale, float verticalScale, float alpha) {
-        float scaledWidth = width * overallScale;
-        float scaledHeight = height * overallScale;
+                          float overallScale, float activityScale,
+                          float verticalScale, float alpha) {
+        float scaledWidth = width * overallScale * activityScale;
+        float scaledHeight = height * overallScale * activityScale;
         float drawX = x + (width - scaledWidth) * 0.5F;
         float baseDrawY = y + (height - scaledHeight) * 0.5F;
         float eyeAnchorY = baseDrawY + scaledHeight * 0.46F;
@@ -200,9 +272,128 @@ public final class NovaPortraitElement extends UIElement {
         eyesTexture.draw(context, drawX, eyeDrawY, scaledWidth, eyeHeight);
     }
 
+    private void drawScanningDataPanel(GUIContext context, float x, float y,
+                                       int width, int height, float time) {
+        float widthReveal = NovaEyeMotion.scanningPanelWidthReveal(time, activityStartTick);
+        float heightReveal = NovaEyeMotion.scanningPanelHeightReveal(time, activityStartTick);
+        float dataReveal = NovaEyeMotion.scanningPanelDataReveal(time, activityStartTick);
+        if (widthReveal <= 0F)
+            return;
+
+        int fullLeft = Mth.floor(x + width * 0.16F);
+        int fullRight = Mth.ceil(x + width * 0.84F);
+        int centerX = (fullLeft + fullRight) / 2;
+        int panelWidth = Math.max(1, Math.round((fullRight - fullLeft) * widthReveal));
+        int left = centerX - panelWidth / 2;
+        int right = left + panelWidth;
+        int fullTop = Mth.floor(y + height * 0.33F);
+        int fullBottom = Mth.ceil(y + height * 0.62F);
+        int centerY = Mth.floor(y + height * 0.475F);
+        int panelHeight = Math.max(1, Math.round((fullBottom - fullTop) * heightReveal));
+        int top = centerY - panelHeight / 2;
+        int bottom = top + panelHeight;
+        if (right <= left || bottom <= top)
+            return;
+
+        GuiGraphics graphics = context.graphics;
+        if (heightReveal <= 0F) {
+            graphics.fill(left, centerY, right, centerY + 1,
+                    colorWithAlpha(0xD8FFFF, 0.92F * widthReveal));
+            return;
+        }
+        graphics.fill(left, top, right, bottom,
+                colorWithAlpha(0x071A22, 0.52F * heightReveal));
+
+        int borderColor = colorWithAlpha(0x78F5F1, 0.72F * heightReveal);
+        int cornerLength = Math.max(2, Math.min(5, panelWidth / 4));
+        drawPanelCorners(graphics, left, top, right, bottom, cornerLength, borderColor);
+        if (panelWidth < 8 || bottom - top < 6 || dataReveal <= 0F)
+            return;
+
+        int innerWidth = Math.max(1, right - left - 4);
+        int innerHeight = Math.max(1, bottom - top - 4);
+        int columns = width >= 64 ? 5 : 4;
+        for (int column = 0; column < columns; column++) {
+            int streamX = left + 2 + Math.round(
+                    innerWidth * (column + 0.5F) / columns);
+            float speed = 0.34F + column * 0.055F;
+            for (int segment = 0; segment < 3; segment++) {
+                int phase = Mth.floor(time * speed + column * 5F + segment * 7F);
+                int streamY = top + 2 + Math.floorMod(phase, innerHeight);
+                int segmentWidth = 1 + Math.floorMod(column + segment, 3);
+                int segmentColor = colorWithAlpha(
+                        segment == 0 ? 0xB8FFFF : 0x49D9D7,
+                        (segment == 0 ? 0.82F : 0.48F) * dataReveal);
+                graphics.fill(streamX, streamY,
+                        Math.min(right - 1, streamX + segmentWidth),
+                        Math.min(bottom - 1, streamY + 1), segmentColor);
+            }
+        }
+
+        int cursorRange = Math.max(1, innerWidth - 2);
+        int cursorX = left + 2 + Math.floorMod(Mth.floor(time * 0.72F), cursorRange);
+        graphics.fill(cursorX, top + 1, Math.min(right - 1, cursorX + 2), top + 2,
+                colorWithAlpha(0xE8FFFF, 0.88F * dataReveal));
+    }
+
+    private void drawFaultGlitch(GuiGraphics graphics, int x, int y,
+                                 int width, int height, float time) {
+        if (activity != NovaPortraitActivity.WARNING)
+            return;
+        float intensity = NovaEyeMotion.faultGlitchIntensity(time, activityStartTick);
+        if (intensity <= 0F)
+            return;
+
+        int frame = Mth.floor(time * 0.8F);
+        int[] colors = {0x6BE8E8, 0xB8FFFF, 0x3D93A1, 0xD47BAF};
+        for (int band = 0; band < 6; band++) {
+            int selector = Math.floorMod(frame * 5 + band * 11, 17);
+            if (selector > 8)
+                continue;
+            int bandY = y + Math.floorMod(frame * (band + 3) + band * 13,
+                    Math.max(1, height - 2));
+            int bandHeight = 1 + Math.floorMod(frame + band, 2);
+            int bandWidth = Math.max(2, Math.round(width
+                    * (0.16F + Math.floorMod(frame + band * 7, 6) * 0.08F)));
+            int bandX = x + Math.floorMod(frame * 3 + band * 17,
+                    Math.max(1, width - bandWidth + 1));
+            int color = colorWithAlpha(colors[Math.floorMod(frame + band, colors.length)],
+                    intensity * (band % 3 == 0 ? 0.68F : 0.42F));
+            graphics.fill(bandX, bandY,
+                    Math.min(x + width, bandX + bandWidth),
+                    Math.min(y + height, bandY + bandHeight), color);
+        }
+
+        int tearY = y + Math.floorMod(frame * 7 + 5, Math.max(1, height - 2));
+        int tearWidth = Math.max(3, Math.round(width * 0.62F));
+        int tearX = x + Math.floorMod(frame * 5 + 9,
+                Math.max(1, width - tearWidth + 1));
+        graphics.fill(tearX, tearY, Math.min(x + width, tearX + tearWidth),
+                Math.min(y + height, tearY + 1),
+                colorWithAlpha(0xE8FFFF, intensity * 0.72F));
+    }
+
+    private static void drawPanelCorners(GuiGraphics graphics,
+                                         int left, int top, int right, int bottom,
+                                         int length, int color) {
+        graphics.fill(left, top, Math.min(right, left + length), top + 1, color);
+        graphics.fill(left, top, left + 1, Math.min(bottom, top + length), color);
+        graphics.fill(Math.max(left, right - length), top, right, top + 1, color);
+        graphics.fill(right - 1, top, right, Math.min(bottom, top + length), color);
+        graphics.fill(left, bottom - 1, Math.min(right, left + length), bottom, color);
+        graphics.fill(left, Math.max(top, bottom - length), left + 1, bottom, color);
+        graphics.fill(Math.max(left, right - length), bottom - 1, right, bottom, color);
+        graphics.fill(right - 1, Math.max(top, bottom - length), right, bottom, color);
+    }
+
     private static int whiteWithAlpha(float alpha) {
         int alphaByte = Mth.clamp(Math.round(alpha * 255F), 0, 255);
         return alphaByte << 24 | 0x00FFFFFF;
+    }
+
+    private static int colorWithAlpha(int rgb, float alpha) {
+        int alphaByte = Mth.clamp(Math.round(alpha * 255F), 0, 255);
+        return alphaByte << 24 | rgb & 0x00FFFFFF;
     }
 
     /** Draws a deliberately geometric T0 placeholder, never final N.O.V.A. artwork. */

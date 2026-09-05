@@ -39,10 +39,10 @@ public class StarSystems
 
     /**
      * The second system is translated as one cluster. Its centre is about
-     * 15,000 units from sys1, leaving a deep-space gap between both systems'
-     * visual influence shells.
+     * 40,000 units from sys1: from the starter orbit the red dwarf is roughly
+     * twice as distant as the local star, leaving a legible deep-space gap.
      */
-    private static final Vec3 COLD_SYSTEM_CENTER = new Vec3(11200.0, 102.0, 7260.0);
+    private static final Vec3 COLD_SYSTEM_CENTER = new Vec3(32400.0, 102.0, 20550.0);
     private static final Vec3 COLD_STAR_OFFSET = new Vec3(6000.0, 6898.0, 11000.0);
 
     private static final StellarVisualProfile MAIN_STAR = new StellarVisualProfile(
@@ -150,7 +150,7 @@ public class StarSystems
         // ---- 第二恒星系: 强辐射的暗淡红矮星, 目前只有寒冷世界 ----
         systems.add(new StarSystem(SYS_COLD, "starmap.system.sys2", "starmap.system.sys2.desc",
                 "starmap.type.red_dwarf", RED_DWARF,
-                GalaxyMapPosition.fromPixelCenter(182, 129, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
+                GalaxyMapPosition.fromPixelCenter(208, 152, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
                 COLD_SYSTEM_CENTER, 4500.0, List.of(
                 new PlanetEntry("sys2:frozen", "starmap.entry.sys2.frozen.name",
                         "planet.starboundmc.frozen", "starmap.entry.sys2.frozen.desc",

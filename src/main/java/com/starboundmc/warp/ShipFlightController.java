@@ -20,6 +20,15 @@ public final class ShipFlightController
     private static final int HEADING_ALIGN_TICKS = 110;
     /** Virtual-space distance used to establish a visible departure/approach leg. */
     private static final double DOCK_LEAD_DISTANCE = 18.0;
+    /**
+     * Long routes reserve short, fixed-distance sublight legs at both ends.
+     * Increasing the distance between systems must make hyperspace cover more
+     * space, not make the ship skim past nearby bodies several times faster.
+     */
+    private static final double SUBLIGHT_LEG_DISTANCE = 50.0;
+    private static final double MAX_SUBLIGHT_LEG_FRACTION = 0.18;
+    /** Deliberately slow at the window-visible hand-off into hyperspace. */
+    private static final double SUBLIGHT_BOUNDARY_SPEED = 1.15;
     private static final double CORNER_SMOOTH_FRACTION = 0.18;
     private static final int CORNER_SMOOTH_PASSES = 4;
     /** Samples on either side of the current point when estimating route heading. */
@@ -100,11 +109,8 @@ public final class ShipFlightController
 
     public static UniversePosition sampleUniversePosition(Planet from,Planet to,int total,double tick)
     {
-        // Motion starts immediately but the quintic curve has near-zero initial
-        // acceleration. The planet therefore recedes slowly before the ship
-        // gathers speed, instead of waiting motionless and then lunging forward.
-        double u=smoother(tick/(double)Math.max(1,total));
-        return route(from,to).universePointAtProgress(u);
+        FlightRoute route = route(from, to);
+        return route.universePointAtProgress(routeProgress(from, to, route, total, tick));
     }
 
     public static double sampleYaw(Planet from,Planet to,int total,double tick)
@@ -113,9 +119,9 @@ public final class ShipFlightController
         // made interplanetary travel look like sideways translation whenever
         // the route crossed the sky at a different angle.
         FlightRoute route = route(from, to);
-        // Position advances on the same quintic clock; heading must sample the
-        // same point on the route or it will lag far behind during deceleration.
-        double u = smoother(tick / Math.max(1.0, total));
+        // Heading must sample the same phase-aware route clock as position or it
+        // will point at the wrong corridor section during hyperspace/deceleration.
+        double u = routeProgress(from, to, route, total, tick);
         double dockFrom = ShipSpace.yawDock(from);
         double dockTo = ShipSpace.yawDock(to);
 
@@ -124,18 +130,78 @@ public final class ShipFlightController
         // twitch the ship or produce a sudden camera snap.
         if (tick < HEADING_ALIGN_TICKS)
         {
-            double alignedU = smoother(HEADING_ALIGN_TICKS / (double) Math.max(1, total));
+            double alignedU = routeProgress(from, to, route, total, HEADING_ALIGN_TICKS);
             return lerpAngle(dockFrom, route.headingYaw(alignedU),
                     smoother(tick / (double) HEADING_ALIGN_TICKS));
         }
         int arrivalStart = Math.max(HEADING_ALIGN_TICKS, total - HEADING_ALIGN_TICKS);
         if (tick > arrivalStart)
         {
-            double arrivalU = smoother(arrivalStart / (double) Math.max(1, total));
+            double arrivalU = routeProgress(from, to, route, total, arrivalStart);
             return lerpAngle(route.headingYaw(arrivalU), dockTo,
                     smoother((tick - arrivalStart) / (double) Math.max(1, total - arrivalStart)));
         }
         return route.headingYaw(u);
+    }
+
+    /**
+     * Maps flight time to route arclength. Moon-scale routes retain the original
+     * whole-flight quintic curve. Longer routes use two fixed-distance sublight
+     * legs with a Hermite hyperspace segment between them; matching boundary
+     * speeds keeps position and heading continuous when the visual phase changes.
+     */
+    private static double routeProgress(Planet from, Planet to, FlightRoute route,
+                                        int total, double tick)
+    {
+        double safeTotal = Math.max(1.0, total);
+        double clampedTick = Math.max(0.0, Math.min(safeTotal, tick));
+        if (isShort(from, to))
+            return smoother(clampedTick / safeTotal);
+
+        double departureEnd = travelStart();
+        double arrivalStart = decelStart(total);
+        if (arrivalStart <= departureEnd || route.total <= 0.0)
+            return smoother(clampedTick / safeTotal);
+
+        double legDistance = Math.min(SUBLIGHT_LEG_DISTANCE,
+                route.total * MAX_SUBLIGHT_LEG_FRACTION);
+        double boundarySpeed = SUBLIGHT_BOUNDARY_SPEED
+                * (legDistance / SUBLIGHT_LEG_DISTANCE);
+        double travelled;
+        if (clampedTick <= departureEnd)
+        {
+            travelled = hermiteDistance(0.0, legDistance, 0.0, boundarySpeed,
+                    departureEnd, clampedTick);
+        }
+        else if (clampedTick < arrivalStart)
+        {
+            travelled = hermiteDistance(legDistance, route.total - legDistance,
+                    boundarySpeed, boundarySpeed,
+                    arrivalStart - departureEnd, clampedTick - departureEnd);
+        }
+        else
+        {
+            travelled = hermiteDistance(route.total - legDistance, route.total,
+                    boundarySpeed, 0.0,
+                    safeTotal - arrivalStart, clampedTick - arrivalStart);
+        }
+        return clamp01(travelled / route.total);
+    }
+
+    private static double hermiteDistance(double from, double to,
+                                          double fromSpeed, double toSpeed,
+                                          double duration, double elapsed)
+    {
+        if (duration <= 0.0)
+            return to;
+        double t = clamp01(elapsed / duration);
+        double t2 = t * t;
+        double t3 = t2 * t;
+        double value = (2.0 * t3 - 3.0 * t2 + 1.0) * from
+                + (t3 - 2.0 * t2 + t) * fromSpeed * duration
+                + (-2.0 * t3 + 3.0 * t2) * to
+                + (t3 - t2) * toSpeed * duration;
+        return Math.max(from, Math.min(to, value));
     }
     public static double samplePitch(Planet from,Planet to,int total,double tick)
     {
@@ -147,13 +213,14 @@ public final class ShipFlightController
     /** Bank into turns, derived from the same smoothed heading used for yaw. */
     public static double sampleRoll(Planet from,Planet to,int total,double tick)
     {
-        if (tick <= total * 0.12 || tick >= total * 0.88)
-            return 0.0;
         double half = 4.0;
         double before = sampleYaw(from, to, total, tick - half);
         double after = sampleYaw(from, to, total, tick + half);
         double delta = Math.IEEEremainder(after - before, 360.0) / (2.0 * half);
-        return Math.max(-MAX_ROLL_DEGREES, Math.min(MAX_ROLL_DEGREES, delta * ROLL_GAIN));
+        double raw = Math.max(-MAX_ROLL_DEGREES, Math.min(MAX_ROLL_DEGREES, delta * ROLL_GAIN));
+        double gateIn = smoother((tick - total * 0.12) / (total * 0.06));
+        double gateOut = smoother((total * 0.88 - tick) / (total * 0.06));
+        return raw * gateIn * gateOut;
     }
 
     // ---- Route (planar obstacle avoidance) -----------------------------------

@@ -22,9 +22,45 @@ class StarSystemLayoutTest
         double visualOuterSum = (main.getInfluenceRadius() + cold.getInfluenceRadius())
                 * VISUAL_OUTER_RATIO;
 
-        assertTrue(centreDistance >= 14_000.0 && centreDistance <= 16_000.0);
+        assertTrue(centreDistance >= 39_000.0 && centreDistance <= 41_000.0);
         assertTrue(centreDistance > visualOuterSum,
                 "stellar visual influence shells must not overlap");
+        assertTrue(centreDistance - visualOuterSum >= 27_000.0,
+                "both systems need a substantial neutral deep-space interval");
+    }
+
+    @Test
+    void coldSystemReadsAsASeparateDistanceLayerFromTheStarterOrbit()
+    {
+        Vec3 starterDock = ShipSpace.vDock(Planet.LUSH);
+        double localStarDistance = StarSystems.byId(StarSystems.SYS_MAIN)
+                .getStellarVisual().getVirtualPosition().distanceTo(starterDock);
+        double coldStarDistance = StarSystems.byId(StarSystems.SYS_COLD)
+                .getStellarVisual().getVirtualPosition().distanceTo(starterDock);
+
+        assertTrue(coldStarDistance >= localStarDistance * 1.9,
+                "the remote red dwarf must sit visibly behind the local star");
+        assertTrue(coldStarDistance <= localStarDistance * 2.2,
+                "the authored second system should remain readable from the starter region");
+    }
+
+    @Test
+    void galaxyMapNodesUseTheExpandedComposition()
+    {
+        GalaxyMapPosition main = StarSystems.byId(StarSystems.SYS_MAIN).getGalaxyMapPosition();
+        GalaxyMapPosition cold = StarSystems.byId(StarSystems.SYS_COLD).getGalaxyMapPosition();
+        int mainX = main.pixelX(250);
+        int mainY = main.pixelY(220);
+        int coldX = cold.pixelX(250);
+        int coldY = cold.pixelY(220);
+        double separation = Math.hypot(coldX - mainX, coldY - mainY);
+
+        assertEquals(62, mainX);
+        assertEquals(84, mainY);
+        assertEquals(208, coldX);
+        assertEquals(152, coldY);
+        assertTrue(separation >= 160.0,
+                "the deep-space overview should not visually crowd both systems together");
     }
 
     @Test

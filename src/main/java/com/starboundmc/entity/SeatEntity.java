@@ -3,10 +3,13 @@ package com.starboundmc.entity;
 import com.mojang.logging.LogUtils;
 import com.starboundmc.block.CaptainChairBlock;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.vehicle.DismountHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -61,6 +64,26 @@ public class SeatEntity extends Entity
     public Vec3 getPassengerRidingPosition(Entity passenger)
     {
         return this.position().add(0.0D, 0.3D, 0.0D);
+    }
+
+    @Override
+    public Vec3 getDismountLocationForPassenger(LivingEntity passenger)
+    {
+        BlockPos chairPos = this.blockPosition();
+        var chair = this.level().getBlockState(chairPos);
+        if (chair.getBlock() instanceof CaptainChairBlock)
+        {
+            Direction facing = chair.getValue(CaptainChairBlock.FACING);
+            // The default entity-top exit is 0.8 above the chair block, which
+            // puts a standing player's head inside a two-block-high cockpit.
+            for (Direction side : new Direction[] {facing.getOpposite(), facing.getClockWise(), facing.getCounterClockWise()})
+            {
+                Vec3 safe = DismountHelper.findSafeDismountLocation(passenger.getType(), this.level(),
+                        chairPos.relative(side), true);
+                if (safe != null) return safe;
+            }
+        }
+        return super.getDismountLocationForPassenger(passenger);
     }
 
     @Override

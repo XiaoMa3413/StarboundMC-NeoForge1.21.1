@@ -9,6 +9,11 @@
 
 ## 当前活动计划
 
+- [航天飞机外形与内饰落地](shuttle-ship-import-plan.md)：用户实机布置的内饰存档已设为默认初始飞船；
+  新世界直接读取内置结构生成，设备坐标、半砖和朝向与归档一致。
+- [飞船维度太空视觉增强计划](ship-space-visual-enhancement-plan.md)：增强普通停靠/航行时的深空
+  层次，重新校准两个星系的空间距离，提升行星材质与自转、星系环境差异和亚光速视差，并为
+  `FULL` LOD 恒星制作自发光 3D 球体核心；星系间距已视觉确认，亚光速节奏修复等待视觉确认。
 - [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：普通功能方块的界面迁移计划；
   传送器及其余普通机器 UI 的继续迭代暂缓。
 - [体素提炼与打印合成站计划](voxel-printing-station-plan.md)：通用货币“体素”、体素提炼机
@@ -30,6 +35,8 @@
 - [星图重绘需求](archive/starmap-redraw-requirements.md)：三级星图最终产品与交互要求。
 - [星图重绘优化方案](archive/starmap-redraw-optimization.md)：LDLib2 组件化与绘制重构依据。
 - [星图重绘完成清单](archive/starmap-redraw-todo.md)：P0–P5 实现、测试和视觉验收记录。
+- [飞船维度太空渲染基线](archive/ship-space-visual-baseline.md)：现有深空穹顶、程序化星点、行星
+  球体、恒星三级 LOD、连续星系环境和跃迁演出的实现归档。
 
 归档文档不再追加新任务。出现后续需求时，应新建活动计划并链接到相关归档，而不是重新打开
 已经关闭的清单。

@@ -3,6 +3,7 @@ package com.starboundmc.economy;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncVoxelWalletPacket;
 import com.starboundmc.story.ModAttachments;
+import com.starboundmc.story.ShipStoryBroadcastService;
 import com.starboundmc.item.ModItems;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -22,9 +23,15 @@ public final class VoxelWalletService {
         if (amount <= 0) {
             return;
         }
-        VoxelWalletState updated = player.getData(ModAttachments.VOXEL_WALLET).add(amount);
+        VoxelWalletState current = player.getData(ModAttachments.VOXEL_WALLET);
+        VoxelWalletState updated = current.add(amount);
+        int credited = Math.max(0, updated.balance() - current.balance());
+        if (credited <= 0) {
+            return;
+        }
         player.setData(ModAttachments.VOXEL_WALLET, updated);
         sync(player);
+        ShipStoryBroadcastService.onVoxelAcquired(player, credited);
     }
 
     /** Returns true and deducts when affordable; returns false without changes. */

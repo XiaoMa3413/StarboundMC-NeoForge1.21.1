@@ -77,6 +77,7 @@ final class NovaBroadcastHudRoot extends UIElement
         body.setText(Component.literal(snapshot.visibleText()));
         portrait.setSpeaking(snapshot.speaking());
         portrait.setCoreState(presentationCoreState(snapshot.translationKey()));
+        portrait.setActivity(NovaPortraitActivity.fromBroadcastKey(snapshot.translationKey()));
         while (observedPulseSequence < pulseSequence)
         {
             portrait.onTextAdvanced();

@@ -37,6 +37,8 @@ class PlayerStoryStateTest
                 .withFlag(PlayerStoryFlag.TERMINAL_CONTACTED)
                 .withFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST)
                 .withFlag(PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST)
+                .withFlag(PlayerStoryFlag.VOXEL_DISCOVERED)
+                .withFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST)
                 .withDismissedHint(0x01);
 
         Tag encoded = PlayerStoryState.CODEC.encodeStart(NbtOps.INSTANCE, expected).getOrThrow();
@@ -50,7 +52,10 @@ class PlayerStoryStateTest
         assertTrue(restored.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
         assertTrue(restored.hasFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST));
         assertTrue(restored.hasFlag(PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST));
-        assertEquals(8L, restored.revision());
+        assertTrue(restored.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED));
+        assertTrue(restored.hasFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST));
+        assertEquals(10L, restored.revision());
+        assertEquals(0xFF, PlayerStoryFlag.knownMask());
     }
 
     @Test
