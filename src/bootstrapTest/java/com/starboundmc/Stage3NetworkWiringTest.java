@@ -203,7 +203,7 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("quantityMinus"));
         assertTrue(printingRoot.contains("quantityMinusTen"));
         assertTrue(printingRoot.contains("quantityPlusTen"));
-        assertTrue(printingRoot.contains("maxCraftsForMaterials"));
+        assertTrue(printingRoot.contains("maxCraftsForRequirements"));
         assertTrue(printingRoot.contains("target = Math.min(target, selectedQuantityCeiling())"));
         assertTrue(printingRoot.contains("PANEL_H = 234"));
         assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 4, 26, 106, 119"));
