@@ -1030,7 +1030,8 @@ public class PlanetRenderer
             float worldX = yawX;
             float worldY = localY * pitchCos - yawZ * pitchSin;
             float worldZ = localY * pitchSin + yawZ * pitchCos;
-            addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i], worldSun);
+            addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i], worldSun,
+                    terminatorWidth(planet), nightFloor(planet));
         }
 
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
@@ -1098,17 +1099,47 @@ public class PlanetRenderer
         return moonSurfaceBuffer;
     }
 
+    private static float terminatorWidth(Planet planet)
+    {
+        return switch (planet)
+        {
+            case MOLTEN -> 0.16F;
+            case LUSH -> 0.24F;
+            case FROZEN -> 0.30F;
+            case BARREN -> 0.18F;
+        };
+    }
+
+    private static float nightFloor(Planet planet)
+    {
+        return switch (planet)
+        {
+            case MOLTEN -> 0.16F;
+            case LUSH -> 0.10F;
+            case FROZEN -> 0.14F;
+            case BARREN -> 0.06F;
+        };
+    }
+
     private static void addLitSphereVertex(BufferBuilder bb, float x, float y, float z,
                                            float u, float v, Vector3f sun)
+    {
+        addLitSphereVertex(bb, x, y, z, u, v, sun, 0.22F, 0.08F);
+    }
+
+    private static void addLitSphereVertex(BufferBuilder bb, float x, float y, float z,
+                                           float u, float v, Vector3f sun,
+                                           float terminatorWidth, float nightFloor)
     {
         float dot = x / PLANET_RADIUS * sun.x
                 + y / PLANET_RADIUS * sun.y
                 + z / PLANET_RADIUS * sun.z;
-        float shade = 1.0F - smoothstep((dot + 0.25F) / 0.5F);
+        float shade = 1.0F - smoothstep((dot + terminatorWidth) / (terminatorWidth * 2.0F));
+        shade *= 1.0F - nightFloor;
         float r = lerp(1.0F, 0.06F, shade);
         float g = lerp(1.0F, 0.08F, shade);
         float b = lerp(1.0F, 0.20F, shade);
-        float terminator = Math.max(0.0F, 1.0F - Math.abs(dot) / 0.22F);
+        float terminator = Math.max(0.0F, 1.0F - Math.abs(dot) / terminatorWidth);
         r += (0.90F - r) * terminator * 0.35F;
         g += (0.55F - g) * terminator * 0.25F;
         b += (0.25F - b) * terminator * 0.18F;

@@ -111,6 +111,17 @@ public class StarSystem
         return universeNavigationCenter;
     }
 
+    /**
+     * Shared direction used for planetary lighting in this system. The star's
+     * display position remains art-directed, but every body uses the same
+     * system-scale vector so moons do not acquire a visible light mismatch.
+     */
+    public Vec3 getLightingDirection()
+    {
+        Vec3 delta = stellarVisual.getVirtualPosition().subtract(navigationCenter);
+        return delta.lengthSqr() < 1.0e-8 ? new Vec3(0.0, 0.0, 1.0) : delta.normalize();
+    }
+
     public double getInfluenceRadius()
     {
         return influenceRadius;

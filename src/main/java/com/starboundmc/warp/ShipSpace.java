@@ -131,7 +131,7 @@ public final class ShipSpace
         StarSystem system = StarSystems.systemOfPlanet(planet);
         if (system == null)
             throw new IllegalArgumentException("Unknown planet: " + planet);
-        return universeBodyPosition(planet).deltaTo(system.getStellarVisual().getUniversePosition()).toVec3().normalize();
+        return system.getLightingDirection();
     }
 
     public static double flightDistance(Planet from, Planet to)
