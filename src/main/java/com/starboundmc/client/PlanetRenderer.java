@@ -588,12 +588,12 @@ public class PlanetRenderer
         float cx = (float) bodyCenter.x;
         float cy = (float) bodyCenter.y;
         float cz = (float) bodyCenter.z;
-        if (reducedWeight + fullWeight > 0.002F)
-            renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
-                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (fullWeight > 0.002F && renderedRadius >= 0.45F)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz);
+        if (reducedWeight + fullWeight > 0.002F)
+            renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
+                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (pointWeight > 0.002F)
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
