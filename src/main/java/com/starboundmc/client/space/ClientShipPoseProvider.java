@@ -17,6 +17,27 @@ final class ClientShipPoseProvider implements ShipPoseProvider
     {
     }
 
+    /**
+     * Capture the client flight state once for a render frame. Calling the
+     * individual accessors while a network snapshot arrives can otherwise
+     * combine the old position with the new heading for one frame.
+     */
+    SpaceRenderContext capture(float animationTicks)
+    {
+        ClientPlanetState.VisualSnapshot snapshot = ClientPlanetState.captureVisualSnapshot();
+        String currentHint = StarSystems.systemIdOfEntry(snapshot.currentEntryId());
+        if (currentHint == null)
+            currentHint = systemIdOf(snapshot.currentBody());
+        String targetHint = StarSystems.systemIdOfEntry(snapshot.targetEntryId());
+        if (targetHint == null)
+            targetHint = systemIdOf(snapshot.targetBody());
+        return new SpaceRenderContext(snapshot.position(), snapshot.universePosition(),
+                snapshot.velocity(), snapshot.yaw(), snapshot.pitch(), snapshot.roll(),
+                snapshot.flightPhase(), snapshot.warping(), snapshot.warpProgress(),
+                snapshot.warpDurationTicks(), snapshot.currentBody(), snapshot.targetBody(),
+                currentHint, targetHint, animationTicks);
+    }
+
     @Override
     public Vec3 position()
     {

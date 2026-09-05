@@ -11,6 +11,9 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.space.CelestialLod;
+import com.starboundmc.client.space.CelestialLodPolicy;
+import com.starboundmc.client.space.CelestialLodTransitions;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.SpaceRenderState;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
@@ -77,9 +80,6 @@ public class PlanetRenderer
     private static final float STAR_DISTANCE = 200.0F;
     private static final float STAR_SIZE_SCALE = 0.85F;
 
-    /** Planet hand-off is cut at the hyperspace boundary; no departure fade. */
-    private static final float ARRIVAL_PLANET_FADE_FRACTION = 0.08F;
-
     // ---- Streak tunnel ----
     private static final int STREAK_COUNT = 220;
     /** Close, bright streaks that provide speed parallax near the cockpit. */
@@ -99,6 +99,12 @@ public class PlanetRenderer
     private static final Map<Planet, Vector3f> STELLAR_CORONA_COLORS = new EnumMap<>(Planet.class);
     private static final Planet[] PLANET_DRAW_ORDER = Planet.values();
     private static final double[] PLANET_DISTANCE_SQ = new double[PLANET_DRAW_ORDER.length];
+    /** Distance-driven body quality with a temporal blend to avoid popping. */
+    private static final CelestialLodTransitions PLANET_LOD_TRANSITIONS =
+            new CelestialLodTransitions(PLANET_DRAW_ORDER.length * 2);
+    private static final int[] PLANET_POINT_COLORS = new int[PLANET_DRAW_ORDER.length];
+    /** Resource locations are immutable and reused; distant bodies never touch the texture manager. */
+    private static final Map<Planet, ResourceLocation> PLANET_TEXTURES = new EnumMap<>(Planet.class);
     private static final float PLANET_SKY_DISTANCE = 280.0F;
     private static final float MIN_PLANET_SKY_RADIUS = 0.12F;
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
@@ -131,6 +137,7 @@ public class PlanetRenderer
 
         for (Planet planet : Planet.values())
         {
+            PLANET_TEXTURES.put(planet, planet.texture());
             Vec3 sun = ShipSpace.sunDirection(planet);
             FIXED_SUN_DIRECTIONS.put(planet, new Vector3f((float) sun.x, (float) sun.y, (float) sun.z));
             StellarVisualProfile profile = stellarProfile(planet);
@@ -139,7 +146,19 @@ public class PlanetRenderer
                     ((color >> 16) & 0xFF) / 255.0F,
                     ((color >> 8) & 0xFF) / 255.0F,
                     (color & 0xFF) / 255.0F));
+            PLANET_POINT_COLORS[planet.ordinal()] = pointColor(planet);
         }
+    }
+
+    private static int pointColor(Planet planet)
+    {
+        return switch (planet)
+        {
+            case LUSH -> 0xFF68D68A;
+            case MOLTEN -> 0xFFFF8A4C;
+            case FROZEN -> 0xFF8FD7FF;
+            case BARREN -> 0xFFD0B07A;
+        };
     }
 
     // Arrival crossfade: the target planet grows and fades in over the last ~28%
@@ -450,11 +469,11 @@ public class PlanetRenderer
     {
         boolean longRoute = space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS;
         float warpProgress = space.warpProgress();
-        float hyperspaceStart = longRoute
-                ? (ShipFlightController.TURN_TICKS + ShipFlightController.ACCEL_TICKS)
-                    / (float) Math.max(1, space.warpDurationTicks())
-                : 0.0F;
         UniversePosition ship = space.universePosition();
+        StarSystem sourceSystem = space.currentBody() == null
+                ? null : StarSystems.systemOfPlanet(space.currentBody());
+        StarSystem targetSystem = space.targetBody() == null
+                ? null : StarSystems.systemOfPlanet(space.targetBody());
         for (int i = 0; i < PLANET_DRAW_ORDER.length; i++)
             PLANET_DISTANCE_SQ[i] = ShipSpace.universeBodyPosition(PLANET_DRAW_ORDER[i]).distanceToSqr(ship);
 
@@ -479,10 +498,6 @@ public class PlanetRenderer
         {
             StarSystem system = StarSystems.systemOfPlanet(body);
             float systemVisibility = stellarVisibility(stars, system);
-            StarSystem sourceSystem = space.currentBody() == null
-                    ? null : StarSystems.systemOfPlanet(space.currentBody());
-            StarSystem targetSystem = space.targetBody() == null
-                    ? null : StarSystems.systemOfPlanet(space.targetBody());
             boolean departingSystemBody = space.warping() && longRoute
                     && warpProgress < WarpVisualTiming.ARRIVAL_FADE_START
                     && sourceSystem != null && system == sourceSystem;
@@ -493,25 +508,37 @@ public class PlanetRenderer
             // preserves the primary/companion relationship (for example the
             // lush world and its molten moon) instead of dropping every body
             // except the one the ship is docked at.
-            if (longRoute && space.warping() && !departingSystemBody && !arrivingSystemBody)
-                continue;
-            if (systemVisibility <= 0.20F && !arrivingSystemBody && !departingSystemBody)
-                continue;
-            float alpha = 1.0F;
-            if (arrivingSystemBody)
+            boolean routePriority = departingSystemBody || arrivingSystemBody;
+            if (longRoute && space.warping() && !routePriority)
             {
-                alpha = arrivalPlanetAlpha(warpProgress);
+                updatePlanetLod(body, CelestialLod.CULLED, space.animationTicks());
+                continue;
             }
-            if (alpha > 0.002F)
-                renderVirtualPlanet(pose, camera, body, space, alpha);
+
+            Vec3 bodyCenter = virtualToView(ShipSpace.universeBodyPosition(body), space);
+            double distance = bodyCenter.length();
+            double angularDiameter = CelestialLodPolicy.angularDiameterDegrees(
+                    ShipSpace.radius(body), distance);
+            CelestialLod previous = PLANET_LOD_TRANSITIONS.currentLod(body.getId());
+            CelestialLod requested = CelestialLodPolicy.hysteretic(
+                    angularDiameter, previous, routePriority ? CelestialLod.POINT : CelestialLod.CULLED);
+            if (systemVisibility <= 0.20F && !routePriority)
+                requested = CelestialLod.CULLED;
+            float detail = updatePlanetLod(body, requested, space.animationTicks());
+
+            // The hand-off still switches at the shared arrival boundary, but
+            // the body itself is no longer faded in. Distance LOD blending is
+            // the only visual transition, so an approaching planet cannot
+            // appear, disappear, and then restart a second fade.
+            if (detail > 0.001F)
+                renderVirtualPlanet(pose, camera, body, space, 1.0F, detail);
         }
     }
-    static float arrivalPlanetAlpha(float warpProgress)
-    {
-        return smoothstep((warpProgress - WarpVisualTiming.ARRIVAL_FADE_START)
-                / ARRIVAL_PLANET_FADE_FRACTION);
-    }
 
+    private static float updatePlanetLod(Planet body, CelestialLod requested, float animationTicks)
+    {
+        return PLANET_LOD_TRANSITIONS.update(body.getId(), requested, animationTicks);
+    }
     private static float stellarVisibility(StarSystemResolver.ResolvedStarField stars, StarSystem system)
     {
         if (system == null)
@@ -527,7 +554,7 @@ public class PlanetRenderer
 
     /** Draw one body at true near distance or angularly projected on the sky shell. */
     private static void renderVirtualPlanet(PoseStack pose, Camera camera, Planet body,
-                                            SpaceRenderContext space, float alpha)
+                                            SpaceRenderContext space, float alpha, float lodDetail)
     {
         Vec3 bodyCenter = virtualToView(ShipSpace.universeBodyPosition(body), space);
         float bodyScale = (float) (ShipSpace.radius(body) / PLANET_RADIUS);
@@ -539,14 +566,32 @@ public class PlanetRenderer
             bodyScale *= projectionScale;
         }
         float renderedRadius = PLANET_RADIUS * bodyScale;
+        float pointWeight = CelestialLodTransitions.pointWeight(lodDetail);
+        float reducedWeight = CelestialLodTransitions.reducedWeight(lodDetail);
+        float fullWeight = CelestialLodTransitions.fullWeight(lodDetail);
+        float bodyWeight = pointWeight + reducedWeight + fullWeight;
         if (renderedRadius < MIN_PLANET_SKY_RADIUS)
+        {
+            // A body can cross the point -> reduced boundary while it is still
+            // smaller than the minimum sphere radius. Keep one marker alive
+            // during that transition instead of fading the point out before a
+            // reduced sphere can become visible.
+            if (bodyWeight > 0.002F)
+                renderPlanetPoint(pose, body, alpha * bodyWeight, (float) bodyCenter.x,
+                        (float) bodyCenter.y, (float) bodyCenter.z, renderedRadius);
             return;
-        renderPlanet(pose, camera, body, bodyScale, alpha,
-                (float) bodyCenter.x, (float) bodyCenter.y, (float) bodyCenter.z,
-                (float) space.yaw(), (float) space.pitch());
-        if (renderedRadius >= 0.45F)
-            renderAtmosphereGlow(pose, body, bodyScale, alpha,
-                    (float) bodyCenter.x, (float) bodyCenter.y, (float) bodyCenter.z);
+        }
+        float cx = (float) bodyCenter.x;
+        float cy = (float) bodyCenter.y;
+        float cz = (float) bodyCenter.z;
+        if (reducedWeight + fullWeight > 0.002F)
+            renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
+                    cx, cy, cz, (float) space.yaw(), (float) space.pitch());
+        if (fullWeight > 0.002F && renderedRadius >= 0.45F)
+            renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
+                    cx, cy, cz);
+        if (pointWeight > 0.002F)
+            renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
 
     /** Camera rotation only: deliberately excludes walk/view bobbing. */
@@ -864,6 +909,56 @@ public class PlanetRenderer
         return a + (b - a) * t;
     }
 
+    /**
+     * Small bodies remain readable without keeping a textured sphere alive.
+     * The eight-sided marker is intentionally softer than a square billboard,
+     * so distant planets do not look like stray pixels in the starfield.
+     */
+    private static void renderPlanetPoint(PoseStack pose, Planet planet, float alpha,
+                                          float cx, float cy, float cz, float projectedRadius)
+    {
+        if (alpha <= 0.002F)
+            return;
+        float size = Math.max(0.30F, Math.min(1.10F, projectedRadius * 0.85F));
+        int color = PLANET_POINT_COLORS[planet.ordinal()];
+        float r = ((color >> 16) & 0xFF) / 255.0F;
+        float g = ((color >> 8) & 0xFF) / 255.0F;
+        float b = (color & 0xFF) / 255.0F;
+
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+        Matrix4f matrix = pose.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+        for (int i = 0; i < 8; i++)
+        {
+            double a0 = Math.PI * 2.0 * i / 8.0;
+            double a1 = Math.PI * 2.0 * (i + 1) / 8.0;
+            vertexColor(bb, matrix, cx, cy, cz, r, g, b, alpha);
+            vertexColor(bb, matrix,
+                    cx + (float) Math.cos(a0) * size,
+                    cy + (float) Math.sin(a0) * size, cz,
+                    r, g, b, alpha * 0.72F);
+            vertexColor(bb, matrix,
+                    cx + (float) Math.cos(a1) * size,
+                    cy + (float) Math.sin(a1) * size, cz,
+                    r, g, b, alpha * 0.72F);
+        }
+        BufferUploader.drawWithShader(bb.buildOrThrow());
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+    }
+
     private static void renderPlanet(PoseStack pose, Camera cam, Planet planet, float scale, float alpha,
                                      float cx, float cy, float cz, float shipYaw, float shipPitch)
     {
@@ -885,7 +980,7 @@ public class PlanetRenderer
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, planet.texture());
+        RenderSystem.setShaderTexture(0, PLANET_TEXTURES.get(planet));
         RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
         // The VBO contains body-oriented positions and fixed per-vertex light.

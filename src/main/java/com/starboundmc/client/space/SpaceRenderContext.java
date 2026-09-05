@@ -17,6 +17,8 @@ public record SpaceRenderContext(Vec3 shipPosition, UniversePosition universePos
 {
     static SpaceRenderContext capture(ShipPoseProvider provider, float animationTicks)
     {
+        if (provider instanceof ClientShipPoseProvider client)
+            return client.capture(animationTicks);
         return new SpaceRenderContext(provider.position(), provider.universePosition(), provider.velocity(),
                 provider.yaw(), provider.pitch(), provider.roll(),
                 provider.flightPhase(), provider.isWarping(), provider.warpProgress(),
