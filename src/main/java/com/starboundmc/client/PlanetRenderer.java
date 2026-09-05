@@ -502,11 +502,11 @@ public class PlanetRenderer
             StarSystem system = StarSystems.systemOfPlanet(body);
             float systemVisibility = stellarVisibility(stars, system);
             boolean departingSystemBody = space.warping() && longRoute
-                    && sourceSystem != null && system == sourceSystem
-                    && warpProgress < WarpVisualTiming.SOURCE_SYSTEM_FADE_END;
+                    && warpProgress < WarpVisualTiming.ARRIVAL_FADE_START
+                    && sourceSystem != null && system == sourceSystem;
             boolean arrivingSystemBody = space.warping() && longRoute
-                    && targetSystem != null && system == targetSystem
-                    && warpProgress >= WarpVisualTiming.TARGET_SYSTEM_FADE_START;
+                    && warpProgress >= WarpVisualTiming.ARRIVAL_FADE_START
+                    && targetSystem != null && system == targetSystem;
             // Keep the entire source system during the departure leg. This
             // preserves the primary/companion relationship (for example the
             // lush world and its molten moon) instead of dropping every body
@@ -533,15 +533,8 @@ public class PlanetRenderer
             // the body itself is no longer faded in. Distance LOD blending is
             // the only visual transition, so an approaching planet cannot
             // appear, disappear, and then restart a second fade.
-            float routeAlpha = 1.0F;
-            if (departingSystemBody)
-                routeAlpha *= 1.0F - smoothstep((warpProgress - WarpVisualTiming.SOURCE_SYSTEM_FADE_START)
-                        / (WarpVisualTiming.SOURCE_SYSTEM_FADE_END - WarpVisualTiming.SOURCE_SYSTEM_FADE_START));
-            if (arrivingSystemBody)
-                routeAlpha *= smoothstep((warpProgress - WarpVisualTiming.TARGET_SYSTEM_FADE_START)
-                        / (WarpVisualTiming.TARGET_SYSTEM_FADE_END - WarpVisualTiming.TARGET_SYSTEM_FADE_START));
-            if (detail > 0.001F && routeAlpha > 0.001F)
-                renderVirtualPlanet(pose, camera, body, space, routeAlpha, detail);
+            if (detail > 0.001F)
+                renderVirtualPlanet(pose, camera, body, space, 1.0F, detail);
         }
     }
 
