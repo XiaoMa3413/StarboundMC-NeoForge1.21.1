@@ -1140,10 +1140,10 @@ public class PlanetRenderer
     {
         return switch (planet)
         {
-            case MOLTEN -> 0.006F;
-            case LUSH -> 0.003F;
-            case FROZEN -> 0.0018F;
-            case BARREN -> 0.0022F;
+            case MOLTEN -> 0.0075F;
+            case LUSH -> 0.00375F;
+            case FROZEN -> 0.00225F;
+            case BARREN -> 0.00275F;
         };
     }
 
