@@ -109,6 +109,7 @@ public class PlanetRenderer
     private static final float MIN_PLANET_SKY_RADIUS = 0.12F;
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
     private static final Map<Planet, VertexBuffer> PLANET_SURFACE_BUFFERS = new EnumMap<>(Planet.class);
+    private static final Map<Planet, Float> PLANET_SURFACE_TICKS = new EnumMap<>(Planet.class);
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
@@ -589,7 +590,7 @@ public class PlanetRenderer
         float cz = (float) bodyCenter.z;
         if (reducedWeight + fullWeight > 0.002F)
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
-                    cx, cy, cz, (float) space.yaw(), (float) space.pitch());
+                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (fullWeight > 0.002F && renderedRadius >= 0.45F)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz);
@@ -963,19 +964,20 @@ public class PlanetRenderer
     }
 
     private static void renderPlanet(PoseStack pose, Camera cam, Planet planet, float scale, float alpha,
-                                     float cx, float cy, float cz, float shipYaw, float shipPitch)
+                                     float cx, float cy, float cz, float shipYaw, float shipPitch,
+                                     float animationTicks)
     {
         // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
         drawOrientedPlanetSphere(pose, pose.last().pose(), planet, cx, cy, cz, scale,
-                fixedSunDirection(planet), 1.0F, alpha, shipYaw, shipPitch);
+                fixedSunDirection(planet), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
     private static void drawOrientedPlanetSphere(PoseStack pose, Matrix4f matrix, Planet planet,
                                                   float cx, float cy, float cz, float scale,
                                                   Vector3f worldSun, float brightness, float alpha,
-                                                  float shipYaw, float shipPitch)
+                                                  float shipYaw, float shipPitch, float animationTicks)
     {
         FogRenderer.setupNoFog();
         RenderSystem.enableBlend();
@@ -995,8 +997,9 @@ public class PlanetRenderer
                 .translate(cx, cy, cz)
                 .rotateX((float) Math.toRadians(-shipPitch))
                 .rotateY((float) Math.toRadians(-shipYaw))
+                .rotateY((float) Math.toRadians(animationTicks * spinRate(planet)))
                 .scale(scale);
-        VertexBuffer surface = getPlanetSurfaceBuffer(planet, worldSun);
+        VertexBuffer surface = getPlanetSurfaceBuffer(planet, worldSun, animationTicks);
         surface.bind();
         surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
         VertexBuffer.unbind();
@@ -1004,12 +1007,32 @@ public class PlanetRenderer
         RenderSystem.setShaderColor(1,1,1,1); RenderSystem.depthMask(true); RenderSystem.disableBlend();
     }
 
-    private static VertexBuffer getPlanetSurfaceBuffer(Planet planet, Vector3f worldSun)
+    private static VertexBuffer getPlanetSurfaceBuffer(Planet planet, Vector3f worldSun,
+                                                        float animationTicks)
     {
         VertexBuffer cached = PLANET_SURFACE_BUFFERS.get(planet);
-        if (cached != null && !cached.isInvalid())
+        Float cachedTick = PLANET_SURFACE_TICKS.get(planet);
+        if (cached != null && !cached.isInvalid() && cachedTick != null
+                && Float.compare(cachedTick, animationTicks) == 0)
             return cached;
+        if (cached != null && !cached.isInvalid())
+            cached.close();
 
+        // The model rotates by +spin below. Bake the opposite rotation into
+        // the light vector so the stellar direction remains fixed in world
+        // space while the surface texture turns underneath it.
+        float spin = (float) Math.toRadians(animationTicks * spinRate(planet));
+        float spinCos = (float) Math.cos(-spin);
+        float spinSin = (float) Math.sin(-spin);
+        Vector3f compensatedSun = new Vector3f(
+                worldSun.x * spinCos + worldSun.z * spinSin,
+                worldSun.y,
+                -worldSun.x * spinSin + worldSun.z * spinCos);
+
+        float sunX = compensatedSun.x;
+        float sunY = compensatedSun.y;
+        float sunZ = compensatedSun.z;
+        Vector3f bakedSun = new Vector3f(sunX, sunY, sunZ);
         Vector3f orientation = BODY_ORIENTATION.getOrDefault(planet, new Vector3f());
         float yaw = (float) Math.toRadians(orientation.y);
         float pitch = (float) Math.toRadians(orientation.x);
@@ -1030,7 +1053,8 @@ public class PlanetRenderer
             float worldX = yawX;
             float worldY = localY * pitchCos - yawZ * pitchSin;
             float worldZ = localY * pitchSin + yawZ * pitchCos;
-            addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i], worldSun,
+            addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i],
+                    bakedSun,
                     terminatorWidth(planet), nightFloor(planet));
         }
 
@@ -1039,6 +1063,7 @@ public class PlanetRenderer
         buffer.upload(bb.buildOrThrow());
         VertexBuffer.unbind();
         PLANET_SURFACE_BUFFERS.put(planet, buffer);
+        PLANET_SURFACE_TICKS.put(planet, animationTicks);
         return buffer;
     }
 
@@ -1107,6 +1132,18 @@ public class PlanetRenderer
             case LUSH -> 0.24F;
             case FROZEN -> 0.30F;
             case BARREN -> 0.18F;
+        };
+    }
+
+    /** Degrees per game tick; one revolution takes several real minutes. */
+    private static float spinRate(Planet planet)
+    {
+        return switch (planet)
+        {
+            case MOLTEN -> 0.006F;
+            case LUSH -> 0.003F;
+            case FROZEN -> 0.0018F;
+            case BARREN -> 0.0022F;
         };
     }
 
