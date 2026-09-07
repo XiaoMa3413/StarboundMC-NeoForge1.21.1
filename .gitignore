@@ -38,6 +38,9 @@ bin/
 ### VS Code ###
 .vscode/
 
+### Agent workspace skills (local only) ###
+.agents/
+
 ### OS files ###
 .DS_Store
 Thumbs.db
