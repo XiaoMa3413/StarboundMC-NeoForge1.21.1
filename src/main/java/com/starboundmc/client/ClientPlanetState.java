@@ -6,6 +6,7 @@ import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.world.Planet;
+import com.starboundmc.world.starmap.StarSystems;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -136,8 +137,7 @@ public final class ClientPlanetState {
             return;
         var textures = Minecraft.getInstance().getTextureManager();
         textures.preload(planet.texture(), Util.backgroundExecutor());
-        Planet companion = planet == Planet.LUSH ? Planet.MOLTEN
-                : planet == Planet.MOLTEN ? Planet.LUSH : null;
+        Planet companion = StarSystems.companionOf(planet);
         if (companion != null)
             textures.preload(companion.texture(), Util.backgroundExecutor());
     }

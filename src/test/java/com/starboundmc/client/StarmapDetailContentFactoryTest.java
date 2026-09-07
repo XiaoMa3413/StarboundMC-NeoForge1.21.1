@@ -60,7 +60,12 @@ class StarmapDetailContentFactoryTest
     @Test
     void lockedEntryHasNoEmptyNavigationCategory()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:gasgiant");
+        // A locked placeholder has a null destination. Since the gas giant and
+        // its moon are now reachable, use a synthetic body to keep the locked
+        // detail-card code path under test.
+        PlanetEntry entry = new PlanetEntry("synthetic:locked", "starmap.entry.locked.name",
+                "starmap.type.gas_giant", "starmap.entry.locked.desc",
+                null, 0, 200, 0.0F, null, 0xFFE8A860, 22);
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, 0);

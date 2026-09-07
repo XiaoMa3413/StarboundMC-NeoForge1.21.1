@@ -12,7 +12,9 @@ public enum Planet
     LUSH("lush"),
     MOLTEN("molten"),
     FROZEN("frozen"),
-    BARREN("barren");
+    BARREN("barren"),
+    GAS_GIANT("gasgiant"),
+    ROCKY_MOON("rockymoon");
 
     private final String id;
 
@@ -51,11 +53,22 @@ public enum Planet
     {
         switch (this)
         {
-            case LUSH:   return 1;
-            case BARREN: return 2;
-            case FROZEN: return 4;
-            case MOLTEN: return 6;
+            case LUSH:        return 1;
+            case BARREN:      return 2;
+            case ROCKY_MOON:  return 5;
+            case FROZEN:      return 4;
+            case MOLTEN:      return 6;
+            case GAS_GIANT:   return 8;
         }
         return 0;
+    }
+
+    /**
+     * Whether the ship may put a player onto a surface dimension from this
+     * orbit. The gas giant is orbit-only: there is no ground to land on.
+     */
+    public boolean canLand()
+    {
+        return this != GAS_GIANT;
     }
 }

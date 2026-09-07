@@ -47,10 +47,18 @@ public final class Stage6TravelService {
             return false;
         }
         Planet current = ShipWarpManager.getCurrentPlanet();
+        if (!current.canLand()) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.starboundmc.warp.no_landing",
+                    net.minecraft.network.chat.Component.translatable(current.translationKey())), true);
+            return false;
+        }
         ResourceKey<Level> destination = switch (current) {
             case MOLTEN -> MoltenPlanet.MOLTEN_LEVEL;
             case FROZEN -> FrozenPlanet.FROZEN_LEVEL;
             case BARREN -> BarrenPlanet.BARREN_LEVEL;
+            case ROCKY_MOON -> RockyMoonPlanet.ROCKY_MOON_LEVEL;
+            case GAS_GIANT -> throw new IllegalStateException("Gas giant is orbit-only");
             case LUSH -> Level.OVERWORLD;
         };
         if (Level.OVERWORLD.equals(destination) || server.getLevel(destination) == null) {
@@ -61,7 +69,8 @@ public final class Stage6TravelService {
                 case MOLTEN -> MoltenPlanet.teleportToMolten(player);
                 case FROZEN -> FrozenPlanet.teleportToFrozen(player);
                 case BARREN -> BarrenPlanet.teleportToBarren(player);
-                case LUSH -> throw new IllegalStateException("Lush must use the overworld");
+                case ROCKY_MOON -> RockyMoonPlanet.teleportToRockyMoon(player);
+                case GAS_GIANT, LUSH -> throw new IllegalStateException("Unreachable landing path");
             }
         }
         // Mission progression and the personal tutorial are driven only after

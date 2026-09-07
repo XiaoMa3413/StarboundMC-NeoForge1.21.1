@@ -110,6 +110,26 @@ public class PlanetRenderer
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
     private static final Map<Planet, VertexBuffer> PLANET_SURFACE_BUFFERS = new EnumMap<>(Planet.class);
     private static final Map<Planet, Float> PLANET_SURFACE_TICKS = new EnumMap<>(Planet.class);
+    /** Ringed-body support: strip texture plus pre-oriented quad geometry (see buildGasGiantRings). */
+    private static final ResourceLocation GAS_GIANT_RING_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "textures/planet/gasgiant_ring.png");
+    private static final int RING_SEGMENTS = 96;
+    private static final float RING_INNER = 1.30F;
+    private static final float RING_OUTER = 2.32F;
+    private static final float RING_ALPHA = 0.75F;
+    /** Ring tint of the star-map art direction: warm dust 0xFFD8C8A0. */
+    private static final float RING_TINT_R = 0.847F;
+    private static final float RING_TINT_G = 0.784F;
+    private static final float RING_TINT_B = 0.627F;
+    /** 4 corners per segment: inner(a0), outer(a0), outer(a1), inner(a1). Local, PLANET_RADIUS units. */
+    private static final float[] RING_VX = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VY = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VZ = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VU = new float[RING_SEGMENTS * 4];
+    /** Segment centroid in the same oriented local frame, for the far/near draw split. */
+    private static final float[] RING_MID_X = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Y = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Z = new float[RING_SEGMENTS];
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
@@ -123,11 +143,15 @@ public class PlanetRenderer
         ATMOSPHERE_COLORS.put(Planet.MOLTEN, new Vector3f(1.0F, 0.45F, 0.20F));
         ATMOSPHERE_COLORS.put(Planet.FROZEN, new Vector3f(0.55F, 0.78F, 1.0F));
         ATMOSPHERE_COLORS.put(Planet.BARREN, new Vector3f(0.75F, 0.65F, 0.50F));
+        ATMOSPHERE_COLORS.put(Planet.GAS_GIANT, new Vector3f(1.00F, 0.86F, 0.62F));
+        ATMOSPHERE_COLORS.put(Planet.ROCKY_MOON, new Vector3f(0.55F, 0.55F, 0.60F));
 
         ATMOSPHERE_PEAK.put(Planet.LUSH, 0.20F);
         ATMOSPHERE_PEAK.put(Planet.MOLTEN, 0.26F);
         ATMOSPHERE_PEAK.put(Planet.FROZEN, 0.23F);
         ATMOSPHERE_PEAK.put(Planet.BARREN, 0.15F);
+        ATMOSPHERE_PEAK.put(Planet.GAS_GIANT, 0.24F);
+        ATMOSPHERE_PEAK.put(Planet.ROCKY_MOON, 0.03F);
 
         // x=axis tilt, y=fixed body yaw, z=fixed axial roll. These orient the
         // texture and poles in the common virtual-space frame but never animate.
@@ -135,6 +159,10 @@ public class PlanetRenderer
         BODY_ORIENTATION.put(Planet.MOLTEN, new Vector3f(6.0F, 210.0F, 0.0F));
         BODY_ORIENTATION.put(Planet.FROZEN, new Vector3f(32.0F, 125.0F, 0.0F));
         BODY_ORIENTATION.put(Planet.BARREN, new Vector3f(12.0F, 285.0F, 0.0F));
+        // A strong axial tilt reads the ring open from the berth; the rocky
+        // moon is tumbled so its crater field never looks like a flat decal.
+        BODY_ORIENTATION.put(Planet.GAS_GIANT, new Vector3f(18.0F, 40.0F, 0.0F));
+        BODY_ORIENTATION.put(Planet.ROCKY_MOON, new Vector3f(8.0F, 160.0F, 0.0F));
 
         for (Planet planet : Planet.values())
         {
@@ -149,6 +177,66 @@ public class PlanetRenderer
                     (color & 0xFF) / 255.0F));
             PLANET_POINT_COLORS[planet.ordinal()] = pointColor(planet);
         }
+        buildGasGiantRings();
+    }
+
+    /** A body draws its ring band only when it has one. */
+    private static boolean hasRings(Planet planet)
+    {
+        return planet == Planet.GAS_GIANT;
+    }
+
+    /**
+     * Bakes the gas giant's ring as oriented quads in the same body-local frame
+     * as the surface sphere, so a single tilt/roll drives both. The strip texture
+     * supplies per-radius alpha; the far/near split is resolved at draw time.
+     */
+    private static void buildGasGiantRings()
+    {
+        Vector3f orientation = BODY_ORIENTATION.get(Planet.GAS_GIANT);
+        float yaw = (float) Math.toRadians(orientation.y);
+        float pitch = (float) Math.toRadians(orientation.x);
+        float yawCos = (float) Math.cos(yaw);
+        float yawSin = (float) Math.sin(yaw);
+        float pitchCos = (float) Math.cos(pitch);
+        float pitchSin = (float) Math.sin(pitch);
+
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            double a0 = Math.PI * 2.0 * seg / RING_SEGMENTS;
+            double a1 = Math.PI * 2.0 * (seg + 1) / RING_SEGMENTS;
+            float cos0 = (float) Math.cos(a0), sin0 = (float) Math.sin(a0);
+            float cos1 = (float) Math.cos(a1), sin1 = (float) Math.sin(a1);
+
+            // Corner order: inner@a0 (u0), outer@a0 (u1), outer@a1 (u1), inner@a1 (u0).
+            for (int corner = 0; corner < 4; corner++)
+            {
+                float radius = (corner == 0 || corner == 3) ? RING_INNER : RING_OUTER;
+                float angleCos = (corner <= 1) ? cos0 : cos1;
+                float angleSin = (corner <= 1) ? sin0 : sin1;
+                float u = (corner == 1 || corner == 2) ? 1.0F : 0.0F;
+                // Untilted ring lies in the equatorial (x/z) plane.
+                float lx = angleCos * radius * PLANET_RADIUS;
+                float ly = 0.0F;
+                float lz = angleSin * radius * PLANET_RADIUS;
+                float yawX = lx * yawCos + lz * yawSin;
+                float yawZ = -lx * yawSin + lz * yawCos;
+                float outX = yawX;
+                float outY = ly * pitchCos - yawZ * pitchSin;
+                float outZ = ly * pitchSin + yawZ * pitchCos;
+                int idx = seg * 4 + corner;
+                RING_VX[idx] = outX;
+                RING_VY[idx] = outY;
+                RING_VZ[idx] = outZ;
+                RING_VU[idx] = u;
+            }
+            RING_MID_X[seg] = 0.25F * (RING_VX[seg * 4] + RING_VX[seg * 4 + 1]
+                    + RING_VX[seg * 4 + 2] + RING_VX[seg * 4 + 3]);
+            RING_MID_Y[seg] = 0.25F * (RING_VY[seg * 4] + RING_VY[seg * 4 + 1]
+                    + RING_VY[seg * 4 + 2] + RING_VY[seg * 4 + 3]);
+            RING_MID_Z[seg] = 0.25F * (RING_VZ[seg * 4] + RING_VZ[seg * 4 + 1]
+                    + RING_VZ[seg * 4 + 2] + RING_VZ[seg * 4 + 3]);
+        }
     }
 
     private static int pointColor(Planet planet)
@@ -159,6 +247,8 @@ public class PlanetRenderer
             case MOLTEN -> 0xFFFF8A4C;
             case FROZEN -> 0xFF8FD7FF;
             case BARREN -> 0xFFD0B07A;
+            case GAS_GIANT -> 0xFFE8B87A;
+            case ROCKY_MOON -> 0xFFB4B8BE;
         };
     }
 
@@ -969,8 +1059,75 @@ public class PlanetRenderer
     {
         // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
+        // The ring writes no depth either, so its far half is drawn first, the disk
+        // second, and the near half last to read as orbiting the body.
+        if (hasRings(planet))
+            drawPlanetRings(pose, cx, cy, cz, scale, shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose, pose.last().pose(), planet, cx, cy, cz, scale,
                 fixedSunDirection(planet), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        if (hasRings(planet))
+            drawPlanetRings(pose, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
+    }
+
+    /**
+     * Draws the pre-oriented gas giant ring, restricted to the far half (nearPass
+     * = false, drawn before the disk) or the near half (nearPass = true, drawn
+     * after the disk). A segment is "near" when its centroid lands closer to the
+     * camera than the body centre: |c + o|^2 < |c|^2.
+     */
+    private static void drawPlanetRings(PoseStack pose, float cx, float cy, float cz,
+                                        float scale, float shipYaw, float shipPitch,
+                                        float alpha, boolean nearPass)
+    {
+        if (alpha <= 0.002F)
+            return;
+        // Match the disk's orientation-minus-spin so ring and surface tilt together.
+        Matrix4f orient = new Matrix4f()
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw));
+        Vector3f rotated = new Vector3f();
+
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.disableCull();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, GAS_GIANT_RING_TEXTURE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
+
+        Matrix4f matrix = pose.last().pose();
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Vector3f tmp = new Vector3f();
+        int drawn = 0;
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            tmp.set(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg]);
+            orient.transformDirection(tmp, rotated);
+            rotated.mul(scale);
+            float oDotC = cx * rotated.x + cy * rotated.y + cz * rotated.z;
+            boolean near = (2.0F * oDotC + rotated.lengthSquared()) < 0.0F;
+            if (near != nearPass)
+                continue;
+            drawn++;
+            for (int corner = 0; corner < 4; corner++)
+            {
+                int idx = seg * 4 + corner;
+                bb.addVertex(matrix, RING_VX[idx] * scale + cx,
+                        RING_VY[idx] * scale + cy, RING_VZ[idx] * scale + cz)
+                        .setUv(RING_VU[idx], 0.5F)
+                        .setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1.0F);
+            }
+        }
+        if (drawn > 0)
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableCull();
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
@@ -1132,6 +1289,9 @@ public class PlanetRenderer
             case LUSH -> 0.24F;
             case FROZEN -> 0.30F;
             case BARREN -> 0.18F;
+            // Storm-banded atmospheres have no hard day/night line.
+            case GAS_GIANT -> 0.42F;
+            case ROCKY_MOON -> 0.12F;
         };
     }
 
@@ -1144,6 +1304,9 @@ public class PlanetRenderer
             case LUSH -> 0.00375F;
             case FROZEN -> 0.00225F;
             case BARREN -> 0.00275F;
+            // Jupiter-like: the fastest spin in the system, storms never rest.
+            case GAS_GIANT -> 0.009F;
+            case ROCKY_MOON -> 0.002F;
         };
     }
 
@@ -1155,6 +1318,10 @@ public class PlanetRenderer
             case LUSH -> 0.10F;
             case FROZEN -> 0.14F;
             case BARREN -> 0.06F;
+            // Thick scattering atmosphere keeps the night side visibly warm.
+            case GAS_GIANT -> 0.22F;
+            // Airless rock: hard black on the far side.
+            case ROCKY_MOON -> 0.03F;
         };
     }
 

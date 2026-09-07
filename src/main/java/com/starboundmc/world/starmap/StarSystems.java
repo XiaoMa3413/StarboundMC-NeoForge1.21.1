@@ -16,8 +16,9 @@ import java.util.Map;
  * <ul>
  *   <li>{@code sys1} "第一恒星系" (warm yellow sun-like star): barren planet on the
  *       inner orbit, the lush overworld, its molten moon, and a gas giant with
- *       a dead rocky moon on the outer orbit (the gas giant and its moon are
- *       placeholders — visible on the map but locked/unreachable).</li>
+ *       a dead rocky mining-moon outpost on the outer orbit. The gas giant can
+ *       be warped to but never landed on (no solid surface); its moon has a
+ *       surface dimension.</li>
  *   <li>{@code sys2} "第二恒星系" (dim, strongly-radiating RED DWARF): only the
  *       frozen world for now; more bodies can be added later.</li>
  * </ul>
@@ -106,6 +107,7 @@ public class StarSystems
     private static final Map<String, StarSystem> BY_ID = new HashMap<>();
     private static final Map<String, PlanetEntry> ENTRIES = new HashMap<>();
     private static final Map<Planet, StarSystem> BY_PLANET = new EnumMap<>(Planet.class);
+    private static final Map<Planet, PlanetEntry> BY_DESTINATION = new EnumMap<>(Planet.class);
 
     static
     {
@@ -116,7 +118,10 @@ public class StarSystems
             {
                 ENTRIES.put(entry.getEntryId(), entry);
                 if (entry.getDestination() != null)
+                {
                     BY_PLANET.put(entry.getDestination(), system);
+                    BY_DESTINATION.put(entry.getDestination(), entry);
+                }
             }
         }
     }
@@ -141,10 +146,10 @@ public class StarSystems
                         Planet.MOLTEN, 6, 22, 90.0F, "sys1:lush", MOLTEN_BODY),
                 new PlanetEntry("sys1:gasgiant", "starmap.entry.sys1.gasgiant.name",
                         "starmap.type.gas_giant", "starmap.entry.sys1.gasgiant.desc",
-                        null, 0, 116, 200.0F, null, GAS_GIANT_BODY),
+                        Planet.GAS_GIANT, 8, 116, 200.0F, null, GAS_GIANT_BODY),
                 new PlanetEntry("sys1:rockymoon", "starmap.entry.sys1.rockymoon.name",
                         "starmap.type.rocky_moon", "starmap.entry.sys1.rockymoon.desc",
-                        null, 0, 20, 30.0F, "sys1:gasgiant", ROCKY_MOON_BODY)
+                        Planet.ROCKY_MOON, 5, 20, 30.0F, "sys1:gasgiant", ROCKY_MOON_BODY)
         )));
 
         // ---- 第二恒星系: 强辐射的暗淡红矮星, 目前只有寒冷世界 ----
@@ -193,5 +198,36 @@ public class StarSystems
     public static StarSystem systemOfPlanet(Planet planet)
     {
         return planet == null ? null : BY_PLANET.get(planet);
+    }
+
+    /** The reachable star-map entry that leads to this planet, or null. */
+    public static PlanetEntry entryByDestination(Planet planet)
+    {
+        return planet == null ? null : BY_DESTINATION.get(planet);
+    }
+
+    /**
+     * The body that shares a dock view with this planet: its parent for a moon,
+     * or its first moon for a primary. Null when no companion exists, so the
+     * pair is never visible from the other berth.
+     */
+    public static Planet companionOf(Planet planet)
+    {
+        PlanetEntry entry = entryByDestination(planet);
+        if (entry == null)
+            return null;
+        if (entry.getParentEntryId() != null)
+        {
+            PlanetEntry parent = entryById(entry.getParentEntryId());
+            return parent == null ? null : parent.getDestination();
+        }
+        String systemId = systemIdOfEntry(entry.getEntryId());
+        StarSystem system = systemId == null ? null : byId(systemId);
+        if (system == null)
+            return null;
+        for (PlanetEntry candidate : system.getEntries())
+            if (entry.getEntryId().equals(candidate.getParentEntryId()))
+                return candidate.getDestination();
+        return null;
     }
 }
