@@ -63,6 +63,8 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("durasteel_ore", ModBlocks.DURASTEEL_ORE);
     public static final DeferredItem<BlockItem> STAR_CORE_ORE_ITEM =
             ITEMS.registerSimpleBlockItem("star_core_ore", ModBlocks.STAR_CORE_ORE);
+    public static final DeferredItem<BlockItem> FUEL_CRYSTAL_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("fuel_crystal_ore", ModBlocks.FUEL_CRYSTAL_ORE);
     public static final DeferredItem<BlockItem> TITANIUM_ALLOY_FURNACE_ITEM =
             ITEMS.registerSimpleBlockItem("titanium_alloy_furnace", ModBlocks.TITANIUM_ALLOY_FURNACE);
     public static final DeferredItem<BlockItem> VOXEL_REFINERY_ITEM =
@@ -78,6 +80,7 @@ public final class ModItems {
     public static final DeferredItem<Item> TITANIUM_INGOT = ITEMS.registerSimpleItem("titanium_ingot");
     public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
     public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
+    public static final DeferredItem<Item> FUEL_CRYSTAL = ITEMS.registerSimpleItem("fuel_crystal");
 
     // Currency-grade matter unit. 99 is the vanilla hard cap: item counts
     // above 99 cannot pass the creative-mode slot packet (range [1;99]).
@@ -123,6 +126,7 @@ public final class ModItems {
                         output.accept(TITANIUM_ORE_ITEM);
                         output.accept(DURASTEEL_ORE_ITEM);
                         output.accept(STAR_CORE_ORE_ITEM);
+                        output.accept(FUEL_CRYSTAL_ORE_ITEM);
                         output.accept(TITANIUM_ALLOY_FURNACE_ITEM);
                         output.accept(VOXEL_REFINERY_ITEM);
                         output.accept(VOXEL_PRINTING_STATION_ITEM);
@@ -135,6 +139,7 @@ public final class ModItems {
                         output.accept(TITANIUM_INGOT);
                         output.accept(DURASTEEL_INGOT);
                         output.accept(STAR_CORE_FRAGMENT);
+                        output.accept(FUEL_CRYSTAL);
                         output.accept(EMERGENCY_FOOD_CAN);
                         output.accept(SURVIVAL_KNIFE);
                     })

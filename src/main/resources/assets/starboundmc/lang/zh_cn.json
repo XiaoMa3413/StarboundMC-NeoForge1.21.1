@@ -135,6 +135,7 @@
   "block.starboundmc.ship_engine_unit": "飞船引擎",
   "message.starboundmc.thruster.module_recovered": "已取回旧槽内模块，请将它安装到新的飞船引擎中。",
   "block.starboundmc.star_core_ore": "星核碎片矿石",
+  "block.starboundmc.fuel_crystal_ore": "燃料水晶矿",
   "block.starboundmc.teleporter": "传送器",
   "block.starboundmc.titanium_alloy_furnace": "钛制合金炉",
   "block.starboundmc.titanium_ore": "钛矿石",
@@ -262,6 +263,7 @@
   "item.starboundmc.raw_titanium": "原钛",
   "item.starboundmc.raw_tungsten": "原钨",
   "item.starboundmc.star_core_fragment": "星核碎片",
+  "item.starboundmc.fuel_crystal": "燃料水晶",
   "item.starboundmc.titanium_ingot": "钛锭",
   "item.starboundmc.tungsten_ingot": "钨锭",
    "item.starboundmc.emergency_food_can": "应急食物罐头",
@@ -363,6 +365,7 @@
    "message.starboundmc.warp.core_offline": "飞船核心系统离线",
    "message.starboundmc.warp.sublight_offline": "亚光速引擎离线",
    "message.starboundmc.warp.hyperdrive_offline": "超空间引擎离线",
+  "message.starboundmc.warp.no_landing": "%1$s没有可供降落的固体表面",
   "planet.starboundmc.barren": "荒芜星球",
   "planet.starboundmc.frozen": "冰封星球",
   "planet.starboundmc.lush": "翠绿星球",
@@ -376,5 +379,9 @@
   "gui.starboundmc.voxel_printing.submit.accepted": "已加入打印队列",
   "gui.starboundmc.voxel_printing.submit.rejected": "提交未成功，请检查材料与队列",
   "gui.starboundmc.voxel_printing.tab.recipes": "配方",
-  "gui.starboundmc.voxel_printing.tab.queue": "队列"
+  "gui.starboundmc.voxel_printing.tab.queue": "队列",
+  "planet.starboundmc.gasgiant": "气态巨行星",
+  "planet.starboundmc.rockymoon": "岩石卫星",
+  "biome.starboundmc.rocky_wastes": "岩石荒原",
+  "biome.starboundmc.rocky_craters": "陨坑带"
 }

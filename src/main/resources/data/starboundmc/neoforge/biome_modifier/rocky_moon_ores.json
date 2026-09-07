@@ -1,0 +1,13 @@
+{
+  "type": "neoforge:add_features",
+  "biomes": [
+    "starboundmc:rocky_wastes",
+    "starboundmc:rocky_craters"
+  ],
+  "features": [
+    "starboundmc:moon_iron",
+    "starboundmc:moon_gold",
+    "starboundmc:moon_fuel_crystal"
+  ],
+  "step": "underground_ores"
+}

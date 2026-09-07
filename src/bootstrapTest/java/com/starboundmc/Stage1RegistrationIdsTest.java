@@ -17,7 +17,8 @@ final class Stage1RegistrationIdsTest {
                 "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
                 "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
                 "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
-                "starmap_terminal", "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit"
+                "starmap_terminal", "ship_ai_terminal", "voxel_refinery", "voxel_printing_station",
+                "ship_engine_unit", "fuel_crystal_ore"
         ));
     }
 
@@ -39,7 +40,8 @@ final class Stage1RegistrationIdsTest {
                 "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
                 "durasteel_ingot", "star_core_fragment", "ship_ai_terminal",
                 "emergency_food_can", "survival_knife", "voxel", "voxel_refinery",
-                "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit"
+                "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
+                "fuel_crystal_ore", "fuel_crystal"
         ));
         assertSourceIds("item/ModItems.java", "CREATIVE_MODE_TABS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("starboundmc"));
@@ -58,7 +60,7 @@ final class Stage1RegistrationIdsTest {
     @Test
     void keepsPublishedWorldgenIds() throws IOException {
         assertSourceIds("world/ModWorldgen.java", "public static final ResourceLocation [A-Z_]+ = id\\(\"([^\"]+)\"\\)",
-                Set.of("ship", "molten", "barren", "filtered"));
+                Set.of("ship", "molten", "barren", "rocky_moon", "filtered"));
     }
 
     private static void assertSourceIds(String relativePath, String expression, Set<String> expected)

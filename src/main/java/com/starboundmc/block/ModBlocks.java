@@ -55,6 +55,9 @@ public final class ModBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).requiresCorrectToolForDrops().strength(6.0F, 6.0F));
     public static final DeferredBlock<Block> STAR_CORE_ORE = BLOCKS.registerSimpleBlock("star_core_ore",
             BlockBehaviour.Properties.ofFullCopy(Blocks.OBSIDIAN).requiresCorrectToolForDrops().strength(7.0F, 7.0F));
+    public static final DeferredBlock<Block> FUEL_CRYSTAL_ORE = BLOCKS.registerSimpleBlock("fuel_crystal_ore",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).requiresCorrectToolForDrops().strength(3.0F, 3.0F)
+                    .lightLevel(state -> 3));
     public static final DeferredBlock<Stage2Blocks.AlloyFurnace> TITANIUM_ALLOY_FURNACE = BLOCKS.registerBlock(
             "titanium_alloy_furnace", Stage2Blocks.AlloyFurnace::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(5.0F, 6.0F));
