@@ -12,6 +12,7 @@ public final class ModWorldgen {
     public static final ResourceLocation SHIP_CHUNK_GENERATOR_ID = id("ship");
     public static final ResourceLocation MOLTEN_CHUNK_GENERATOR_ID = id("molten");
     public static final ResourceLocation BARREN_CHUNK_GENERATOR_ID = id("barren");
+    public static final ResourceLocation ROCKY_MOON_CHUNK_GENERATOR_ID = id("rocky_moon");
     public static final ResourceLocation FILTERED_BIOME_SOURCE_ID = id("filtered");
 
     private ModWorldgen() {
@@ -23,6 +24,7 @@ public final class ModWorldgen {
             event.register(Registries.CHUNK_GENERATOR, SHIP_CHUNK_GENERATOR_ID, () -> ShipChunkGenerator.CODEC);
             event.register(Registries.CHUNK_GENERATOR, MOLTEN_CHUNK_GENERATOR_ID, () -> MoltenChunkGenerator.CODEC);
             event.register(Registries.CHUNK_GENERATOR, BARREN_CHUNK_GENERATOR_ID, () -> BarrenChunkGenerator.CODEC);
+            event.register(Registries.CHUNK_GENERATOR, ROCKY_MOON_CHUNK_GENERATOR_ID, () -> RockyMoonChunkGenerator.CODEC);
         } else if (event.getRegistryKey().equals(Registries.BIOME_SOURCE)) {
             event.register(Registries.BIOME_SOURCE, FILTERED_BIOME_SOURCE_ID, () -> FilteredBiomeSource.CODEC);
         }
