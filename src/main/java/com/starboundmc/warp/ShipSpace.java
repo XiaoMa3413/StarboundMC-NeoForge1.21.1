@@ -85,9 +85,12 @@ public final class ShipSpace
         // straight away from the disc, so it can never shear across the
         // giant's own keep-out shell. A small vertical offset keeps the pair
         // from lying on the ecliptic line exactly.
-        Vec3 giantMoonOrbit = rotateYaw(dockOffset(Planet.GAS_GIANT), yawDock(Planet.GAS_GIANT))
-                .normalize().scale(-radius(Planet.GAS_GIANT) * 14.0);
-        giantMoonOrbit = new Vec3(giantMoonOrbit.x, -20.0, giantMoonOrbit.z);
+        Vec3 giantOutward = rotateYaw(dockOffset(Planet.GAS_GIANT), yawDock(Planet.GAS_GIANT));
+        double giantOutwardPlanar = Math.hypot(giantOutward.x, giantOutward.z);
+        Vec3 giantMoonOrbit = new Vec3(
+                -giantOutward.x / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 14.0,
+                -20.0,
+                -giantOutward.z / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 14.0);
         Q_POS.put(Planet.ROCKY_MOON, Q_POS.get(Planet.GAS_GIANT).add(giantMoonOrbit));
         V_DOCK.put(Planet.ROCKY_MOON, Q_POS.get(Planet.ROCKY_MOON)
                 .subtract(rotateYaw(dockOffset(Planet.ROCKY_MOON), yawDock(Planet.ROCKY_MOON))));

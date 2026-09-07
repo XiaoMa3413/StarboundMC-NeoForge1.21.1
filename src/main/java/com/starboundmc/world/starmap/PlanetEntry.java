@@ -9,10 +9,13 @@ import java.util.Objects;
  *
  * <p>Entries are deliberately DECOUPLED from the {@link Planet} enum (which is
  * only about dimension destinations): {@code destination == null} marks a body
- * that exists in the star map but is not reachable yet (locked, e.g. the gas
- * giant). Adding a new planet later is just one more {@code PlanetEntry}
- * definition — with a destination if it has a real dimension, without one if
- * it is only a placeholder.</p>
+ * that exists in the star map but is not reachable yet (locked). All shipped
+ * entries currently have destinations; a locked body is still warp-ineligible
+ * and renders with the locked placeholder styling. Adding a new planet later
+ * is just one more {@code PlanetEntry} definition — with a destination if it
+ * has a real dimension, without one if it is only a placeholder. Bodies that
+ * are warpable but have no ground (the gas giant) still carry a destination;
+ * {@code Planet.canLand()} guards the surface teleport separately.</p>
  *
  * <p>Layout: {@code orbitRadius}/{@code orbitAngle} position the body around
  * the system's star. A moon (non-null {@code parentEntryId}) is positioned

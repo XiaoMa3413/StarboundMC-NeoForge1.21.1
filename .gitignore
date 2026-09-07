@@ -40,6 +40,7 @@ bin/
 
 ### Agent workspace skills (local only) ###
 .agents/
+.zcode/
 
 ### OS files ###
 .DS_Store
