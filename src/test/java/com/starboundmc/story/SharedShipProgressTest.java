@@ -98,6 +98,76 @@ class SharedShipProgressTest
     }
 
     @Test
+    void sublightIgnitionIsServerTimedAndIdempotent()
+    {
+        SharedShipProgress ready = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission()
+                .beginMineralScan(1L, 1L)
+                .advanceMineralScanIfDue(2L, 1L, 1L)
+                .advanceMineralScanIfDue(3L, 1L, 1L)
+                .advanceMineralScanIfDue(4L, 1L, 1L);
+
+        SharedShipProgress igniting = ready.beginSublightIgnition(100L, 60L);
+        assertEquals(EngineState.IGNITING, igniting.sublightEngine());
+        assertEquals(160L, igniting.sublightIgnitionCompleteGameTime());
+        assertFalse(igniting.canTravelWithinSystem());
+        assertSame(igniting, igniting.beginSublightIgnition(110L, 60L));
+        assertSame(igniting, igniting.finishSublightIgnitionIfDue(159L));
+
+        SharedShipProgress online = igniting.finishSublightIgnitionIfDue(160L);
+        assertEquals(EngineState.ONLINE, online.sublightEngine());
+        assertEquals(0L, online.sublightIgnitionCompleteGameTime());
+        assertTrue(online.canTravelWithinSystem());
+        assertSame(online, online.finishSublightIgnitionIfDue(161L));
+    }
+
+    @Test
+    void sublightIgnitionDeadlineSurvivesSaveAndLoad()
+    {
+        SharedShipProgress ready = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission()
+                .beginMineralScan(1L, 1L)
+                .advanceMineralScanIfDue(2L, 1L, 1L)
+                .advanceMineralScanIfDue(3L, 1L, 1L)
+                .advanceMineralScanIfDue(4L, 1L, 1L);
+
+        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(
+                ready.beginSublightIgnition(500L, 60L).save());
+
+        assertEquals(EngineState.IGNITING, loaded.state().sublightEngine());
+        assertEquals(560L, loaded.state().sublightIgnitionCompleteGameTime());
+        assertFalse(loaded.requiresSave());
+    }
+
+    @Test
+    void ignitionWithIncompleteScanFailsClosedOnLoad()
+    {
+        SharedShipProgress ready = SharedShipProgress.newWorld()
+                .beginCoreReboot(0L, 1L)
+                .finishCoreRebootIfDue(1L)
+                .activateSurfaceMission()
+                .completeSurfaceMission()
+                .beginMineralScan(1L, 1L)
+                .advanceMineralScanIfDue(2L, 1L, 1L)
+                .advanceMineralScanIfDue(3L, 1L, 1L)
+                .advanceMineralScanIfDue(4L, 1L, 1L);
+        CompoundTag malformed = ready.beginSublightIgnition(100L, 60L).save();
+        malformed.putString("MineralScan", MineralScanState.LOCKED.id());
+
+        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(malformed);
+
+        assertEquals(EngineState.DAMAGED, loaded.state().sublightEngine());
+        assertEquals(0L, loaded.state().sublightIgnitionCompleteGameTime());
+        assertTrue(loaded.requiresSave());
+    }
+
+    @Test
     void inProgressMineralScanRoundTripsWithoutLosingItsDeadline()
     {
         SharedShipProgress pending = SharedShipProgress.newWorld()

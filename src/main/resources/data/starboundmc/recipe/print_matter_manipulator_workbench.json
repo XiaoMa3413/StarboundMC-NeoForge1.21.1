@@ -1,0 +1,29 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "minecraft:iron_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:redstone"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:crafting_table"
+      },
+      "count": 1
+    }
+  ],
+  "voxel_cost": 50,
+  "print_seconds": 5,
+  "result": {
+    "id": "starboundmc:matter_manipulator_workbench",
+    "count": 1
+  }
+}

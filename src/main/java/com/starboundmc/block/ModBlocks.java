@@ -34,6 +34,9 @@ public final class ModBlocks {
                     .lightLevel(state -> 4));
     public static final DeferredBlock<ShipEngineBlock> SHIP_ENGINE = BLOCKS.registerBlock("ship_engine",
             ShipEngineBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 14));
+    public static final DeferredBlock<ShipEngineUnitBlock> SHIP_ENGINE_UNIT = BLOCKS.registerBlock("ship_engine_unit",
+            ShipEngineUnitBlock::new, BlockBehaviour.Properties.of().strength(4.0F, 8.0F)
+                    .sound(SoundType.METAL).noOcclusion().lightLevel(state -> 8));
     public static final DeferredBlock<CaptainChairBlock> CAPTAIN_CHAIR = BLOCKS.registerBlock("captain_chair",
             CaptainChairBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.QUARTZ_BLOCK).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.FuelController> FUEL_CONTROLLER = BLOCKS.registerBlock(

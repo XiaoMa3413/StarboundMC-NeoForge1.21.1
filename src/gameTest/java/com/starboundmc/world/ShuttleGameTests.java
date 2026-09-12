@@ -60,10 +60,16 @@ public final class ShuttleGameTests
                     {
                         var entity = promoted.getBlockEntity(entry.getKey());
                         helper.assertTrue(entity != null, "Missing promoted block entity at " + entry.getKey());
-                        var saved = entity.saveWithFullMetadata(ship.registryAccess());
-                        var expected = entry.getValue().blockEntityTagAt(entry.getKey());
-                        for (String key : expected.getAllKeys())
-                            helper.assertTrue(expected.get(key).equals(saved.get(key)), "Lost block entity data: " + key);
+                        // Former decorative blocks (ship engines) acquire an empty BE on chunk promotion.
+                        // Only template entries that actually carry NBT have fields to preserve.
+                        if (entry.getValue().blockEntityTag() != null) {
+                            var saved = entity.saveWithFullMetadata(ship.registryAccess());
+                            var expected = entry.getValue().blockEntityTagAt(entry.getKey());
+                            for (String key : expected.getAllKeys())
+                                helper.assertTrue(expected.get(key).equals(saved.get(key)), "Lost block entity data: " + key);
+                        } else if (entity instanceof com.starboundmc.block.entity.ShipEngineBlockEntity engine) {
+                            helper.assertTrue(engine.isEmpty(), "New engine socket must start empty");
+                        }
                     }
                     ship.setBlock(entry.getKey(), state, 2);
                     if (entry.getValue().blockEntityTag() != null)

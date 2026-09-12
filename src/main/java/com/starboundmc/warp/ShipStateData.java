@@ -283,6 +283,16 @@ public class ShipStateData extends SavedData
         return applyStoryProgress(storyProgress.restoreSublightEngine());
     }
 
+    public boolean beginSublightIgnition(long gameTime, long durationTicks)
+    {
+        return applyStoryProgress(storyProgress.beginSublightIgnition(gameTime, durationTicks));
+    }
+
+    public boolean finishSublightIgnitionIfDue(long gameTime)
+    {
+        return applyStoryProgress(storyProgress.finishSublightIgnitionIfDue(gameTime));
+    }
+
     public boolean restoreHyperdrive()
     {
         return applyStoryProgress(storyProgress.restoreHyperdrive());
