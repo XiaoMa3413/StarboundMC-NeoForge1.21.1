@@ -65,6 +65,12 @@ public record ShipAiActionPacket(int containerId, long requestId,
                 Action.ACTIVATE_SURFACE_MISSION, 0);
     }
 
+    public static ShipAiActionPacket submitSublightRepair(int containerId, long requestId)
+    {
+        return new ShipAiActionPacket(containerId, requestId,
+                Action.SUBMIT_SUBLIGHT_REPAIR, 0);
+    }
+
     public SituationTopic situationTopic()
     {
         return action == Action.MARK_SITUATION_READ
@@ -82,7 +88,8 @@ public record ShipAiActionPacket(int containerId, long requestId,
         BEGIN_CORE_REBOOT(0),
         CONFIRM_IDENTITY(1),
         MARK_SITUATION_READ(2),
-        ACTIVATE_SURFACE_MISSION(3);
+        ACTIVATE_SURFACE_MISSION(3),
+        SUBMIT_SUBLIGHT_REPAIR(4);
 
         private final int wireId;
 

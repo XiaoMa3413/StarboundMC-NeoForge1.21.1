@@ -28,7 +28,7 @@ final class Stage10ResourcesTest {
             "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
             "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
             "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
-            "ship_ai_terminal", "voxel_refinery", "voxel_printing_station");
+            "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit");
 
     private static final List<String> ITEMS = List.of(
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
@@ -37,7 +37,7 @@ final class Stage10ResourcesTest {
             "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
             "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
             "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel",
-            "voxel_refinery", "voxel_printing_station");
+            "voxel_refinery", "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {
@@ -69,7 +69,7 @@ final class Stage10ResourcesTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(19, files.size());
+            assertEquals(21, files.size());
             int printingRecipes = 0;
             int decompositionRecipes = 0;
             for (Path path : files) {
@@ -90,9 +90,77 @@ final class Stage10ResourcesTest {
                     assertTrue(result.has("count"), path.toString());
                 }
             }
-            assertEquals(1, printingRecipes, "exactly one printing recipe");
+            assertEquals(3, printingRecipes, "three printing recipes");
             assertEquals(14, decompositionRecipes, "fourteen decomposition recipes");
         }
+    }
+
+    @Test
+    void engineUnitHasIndependentModelAndAnimatedPixelTextures() throws IOException {
+        var model = json(ASSETS.resolve("models/block/ship_engine_unit.json"));
+        assertTrue(model.getAsJsonArray("elements").size() > 10, "Engine needs an actual machine model");
+        for (var part : model.getAsJsonArray("elements")) {
+            for (String edge : List.of("from", "to"))
+                for (var coordinate : part.getAsJsonObject().getAsJsonArray(edge))
+                    assertTrue(coordinate.getAsDouble() >= 0 && coordinate.getAsDouble() <= 16);
+        }
+        for (String layer : List.of("casing", "metal", "vent", "panel", "coil", "core")) {
+            assertEquals("starboundmc:block/ship_engine_unit_" + layer,
+                    model.getAsJsonObject("textures").get(layer).getAsString());
+            var image = ImageIO.read(ASSETS.resolve("textures/block/ship_engine_unit_" + layer + ".png").toFile());
+            assertEquals(32, image.getWidth());
+            assertEquals(layer.equals("core") ? 128 : 32, image.getHeight());
+        }
+        assertTrue(json(ASSETS.resolve("textures/block/ship_engine_unit_core.png.mcmeta"))
+                .getAsJsonObject("animation").get("interpolate").getAsBoolean());
+        assertFalse(Files.exists(DATA.resolve("recipe/ship_engine_unit.json")));
+    }
+
+    @Test
+    void ignitionCoreRecipeAndSocketTagAgree() throws IOException {
+        var recipe = json(DATA.resolve("recipe/print_sublight_ignition_core.json"));
+        assertEquals("starboundmc:voxel_printing", recipe.get("type").getAsString());
+        var materials = recipe.getAsJsonArray("materials");
+        assertEquals(1, materials.size());
+        assertEquals("minecraft:diamond", materials.get(0).getAsJsonObject()
+                .getAsJsonObject("ingredient").get("item").getAsString());
+        assertEquals(3, materials.get(0).getAsJsonObject().get("count").getAsInt());
+        assertEquals(50, recipe.get("voxel_cost").getAsInt());
+        assertEquals(5, recipe.get("print_seconds").getAsInt());
+        assertEquals("starboundmc:sublight_ignition_core", recipe.getAsJsonObject("result").get("id").getAsString());
+        assertEquals(1, recipe.getAsJsonObject("result").get("count").getAsInt());
+        var modules = json(DATA.resolve("tags/item/engine_repair_modules.json")).getAsJsonArray("values");
+        assertEquals(1, modules.size(), "No unimplemented hyperdrive module");
+        assertEquals("starboundmc:sublight_ignition_core", modules.get(0).getAsString());
+        assertFalse(Files.exists(DATA.resolve("recipe/print_ship_engine.json")));
+    }
+
+    @Test
+    void sublightRepairWorkbenchUsesConfirmedPrintingRecipe() throws IOException {
+        JsonObject root = json(DATA.resolve("recipe/print_matter_manipulator_workbench.json"));
+        assertEquals("starboundmc:voxel_printing", root.get("type").getAsString());
+        assertEquals(50, root.get("voxel_cost").getAsInt());
+        assertEquals(5, root.get("print_seconds").getAsInt());
+
+        int iron = 0;
+        int redstone = 0;
+        int craftingTable = 0;
+        for (JsonElement element : root.getAsJsonArray("materials")) {
+            JsonObject material = element.getAsJsonObject();
+            String item = material.getAsJsonObject("ingredient").get("item").getAsString();
+            switch (item) {
+                case "minecraft:iron_ingot" -> iron = material.get("count").getAsInt();
+                case "minecraft:redstone" -> redstone = material.get("count").getAsInt();
+                case "minecraft:crafting_table" -> craftingTable = material.get("count").getAsInt();
+                default -> throw new AssertionError("unexpected workbench ingredient " + item);
+            }
+        }
+        assertEquals(4, iron);
+        assertEquals(1, redstone);
+        assertEquals(1, craftingTable);
+        assertEquals("starboundmc:matter_manipulator_workbench",
+                root.getAsJsonObject("result").get("id").getAsString());
+        assertEquals(1, root.getAsJsonObject("result").get("count").getAsInt());
     }
 
     @Test

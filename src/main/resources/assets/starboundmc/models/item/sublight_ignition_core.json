@@ -1,0 +1,39 @@
+{
+  "parent": "minecraft:block/block",
+  "gui_light": "front",
+  "textures": {
+    "shell": "starboundmc:block/ship_engine_side",
+    "core": "minecraft:block/diamond_block",
+    "rail": "minecraft:block/iron_block",
+    "particle": "minecraft:block/diamond_block"
+  },
+  "elements": [
+    {"from": [4, 1, 5], "to": [12, 4, 11], "faces": {
+      "north": {"texture": "#shell"}, "south": {"texture": "#shell"},
+      "east": {"texture": "#shell"}, "west": {"texture": "#shell"},
+      "up": {"texture": "#rail"}, "down": {"texture": "#shell"}}},
+    {"from": [5, 4, 6], "to": [11, 12, 10], "faces": {
+      "north": {"texture": "#core"}, "south": {"texture": "#core"},
+      "east": {"texture": "#core"}, "west": {"texture": "#core"},
+      "up": {"texture": "#core"}, "down": {"texture": "#core"}}},
+    {"from": [4, 12, 5], "to": [12, 15, 11], "faces": {
+      "north": {"texture": "#shell"}, "south": {"texture": "#shell"},
+      "east": {"texture": "#shell"}, "west": {"texture": "#shell"},
+      "up": {"texture": "#shell"}, "down": {"texture": "#rail"}}},
+    {"from": [3, 3, 7], "to": [5, 13, 9], "faces": {
+      "north": {"texture": "#rail"}, "south": {"texture": "#rail"},
+      "east": {"texture": "#rail"}, "west": {"texture": "#rail"},
+      "up": {"texture": "#rail"}, "down": {"texture": "#rail"}}},
+    {"from": [11, 3, 7], "to": [13, 13, 9], "faces": {
+      "north": {"texture": "#rail"}, "south": {"texture": "#rail"},
+      "east": {"texture": "#rail"}, "west": {"texture": "#rail"},
+      "up": {"texture": "#rail"}, "down": {"texture": "#rail"}}}
+  ],
+  "display": {
+    "gui": {"rotation": [15, -25, -10], "scale": [1.05, 1.05, 1.05]},
+    "ground": {"translation": [0, 2, 0], "scale": [0.5, 0.5, 0.5]},
+    "fixed": {"rotation": [0, 180, 0], "scale": [0.75, 0.75, 0.75]},
+    "thirdperson_righthand": {"rotation": [0, -90, 15], "translation": [0, 2, 0], "scale": [0.6, 0.6, 0.6]},
+    "firstperson_righthand": {"rotation": [0, -90, 15], "translation": [1, 2, 1], "scale": [0.65, 0.65, 0.65]}
+  }
+}

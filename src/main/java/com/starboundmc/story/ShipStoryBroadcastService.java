@@ -245,6 +245,20 @@ public final class ShipStoryBroadcastService
         }
     }
 
+    /** Broadcasts the short shared ignition start cue after payment is accepted. */
+    public static void onSublightIgnitionStarted(MinecraftServer server)
+    {
+        if (server != null)
+            broadcastNova(server, "message.starboundmc.nova.prologue.sublight_ignition_started");
+    }
+
+    /** Broadcasts the completion cue once the server-timed ignition finishes. */
+    public static void onSublightEngineOnline(MinecraftServer server)
+    {
+        if (server != null)
+            broadcastNova(server, "message.starboundmc.nova.prologue.sublight_engine_online");
+    }
+
     /** Clears timers at a server lifecycle boundary. */
     public static void reset()
     {

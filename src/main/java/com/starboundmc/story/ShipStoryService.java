@@ -1,6 +1,11 @@
 package com.starboundmc.story;
 
 import com.starboundmc.block.ModBlocks;
+import com.starboundmc.item.MatterManipulatorItem;
+import com.starboundmc.item.ModItems;
+import com.starboundmc.block.entity.ShipEngineBlockEntity;
+import com.starboundmc.menu.ShipEngineMenu;
+import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.ShipAiActionPacket;
@@ -13,11 +18,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.item.ItemStack;
 
 /** Server-main-thread authority for terminal actions and owner-specific snapshots. */
 public final class ShipStoryService
 {
     public static final long CORE_REBOOT_TICKS = 50L;
+    public static final long SUBLIGHT_IGNITION_TICKS = 60L;
 
     private ShipStoryService()
     {
@@ -119,6 +126,10 @@ public final class ShipStoryService
                         && personal.hasReadAllRequiredTopics())
                     sharedChanged = ship.activateSurfaceMission();
             }
+            case SUBMIT_SUBLIGHT_REPAIR ->
+            {
+                // Retain wire ID 4 for older clients, but never accept terminal repair requests.
+            }
         }
 
         if (sharedChanged)
@@ -136,6 +147,12 @@ public final class ShipStoryService
         if (ship.finishCoreRebootIfDue(server.overworld().getGameTime()))
         {
             ShipStoryBroadcastService.onCoreOnline(server);
+            syncOpenTerminalOwners(server, null, 0L);
+            ShipEnvironmentService.syncOpenMenus(server);
+        }
+        if (ship.finishSublightIgnitionIfDue(server.overworld().getGameTime()))
+        {
+            ShipStoryBroadcastService.onSublightEngineOnline(server);
             syncOpenTerminalOwners(server, null, 0L);
             ShipEnvironmentService.syncOpenMenus(server);
         }
@@ -204,6 +221,54 @@ public final class ShipStoryService
         return shared.isWritable()
                 && shared.schemaVersion() <= SharedShipProgress.CURRENT_SCHEMA_VERSION
                 && personal.schemaVersion() <= PlayerStoryState.CURRENT_SCHEMA_VERSION;
+    }
+
+    /** Called after a vanilla slot transaction, on the server thread. No inventory scanning for payment. */
+    public static boolean installSublightCore(ServerPlayer player, ShipEngineBlockEntity engine)
+    {
+        if (player == null || player.isSpectator() || player.getServer() == null
+                || engine == null || !engine.stillValid(player)
+                || !player.level().dimension().equals(ShipDimensions.SHIP_LEVEL)
+                || !player.level().getBlockState(engine.getBlockPos()).is(ModBlocks.SHIP_ENGINE_UNIT.get())
+                || !(player.containerMenu instanceof ShipEngineMenu menu) || !menu.isBoundTo(engine)
+                || !engine.getItem(0).is(ModItems.SUBLIGHT_IGNITION_CORE.get())
+                || !hasUpgradedManipulator(player)) return false;
+        MinecraftServer server = player.getServer();
+        ShipStateData ship = ShipStateData.get(server);
+        if (!acceptSublightCore(ship, engine, server.overworld().getGameTime()))
+            return false;
+        ShipStoryBroadcastService.onSublightIgnitionStarted(server);
+        syncOpenScreens(server);
+        return true;
+    }
+
+    /** Transaction boundary after player/menu authorization; also exercised against real registries in GameTest. */
+    static boolean acceptSublightCore(ShipStateData ship, ShipEngineBlockEntity engine, long gameTime) {
+        if (!engine.getBlockState().is(ModBlocks.SHIP_ENGINE_UNIT.get())) return false;
+        if (!engine.getItem(0).is(ModItems.SUBLIGHT_IGNITION_CORE.get())) return false;
+        // The shared state transition is the one-shot guard, including across multiple engine blocks.
+        if (!ship.beginSublightIgnition(gameTime, SUBLIGHT_IGNITION_TICKS)) return false;
+        engine.removeItem(0, 1);
+        return true;
+    }
+
+    public static boolean hasUpgradedManipulator(ServerPlayer player)
+    {
+        if (player == null)
+            return false;
+        for (ItemStack stack : player.getInventory().items)
+        {
+            if (stack.getItem() instanceof MatterManipulatorItem
+                    && MatterManipulatorItem.getMiningLevel(stack) >= 1)
+                return true;
+        }
+        for (ItemStack stack : player.getInventory().offhand)
+        {
+            if (stack.getItem() instanceof MatterManipulatorItem
+                    && MatterManipulatorItem.getMiningLevel(stack) >= 1)
+                return true;
+        }
+        return false;
     }
 
     private static void sendAcknowledgement(ServerPlayer player, int containerId,

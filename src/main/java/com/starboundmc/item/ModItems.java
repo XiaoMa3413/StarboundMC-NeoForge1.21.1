@@ -30,6 +30,8 @@ public final class ModItems {
             "matter_manipulator", MatterManipulatorItem::new, new Item.Properties().stacksTo(1));
     public static final DeferredItem<MatterManipulatorModuleItem> MATTER_MANIPULATOR_MODULE =
             ITEMS.registerItem("matter_manipulator_module", MatterManipulatorModuleItem::new);
+    public static final DeferredItem<SublightIgnitionCoreItem> SUBLIGHT_IGNITION_CORE =
+            ITEMS.registerItem("sublight_ignition_core", SublightIgnitionCoreItem::new, new Item.Properties().stacksTo(16));
 
     public static final DeferredItem<BlockItem> MATTER_MANIPULATOR_WORKBENCH_ITEM =
             ITEMS.registerSimpleBlockItem("matter_manipulator_workbench", ModBlocks.MATTER_MANIPULATOR_WORKBENCH);
@@ -51,6 +53,8 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("ship_door", ModBlocks.SHIP_DOOR);
     public static final DeferredItem<BlockItem> SHIP_ENGINE_ITEM =
             ITEMS.registerSimpleBlockItem("ship_engine", ModBlocks.SHIP_ENGINE);
+    public static final DeferredItem<BlockItem> SHIP_ENGINE_UNIT_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_engine_unit", ModBlocks.SHIP_ENGINE_UNIT);
     public static final DeferredItem<BlockItem> TUNGSTEN_ORE_ITEM =
             ITEMS.registerSimpleBlockItem("tungsten_ore", ModBlocks.TUNGSTEN_ORE);
     public static final DeferredItem<BlockItem> TITANIUM_ORE_ITEM =
@@ -103,6 +107,7 @@ public final class ModItems {
                     .displayItems((parameters, output) -> {
                         output.accept(MATTER_MANIPULATOR);
                         output.accept(MATTER_MANIPULATOR_MODULE);
+                        output.accept(SUBLIGHT_IGNITION_CORE);
                         output.accept(MATTER_MANIPULATOR_WORKBENCH_ITEM);
                         output.accept(TELEPORTER_ITEM);
                         output.accept(SHIP_CONSOLE_ITEM);
@@ -113,6 +118,7 @@ public final class ModItems {
                         output.accept(SHIP_CRATE_ITEM);
                         output.accept(SHIP_DOOR_ITEM);
                         output.accept(SHIP_ENGINE_ITEM);
+                        output.accept(SHIP_ENGINE_UNIT_ITEM);
                         output.accept(TUNGSTEN_ORE_ITEM);
                         output.accept(TITANIUM_ORE_ITEM);
                         output.accept(DURASTEEL_ORE_ITEM);

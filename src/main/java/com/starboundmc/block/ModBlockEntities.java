@@ -3,6 +3,7 @@ package com.starboundmc.block;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.block.entity.AlloyFurnaceBlockEntity;
 import com.starboundmc.block.entity.FuelControllerBlockEntity;
+import com.starboundmc.block.entity.ShipEngineBlockEntity;
 import com.starboundmc.block.entity.ShipCrateBlockEntity;
 import com.starboundmc.block.entity.ShipDoorBlockEntity;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
@@ -35,6 +36,10 @@ public final class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<VoxelPrintingStationBlockEntity>> VOXEL_PRINTING_STATION =
             BLOCK_ENTITIES.register("voxel_printing_station", () -> BlockEntityType.Builder.of(
                     VoxelPrintingStationBlockEntity::new, ModBlocks.VOXEL_PRINTING_STATION.get()).build(null));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShipEngineBlockEntity>> SHIP_ENGINE =
+            BLOCK_ENTITIES.register("ship_engine", () -> BlockEntityType.Builder.of(
+                    ShipEngineBlockEntity::new, ModBlocks.SHIP_ENGINE.get(), ModBlocks.SHIP_ENGINE_UNIT.get()).build(null));
 
     private ModBlockEntities() {
     }

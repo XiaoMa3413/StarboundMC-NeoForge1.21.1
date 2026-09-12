@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.ShipAiActionPacket;
 import com.starboundmc.story.CoreState;
@@ -23,6 +24,9 @@ import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.ItemStack;
+import com.starboundmc.item.ModItems;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
@@ -62,6 +66,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private ClientShipStoryState.Snapshot authoritativeSnapshot;
     private PrologueDialogueNode baseNode;
     private long observedUpdateSequence;
+    private int observedRepairInventoryState = Integer.MIN_VALUE;
     private boolean applyingAutoScroll;
 
     public ShipAiTerminalRoot(int containerId)
@@ -442,6 +447,9 @@ public final class ShipAiTerminalRoot extends UIElement
     private void tickTerminal()
     {
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
+        int repairInventoryState = localRepairInventoryState();
+        boolean repairInventoryChanged = repairInventoryState != observedRepairInventoryState;
+        observedRepairInventoryState = repairInventoryState;
         int previousStreamingIndex = session.streamingIndex();
         int revealedCodePoint = session.nextUnrevealedCodePoint();
         ClientShipAiTerminalState.CompletionIntent completed = session.advanceStream();
@@ -460,7 +468,8 @@ public final class ShipAiTerminalRoot extends UIElement
 
         if (!completed.isNone())
             dispatchCompletion(completed);
-        if (snapshotChanged || previousStreamingIndex != nextStreamingIndex || !completed.isNone())
+        if (snapshotChanged || repairInventoryChanged
+                || previousStreamingIndex != nextStreamingIndex || !completed.isNone())
             syncPresentation();
     }
 
@@ -663,6 +672,7 @@ public final class ShipAiTerminalRoot extends UIElement
                     containerId, requestId, topic);
             case ACTIVATE_SURFACE_MISSION -> ShipAiActionPacket.activateSurfaceMission(
                     containerId, requestId);
+            case SUBMIT_SUBLIGHT_REPAIR -> throw new IllegalArgumentException("Repair requires an engine socket");
         };
         ModNetwork.sendToServer(packet);
         syncPresentation();
@@ -688,6 +698,8 @@ public final class ShipAiTerminalRoot extends UIElement
         if (!canSelectTopics())
             return false;
         SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
+        if (authoritativeSnapshot.shared().sublightEngine() == EngineState.IGNITING)
+            return false;
         return mission != SurfaceMissionState.LOCKED
                 || hasReadAllRequiredTopics(authoritativeSnapshot.player().readSituationMask());
     }
@@ -834,11 +846,16 @@ public final class ShipAiTerminalRoot extends UIElement
                         ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.next")
                         : Component.translatable(
                                 "gui.starboundmc.ship_ai.prologue.option.next_locked", readCount)
-                : Component.translatable(
-                        "gui.starboundmc.ship_ai.prologue.option.current_status");
+                : authoritativeSnapshot.shared().sublightEngine() == EngineState.DAMAGED
+                        && authoritativeSnapshot.shared().mineralScan() == MineralScanState.COMPLETE
+                        ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.repair")
+                        : Component.translatable(
+                                "gui.starboundmc.ship_ai.prologue.option.current_status");
+        boolean progressionActive = canSelectProgression();
         progressionButton.setText(nextText);
-        progressionButton.style(style -> style.tooltips(nextText));
-        progressionButton.setActive(canSelectProgression());
+        Component progressionTooltip = progressionActive ? nextText : currentStatusText();
+        progressionButton.style(style -> style.tooltips(progressionTooltip));
+        progressionButton.setActive(progressionActive);
     }
 
     private static void setClass(UIElement element, String className, boolean enabled)
@@ -911,14 +928,16 @@ public final class ShipAiTerminalRoot extends UIElement
     private Component currentStatusText()
     {
         ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
-        Component objective = Component.translatable(
-                shared.surfaceMission() == SurfaceMissionState.COMPLETE
-                        ? "gui.starboundmc.ship_ai.prologue.current_status.complete"
-                        : "gui.starboundmc.ship_ai.prologue.current_objective.summary");
+        Component objective = shared.surfaceMission() == SurfaceMissionState.COMPLETE
+                ? repairObjectiveText(shared)
+                : Component.translatable("gui.starboundmc.ship_ai.prologue.current_objective.summary");
         Component sublight = Component.translatable(
-                shared.sublightEngine() == EngineState.ONLINE
-                        ? "gui.starboundmc.ship_ai.status.sublight.online"
-                        : "gui.starboundmc.ship_ai.status.sublight.damaged");
+                switch (shared.sublightEngine())
+                {
+                    case ONLINE -> "gui.starboundmc.ship_ai.status.sublight.online";
+                    case IGNITING -> "gui.starboundmc.ship_ai.status.sublight.igniting";
+                    case DAMAGED -> "gui.starboundmc.ship_ai.status.sublight.damaged";
+                });
         Component hyperdrive = Component.translatable(
                 shared.hyperdrive() == EngineState.ONLINE
                         ? "gui.starboundmc.ship_ai.status.hyperdrive.online"
@@ -938,6 +957,62 @@ public final class ShipAiTerminalRoot extends UIElement
                 .append(sublight)
                 .append(Component.literal("\n"))
                 .append(hyperdrive);
+    }
+
+    private Component repairObjectiveText(ClientShipStoryState.SharedView shared)
+    {
+        if (shared.sublightEngine() == EngineState.IGNITING)
+            return Component.translatable("gui.starboundmc.ship_ai.repair.igniting");
+        if (shared.sublightEngine() == EngineState.ONLINE)
+            return Component.translatable("gui.starboundmc.ship_ai.repair.complete");
+        if (shared.mineralScan() != MineralScanState.COMPLETE)
+            return Component.translatable("gui.starboundmc.ship_ai.prologue.current_status.complete");
+        if (!hasUpgradedManipulator())
+            return Component.translatable("gui.starboundmc.ship_ai.repair.need_upgrade");
+        return Component.translatable(hasIgnitionCore()
+                ? "gui.starboundmc.ship_ai.repair.install_core"
+                : "gui.starboundmc.ship_ai.repair.print_core");
+    }
+
+    private boolean hasUpgradedManipulator()
+    {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null)
+            return false;
+        for (ItemStack stack : minecraft.player.getInventory().items)
+        {
+            if (stack.getItem() instanceof MatterManipulatorItem
+                    && MatterManipulatorItem.getMiningLevel(stack) >= 1)
+                return true;
+        }
+        for (ItemStack stack : minecraft.player.getInventory().offhand)
+        {
+            if (stack.getItem() instanceof MatterManipulatorItem
+                    && MatterManipulatorItem.getMiningLevel(stack) >= 1)
+                return true;
+        }
+        return false;
+    }
+
+    private boolean hasIgnitionCore()
+    {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null)
+            return false;
+        for (ItemStack stack : minecraft.player.getInventory().items)
+        {
+            if (stack.is(ModItems.SUBLIGHT_IGNITION_CORE.get())) return true;
+        }
+        for (ItemStack stack : minecraft.player.getInventory().offhand)
+        {
+            if (stack.is(ModItems.SUBLIGHT_IGNITION_CORE.get())) return true;
+        }
+        return false;
+    }
+
+    private int localRepairInventoryState()
+    {
+        return (hasUpgradedManipulator() ? 2 : 0) + (hasIgnitionCore() ? 1 : 0);
     }
 
     private static String mineralScanCueCategory(MineralScanState state)

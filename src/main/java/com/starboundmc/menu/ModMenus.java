@@ -45,6 +45,10 @@ public final class ModMenus {
             MENUS.register("voxel_printing_station_menu", () -> IMenuTypeExtension.create(
                     VoxelPrintingStationMenu::new));
 
+    public static final DeferredHolder<MenuType<?>, MenuType<ShipEngineMenu>> SHIP_ENGINE_MENU =
+            MENUS.register("ship_engine_menu", () -> IMenuTypeExtension.create(
+                    (id, inventory, buffer) -> new ShipEngineMenu(id, inventory)));
+
     private ModMenus() {
     }
 

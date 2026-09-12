@@ -32,6 +32,7 @@ public final class Stage2ClientRegistrar {
         event.register(ModMenus.TELEPORTER_MENU.get(), TeleporterScreen::new);
         event.register(ModMenus.ALLOY_FURNACE_MENU.get(), AlloyFurnaceScreen::new);
         event.register(ModMenus.FUEL_CONTROLLER_MENU.get(), FuelControllerScreen::new);
+        event.register(ModMenus.SHIP_ENGINE_MENU.get(), ShipEngineScreen::new);
         event.register(ModMenus.VOXEL_REFINERY_MENU.get(), VoxelRefineryScreen::new);
         event.register(ModMenus.VOXEL_PRINTING_STATION_MENU.get(), VoxelPrintingStationScreen::new);
     }

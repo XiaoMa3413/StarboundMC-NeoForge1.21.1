@@ -6,7 +6,9 @@ import java.util.Locale;
 public enum EngineState
 {
     DAMAGED(0, "damaged"),
-    ONLINE(1, "online");
+    ONLINE(1, "online"),
+    /** The repair payment was accepted and the server is running the ignition sequence. */
+    IGNITING(2, "igniting");
 
     private final int networkId;
     private final String id;
