@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.starboundmc.client.RockyMoonDimensionEffects;
 import com.starboundmc.client.RockyMoonSkyRenderer;
+import com.starboundmc.world.RockyMoonLandingPlain;
 import com.starboundmc.world.RockyMoonPlanet;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -190,6 +191,98 @@ final class RockyMoonEnvironmentTest {
         }
         assertTrue(crystalPixels >= 25, path + " lost its cyan crystal body, only "
                 + crystalPixels + " strongly-cyan pixels remain");
+    }
+
+    // ---- landing plain ----
+
+    /**
+     * The teleporter lands on a broad gravel bench levelled to the local
+     * natural average: the flat core sits at the bench (plus the slow
+     * undulation), the skirt returns the natural surface untouched, and the
+     * wobbled boundary never draws a perfect crater circle.
+     */
+    @Test
+    void landingSiteIsABroadFlatGravelPlain() {
+        int spawnX = RockyMoonPlanet.DEFAULT_SPAWN.getX();
+        int spawnZ = RockyMoonPlanet.DEFAULT_SPAWN.getZ();
+        int bench = RockyMoonLandingPlain.computeBenchY((x, z) -> 80);
+        assertEquals(80, bench, "bench is the mean of the sampled natural surface");
+        int varied = RockyMoonLandingPlain.computeBenchY((x, z) -> 70 + (x + 4 * z) % 21);
+        assertTrue(varied > 70 && varied < 91, "bench should average its samples, got " + varied);
+
+        for (int[] probe : new int[][] {{spawnX, spawnZ}, {spawnX + 40, spawnZ},
+                {spawnX - 30, spawnZ + 30}, {spawnX, spawnZ - 45}}) {
+            int y = RockyMoonLandingPlain.targetY(probe[0], probe[1], 200, bench);
+            assertTrue(y >= bench && y <= bench + 2,
+                    "flat core drifted at " + probe[0] + "," + probe[1] + " -> " + y);
+        }
+        assertEquals(200, RockyMoonLandingPlain.targetY(
+                spawnX + 500, spawnZ, 200, bench), "far terrain must stay natural");
+        assertEquals(137, RockyMoonLandingPlain.targetY(
+                spawnX + 125, spawnZ, 137, bench), "beyond the wobble must return natural");
+        assertTrue(RockyMoonLandingPlain.inPlain(spawnX + 85, spawnZ), "inner skirt must belong");
+        assertFalse(RockyMoonLandingPlain.inPlain(spawnX + 125, spawnZ), "outer skirt must not");
+
+        // The edge wobbles: on the nominal-radius ring both sides exist.
+        boolean inside = false;
+        boolean outside = false;
+        for (int a = 0; a < 72; a++) {
+            double angle = Math.PI * 2.0 * a / 72.0;
+            int x = spawnX + (int) Math.round(Math.cos(angle) * RockyMoonLandingPlain.EDGE_RADIUS);
+            int z = spawnZ + (int) Math.round(Math.sin(angle) * RockyMoonLandingPlain.EDGE_RADIUS);
+            inside |= RockyMoonLandingPlain.inPlain(x, z);
+            outside |= !RockyMoonLandingPlain.inPlain(x, z);
+        }
+        assertTrue(inside && outside, "plain edge must not be a perfect circle");
+
+        int gravel = 0;
+        int samples = 0;
+        for (int dx = -20; dx <= 20; dx += 3) {
+            for (int dz = -20; dz <= 20; dz += 3) {
+                samples++;
+                if (RockyMoonLandingPlain.surfaceIsGravel(spawnX + dx, spawnZ + dz))
+                    gravel++;
+            }
+        }
+        assertTrue(gravel * 100 / samples >= 70,
+                "plain cover must stay gravel-dominant, was " + gravel + "/" + samples);
+    }
+
+    // ---- fuel crystal fuel economy ----
+
+    /**
+     * The fuel chain dies if the ore can't be harvested: every ore block
+     * registers with {@code requiresCorrectToolForDrops}, which only pays off
+     * when the block carries vanilla's tool tags. Without
+     * {@code mineable/pickaxe} no pickaxe ever counts as correct, drops never
+     * appear, and the crystals (50 fuel each) are unobtainable in survival.
+     */
+    @Test
+    void everyToolRequiredOreIsTaggedMineableWithTheRightTier() throws IOException {
+        JsonObject pickaxe = json(Path.of("src/main/resources/data/minecraft/tags/block/mineable/pickaxe.json"));
+        Set<String> pickaxeValues = tagValues(pickaxe);
+        for (String block : List.of("starboundmc:tungsten_ore", "starboundmc:titanium_ore",
+                "starboundmc:durasteel_ore", "starboundmc:star_core_ore",
+                "starboundmc:fuel_crystal_ore", "starboundmc:titanium_alloy_furnace")) {
+            assertTrue(pickaxeValues.contains(block), block + " must be mineable/pickaxe");
+        }
+        assertTrue(tagValues(json(Path.of(
+                "src/main/resources/data/minecraft/tags/block/needs_stone_tool.json")))
+                .containsAll(List.of("starboundmc:tungsten_ore",
+                        "starboundmc:fuel_crystal_ore", "starboundmc:titanium_alloy_furnace")));
+        assertTrue(tagValues(json(Path.of(
+                "src/main/resources/data/minecraft/tags/block/needs_iron_tool.json")))
+                .contains("starboundmc:titanium_ore"));
+        assertTrue(tagValues(json(Path.of(
+                "src/main/resources/data/minecraft/tags/block/needs_diamond_tool.json")))
+                .containsAll(List.of("starboundmc:durasteel_ore", "starboundmc:star_core_ore")));
+    }
+
+    private static Set<String> tagValues(JsonObject tag) {
+        Set<String> values = new HashSet<>();
+        for (JsonElement element : tag.getAsJsonArray("values"))
+            values.add(element.getAsString());
+        return values;
     }
 
     private static JsonObject json(Path path) {

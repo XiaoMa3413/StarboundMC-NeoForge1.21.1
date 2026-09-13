@@ -19,7 +19,7 @@ public class RockyMoonPlanet
     public static final ResourceKey<Level> ROCKY_MOON_LEVEL =
             ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "rockymoon"));
 
-    private static final BlockPos DEFAULT_SPAWN = new BlockPos(8, 80, 8);
+    public static final BlockPos DEFAULT_SPAWN = new BlockPos(8, 80, 8);
 
     public static void teleportToRockyMoon(ServerPlayer player)
     {

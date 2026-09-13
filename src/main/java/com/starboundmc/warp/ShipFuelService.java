@@ -50,7 +50,7 @@ public final class ShipFuelService {
 
     public static int fuelValue(Item item) {
         if (item == com.starboundmc.item.ModItems.FUEL_CRYSTAL.get()) {
-            return 30;
+            return 50;
         }
         if (item == Items.COAL) {
             return 10;
