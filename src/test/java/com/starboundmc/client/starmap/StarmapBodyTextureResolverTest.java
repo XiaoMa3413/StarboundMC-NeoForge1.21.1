@@ -33,11 +33,18 @@ final class StarmapBodyTextureResolverTest {
         assertEquals(ResourceLocation.parse(
                         "starboundmc:textures/gui/starmap/bodies/molten.png"),
                 resolver.resolve(molten.getVisual(), true));
-        assertNull(resolver.resolve(gasGiant.getVisual(), true));
+        assertEquals(ResourceLocation.parse(
+                        "starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png"),
+                resolver.resolve(gasGiant.getVisual(), true));
         GuiTextureGroup sprite = assertInstanceOf(GuiTextureGroup.class,
                 resolver.texture(barren, 32.0F, true));
+        // The gas giant now ships authored sprites, so the SDF fallback path
+        // needs a synthetic texture-less body to stay under test.
+        PlanetEntry plain = new PlanetEntry("synthetic:plain", "starmap.entry.plain.name",
+                "starmap.type.rocky_moon", "starmap.entry.plain.desc",
+                null, 0, 20, 0.0F, null, 0xFF909090, 16);
         GuiTextureGroup fallback = assertInstanceOf(GuiTextureGroup.class,
-                resolver.texture(gasGiant, 16.0F, true));
+                resolver.texture(plain, 16.0F, true));
         assertInstanceOf(SpriteTexture.class, sprite.getTextures()[0]);
         assertInstanceOf(SDFRectTexture.class, sprite.getTextures()[1]);
         assertInstanceOf(SDFRectTexture.class, fallback.getTextures()[0]);

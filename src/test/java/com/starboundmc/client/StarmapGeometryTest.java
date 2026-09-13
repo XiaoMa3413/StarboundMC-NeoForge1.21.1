@@ -27,7 +27,9 @@ class StarmapGeometryTest
         assertPosition("sys1:lush", 184, 51);
         assertPosition("sys1:molten", 184, 73);
         assertPosition("sys1:gasgiant", 16, 71);
-        assertPosition("sys1:rockymoon", 33, 80);
+        // The moon's map orbit (26) hugs the giant's 22-unit sprite from
+        // outside, so the pair reads as a close giant-moon system.
+        assertPosition("sys1:rockymoon", 38, 83);
         assertPosition("sys2:frozen", 125, 26);
     }
 

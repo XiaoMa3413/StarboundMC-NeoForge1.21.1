@@ -616,7 +616,12 @@ public class PlanetRenderer
             CelestialLod previous = PLANET_LOD_TRANSITIONS.currentLod(body.getId());
             CelestialLod requested = CelestialLodPolicy.hysteretic(
                     angularDiameter, previous, routePriority ? CelestialLod.POINT : CelestialLod.CULLED);
-            if (systemVisibility <= 0.20F && !routePriority)
+            // The star's alpha fades with the system's VISUAL influence, but a
+            // system's outer berths (the gas giant) sit far beyond that fade.
+            // Bodies stay renderable while the ship is inside the system's
+            // planet field regardless of how dim the remote star looks.
+            if (systemVisibility <= 0.20F && !insidePlanetField(space.universePosition(), system)
+                    && !routePriority)
                 requested = CelestialLod.CULLED;
             float detail = updatePlanetLod(body, requested, space.animationTicks());
 
@@ -644,6 +649,14 @@ public class PlanetRenderer
                 return star.alpha();
         }
         return 0.0F;
+    }
+
+    /** Whether the ship sits inside the system's body-rendering field. */
+    private static boolean insidePlanetField(UniversePosition ship, StarSystem system)
+    {
+        return system != null
+                && ship.distanceToSqr(system.getUniverseNavigationCenter())
+                        <= system.getPlanetFieldRadius() * system.getPlanetFieldRadius();
     }
 
     /** Draw one body at true near distance or angularly projected on the sky shell. */
@@ -757,7 +770,7 @@ public class PlanetRenderer
      * SkyType.NONE, so without this the sky behind the starfield is just the
      * clear color; the dome guarantees a proper deep-space backdrop.
      */
-    private static void renderSpaceDome(PoseStack pose)
+    static void renderSpaceDome(PoseStack pose)
     {
         Matrix4f matrix = pose.last().pose();
         FogRenderer.setupNoFog();
@@ -811,7 +824,7 @@ public class PlanetRenderer
      * rotated by the ship heading, so during the turn the stars sweep across the
      * view exactly like the planet does.
      */
-    private static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
+    static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
                                         float alpha, float convergence,
                                         int tintColor, float tintAmount)
     {
@@ -1079,13 +1092,27 @@ public class PlanetRenderer
                                         float scale, float shipYaw, float shipPitch,
                                         float alpha, boolean nearPass)
     {
+        // Match the disk's orientation-minus-spin so ring and surface tilt together.
+        Matrix4f model = new Matrix4f()
+                .translate(cx, cy, cz)
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw))
+                .scale(scale);
+        drawRingPass(pose, model, alpha, nearPass);
+    }
+
+    /**
+     * Draws one half of the baked gas-giant ring. {@code model} maps the ring's
+     * local PLANET_RADIUS-unit frame (centred on the body) into the pose's
+     * frame; the far/near split is classified by each segment centroid's
+     * distance to the camera, which sits at the origin of the pose's outermost
+     * frame. Any caller (ship berth view, rocky-moon sky) therefore gets
+     * correct occlusion against its own disc for free.
+     */
+    static void drawRingPass(PoseStack pose, Matrix4f model, float alpha, boolean nearPass)
+    {
         if (alpha <= 0.002F)
             return;
-        // Match the disk's orientation-minus-spin so ring and surface tilt together.
-        Matrix4f orient = new Matrix4f()
-                .rotateX((float) Math.toRadians(-shipPitch))
-                .rotateY((float) Math.toRadians(-shipYaw));
-        Vector3f rotated = new Vector3f();
 
         FogRenderer.setupNoFog();
         RenderSystem.enableBlend();
@@ -1097,26 +1124,23 @@ public class PlanetRenderer
         RenderSystem.setShaderTexture(0, GAS_GIANT_RING_TEXTURE);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
 
-        Matrix4f matrix = pose.last().pose();
+        Matrix4f full = new Matrix4f(pose.last().pose()).mul(model);
+        Vector3f centre = full.transformPosition(new Vector3f());
+        Vector3f centroid = new Vector3f();
         BufferBuilder bb = Tesselator.getInstance().begin(
                 VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        Vector3f tmp = new Vector3f();
         int drawn = 0;
         for (int seg = 0; seg < RING_SEGMENTS; seg++)
         {
-            tmp.set(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg]);
-            orient.transformDirection(tmp, rotated);
-            rotated.mul(scale);
-            float oDotC = cx * rotated.x + cy * rotated.y + cz * rotated.z;
-            boolean near = (2.0F * oDotC + rotated.lengthSquared()) < 0.0F;
+            full.transformPosition(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg], centroid);
+            boolean near = centroid.lengthSquared() < centre.lengthSquared();
             if (near != nearPass)
                 continue;
             drawn++;
             for (int corner = 0; corner < 4; corner++)
             {
                 int idx = seg * 4 + corner;
-                bb.addVertex(matrix, RING_VX[idx] * scale + cx,
-                        RING_VY[idx] * scale + cy, RING_VZ[idx] * scale + cz)
+                bb.addVertex(full, RING_VX[idx], RING_VY[idx], RING_VZ[idx])
                         .setUv(RING_VU[idx], 0.5F)
                         .setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1.0F);
             }

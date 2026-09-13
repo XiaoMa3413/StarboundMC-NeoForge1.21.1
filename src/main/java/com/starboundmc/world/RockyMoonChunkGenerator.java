@@ -102,13 +102,14 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
     }
 
     /**
-     * Replaces grass/dirt/snow with grey stone (gravel in a sparse banding) and
-     * removes the resulting organic layer so the surface reads as impact
-     * regolith. The mix is a cheap hash of the block position.
+     * Replaces grass/dirt/snow with grey stone and spreads gravel in smooth,
+     * connected regolith patches so the surface reads as impact-scoured rock.
      */
     private static void stripOrganicCrust(ChunkAccess chunk)
     {
         LevelChunkSection[] sections = chunk.getSections();
+        int baseX = chunk.getPos().getMinBlockX();
+        int baseZ = chunk.getPos().getMinBlockZ();
         for (int si = 0; si < sections.length; si++)
         {
             LevelChunkSection section = sections[si];
@@ -118,18 +119,50 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
             {
                 for (int z = 0; z < 16; z++)
                 {
+                    boolean gravel = isGravelPatch(baseX + x, baseZ + z);
                     for (int y = 0; y < 16; y++)
                     {
                         BlockState state = section.getBlockState(x, y, z);
                         if (state.isAir() || !isOrganicCrust(state))
                             continue;
-                        long hash = (chunk.getPos().x * 1182916L) + ((long) x * 39916801L)
-                                + ((long) (si * 16 + y) * 8101L) + ((long) z * 50021L);
-                        section.setBlockState(x, y, z, (hash & 3L) == 0L ? GRAVEL : STONE, false);
+                        section.setBlockState(x, y, z, gravel ? GRAVEL : STONE, false);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Low-frequency value noise on a 9-block lattice: gravel gathers into
+     * organic, cross-chunk-coherent patches. The previous per-block linear
+     * hash aliased into visible diagonal stripes across the surface.
+     */
+    private static boolean isGravelPatch(int x, int z)
+    {
+        int x0 = Math.floorDiv(x, 9);
+        int z0 = Math.floorDiv(z, 9);
+        double tx = smoothstep((x - x0 * 9) / 9.0);
+        double tz = smoothstep((z - z0 * 9) / 9.0);
+        double a = lattice(x0, z0) + (lattice(x0 + 1, z0) - lattice(x0, z0)) * tx;
+        double b = lattice(x0, z0 + 1) + (lattice(x0 + 1, z0 + 1) - lattice(x0, z0 + 1)) * tx;
+        return a + (b - a) * tz > 0.68;
+    }
+
+    private static double smoothstep(double t)
+    {
+        return t * t * (3.0 - 2.0 * t);
+    }
+
+    /** Avalanche-mixed lattice hash in [0, 1). */
+    private static double lattice(int x, int z)
+    {
+        long h = (long) x * 0x9E3779B97F4A7C15L ^ (long) z * 0xC2B2AE3D27D4EB4FL;
+        h ^= h >>> 33;
+        h *= 0xFF51AFD7ED55814DL;
+        h ^= h >>> 33;
+        h *= 0xC4CEB9FE1A85EC53L;
+        h ^= h >>> 33;
+        return (h & 0xFFFFFFL) / (double) 0x1000000L;
     }
 
     /** The overworld surface family that must not exist on an airless rock. */

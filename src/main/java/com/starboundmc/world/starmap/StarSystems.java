@@ -87,11 +87,15 @@ public class StarSystems
             .atmosphere(0xFFFFD6A0, 0.62F)
             .bands(0.88F)
             .rings(0xFFD8C8A0, 0.46F)
+            .texture("starboundmc:textures/gui/starmap/bodies/gasgiant.png")
+            .focusTexture("starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png")
             .build();
     private static final StarmapBodyVisual ROCKY_MOON_BODY = StarmapBodyVisual.builder(
                     StarmapBodyType.ROCKY, 0xFF909090, 10, 0x63E14AB5L)
             .secondaryColor(0xFF5E6268)
             .surfaceDetail(0.90F)
+            .texture("starboundmc:textures/gui/starmap/bodies/rockymoon.png")
+            .focusTexture("starboundmc:textures/gui/starmap/bodies/rockymoon_focus.png")
             .build();
     private static final StarmapBodyVisual FROZEN_BODY = StarmapBodyVisual.builder(
                     StarmapBodyType.ICY, 0xFF60A8E8, 18, 0x49B3C762L)
@@ -131,10 +135,15 @@ public class StarSystems
         List<StarSystem> systems = new ArrayList<>();
 
         // ---- 第一恒星系: 荒芜(内) · 主世界 · 熔岩月亮(主世界卫星) · 气态巨行星(外) + 岩石卫星 ----
+        // The star's visual influence fades at 5500 (deep-space contract in
+        // StarSystemLayoutTest), but the gas-giant berth sits ~16000 out and the
+        // rocky-moon berth ~16500. The planet field is independent of the star's
+        // art-directed fade: without covering both berths the bodies get culled
+        // during the approach and at the berth itself.
         systems.add(new StarSystem(SYS_MAIN, "starmap.system.sys1", "starmap.system.sys1.desc",
                 "starmap.type.yellow_dwarf", MAIN_STAR,
                 GalaxyMapPosition.fromPixelCenter(62, 84, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
-                new Vec3(-1500.0, 102.0, -700.0), 5500.0, List.of(
+                new Vec3(-1500.0, 102.0, -700.0), 5500.0, 24000.0, List.of(
                 new PlanetEntry("sys1:barren", "starmap.entry.sys1.barren.name",
                         "planet.starboundmc.barren", "starmap.entry.sys1.barren.desc",
                         Planet.BARREN, 2, 52, 135.0F, null, BARREN_BODY),
@@ -149,7 +158,9 @@ public class StarSystems
                         Planet.GAS_GIANT, 8, 116, 200.0F, null, GAS_GIANT_BODY),
                 new PlanetEntry("sys1:rockymoon", "starmap.entry.sys1.rockymoon.name",
                         "starmap.type.rocky_moon", "starmap.entry.sys1.rockymoon.desc",
-                        Planet.ROCKY_MOON, 5, 20, 30.0F, "sys1:gasgiant", ROCKY_MOON_BODY)
+                        // Orbit 26 keeps the moon's marker just outside the
+                        // giant's 22-unit sprite: circling it, not hugging it.
+                        Planet.ROCKY_MOON, 5, 26, 30.0F, "sys1:gasgiant", ROCKY_MOON_BODY)
         )));
 
         // ---- 第二恒星系: 强辐射的暗淡红矮星, 目前只有寒冷世界 ----

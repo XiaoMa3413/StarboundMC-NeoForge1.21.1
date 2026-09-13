@@ -1,9 +1,11 @@
 package com.starboundmc;
 
 import com.starboundmc.client.PlanetRenderer;
+import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.starmap.StarSystem;
 import com.starboundmc.world.starmap.StarSystems;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -70,16 +72,53 @@ final class PlanetContentTest {
     }
 
     @Test
-    void rockyMoonSitsAtTheCompressedFourteenRadiusOrbit() {
+    void rockyMoonSitsAtTheCompressedSevenRadiusOrbit() {
         var delta = ShipSpace.universeBodyPosition(Planet.ROCKY_MOON)
                 .deltaTo(ShipSpace.universeBodyPosition(Planet.GAS_GIANT));
         double distance = Math.sqrt(delta.x() * delta.x() + delta.y() * delta.y()
                 + delta.z() * delta.z());
-        // 14 primary radii plus a small vertical offset, same as Lush/Molten.
-        assertEquals(ShipSpace.radius(Planet.GAS_GIANT) * 14.0,
+        // 7 primary radii (half the old compression) plus a small vertical
+        // offset: keeps the giant-moon flight sublight and makes the giant
+        // dominate the moon's sky.
+        assertEquals(ShipSpace.radius(Planet.GAS_GIANT) * 7.0,
                 Math.hypot(delta.x(), delta.z()), 1.0);
-        assertTrue(distance > 12.0 * ShipSpace.radius(Planet.GAS_GIANT),
+        assertTrue(distance > 6.0 * ShipSpace.radius(Planet.GAS_GIANT),
                 "moon orbits far outside the rings");
+    }
+
+    /**
+     * Routes at or under LONG_ROUTE_MIN dock-to-dock run as an 11-second
+     * sublight cruise; anything longer enters hyperspace. The giant-moon pair
+     * is authored to stay sublight like the lush-molten reference pair.
+     */
+    @Test
+    void giantMoonPairRunsAsASublightRoute() {
+        double giantMoon = ShipSpace.flightDistance(Planet.GAS_GIANT, Planet.ROCKY_MOON);
+        double lushMolten = ShipSpace.flightDistance(Planet.LUSH, Planet.MOLTEN);
+        assertTrue(lushMolten <= ShipFlightController.LONG_ROUTE_MIN,
+                "lush-molten reference pair must stay sublight");
+        assertTrue(giantMoon <= ShipFlightController.LONG_ROUTE_MIN,
+                "giant-moon route must stay sublight, was " + String.format("%.0f", giantMoon));
+    }
+
+    /**
+     * The ship-sky planet gate culls bodies outside their system's planet
+     * field; a berth outside that field renders as the infamous reverse LOD
+     * (sphere -> point -> gone) during the approach and vanishes at the berth
+     * itself. Every dock must sit inside its own system's field.
+     */
+    @Test
+    void everyBerthSitsInsideItsSystemPlanetField() {
+        for (Planet planet : Planet.values()) {
+            StarSystem system = StarSystems.systemOfPlanet(planet);
+            assertNotNull(system, planet + " has no system");
+            double berthDistance = Math.sqrt(ShipSpace.universeDock(planet)
+                    .distanceToSqr(system.getUniverseNavigationCenter()));
+            assertTrue(berthDistance <= system.getPlanetFieldRadius(),
+                    planet + " berth at " + String.format("%.0f", berthDistance)
+                            + " is outside its system's planet field "
+                            + String.format("%.0f", system.getPlanetFieldRadius()));
+        }
     }
 
     @Test

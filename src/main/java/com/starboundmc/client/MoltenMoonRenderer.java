@@ -76,6 +76,10 @@ public class MoltenMoonRenderer
         Vector3f sunLocal = PHASE_SUN_DIRECTIONS[level.getMoonPhase() & 7];
 
         PoseStack pose = event.getPoseStack();
+        // AFTER_SKY hands out a fresh identity stack; the camera rotation is
+        // only in getModelViewMatrix(). Without this mulPose the moon is pinned
+        // to the screen instead of riding the celestial sphere.
+        pose.mulPose(event.getModelViewMatrix());
         pose.pushPose();
         pose.mulPose(Axis.YP.rotationDegrees(-90.0F));
         pose.mulPose(Axis.XP.rotationDegrees(timeAngle));

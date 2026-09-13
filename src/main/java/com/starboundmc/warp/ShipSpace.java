@@ -36,10 +36,11 @@ public final class ShipSpace
         RADIUS.put(Planet.MOLTEN, 6.0 / 3.67);
         RADIUS.put(Planet.FROZEN, 5.5);
         RADIUS.put(Planet.BARREN, 4.0);
-        // The gas giant keeps the same primary-to-moon ratio (3.67:1) as the
-        // Lush/Molten pair, so both berths share one familiar geometry.
-        RADIUS.put(Planet.GAS_GIANT, 30.0);
-        RADIUS.put(Planet.ROCKY_MOON, 30.0 / 3.67);
+        // A deliberately extreme primary-to-moon ratio (8:1): the giant reads
+        // colossal beside its dead moon, and the moon's 7-primary-radii orbit
+        // stays far outside the ring band (ring outer ≈ 2.32 radii).
+        RADIUS.put(Planet.GAS_GIANT, 40.0);
+        RADIUS.put(Planet.ROCKY_MOON, 5.0);
 
         YAW_DOCK.put(Planet.LUSH, 0.0);
         // Keep every dock heading within one compact sector. The ship can then
@@ -57,7 +58,11 @@ public final class ShipSpace
         // across such a large keep-out shell cannot stay outside after the
         // corridor smoothing (see buildRoute peel + smooth passes).
         YAW_DOCK.put(Planet.GAS_GIANT, 259.0);
-        YAW_DOCK.put(Planet.ROCKY_MOON, 265.0);
+        // The moon berth frames BOTH bodies: the view axis is rotated ~47
+        // degrees off the giant's bearing, so the ringed giant clears the
+        // moon's 38.4-degree disc (its own bearing would hide it dead centre
+        // behind the moon) while staying inside the bridge window.
+        YAW_DOCK.put(Planet.ROCKY_MOON, 306.0);
 
         V_DOCK.put(Planet.LUSH, new Vec3(0.0, 102.0, 0.0));
         // The frozen dock follows the second system's navigation centre so a
@@ -80,17 +85,19 @@ public final class ShipSpace
 
         Q_POS.put(Planet.GAS_GIANT, vDock(Planet.GAS_GIANT)
                 .add(rotateYaw(dockOffset(Planet.GAS_GIANT), yawDock(Planet.GAS_GIANT))));
-        // Same 14-primary-radii compression as the Lush/Molten pair, placed on
-        // the berth's anti-planet side: the route leaves the giant's dock
-        // straight away from the disc, so it can never shear across the
-        // giant's own keep-out shell. A small vertical offset keeps the pair
-        // from lying on the ecliptic line exactly.
+        // Half the Lush/Molten ratio (7 primary radii), placed on the berth's
+        // anti-planet side: the route leaves the giant's dock straight away
+        // from the disc, so it can never shear across the giant's own keep-out
+        // shell. At 7 radii the dock-to-dock flight stays under LONG_ROUTE_MIN,
+        // so the pair runs as an 11-second sublight cruise with no hyperspace,
+        // and the giant looms huge over the moon's sky. A small vertical offset
+        // keeps the pair from lying on the ecliptic line exactly.
         Vec3 giantOutward = rotateYaw(dockOffset(Planet.GAS_GIANT), yawDock(Planet.GAS_GIANT));
         double giantOutwardPlanar = Math.hypot(giantOutward.x, giantOutward.z);
         Vec3 giantMoonOrbit = new Vec3(
-                -giantOutward.x / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 14.0,
+                -giantOutward.x / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 7.0,
                 -20.0,
-                -giantOutward.z / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 14.0);
+                -giantOutward.z / giantOutwardPlanar * radius(Planet.GAS_GIANT) * 7.0);
         Q_POS.put(Planet.ROCKY_MOON, Q_POS.get(Planet.GAS_GIANT).add(giantMoonOrbit));
         V_DOCK.put(Planet.ROCKY_MOON, Q_POS.get(Planet.ROCKY_MOON)
                 .subtract(rotateYaw(dockOffset(Planet.ROCKY_MOON), yawDock(Planet.ROCKY_MOON))));

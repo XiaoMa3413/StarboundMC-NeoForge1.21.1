@@ -203,9 +203,9 @@ MIT License 允许使用、复制、修改、合并、发布、再许可和销�
 - `textures/planet/barren.png`：Mars
 - `textures/planet/gasgiant.png`：Jupiter，仅 JPEG→RGBA PNG 格式转换
 - `textures/planet/rockymoon.png`：Moon，由 8192×4096 缩采样至 4096×2048 并转为 RGBA PNG
-- `textures/planet/gasgiant_ring.png`：Saturn ring alpha 条图，由 8192×500 缩采样至 2048×250
+- `textures/planet/gasgiant_ring.png`：Saturn ring alpha 条图，原分辨率 8192×500 直接使用
 
-使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+星图界面（`textures/gui/starmap/bodies/`）的天体精灵图由上述贴图经球面投影缩采样生成，随这些贴图一同受 CC BY 4.0 约束。使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ### 运行时依赖与音频边界
 

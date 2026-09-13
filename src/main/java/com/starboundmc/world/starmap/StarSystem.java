@@ -24,12 +24,29 @@ public class StarSystem
     private final Vec3 navigationCenter;
     private final UniversePosition universeNavigationCenter;
     private final double influenceRadius;
+    /**
+     * Radius within which this system's bodies may render in the ship sky,
+     * independent of the star's VISUAL influence ({@link #influenceRadius}):
+     * the outer gas-giant berth sits far beyond the star's art-directed fade,
+     * but its planets must still render while the ship is inside the system's
+     * territory. Must cover every body's berth of this system.
+     */
+    private final double planetFieldRadius;
     private final List<PlanetEntry> entries;
 
     public StarSystem(String systemId, String nameKey, String descriptionKey, String starTypeKey,
                       StellarVisualProfile stellarVisual, GalaxyMapPosition galaxyMapPosition,
                       Vec3 navigationCenter,
                       double influenceRadius, List<PlanetEntry> entries)
+    {
+        this(systemId, nameKey, descriptionKey, starTypeKey, stellarVisual, galaxyMapPosition,
+                navigationCenter, influenceRadius, influenceRadius, entries);
+    }
+
+    public StarSystem(String systemId, String nameKey, String descriptionKey, String starTypeKey,
+                      StellarVisualProfile stellarVisual, GalaxyMapPosition galaxyMapPosition,
+                      Vec3 navigationCenter,
+                      double influenceRadius, double planetFieldRadius, List<PlanetEntry> entries)
     {
         this.systemId = systemId;
         this.nameKey = nameKey;
@@ -40,6 +57,7 @@ public class StarSystem
         this.navigationCenter = navigationCenter;
         this.universeNavigationCenter = UniversePosition.fromLegacy(navigationCenter);
         this.influenceRadius = influenceRadius;
+        this.planetFieldRadius = Math.max(influenceRadius, planetFieldRadius);
         this.entries = entries;
     }
 
@@ -125,6 +143,12 @@ public class StarSystem
     public double getInfluenceRadius()
     {
         return influenceRadius;
+    }
+
+    /** Radius within which this system's bodies may render in the ship sky. */
+    public double getPlanetFieldRadius()
+    {
+        return planetFieldRadius;
     }
 
     public List<PlanetEntry> getEntries()
