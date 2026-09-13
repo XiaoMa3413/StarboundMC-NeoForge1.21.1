@@ -15,6 +15,9 @@ scripts/__pycache__/
 ### Generated resources ###
 src/generated/**/.cache/
 
+### Local agent skills ###
+.agents/
+
 ### IntelliJ IDEA ###
 .idea/
 .run/

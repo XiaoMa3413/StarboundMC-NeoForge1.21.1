@@ -46,13 +46,25 @@ public final class VoxelPrintingStationBlock extends BaseEntityBlock {
     public static final MapCodec<VoxelPrintingStationBlock> CODEC = simpleCodec(VoxelPrintingStationBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    /** Base model faces north, with its rear housing against the south wall. */
+    /** Base model faces north. Follow the chassis and leave the fabrication bay open. */
     private static final VoxelShape NORTH_SHAPE = Shapes.or(
-            Block.box(1.0, 2.0, 13.25, 15.0, 15.5, 16.0),
-            Block.box(2.5, 2.0, 4.0, 13.5, 5.5, 13.5),
-            Block.box(1.0, 5.5, 7.0, 3.85, 15.5, 13.5),
-            Block.box(12.15, 5.5, 7.0, 15.0, 15.5, 13.5),
-            Block.box(3.85, 13.5, 7.0, 12.15, 15.5, 13.5));
+            Block.box(1.0, 2.0, 14.0, 15.0, 15.5, 16.0),
+            Block.box(2.0, 1.0, 4.0, 14.0, 3.0, 14.0),
+            Block.box(3.0, 3.0, 3.0, 13.0, 4.25, 14.0),
+            Block.box(3.0, 4.25, 3.0, 13.0, 5.25, 4.0),
+            Block.box(4.0, 4.25, 4.0, 12.0, 5.25, 13.5),
+            Block.box(3.0, 4.25, 4.0, 4.0, 5.6, 13.5),
+            Block.box(12.0, 4.25, 4.0, 13.0, 5.6, 13.5),
+            Block.box(1.0, 3.0, 8.5, 3.0, 13.5, 14.0),
+            Block.box(13.0, 3.0, 8.5, 15.0, 13.5, 14.0),
+            Block.box(1.0, 6.0, 6.5, 3.0, 13.5, 8.5),
+            Block.box(13.0, 6.0, 6.5, 15.0, 13.5, 8.5),
+            Block.box(1.0, 3.0, 5.8, 3.0, 6.0, 8.5),
+            Block.box(13.0, 3.0, 5.8, 15.0, 6.0, 8.5),
+            Block.box(1.0, 13.44, 6.25, 15.0, 15.5, 14.0),
+            Block.box(3.0, 15.5, 9.0, 13.0, 16.0, 14.5),
+            Block.box(3.0, 4.25, 12.75, 13.0, 13.5, 14.0),
+            Block.box(6.5, 3.375, 2.75, 9.5, 4.0, 3.0));
     private static final Map<Direction, VoxelShape> SHAPES = new EnumMap<>(Direction.class);
 
     static {

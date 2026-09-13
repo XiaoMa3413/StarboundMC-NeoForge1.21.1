@@ -12,8 +12,10 @@ import net.minecraft.world.entity.player.Inventory;
 /** LDLib2 printing screen with a recipe list and selected-item details. */
 public final class VoxelPrintingStationScreen
         extends StarboundModularScreen<VoxelPrintingStationMenu, VoxelPrintingStationRoot> {
-    private static final int PANEL_W = 364;
-    private static final int PANEL_H = 234;
+    private static final int PANEL_W = 440;
+    private static final int COMPACT_W = 320;
+    private static final int PANEL_H = 240;
+    private final PrintSubmissionState submission = new PrintSubmissionState();
 
     public VoxelPrintingStationScreen(
             VoxelPrintingStationMenu menu, Inventory inventory, Component title) {
@@ -23,14 +25,26 @@ public final class VoxelPrintingStationScreen
     }
 
     @Override
+    protected void init() {
+        imageWidth = width < PANEL_W ? COMPACT_W : PANEL_W;
+        super.init();
+    }
+
+    @Override
     protected VoxelPrintingStationRoot createRoot() {
-        return new VoxelPrintingStationRoot(menu, leftPos, topPos, title, playerInventoryTitle);
+        return new VoxelPrintingStationRoot(menu, leftPos, topPos, title, playerInventoryTitle,
+                submission, imageWidth < PANEL_W);
+    }
+
+    public void acceptSubmission(boolean accepted) {
+        submission.complete(accepted, net.minecraft.Util.getMillis());
+        if (root != null) root.refresh();
     }
 
     @Override
     protected ResourceLocation stylesheet() {
         return ResourceLocation.fromNamespaceAndPath(
-                StarboundMC.MODID, "lss/ship_machine_inventory.lss");
+                StarboundMC.MODID, "lss/voxel_printing_station.lss");
     }
 
     @Override

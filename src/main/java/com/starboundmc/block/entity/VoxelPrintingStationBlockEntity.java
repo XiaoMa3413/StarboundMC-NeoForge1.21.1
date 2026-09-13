@@ -33,10 +33,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Voxel printing station logic: reserves matched materials directly from the
- * operator's inventory, deducts the voxel cost up front, then produces the
- * recipe result after the print duration. The legacy material storage indices
- * remain for save compatibility; new print jobs do not read or write them.
+ * Voxel printing station logic: reserves matched inventory materials directly
+ * from the operator, deducts any wallet-backed voxel material up front, then
+ * produces the recipe result after the print duration. The legacy material
+ * storage indices remain for save compatibility; new print jobs do not read or
+ * write them.
  */
 public final class VoxelPrintingStationBlockEntity extends BlockEntity implements Container {
     public static final int MATERIAL_SLOTS = 3;
@@ -147,9 +148,10 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
             reservations.add(reserved);
         }
 
-        long totalCost = (long) printing.voxelCost() * quantity;
+        long voxelMaterialCount = printing.voxelMaterialCount();
+        long totalCost = voxelMaterialCount * quantity;
         if (totalCost > Integer.MAX_VALUE
-                || !VoxelWalletService.trySpend(operator, (int) totalCost)) {
+                || (totalCost > 0 && !VoxelWalletService.trySpend(operator, (int) totalCost))) {
             return PrintEnqueueResult.INSUFFICIENT_VOXELS;
         }
 
@@ -159,7 +161,7 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
         }
         operator.getInventory().setChanged();
         printQueue.addLast(new PrintQueueEntry(UUID.randomUUID(), operator.getUUID(),
-                operator.getGameProfile().getName(), recipe.id(), printing.voxelCost(),
+                operator.getGameProfile().getName(), recipe.id(), Math.toIntExact(voxelMaterialCount),
                 printing.printSeconds() * 20, result, reservations));
         startNextQueuedCraft();
         setChanged();

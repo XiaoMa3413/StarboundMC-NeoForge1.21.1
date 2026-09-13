@@ -29,6 +29,12 @@ class VoxelQueuePacketsTest {
     }
 
     @Test
+    void submissionAcknowledgementPreservesMenuStationAndResult() {
+        assertRoundTrip(new PrintSubmissionResultPacket(17, POS, true), PrintSubmissionResultPacket.STREAM_CODEC);
+        assertRoundTrip(new PrintSubmissionResultPacket(18, POS, false), PrintSubmissionResultPacket.STREAM_CODEC);
+    }
+
+    @Test
     void stopRefinementPreservesMachinePosition() {
         assertRoundTrip(new StopRefinementPacket(POS), StopRefinementPacket.STREAM_CODEC);
     }

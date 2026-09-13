@@ -76,13 +76,13 @@ public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
                 }
             });
         }
-        addSlot(new Slot(slotContainer, VoxelPrintingStationBlockEntity.OUTPUT_SLOT, 118, 39) {
+        addSlot(new Slot(slotContainer, VoxelPrintingStationBlockEntity.OUTPUT_SLOT, 151, 31) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
-        addPlayerInventory(inventory, 56, 157);
+        addPlayerInventory(inventory, 148, 161);
     }
 
     private void addPlayerInventory(Inventory inventory, int x, int y) {

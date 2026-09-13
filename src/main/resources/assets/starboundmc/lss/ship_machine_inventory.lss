@@ -332,6 +332,12 @@
   text-shadow: false;
 }
 
+.voxel-printing-subtitle {
+  font-size: 5;
+  text-color: #899598;
+  text-shadow: false;
+}
+
 .voxel-pane-title {
   font-size: 5;
   text-color: #a9c2c9;
