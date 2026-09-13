@@ -13,14 +13,19 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.RockyMoonPlanet;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.material.FogType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.client.event.ViewportEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -48,8 +53,13 @@ public class RockyMoonSkyRenderer
     private static final float GIANT_ORBIT_RADII = 7.0F;
     private static final float GIANT_SCALE =
             GIANT_DISTANCE / (GIANT_ORBIT_RADII * PlanetRenderer.PLANET_RADIUS);
-    /** Opens the ring ellipse toward the viewer, mirroring the berth-side tilt. */
-    private static final float RING_TILT_DEGREES = 24.0F;
+    /**
+     * Saturn's axial tilt applied to the whole body frame: the ring lies exactly
+     * on the giant's texture equator (its horizontal mid-axis) instead of an
+     * arbitrary separate tilt, and the tilt keeps the ring plane opened toward
+     * the viewer through the whole day cycle rather than disappearing edge-on.
+     */
+    private static final float GIANT_AXIAL_TILT_DEGREES = 26.7F;
     /** The giant's disk is a shade under the sun-side rock brightness. */
     private static final float GIANT_BRIGHTNESS = 0.95F;
 
@@ -91,6 +101,30 @@ public class RockyMoonSkyRenderer
         renderSunAndGiant(pose, level, partialTick);
     }
 
+    /**
+     * Airless rock: no atmospheric haze of any kind. The event fires every
+     * frame after vanilla picked its fog planes; cancelling makes NeoForge
+     * re-apply the plane distances below, which mirrors
+     * {@link FogRenderer#setupNoFog} for both the terrain and sky fog passes.
+     */
+    @SubscribeEvent
+    public static void onRenderFog(ViewportEvent.RenderFog event)
+    {
+        Camera camera = event.getCamera();
+        if (camera.getEntity() != null
+                && shouldDisableFog(camera.getEntity().level().dimension(), event.getType()))
+        {
+            event.setCanceled(true);
+            event.setNearPlaneDistance(Float.MAX_VALUE);
+            event.setFarPlaneDistance(Float.MAX_VALUE);
+        }
+    }
+
+    public static boolean shouldDisableFog(ResourceKey<Level> dimension, FogType fogType)
+    {
+        return fogType == FogType.NONE && RockyMoonPlanet.ROCKY_MOON_LEVEL.equals(dimension);
+    }
+
     private static void renderSunAndGiant(PoseStack pose, ClientLevel level, float partialTick)
     {
         pose.pushPose();
@@ -102,24 +136,23 @@ public class RockyMoonSkyRenderer
         // The parent rides opposite the sun and shows a phase, exactly like the
         // overworld's Molten moon rides opposite the sun for Lush. The ring is
         // drawn in two passes around the disc (far half, disc, near half) so it
-        // reads as orbiting the body, same layering as the berth view.
+        // reads as orbiting the body, same layering as the berth view. Planet
+        // and ring share one tilted body frame, so the ring sits exactly on the
+        // texture equator instead of leaning against the bands.
         float phaseAngle = (level.getMoonPhase() & 7) * (float) Math.PI / 4.0F;
         Vector3f sunLocal = new Vector3f((float) Math.cos(phaseAngle), 0.0F, (float) Math.sin(phaseAngle));
         pose.pushPose();
         pose.translate(0.0F, -GIANT_DISTANCE, 0.0F);
-        // Roll the equator toward the viewer so the bands read across the disk.
-        pose.mulPose(Axis.ZP.rotationDegrees(90.0F));
+        pose.mulPose(Axis.XP.rotationDegrees(GIANT_AXIAL_TILT_DEGREES));
+        // drawPlanetSphere lights the sphere in its local frame, so the sun
+        // direction has to cross the same tilt the geometry just went through.
+        Vector3f sunInBodyFrame = new Vector3f(sunLocal)
+                .rotateX((float) Math.toRadians(-GIANT_AXIAL_TILT_DEGREES));
         Matrix4f ringModel = new Matrix4f().scale(GIANT_SCALE);
-        pose.pushPose();
-        pose.mulPose(Axis.XP.rotationDegrees(RING_TILT_DEGREES));
         PlanetRenderer.drawRingPass(pose, ringModel, 1.0F, false);
-        pose.popPose();
         PlanetRenderer.drawPlanetSphere(pose, pose.last().pose(), Planet.GAS_GIANT.texture(),
-                0.0F, 0.0F, 0.0F, GIANT_SCALE, sunLocal, GIANT_BRIGHTNESS, 1.0F);
-        pose.pushPose();
-        pose.mulPose(Axis.XP.rotationDegrees(RING_TILT_DEGREES));
+                0.0F, 0.0F, 0.0F, GIANT_SCALE, sunInBodyFrame, GIANT_BRIGHTNESS, 1.0F);
         PlanetRenderer.drawRingPass(pose, ringModel, 1.0F, true);
-        pose.popPose();
         pose.popPose();
         pose.popPose();
     }

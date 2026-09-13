@@ -12,7 +12,7 @@
 - `src/main/resources/assets/starboundmc/textures/planet/molten.png`：Venus surface
 - `src/main/resources/assets/starboundmc/textures/planet/frozen.png`：Eris fictional
 - `src/main/resources/assets/starboundmc/textures/planet/barren.png`：Mars
-- `src/main/resources/assets/starboundmc/textures/planet/gasgiant.png`：Jupiter，仅格式转换（JPEG→RGBA PNG）
+- `src/main/resources/assets/starboundmc/textures/planet/gasgiant.png`：Saturn，仅格式转换（JPEG→RGBA PNG）
 - `src/main/resources/assets/starboundmc/textures/planet/rockymoon.png`：Moon，缩采样至 4096×2048 并转为 RGBA PNG
 - `src/main/resources/assets/starboundmc/textures/planet/gasgiant_ring.png`：Saturn ring alpha，原分辨率 8192×500 直接使用
 

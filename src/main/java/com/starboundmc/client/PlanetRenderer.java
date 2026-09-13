@@ -113,14 +113,15 @@ public class PlanetRenderer
     /** Ringed-body support: strip texture plus pre-oriented quad geometry (see buildGasGiantRings). */
     private static final ResourceLocation GAS_GIANT_RING_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "textures/planet/gasgiant_ring.png");
-    private static final int RING_SEGMENTS = 96;
-    private static final float RING_INNER = 1.30F;
-    private static final float RING_OUTER = 2.32F;
-    private static final float RING_ALPHA = 0.75F;
-    /** Ring tint of the star-map art direction: warm dust 0xFFD8C8A0. */
-    private static final float RING_TINT_R = 0.847F;
-    private static final float RING_TINT_G = 0.784F;
-    private static final float RING_TINT_B = 0.627F;
+    private static final int RING_SEGMENTS = 144;
+    /** Real Saturn proportions: the main rings span ~1.24–2.27 planetary radii. */
+    private static final float RING_INNER = 1.24F;
+    private static final float RING_OUTER = 2.27F;
+    private static final float RING_ALPHA = 0.90F;
+    /** The strip texture supplies the colour; only a faint warm lift on top. */
+    private static final float RING_TINT_R = 1.00F;
+    private static final float RING_TINT_G = 0.97F;
+    private static final float RING_TINT_B = 0.92F;
     /** 4 corners per segment: inner(a0), outer(a0), outer(a1), inner(a1). Local, PLANET_RADIUS units. */
     private static final float[] RING_VX = new float[RING_SEGMENTS * 4];
     private static final float[] RING_VY = new float[RING_SEGMENTS * 4];
@@ -143,7 +144,7 @@ public class PlanetRenderer
         ATMOSPHERE_COLORS.put(Planet.MOLTEN, new Vector3f(1.0F, 0.45F, 0.20F));
         ATMOSPHERE_COLORS.put(Planet.FROZEN, new Vector3f(0.55F, 0.78F, 1.0F));
         ATMOSPHERE_COLORS.put(Planet.BARREN, new Vector3f(0.75F, 0.65F, 0.50F));
-        ATMOSPHERE_COLORS.put(Planet.GAS_GIANT, new Vector3f(1.00F, 0.86F, 0.62F));
+        ATMOSPHERE_COLORS.put(Planet.GAS_GIANT, new Vector3f(0.99F, 0.91F, 0.70F));
         ATMOSPHERE_COLORS.put(Planet.ROCKY_MOON, new Vector3f(0.55F, 0.55F, 0.60F));
 
         ATMOSPHERE_PEAK.put(Planet.LUSH, 0.20F);
@@ -159,9 +160,11 @@ public class PlanetRenderer
         BODY_ORIENTATION.put(Planet.MOLTEN, new Vector3f(6.0F, 210.0F, 0.0F));
         BODY_ORIENTATION.put(Planet.FROZEN, new Vector3f(32.0F, 125.0F, 0.0F));
         BODY_ORIENTATION.put(Planet.BARREN, new Vector3f(12.0F, 285.0F, 0.0F));
-        // A strong axial tilt reads the ring open from the berth; the rocky
+        // Saturn's real 26.7-degree axial tilt: ring and surface share this one
+        // orientation, so the band reads exactly along the ring plane and the
+        // ellipse stays open from the berth and the rocky moon alike. The rocky
         // moon is tumbled so its crater field never looks like a flat decal.
-        BODY_ORIENTATION.put(Planet.GAS_GIANT, new Vector3f(18.0F, 40.0F, 0.0F));
+        BODY_ORIENTATION.put(Planet.GAS_GIANT, new Vector3f(26.7F, 40.0F, 0.0F));
         BODY_ORIENTATION.put(Planet.ROCKY_MOON, new Vector3f(8.0F, 160.0F, 0.0F));
 
         for (Planet planet : Planet.values())
@@ -247,7 +250,7 @@ public class PlanetRenderer
             case MOLTEN -> 0xFFFF8A4C;
             case FROZEN -> 0xFF8FD7FF;
             case BARREN -> 0xFFD0B07A;
-            case GAS_GIANT -> 0xFFE8B87A;
+            case GAS_GIANT -> 0xFFE4C893;
             case ROCKY_MOON -> 0xFFB4B8BE;
         };
     }
@@ -1328,7 +1331,7 @@ public class PlanetRenderer
             case LUSH -> 0.00375F;
             case FROZEN -> 0.00225F;
             case BARREN -> 0.00275F;
-            // Jupiter-like: the fastest spin in the system, storms never rest.
+            // Saturn-like ~10.6 h day: fast spin, the bands never rest.
             case GAS_GIANT -> 0.009F;
             case ROCKY_MOON -> 0.002F;
         };

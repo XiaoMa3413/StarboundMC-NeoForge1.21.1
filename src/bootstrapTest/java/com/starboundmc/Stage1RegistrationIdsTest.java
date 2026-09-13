@@ -60,7 +60,7 @@ final class Stage1RegistrationIdsTest {
     @Test
     void keepsPublishedWorldgenIds() throws IOException {
         assertSourceIds("world/ModWorldgen.java", "public static final ResourceLocation [A-Z_]+ = id\\(\"([^\"]+)\"\\)",
-                Set.of("ship", "molten", "barren", "rocky_moon", "filtered"));
+                Set.of("ship", "molten", "barren", "rocky_moon", "filtered", "giant_ore_vein"));
     }
 
     private static void assertSourceIds(String relativePath, String expression, Set<String> expected)
