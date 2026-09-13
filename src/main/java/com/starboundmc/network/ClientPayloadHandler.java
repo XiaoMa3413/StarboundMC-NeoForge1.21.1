@@ -73,6 +73,15 @@ public final class ClientPayloadHandler {
         com.starboundmc.client.ClientPrintQueueState.apply(payload);
     }
 
+    public static void handle(PrintSubmissionResultPacket payload, IPayloadContext context) {
+        if (net.minecraft.client.Minecraft.getInstance().screen
+                instanceof com.starboundmc.client.VoxelPrintingStationScreen screen
+                && screen.getMenu().containerId == payload.containerId()
+                && screen.getMenu().blockPos().equals(payload.pos())) {
+            screen.acceptSubmission(payload.accepted());
+        }
+    }
+
     public static void handle(ShipStorySnapshotPacket payload, IPayloadContext context) {
         if (context.player().containerMenu instanceof ShipAiTerminalMenu menu) {
             ClientShipStoryState.apply(menu.containerId, payload);

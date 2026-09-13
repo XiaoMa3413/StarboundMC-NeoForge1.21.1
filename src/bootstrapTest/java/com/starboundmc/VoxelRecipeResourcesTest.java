@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /** M2/M3: data-driven voxel machine recipes land with agreed values. */
@@ -19,7 +20,7 @@ final class VoxelRecipeResourcesTest {
         JsonObject root = JsonParser.parseString(Files.readString(
                 RECIPES.resolve("print_matter_manipulator_module.json"))).getAsJsonObject();
         assertEquals("starboundmc:voxel_printing", root.get("type").getAsString());
-        assertEquals(100, root.get("voxel_cost").getAsInt());
+        assertFalse(root.has("voxel_cost"));
         assertEquals(5, root.get("print_seconds").getAsInt());
 
         JsonObject result = root.getAsJsonObject("result");
@@ -27,11 +28,14 @@ final class VoxelRecipeResourcesTest {
         assertEquals(2, result.get("count").getAsInt());
 
         var materials = root.getAsJsonArray("materials").asList();
-        assertEquals(2, materials.size());
-        JsonObject lapis = materials.get(0).getAsJsonObject();
+        assertEquals(3, materials.size());
+        JsonObject voxel = materials.get(0).getAsJsonObject();
+        assertEquals("starboundmc:voxel", voxel.getAsJsonObject("ingredient").get("item").getAsString());
+        assertEquals(100, voxel.get("count").getAsInt());
+        JsonObject lapis = materials.get(1).getAsJsonObject();
         assertEquals("minecraft:lapis_lazuli", lapis.getAsJsonObject("ingredient").get("item").getAsString());
         assertEquals(1, lapis.get("count").getAsInt());
-        JsonObject iron = materials.get(1).getAsJsonObject();
+        JsonObject iron = materials.get(2).getAsJsonObject();
         assertEquals("minecraft:iron_ingot", iron.getAsJsonObject("ingredient").get("item").getAsString());
         assertEquals(4, iron.get("count").getAsInt());
     }

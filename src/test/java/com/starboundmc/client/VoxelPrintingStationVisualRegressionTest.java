@@ -102,6 +102,53 @@ class VoxelPrintingStationVisualRegressionTest {
                 "Probe outlines must be drawn only after the line buffer is requested");
     }
 
+    @Test
+    void compactScaleKeepsVanillaItemsInsideTheirSocketAndRestoresGhostOutput() throws IOException {
+        String root = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/voxel/VoxelPrintingStationRoot.java"));
+        String screen = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/VoxelPrintingStationScreen.java"));
+        String menu = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/menu/VoxelPrintingStationMenu.java"));
+
+        assertTrue(screen.contains("COMPACT_W = 320"));
+        assertTrue(screen.contains("imageWidth = width < PANEL_W ? COMPACT_W : PANEL_W"));
+        assertTrue(root.contains(".width(compact ? COMPACT_W : PANEL_W)"));
+        assertTrue(root.contains("voxel-inventory-section\", 144, 151, 172, 84"));
+        assertTrue(root.contains("slotSocket(\"voxel-printing-output-socket\", 4, 2)"));
+        assertFalse(root.contains("outputStatus"), "Output helper text must not sit under the action row");
+        assertFalse(root.contains("output-status"), "Obscured output status label must be removed");
+        assertTrue(root.contains("new ItemStackTexture().setColor(0x66FFFFFF)"));
+        assertTrue(root.contains("outputPreview.setVisible(!hasOutput)"));
+        assertTrue(menu.contains("OUTPUT_SLOT, 151, 31"));
+        assertTrue(menu.contains("addPlayerInventory(inventory, 148, 161)"));
+    }
+
+    @Test
+    void detailPaneReservesOneLineForDescriptionAndUsesCompactQuantityControls() throws IOException {
+        String root = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/voxel/VoxelPrintingStationRoot.java"));
+        String stylesheet = Files.readString(Path.of(
+                "src/main/resources/assets/starboundmc/lss/voxel_printing_station.lss"));
+
+        assertTrue(root.contains("private final Label detailDescription = new Label();"));
+        assertTrue(root.contains("voxel-printing-detail-description\", 5, 21"));
+        assertTrue(root.contains("private final UIElement[] requirementCards = new UIElement[6];"));
+        assertTrue(root.contains("(i % 3) * (cardWidth + cardGap)"));
+        assertTrue(root.contains("int y = 30 + (i / 3) * 19"));
+        assertTrue(root.contains("cardWidth, REQUIREMENT_CARD_H"));
+        assertTrue(root.contains("width(12).height(12)"));
+        assertTrue(root.contains("detailName, detailOutput, detailDescription, detailMeta"));
+        assertTrue(root.contains("detailDescription.setText(description)"));
+        assertTrue(root.contains("detailDescription.style(style -> style.tooltips(detailTooltip))"));
+        assertTrue(root.contains("QUANTITY_ROW_Y = 85"));
+        assertTrue(root.contains("QUANTITY_CONTROL_H = 13"));
+        assertTrue(root.contains(".left(left).top(QUANTITY_ROW_Y).width(width).height(QUANTITY_CONTROL_H)"));
+        assertTrue(stylesheet.contains(".voxel-printing-detail-description"));
+        assertTrue(stylesheet.contains(".voxel-requirement-count { font-size: 6;"));
+        assertTrue(stylesheet.contains(".voxel-printing-detail-pane .voxel-quantity-button"));
+    }
+
     private static double overlap(JsonObject first, JsonObject second, int axis) {
         double lower = Math.max(coordinate(first, "from", axis), coordinate(second, "from", axis));
         double upper = Math.min(coordinate(first, "to", axis), coordinate(second, "to", axis));

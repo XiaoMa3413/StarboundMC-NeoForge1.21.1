@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /** NeoForge 1.21.1 play-payload protocol. */
 public final class ModNetwork {
-    public static final String PROTOCOL_VERSION = "6";
+    public static final String PROTOCOL_VERSION = "7";
     private static volatile ServerPayloadActions serverActions = ServerPayloadActions.NONE;
 
     private ModNetwork() {
@@ -63,6 +63,8 @@ public final class ModNetwork {
                 SyncVoxelMachinePacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(SyncPrintQueuePacket.TYPE,
                 SyncPrintQueuePacket.STREAM_CODEC, ClientPayloadHandler::handle);
+        registrar.playToClient(PrintSubmissionResultPacket.TYPE,
+                PrintSubmissionResultPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipStorySnapshotPacket.TYPE,
                 ShipStorySnapshotPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(ShipEnvironmentSnapshotPacket.TYPE,

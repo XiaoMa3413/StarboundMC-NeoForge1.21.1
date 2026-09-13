@@ -70,6 +70,8 @@ final class VoxelMachineActions {
     }
 
     static void startPrint(ServerPlayer player, BlockPos pos, ResourceLocation recipeId, int quantity) {
+        int containerId = player.containerMenu.containerId;
+        boolean accepted = false;
         if (player.level().getBlockEntity(pos) instanceof VoxelPrintingStationBlockEntity station
                 && player.level().getBlockState(pos).is(ModBlocks.VOXEL_PRINTING_STATION.get())
                 && player.containerMenu instanceof VoxelPrintingStationMenu menu
@@ -82,8 +84,11 @@ final class VoxelMachineActions {
                     .orElse(null);
             if (recipe != null) {
                 switch (station.tryEnqueuePrint(player.serverLevel(), player, recipe, quantity)) {
-                    case QUEUED -> player.displayClientMessage(Component.translatable(
-                            "message.starboundmc.voxel_printing.queued", quantity), true);
+                    case QUEUED -> {
+                        accepted = true;
+                        player.displayClientMessage(Component.translatable(
+                                "message.starboundmc.voxel_printing.queued", quantity), true);
+                    }
                     case INVALID_QUANTITY -> player.displayClientMessage(Component.translatable(
                             "message.starboundmc.voxel_printing.invalid_quantity"), true);
                     case QUEUE_FULL -> player.displayClientMessage(Component.translatable(
@@ -93,11 +98,12 @@ final class VoxelMachineActions {
                             "message.starboundmc.voxel_printing.materials"), true);
                     case INSUFFICIENT_VOXELS -> player.displayClientMessage(Component.translatable(
                             "message.starboundmc.voxel_printing.voxels",
-                            (long) recipe.value().voxelCost() * quantity,
+                            recipe.value().voxelMaterialCount() * quantity,
                             VoxelWalletService.balanceOf(player)), true);
                 }
             }
         }
+        ModNetwork.sendToPlayer(player, new PrintSubmissionResultPacket(containerId, pos, accepted));
     }
 
     static void cancelPrintQueue(ServerPlayer player, BlockPos pos, java.util.UUID queueId) {
