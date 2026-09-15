@@ -244,7 +244,7 @@
   "starmap.entry.sys1.gasgiant.name": "Gas Giant",
   "starmap.entry.sys1.gasgiant.desc": "A colossal gas planet on the outer orbit of the primary world; its storms never cease.",
   "starmap.entry.sys1.rockymoon.name": "Rocky Moon",
-  "starmap.entry.sys1.rockymoon.desc": "A moon of the gas giant — barren rock with no life.",
+  "starmap.entry.sys1.rockymoon.desc": "A cratered, airless moon of the gas giant. Iron, gold and fuel-crystal seams drew mining outposts here — the crews are gone, but the claim markers still glow.",
   "starmap.entry.sys2.frozen.name": "Frozen World",
   "starmap.entry.sys2.frozen.desc": "An ice-locked world with frigid temperatures.",
   "starmap.type.gas_giant": "Gas Giant",
