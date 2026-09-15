@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.RockyMoonPlanet;
 import net.minecraft.client.Minecraft;
@@ -53,13 +54,6 @@ public class RockyMoonSkyRenderer
     private static final float GIANT_ORBIT_RADII = 7.0F;
     private static final float GIANT_SCALE =
             GIANT_DISTANCE / (GIANT_ORBIT_RADII * PlanetRenderer.PLANET_RADIUS);
-    /**
-     * Saturn's axial tilt applied to the whole body frame: the ring lies exactly
-     * on the giant's texture equator (its horizontal mid-axis) instead of an
-     * arbitrary separate tilt, and the tilt keeps the ring plane opened toward
-     * the viewer through the whole day cycle rather than disappearing edge-on.
-     */
-    private static final float GIANT_AXIAL_TILT_DEGREES = 26.7F;
     /** The giant's disk is a shade under the sun-side rock brightness. */
     private static final float GIANT_BRIGHTNESS = 0.95F;
 
@@ -136,21 +130,31 @@ public class RockyMoonSkyRenderer
         // The parent rides opposite the sun and shows a phase, exactly like the
         // overworld's Molten moon rides opposite the sun for Lush. The ring is
         // drawn in two passes around the disc (far half, disc, near half) so it
-        // reads as orbiting the body, same layering as the berth view. Planet
-        // and ring share one tilted body frame, so the ring sits exactly on the
-        // texture equator instead of leaning against the bands.
+        // reads as orbiting the body, same layering as the berth view.
+        //
+        // The ring and the sphere share one body frame (26.7-degree tilt + yaw),
+        // so the ring sits exactly on the texture equator rather than leaning
+        // against the bands. The frame goes into the two model matrices, never
+        // the pose: drawRingPass composes pose.last() (which already carries the
+        // -GIANT_DISTANCE translation), while drawPlanetSphere composes the
+        // global model-view and ignores the pose, and both bake only
+        // translation/scale — so a tilted pose would tilt one but not the other.
         float phaseAngle = (level.getMoonPhase() & 7) * (float) Math.PI / 4.0F;
         Vector3f sunLocal = new Vector3f((float) Math.cos(phaseAngle), 0.0F, (float) Math.sin(phaseAngle));
         pose.pushPose();
         pose.translate(0.0F, -GIANT_DISTANCE, 0.0F);
-        pose.mulPose(Axis.XP.rotationDegrees(GIANT_AXIAL_TILT_DEGREES));
-        // drawPlanetSphere lights the sphere in its local frame, so the sun
-        // direction has to cross the same tilt the geometry just went through.
+        Matrix4f body = PlanetRenderer.gasGiantBodyOrientation();
+        Matrix4f ringModel = new Matrix4f(body).scale(GIANT_SCALE);
+        Matrix4f sphereModel = new Matrix4f(pose.last().pose()).mul(body);
+        // drawPlanetSphere bakes light in the sphere's local frame, so the sun
+        // direction must cross the inverse body frame (Ry(-yaw)*Rx(-tilt))
+        // before the colour attribute is baked, or the terminator drifts as the
+        // yaw/tilt separate the lit pole from the ring plane.
         Vector3f sunInBodyFrame = new Vector3f(sunLocal)
-                .rotateX((float) Math.toRadians(-GIANT_AXIAL_TILT_DEGREES));
-        Matrix4f ringModel = new Matrix4f().scale(GIANT_SCALE);
+                .rotateX((float) Math.toRadians(-GasGiantGeometry.AXIAL_TILT_DEGREES))
+                .rotateY((float) Math.toRadians(-GasGiantGeometry.BODY_YAW_DEGREES));
         PlanetRenderer.drawRingPass(pose, ringModel, 1.0F, false);
-        PlanetRenderer.drawPlanetSphere(pose, pose.last().pose(), Planet.GAS_GIANT.texture(),
+        PlanetRenderer.drawPlanetSphere(pose, sphereModel, Planet.GAS_GIANT.texture(),
                 0.0F, 0.0F, 0.0F, GIANT_SCALE, sunInBodyFrame, GIANT_BRIGHTNESS, 1.0F);
         PlanetRenderer.drawRingPass(pose, ringModel, 1.0F, true);
         pose.popPose();

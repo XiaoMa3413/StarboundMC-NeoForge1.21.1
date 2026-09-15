@@ -23,6 +23,7 @@ import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
+import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.Planet;
 import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.starmap.StarSystem;
@@ -110,13 +111,13 @@ public class PlanetRenderer
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
     private static final Map<Planet, VertexBuffer> PLANET_SURFACE_BUFFERS = new EnumMap<>(Planet.class);
     private static final Map<Planet, Float> PLANET_SURFACE_TICKS = new EnumMap<>(Planet.class);
-    /** Ringed-body support: strip texture plus pre-oriented quad geometry (see buildGasGiantRings). */
+    /** Ringed-body support: strip texture plus equatorial quad geometry (see buildGasGiantRings). */
     private static final ResourceLocation GAS_GIANT_RING_TEXTURE =
             ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "textures/planet/gasgiant_ring.png");
     private static final int RING_SEGMENTS = 144;
     /** Real Saturn proportions: the main rings span ~1.24–2.27 planetary radii. */
-    private static final float RING_INNER = 1.24F;
-    private static final float RING_OUTER = 2.27F;
+    private static final float RING_INNER = GasGiantGeometry.RING_INNER_RADII;
+    private static final float RING_OUTER = GasGiantGeometry.RING_OUTER_RADII;
     private static final float RING_ALPHA = 0.90F;
     /** The strip texture supplies the colour; only a faint warm lift on top. */
     private static final float RING_TINT_R = 1.00F;
@@ -164,7 +165,8 @@ public class PlanetRenderer
         // orientation, so the band reads exactly along the ring plane and the
         // ellipse stays open from the berth and the rocky moon alike. The rocky
         // moon is tumbled so its crater field never looks like a flat decal.
-        BODY_ORIENTATION.put(Planet.GAS_GIANT, new Vector3f(26.7F, 40.0F, 0.0F));
+        BODY_ORIENTATION.put(Planet.GAS_GIANT, new Vector3f(
+                GasGiantGeometry.AXIAL_TILT_DEGREES, GasGiantGeometry.BODY_YAW_DEGREES, 0.0F));
         BODY_ORIENTATION.put(Planet.ROCKY_MOON, new Vector3f(8.0F, 160.0F, 0.0F));
 
         for (Planet planet : Planet.values())
@@ -190,20 +192,16 @@ public class PlanetRenderer
     }
 
     /**
-     * Bakes the gas giant's ring as oriented quads in the same body-local frame
-     * as the surface sphere, so a single tilt/roll drives both. The strip texture
+     * Bakes the gas giant's ring as quads in the body-local <b>equatorial</b>
+     * plane (x/z, pole on +y). The ring is deliberately left un-oriented:
+     * every caller composes its own body frame into the model matrix, exactly
+     * as it already does for the sphere. That is what keeps the ring glued to
+     * the band texture's equator from the ship berth <i>and</i> from the rocky
+     * moon's sky, which run different body-frame transforms. The strip texture
      * supplies per-radius alpha; the far/near split is resolved at draw time.
      */
     private static void buildGasGiantRings()
     {
-        Vector3f orientation = BODY_ORIENTATION.get(Planet.GAS_GIANT);
-        float yaw = (float) Math.toRadians(orientation.y);
-        float pitch = (float) Math.toRadians(orientation.x);
-        float yawCos = (float) Math.cos(yaw);
-        float yawSin = (float) Math.sin(yaw);
-        float pitchCos = (float) Math.cos(pitch);
-        float pitchSin = (float) Math.sin(pitch);
-
         for (int seg = 0; seg < RING_SEGMENTS; seg++)
         {
             double a0 = Math.PI * 2.0 * seg / RING_SEGMENTS;
@@ -218,28 +216,31 @@ public class PlanetRenderer
                 float angleCos = (corner <= 1) ? cos0 : cos1;
                 float angleSin = (corner <= 1) ? sin0 : sin1;
                 float u = (corner == 1 || corner == 2) ? 1.0F : 0.0F;
-                // Untilted ring lies in the equatorial (x/z) plane.
-                float lx = angleCos * radius * PLANET_RADIUS;
-                float ly = 0.0F;
-                float lz = angleSin * radius * PLANET_RADIUS;
-                float yawX = lx * yawCos + lz * yawSin;
-                float yawZ = -lx * yawSin + lz * yawCos;
-                float outX = yawX;
-                float outY = ly * pitchCos - yawZ * pitchSin;
-                float outZ = ly * pitchSin + yawZ * pitchCos;
                 int idx = seg * 4 + corner;
-                RING_VX[idx] = outX;
-                RING_VY[idx] = outY;
-                RING_VZ[idx] = outZ;
+                RING_VX[idx] = angleCos * radius * PLANET_RADIUS;
+                RING_VY[idx] = 0.0F;
+                RING_VZ[idx] = angleSin * radius * PLANET_RADIUS;
                 RING_VU[idx] = u;
             }
             RING_MID_X[seg] = 0.25F * (RING_VX[seg * 4] + RING_VX[seg * 4 + 1]
                     + RING_VX[seg * 4 + 2] + RING_VX[seg * 4 + 3]);
-            RING_MID_Y[seg] = 0.25F * (RING_VY[seg * 4] + RING_VY[seg * 4 + 1]
-                    + RING_VY[seg * 4 + 2] + RING_VY[seg * 4 + 3]);
+            RING_MID_Y[seg] = 0.0F;
             RING_MID_Z[seg] = 0.25F * (RING_VZ[seg * 4] + RING_VZ[seg * 4 + 1]
                     + RING_VZ[seg * 4 + 2] + RING_VZ[seg * 4 + 3]);
         }
+    }
+
+    /**
+     * The gas giant's shared body frame: the surface bake applies yaw about Y
+     * first and the 26.7-degree axial tilt about X second, so this composes as
+     * {@code Rx(tilt) * Ry(yaw)}. The sphere bake and the ring both go through
+     * it, so the band texture's equator and the ring plane can never separate.
+     */
+    static Matrix4f gasGiantBodyOrientation()
+    {
+        return new Matrix4f()
+                .rotateX((float) Math.toRadians(GasGiantGeometry.AXIAL_TILT_DEGREES))
+                .rotateY((float) Math.toRadians(GasGiantGeometry.BODY_YAW_DEGREES));
     }
 
     private static int pointColor(Planet planet)
@@ -1095,11 +1096,14 @@ public class PlanetRenderer
                                         float scale, float shipYaw, float shipPitch,
                                         float alpha, boolean nearPass)
     {
-        // Match the disk's orientation-minus-spin so ring and surface tilt together.
+        // Match the disk's orientation-minus-spin so ring and surface tilt
+        // together: the baked ring is equatorial, so the body frame has to be
+        // composed here, before the ship-view rotation.
         Matrix4f model = new Matrix4f()
                 .translate(cx, cy, cz)
                 .rotateX((float) Math.toRadians(-shipPitch))
                 .rotateY((float) Math.toRadians(-shipYaw))
+                .mul(gasGiantBodyOrientation())
                 .scale(scale);
         drawRingPass(pose, model, alpha, nearPass);
     }

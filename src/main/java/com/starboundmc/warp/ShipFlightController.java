@@ -2,6 +2,7 @@ package com.starboundmc.warp;
 
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.Planet;
 import net.minecraft.world.phys.Vec3;
 
@@ -236,6 +237,9 @@ public final class ShipFlightController
     private static final double KEEP_OUT_FACTOR = 1.45;
     private static final int ARC_POINTS = 48;
     private static final Map<Integer, FlightRoute> ROUTES = new ConcurrentHashMap<>();
+    /** Max corridor-segment length near the giant's disc before subdivision. */
+    private static final double MAX_DENSIFY_STEP = 2.0;
+    private static final int MAX_DENSIFY_STEPS = 400;
 
     /** Dense deterministic polyline (vertices + cumulative 2D arc-length). */
     private static final class FlightRoute
@@ -336,6 +340,10 @@ public final class ShipFlightController
             poly = peel(poly, frame.toRelative(ShipSpace.universeBodyPosition(body)),
                     ShipSpace.radius(body) * KEEP_OUT_FACTOR);
         poly = smoothPolyline(poly);
+        // Long routes are only a couple of dozen vertices, so a segment can jump
+        // clean across the giant's ring disc between two samples; densify the
+        // corridor there first so the ring lift below has points to act on.
+        poly = densifyNearGasGiant(frame, poly);
 
         // Densify into a cumulative-arc-length polyline; y follows along by arc-length.
         int count = poly.size();
@@ -354,7 +362,140 @@ public final class ShipFlightController
             Vec3 p = poly.get(i);
             pts[i] = new Vec3(p.x, y, p.z);
         }
+        liftRouteOverGasGiantRings(frame, pts, cum, total);
         return new FlightRoute(frame, ShipSpace.universeDock(to), pts, cum, total);
+    }
+
+    /**
+     * Subdivides any corridor segment that reaches the gas giant's ring disc so
+     * the ring lift has a dense polyline to work with. Adds vertices only (the
+     * subdivisions are collinear), so cumulative arc length and therefore every
+     * route duration are unchanged.
+     */
+    private static List<Vec3> densifyNearGasGiant(UniverseRouteFrame frame, List<Vec3> poly)
+    {
+        Planet giant = Planet.GAS_GIANT;
+        Vec3 center = frame.toRelative(ShipSpace.universeBodyPosition(giant));
+        double reach = GasGiantGeometry.ringOuterDistance(ShipSpace.radius(giant))
+                + ShipSpace.radius(giant) * 0.5;
+        if (!segmentCouldReachDisc(poly, center, reach))
+            return poly;
+
+        List<Vec3> out = new ArrayList<>();
+        for (int i = 0; i < poly.size() - 1; i++)
+        {
+            Vec3 p = poly.get(i);
+            Vec3 q = poly.get(i + 1);
+            out.add(p);
+            double segmentLength = p.distanceTo(q);
+            if (segmentLength > MAX_DENSIFY_STEP
+                    && (distXY(center, p) <= reach || distXY(center, q) <= reach
+                        || segmentWithinDisc(p, q, center, reach)))
+            {
+                int steps = Math.min(MAX_DENSIFY_STEPS, (int) Math.ceil(segmentLength / MAX_DENSIFY_STEP));
+                for (int k = 1; k < steps; k++)
+                    out.add(p.lerp(q, k / (double) steps));
+            }
+        }
+        out.add(poly.get(poly.size() - 1));
+        return out;
+    }
+
+    /** Cheap pre-check: does any segment pass near the disc? */
+    private static boolean segmentCouldReachDisc(List<Vec3> poly, Vec3 center, double reach)
+    {
+        for (int i = 0; i < poly.size() - 1; i++)
+        {
+            if (distXY(center, poly.get(i)) <= reach
+                    || segmentWithinDisc(poly.get(i), poly.get(i + 1), center, reach))
+                return true;
+        }
+        return false;
+    }
+
+    /** Whether the segment's closest planar approach to the centre is inside the reach. */
+    private static boolean segmentWithinDisc(Vec3 p, Vec3 q, Vec3 center, double reach)
+    {
+        double px = p.x - center.x, pz = p.z - center.z;
+        double dx = q.x - p.x, dz = q.z - p.z;
+        double l2 = dx * dx + dz * dz;
+        double t = l2 <= 1e-12 ? 0 : clamp01(-(px * dx + pz * dz) / l2);
+        double ex = px + dx * t, ez = pz + dz * t;
+        return ex * ex + ez * ez <= reach * reach;
+    }
+
+    /**
+     * Lifts the corridor's mid-section out of the gas giant's ring plane. The
+     * route planner works in the XZ plane, so a route that crosses the ring's
+     * XZ footprint (which every giant berth route does — the giant's own dock
+     * sits inside the band at ~1.6 radii) passes straight through the annulus.
+     * A single smooth hump, sized to the worst crossing, raises the path onto
+     * one side of the plane; the hump tapers to zero over a margin band outside
+     * the disc and is exactly zero at both docks, so endpoints never move.
+     *
+     * <p>All coordinates here live in the route frame's relative space, like
+     * {@link #peel}; plane offsets are translation-invariant, so the side test
+     * still reads the same authored dock geometry.</p>
+     */
+    private static void liftRouteOverGasGiantRings(UniverseRouteFrame frame, Vec3[] pts,
+                                                   double[] cum, double total)
+    {
+        if (total <= 0.0 || pts.length < 2)
+            return;
+        Planet giant = Planet.GAS_GIANT;
+        Vec3 center = frame.toRelative(ShipSpace.universeBodyPosition(giant));
+        double radius = ShipSpace.radius(giant);
+        Vec3 normal = GasGiantGeometry.ringPlaneNormal();
+        if (Math.abs(normal.y) < 1.0e-6)
+            return;
+        double inner = GasGiantGeometry.ringInnerDistance(radius);
+        double outer = GasGiantGeometry.ringOuterDistance(radius);
+        double margin = radius * 0.5;
+
+        // The hump always lifts to the side the giant's dock already leans
+        // toward, so the ship dives under or climbs over instead of threading
+        // through a knife-edge crossing. Plane offset is translation-invariant,
+        // so the world-space dock test matches the relative-space points.
+        double departureOffset = GasGiantGeometry.planeOffset(
+                ShipSpace.vDock(giant), ShipSpace.qPos(giant));
+        double side = departureOffset < 0.0 ? -1.0 : 1.0;
+        double desiredOffset = side * radius * 0.35;
+
+        // Worst required lift over points actually inside the disc; the taper
+        // lives outside the disc so every crossing point reaches full height.
+        // The lift is signed: a negative side dives below the plane.
+        double peak = 0.0;
+        double sStart = Double.MAX_VALUE;
+        double sEnd = -Double.MAX_VALUE;
+        for (int i = 0; i < pts.length; i++)
+        {
+            double planar = GasGiantGeometry.planarRadius(pts[i], center);
+            if (planar < inner - margin || planar > outer + margin)
+                continue;
+            sStart = Math.min(sStart, cum[i]);
+            sEnd = Math.max(sEnd, cum[i]);
+            if (planar < inner || planar > outer)
+                continue;
+            double offset = GasGiantGeometry.planeOffset(pts[i], center);
+            double needed = (desiredOffset - offset) / normal.y;
+            if (Math.abs(needed) > Math.abs(peak))
+                peak = needed;
+        }
+        if (Math.abs(peak) <= 0.001 || sEnd <= sStart)
+            return;
+
+        double ramp = Math.max(6.0, (sEnd - sStart) * 0.35);
+        for (int i = 0; i < pts.length; i++)
+        {
+            double s = cum[i];
+            double rise = clamp01((s - sStart) / ramp);
+            double fall = clamp01((sEnd - s) / ramp);
+            double bump = smoother(rise) * smoother(fall);
+            if (bump <= 0.0)
+                continue;
+            Vec3 p = pts[i];
+            pts[i] = new Vec3(p.x, p.y + peak * bump, p.z);
+        }
     }
 
     /**
