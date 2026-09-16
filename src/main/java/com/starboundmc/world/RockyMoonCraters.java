@@ -5,9 +5,18 @@ package com.starboundmc.world;
  *
  * <p>The moon's biomes are named "craters" and "wastes", but the terrain was
  * only retextured noise. This adds the missing landform: a deterministic field
- * of overlapping impact bowls with raised rims and soft ejecta blankets, built
- * on a jittered lattice so the whole surface is scoured without any single
- * crater being tied to a chunk seed.
+ * of impact bowls with raised rims and soft ejecta blankets, built on a
+ * jittered lattice so no crater is tied to a chunk seed.
+ *
+ * <p>As configured: 62% of 56-block cells seed a crater with radii 7-26, so the
+ * field deforms about 22% of the surface and roughly four fifths of columns lie
+ * outside every crater. The bowls are therefore <em>discrete scattered</em>
+ * landforms rather than a continuously bombarded crust. That is intentional and
+ * not what makes the surface read as broken up — {@link RockyMoonRelief}
+ * supplies the unconditional background undulation, and it was the absence of
+ * that which left featureless gravel plains. This field's job is the
+ * recognisable craters, so it stays sparse enough for each bowl to read as a
+ * crater rather than dissolving into a general roughness.</p>
  *
  * <p>{@link #deformation} is a pure function of world X/Z: the surface height
  * offset in blocks (negative inside a bowl, small positive on a rim). Because

@@ -81,6 +81,32 @@ public final class RockyMoonLandingPlain
     }
 
     /**
+     * How much of the crater-and-relief shaping a column should keep, so the
+     * plain joins the surrounding rough terrain instead of ending in a wall.
+     *
+     * <p>Zero across the flat core, smoothstepping to one at the skirt's outer
+     * edge — the same blend {@link #targetY} uses. Landform shaping multiplied
+     * by this fades out as the plain is approached, so the bench is reached
+     * without a step. Without it every landform would be switched off at the
+     * plain boundary and the difference would show up as a ring of cliffs
+     * exactly where the flat ends.</p>
+     */
+    public static double shapeFade(int x, int z)
+    {
+        double dx = x - RockyMoonPlanet.DEFAULT_SPAWN.getX();
+        double dz = z - RockyMoonPlanet.DEFAULT_SPAWN.getZ();
+        double dist = Math.sqrt(dx * dx + dz * dz);
+        double factor = radiusFactor(dx, dz);
+        double edge = EDGE_RADIUS * factor;
+        if (dist >= edge)
+            return 1.0;
+        double flat = FLAT_RADIUS * factor;
+        if (dist <= flat)
+            return 0.0;
+        return smoothstep((dist - flat) / (edge - flat));
+    }
+
+    /**
      * Plain surface cover: gravel-dominant with a light stone speckle so it
      * reads as natural regolith instead of a uniform carpet.
      */

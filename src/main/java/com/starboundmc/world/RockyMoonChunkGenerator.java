@@ -3,12 +3,18 @@ package com.starboundmc.world;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -17,7 +23,11 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Rocky Moon terrain generator: the overworld noise skeleton, then a surface
@@ -49,8 +59,26 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
     private static final BlockState GRAVEL = Blocks.GRAVEL.defaultBlockState();
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
+    /**
+     * Bounds on the combined relief-plus-crater offset, so a column is never
+     * filled or carved further than this per pass.
+     */
+    private static final int MIN_SHAPE_DELTA = -20;
+    private static final int MAX_SHAPE_DELTA = 16;
+
     /** Lazily sampled natural surface average around the landing point. */
     private int landingBenchY = Integer.MIN_VALUE;
+
+    /**
+     * Pad height chosen by {@link #levelOutpostPads} for a chunk, consumed by
+     * {@link #placeOutposts}. Those two passes run in different chunk-generation
+     * steps — NOISE and SURFACE, i.e. on either side of the vanilla surface rule
+     * — so they cannot share a local, and re-deriving the height after the rule
+     * ran risks stamping the structure off the pad it is supposed to stand on.
+     * Entries are removed on consumption, so this stays bounded by the number of
+     * chunks generating concurrently.
+     */
+    private final Map<Long, Integer> padHeights = new ConcurrentHashMap<>();
 
     public static final MapCodec<RockyMoonChunkGenerator> CODEC = RecordCodecBuilder.mapCodec(instance ->
             instance.group(
@@ -82,7 +110,8 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
         }
         return super.fillFromNoise(blender, randomState, structureManager, chunk)
                 .thenApply(RockyMoonChunkGenerator::dryOutWater)
-                .thenApply(this::applyCraters)
+                .thenApply(RockyMoonChunkGenerator::primeWorldGenHeightmaps)
+                .thenApply(this::applySurfaceShape)
                 .thenApply(this::flattenLandingPlain)
                 .thenApply(this::levelOutpostPads);
     }
@@ -136,13 +165,39 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
     }
 
     /**
+     * Recomputes the {@code _WG} heightmaps from the blocks actually present.
+     * {@link #dryOutWater} writes through the section container, which has no
+     * knowledge of heightmaps, and it removes non-air water — so
+     * {@code WORLD_SURFACE_WG} (topmost <em>non-air</em>) keeps over-reporting
+     * on every dried column. The surface rule reads that map to find its anchor,
+     * and {@code SurfaceRules.SteepMaterialCondition} reads it too, so it is
+     * re-primed here rather than left stale.
+     */
+    private static ChunkAccess primeWorldGenHeightmaps(ChunkAccess chunk)
+    {
+        Heightmap.primeHeightmaps(chunk, EnumSet.of(
+                Heightmap.Types.OCEAN_FLOOR_WG, Heightmap.Types.WORLD_SURFACE_WG));
+        return chunk;
+    }
+
+    /**
      * Lowers bowls and raises rims of the impact-crater field. Columns inside
      * the landing plain are skipped so the plain stays flat; runs before the
      * plain and pad levelling, which then win wherever they apply.
      */
-    private ChunkAccess applyCraters(ChunkAccess chunk)
+    /**
+     * Applies the moon's surface shape: baseline relief everywhere
+     * ({@link RockyMoonRelief}) plus the crater field on top
+     * ({@link RockyMoonCraters}).
+     *
+     * <p>Both are scaled by {@link RockyMoonLandingPlain#shapeFade}, which is
+     * zero across the landing plain's flat core and one past its skirt, so the
+     * bench is reached without a step. Fading rather than skipping matters: a
+     * hard cut would leave the full landform switched on one block outside the
+     * plain and off one block inside, i.e. a ring of cliffs around the flat.</p>
+     */
+    private ChunkAccess applySurfaceShape(ChunkAccess chunk)
     {
-        LevelChunkSection[] sections = chunk.getSections();
         int baseX = chunk.getPos().getMinBlockX();
         int baseZ = chunk.getPos().getMinBlockZ();
         for (int x = 0; x < 16; x++)
@@ -151,16 +206,30 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
             {
                 int wx = baseX + x;
                 int wz = baseZ + z;
-                if (RockyMoonLandingPlain.inPlain(wx, wz))
+                double fade = RockyMoonLandingPlain.shapeFade(wx, wz);
+                if (fade <= 0.0)
                     continue;
-                int delta = RockyMoonCraters.deformation(wx, wz);
+                int delta = shapeDelta(wx, wz, fade);
                 if (delta == 0)
                     continue;
-                int naturalY = topSolidY(sections, x, z);
+                int naturalY = topSolidY(chunk, x, z);
                 shapeColumn(chunk, wx, wz, naturalY, naturalY + delta);
             }
         }
         return chunk;
+    }
+
+    /**
+     * The fading relief-plus-crater offset for a column, clamped. Shared with
+     * {@link #stripOrganicCrust} so the surface material is chosen from the same
+     * landform the shape pass applied — otherwise a shallow relief dip would be
+     * painted as a crater bowl floor.
+     */
+    private static int shapeDelta(int wx, int wz, double fade)
+    {
+        double shaped = fade * (RockyMoonRelief.offset(wx, wz)
+                + RockyMoonCraters.deformation(wx, wz));
+        return Math.max(MIN_SHAPE_DELTA, Math.min(MAX_SHAPE_DELTA, (int) Math.round(shaped)));
     }
 
     /**
@@ -186,15 +255,18 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 {
                     int wx = baseX + x;
                     int wz = baseZ + z;
-                    int crater = RockyMoonLandingPlain.inPlain(wx, wz)
-                            ? 0 : RockyMoonCraters.deformation(wx, wz);
+                    boolean onPlain = RockyMoonLandingPlain.inPlain(wx, wz);
+                    // Same landform the shape pass applied, so a bowl floor is
+                    // recognised as a bowl floor and a relief dip is not.
+                    int shape = onPlain ? 0
+                            : shapeDelta(wx, wz, RockyMoonLandingPlain.shapeFade(wx, wz));
                     boolean gravel;
-                    if (RockyMoonLandingPlain.inPlain(wx, wz))
+                    if (onPlain)
                         gravel = RockyMoonLandingPlain.surfaceIsGravel(wx, wz);
-                    else if (crater < 0)
+                    else if (shape < 0)
                         gravel = false; // bowl floor: exposed bedrock-grey stone
-                    else if (crater > 0)
-                        gravel = true; // rim/ejecta: loose debris
+                    else if (shape > 0)
+                        gravel = true; // rim/ejecta and raised relief: loose debris
                     else
                         gravel = isGravelPatch(wx, wz);
                     for (int y = 0; y < 16; y++)
@@ -231,7 +303,6 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
         if (!RockyMoonLandingPlain.inPlain(closestX, closestZ))
             return chunk;
 
-        LevelChunkSection[] sections = chunk.getSections();
         for (int x = 0; x < 16; x++)
         {
             for (int z = 0; z < 16; z++)
@@ -240,7 +311,7 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 int wz = baseZ + z;
                 if (!RockyMoonLandingPlain.inPlain(wx, wz))
                     continue;
-                int naturalY = topSolidY(sections, x, z);
+                int naturalY = topSolidY(chunk, x, z);
                 int targetY = RockyMoonLandingPlain.targetY(wx, wz, naturalY, this.landingBenchY);
                 shapeColumn(chunk, wx, wz, naturalY, targetY);
             }
@@ -259,13 +330,11 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
         if (structure == null)
             return chunk;
         int[] center = outpostCenter(chunk, structure);
-        if (!structure.id().equals(spawnStructureId()) && footprintTouchesPlain(
-                center[0], center[1], structure.halfX(), structure.halfZ()))
+        if (overlapsLandingPlain(structure, center))
             return chunk;
 
         int padY = averageSurfaceY(chunk, center[0], center[1],
                 structure.halfX(), structure.halfZ());
-        LevelChunkSection[] sections = chunk.getSections();
         int baseX = chunk.getPos().getMinBlockX();
         int baseZ = chunk.getPos().getMinBlockZ();
         for (int x = 0; x < 16; x++)
@@ -277,9 +346,10 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 if (Math.abs(wx - center[0]) > structure.halfX()
                         || Math.abs(wz - center[1]) > structure.halfZ())
                     continue;
-                shapeColumn(chunk, wx, wz, topSolidY(sections, x, z), padY);
+                shapeColumn(chunk, wx, wz, topSolidY(chunk, x, z), padY);
             }
         }
+        padHeights.put(chunk.getPos().toLong(), padY);
         return chunk;
     }
 
@@ -290,12 +360,10 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
         if (structure == null)
             return;
         int[] center = outpostCenter(chunk, structure);
-        if (!structure.id().equals(spawnStructureId()) && footprintTouchesPlain(
-                center[0], center[1], structure.halfX(), structure.halfZ()))
+        if (overlapsLandingPlain(structure, center))
             return;
 
-        int padY = averageSurfaceY(chunk, center[0], center[1],
-                structure.halfX(), structure.halfZ());
+        int padY = padHeightFor(chunk, structure, center);
         // Clear the volume the layout occupies so natural terrain never pokes
         // through a roof or fills an interior.
         int minX = center[0] - structure.halfX();
@@ -309,18 +377,116 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
 
         for (RockyMoonOutposts.Block block : structure.blocks())
         {
-            BlockState state = outpostState(block.kind());
-            chunk.setBlockState(BlockPos.containing(
-                    center[0] + block.x(), padY + block.y(), center[1] + block.z()), state, false);
+            BlockPos pos = BlockPos.containing(
+                    center[0] + block.x(), padY + block.y(), center[1] + block.z());
+            if (block.kind() == RockyMoonOutposts.Kind.DOOR)
+            {
+                placeAirlock(chunk, pos, block);
+                continue;
+            }
+            // Devices are oriented toward the pad centre so a furnace or crate
+            // never ends up facing into a wall.
+            BlockState state = orientTowardCenter(outpostState(block.kind()), pos, center[0], center[1]);
+            chunk.setBlockState(pos, state, false);
+            if (block.kind() == RockyMoonOutposts.Kind.CRATE_LOOT)
+            {
+                // Deferred deserialization: worldgen has no registry access yet,
+                // so hand the tag to the chunk and let promotion load it.
+                chunk.setBlockEntityNbt(lootTag(pos, structure.loot()));
+            }
+            else if (state.getBlock() instanceof EntityBlock entityBlock)
+            {
+                BlockEntity entity = entityBlock.newBlockEntity(pos, state);
+                if (entity != null)
+                    chunk.setBlockEntity(entity);
+            }
         }
     }
 
-    /** The outpost for this chunk: the fixed beacon at spawn, else the hash roll. */
+    /**
+     * Places a sealed three-block airlock. {@code ShipDoor.setOpen} cascades to
+     * the position above and below, so all three blocks must exist or the hull
+     * has a gap.
+     */
+    private static void placeAirlock(ChunkAccess chunk, BlockPos base,
+                                     RockyMoonOutposts.Block marker)
+    {
+        Direction facing = doorFacing(marker);
+        BlockState state = outpostState(RockyMoonOutposts.Kind.DOOR)
+                .setValue(BlockStateProperties.HORIZONTAL_FACING, facing);
+        for (int i = 0; i < 3; i++)
+        {
+            BlockPos pos = base.above(i);
+            chunk.setBlockState(pos, state, false);
+            if (state.getBlock() instanceof EntityBlock entityBlock)
+            {
+                BlockEntity entity = entityBlock.newBlockEntity(pos, state);
+                if (entity != null)
+                    chunk.setBlockEntity(entity);
+            }
+        }
+    }
+
+    /** A doorway sits on a wall, so its outward normal is the larger offset axis. */
+    private static Direction doorFacing(RockyMoonOutposts.Block marker)
+    {
+        if (Math.abs(marker.z()) >= Math.abs(marker.x()))
+            return marker.z() >= 0 ? Direction.SOUTH : Direction.NORTH;
+        return marker.x() >= 0 ? Direction.EAST : Direction.WEST;
+    }
+
+    /** Points any horizontal-facing block at the pad centre; others pass through. */
+    private static BlockState orientTowardCenter(BlockState state, BlockPos pos,
+                                                 int centerX, int centerZ)
+    {
+        if (!state.hasProperty(BlockStateProperties.HORIZONTAL_FACING))
+            return state;
+        int dx = centerX - pos.getX();
+        int dz = centerZ - pos.getZ();
+        Direction facing;
+        if (dx == 0 && dz == 0)
+            facing = Direction.NORTH;
+        else if (Math.abs(dx) >= Math.abs(dz))
+            facing = dx > 0 ? Direction.EAST : Direction.WEST;
+        else
+            facing = dz > 0 ? Direction.SOUTH : Direction.NORTH;
+        return state.setValue(BlockStateProperties.HORIZONTAL_FACING, facing);
+    }
+
+    /**
+     * Block-entity tag for a loot crate. Built from plain item ids, so worldgen
+     * needs no registry access; carrier position is required because
+     * {@code ChunkAccess.setBlockEntityNbt} indexes the pending map by it.
+     */
+    private static CompoundTag lootTag(BlockPos pos, List<RockyMoonOutposts.Loot> loot)
+    {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("x", pos.getX());
+        tag.putInt("y", pos.getY());
+        tag.putInt("z", pos.getZ());
+        ListTag items = new ListTag();
+        for (RockyMoonOutposts.Loot entry : loot)
+        {
+            CompoundTag stack = new CompoundTag();
+            stack.putByte("Slot", (byte) entry.slot());
+            stack.putString("id", entry.item());
+            stack.putInt("count", entry.count());
+            items.add(stack);
+        }
+        tag.put("Items", items);
+        return tag;
+    }
+
+    /** The outpost for this chunk: the fixed beacon at spawn, then cluster, then hash roll. */
     private RockyMoonOutposts.Structure outpostAt(ChunkAccess chunk)
     {
         if (chunk.getPos().equals(new net.minecraft.world.level.ChunkPos(
                 RockyMoonPlanet.DEFAULT_SPAWN)))
             return RockyMoonOutposts.spawnBeacon();
+        RockyMoonOutposts.Structure cluster = RockyMoonOutposts.clusterAt(
+                chunk.getPos().x, chunk.getPos().z);
+        if (cluster != null)
+            return cluster;
         return RockyMoonOutposts.forChunk(chunk.getPos().x, chunk.getPos().z);
     }
 
@@ -339,6 +505,19 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 chunk.getPos().getMinBlockZ() + 8 + jitter };
     }
 
+    /**
+     * Whether a layout must be skipped because it would clip the teleporter's
+     * flat landing plain. The spawn beacon sits on the plain by design, and the
+     * authored cluster is placed outside the flat core so the descent stays
+     * level; both are exempt. Wilderness outposts keep clear of the plain.
+     */
+    private static boolean overlapsLandingPlain(RockyMoonOutposts.Structure structure, int[] center)
+    {
+        if (structure.id().equals(spawnStructureId()) || structure.isCluster())
+            return false;
+        return footprintTouchesPlain(center[0], center[1], structure.halfX(), structure.halfZ());
+    }
+
     private static boolean footprintTouchesPlain(int centerX, int centerZ, int halfX, int halfZ)
     {
         return RockyMoonLandingPlain.inPlain(centerX, centerZ)
@@ -348,10 +527,23 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 || RockyMoonLandingPlain.inPlain(centerX, centerZ + halfZ);
     }
 
+    /**
+     * The pad height {@link #levelOutpostPads} levelled this chunk's footprint
+     * to. Normally that is the value handed over via {@link #padHeights}; the
+     * recompute is only a fallback for a chunk that reaches this pass without
+     * having gone through the levelling pass.
+     */
+    private int padHeightFor(ChunkAccess chunk, RockyMoonOutposts.Structure structure, int[] center)
+    {
+        Integer levelled = padHeights.remove(chunk.getPos().toLong());
+        if (levelled != null)
+            return levelled;
+        return averageSurfaceY(chunk, center[0], center[1], structure.halfX(), structure.halfZ());
+    }
+
     private static int averageSurfaceY(ChunkAccess chunk, int centerX, int centerZ,
                                        int halfX, int halfZ)
     {
-        LevelChunkSection[] sections = chunk.getSections();
         int baseX = chunk.getPos().getMinBlockX();
         int baseZ = chunk.getPos().getMinBlockZ();
         long sum = 0;
@@ -364,29 +556,29 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
                 int z = wz - baseZ;
                 if (x < 0 || x > 15 || z < 0 || z > 15)
                     continue;
-                sum += topSolidY(sections, x, z);
+                sum += topSolidY(chunk, x, z);
                 count++;
             }
         }
-        return count == 0 ? RockyMoonPlanet.DEFAULT_SPAWN.getY() : (int) Math.round(sum / (double) count);
+        return count == 0 ? chunk.getMinBuildHeight() : (int) Math.round(sum / (double) count);
     }
 
     private static BlockState outpostState(RockyMoonOutposts.Kind kind)
     {
         return switch (kind)
         {
-            case IRON -> Blocks.IRON_BLOCK.defaultBlockState();
-            case BRICK -> Blocks.STONE_BRICKS.defaultBlockState();
-            case CRACKED -> Blocks.CRACKED_STONE_BRICKS.defaultBlockState();
-            case COBBLE -> Blocks.COBBLESTONE.defaultBlockState();
-            case DEEPSLATE -> Blocks.DEEPSLATE_TILES.defaultBlockState();
-            case GLASS_PANE -> Blocks.GLASS_PANE.defaultBlockState();
-            case IRON_BARS -> Blocks.IRON_BARS.defaultBlockState();
-            case ANVIL -> Blocks.ANVIL.defaultBlockState();
-            case CAULDRON -> Blocks.CAULDRON.defaultBlockState();
-            case CRAFTING -> Blocks.CRAFTING_TABLE.defaultBlockState();
+            case HULL -> com.starboundmc.block.ModBlocks.HULL_PLATING.get().defaultBlockState();
+            case REINFORCED -> com.starboundmc.block.ModBlocks.REINFORCED_HULL.get().defaultBlockState();
+            case WINDOW -> com.starboundmc.block.ModBlocks.HULL_WINDOW.get().defaultBlockState();
+            case LIGHT -> com.starboundmc.block.ModBlocks.INDUSTRIAL_LIGHT.get().defaultBlockState();
+            case HAZARD -> com.starboundmc.block.ModBlocks.HULL_HAZARD.get().defaultBlockState();
+            case GRATE -> com.starboundmc.block.ModBlocks.HULL_GRATE.get().defaultBlockState();
+            case DOOR -> com.starboundmc.block.ModBlocks.SHIP_DOOR.get().defaultBlockState();
+            case CRATE, CRATE_LOOT -> com.starboundmc.block.ModBlocks.SHIP_CRATE.get().defaultBlockState();
+            case FURNACE -> com.starboundmc.block.ModBlocks.TITANIUM_ALLOY_FURNACE.get().defaultBlockState();
+            case REFINERY -> com.starboundmc.block.ModBlocks.VOXEL_REFINERY.get().defaultBlockState();
+            case BEACON -> com.starboundmc.block.ModBlocks.BEACON_EMITTER.get().defaultBlockState();
             case CRYSTAL -> com.starboundmc.block.ModBlocks.FUEL_CRYSTAL_ORE.get().defaultBlockState();
-            case ENGINE -> com.starboundmc.block.ModBlocks.SHIP_ENGINE.get().defaultBlockState();
         };
     }
 
@@ -426,9 +618,19 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
         }
     }
 
-    /** Highest non-air block of a column, or the world bottom when all air. */
-    private static int topSolidY(LevelChunkSection[] sections, int x, int z)
+    /**
+     * Highest non-air block of a column, or the world bottom when all air.
+     *
+     * <p>The loop walks the section array, so the offset of the array's bottom
+     * element has to be added back before the result means anything as a world
+     * Y — see {@link ChunkSectionGeometry}. Omitting it shifts every height by
+     * the dimension's {@code minBuildHeight} (-64 here), which silently moves
+     * every crater, pad and outpost.</p>
+     */
+    private static int topSolidY(ChunkAccess chunk, int x, int z)
     {
+        LevelChunkSection[] sections = chunk.getSections();
+        int minSection = chunk.getMinSection();
         for (int si = sections.length - 1; si >= 0; si--)
         {
             LevelChunkSection section = sections[si];
@@ -437,10 +639,10 @@ public class RockyMoonChunkGenerator extends NoiseBasedChunkGenerator
             for (int y = 15; y >= 0; y--)
             {
                 if (!section.getBlockState(x, y, z).isAir())
-                    return si * 16 + y;
+                    return ChunkSectionGeometry.blockY(minSection, si, y);
             }
         }
-        return 0;
+        return chunk.getMinBuildHeight();
     }
 
     /**
