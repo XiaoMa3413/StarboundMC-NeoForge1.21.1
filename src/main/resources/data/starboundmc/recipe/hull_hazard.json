@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " P ",
+    "PYP",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "starboundmc:hull_plating"
+    },
+    "Y": {
+      "item": "minecraft:yellow_dye"
+    }
+  },
+  "result": {
+    "id": "starboundmc:hull_hazard",
+    "count": 2
+  }
+}

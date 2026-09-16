@@ -18,7 +18,8 @@ final class Stage1RegistrationIdsTest {
                 "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
                 "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
                 "starmap_terminal", "ship_ai_terminal", "voxel_refinery", "voxel_printing_station",
-                "ship_engine_unit", "fuel_crystal_ore"
+                "ship_engine_unit", "fuel_crystal_ore", "hull_plating", "reinforced_hull",
+                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter"
         ));
     }
 
@@ -41,7 +42,8 @@ final class Stage1RegistrationIdsTest {
                 "durasteel_ingot", "star_core_fragment", "ship_ai_terminal",
                 "emergency_food_can", "survival_knife", "voxel", "voxel_refinery",
                 "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
-                "fuel_crystal_ore", "fuel_crystal"
+                "fuel_crystal_ore", "fuel_crystal", "hull_plating", "reinforced_hull",
+                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter"
         ));
         assertSourceIds("item/ModItems.java", "CREATIVE_MODE_TABS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("starboundmc"));

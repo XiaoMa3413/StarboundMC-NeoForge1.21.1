@@ -76,6 +76,58 @@ public final class ModBlocks {
                     .noOcclusion()
                     .lightLevel(state -> 6));
 
+    // ---- Hull set: the mod's own industrial building language ----
+    // Surface outposts are built from these instead of vanilla stone/brick, so
+    // an abandoned mining claim reads as the same civilisation as the ship:
+    // blue-grey plating, cyan instrument accents, amber hazard banding. They are
+    // plain full cubes (no block entity) and mine with a pickaxe like the ores.
+    public static final DeferredBlock<Block> HULL_PLATING = BLOCKS.registerSimpleBlock("hull_plating",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(4.0F, 8.0F));
+    public static final DeferredBlock<Block> REINFORCED_HULL = BLOCKS.registerSimpleBlock("reinforced_hull",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(5.0F, 10.0F));
+    public static final DeferredBlock<Block> HULL_WINDOW = BLOCKS.registerSimpleBlock("hull_window",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS)
+                    .strength(1.5F, 3.0F)
+                    .noOcclusion()
+                    .isValidSpawn((state, level, pos, type) -> false));
+    public static final DeferredBlock<Block> INDUSTRIAL_LIGHT = BLOCKS.registerSimpleBlock("industrial_light",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(3.0F, 6.0F)
+                    .lightLevel(state -> 15));
+    public static final DeferredBlock<Block> HULL_HAZARD = BLOCKS.registerSimpleBlock("hull_hazard",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(4.0F, 8.0F));
+    /**
+     * Walkable grating. Its openings are genuinely see-through (the model
+     * declares {@code minecraft:cutout}), so it cannot also occlude: a
+     * see-through block that still culls its neighbours' faces would hide the
+     * floor underneath and leave the holes showing void. The transparency flags
+     * follow vanilla leaves and glass — not a spawn surface, not suffocating,
+     * not view-blocking.
+     */
+    public static final DeferredBlock<Block> HULL_GRATE = BLOCKS.registerSimpleBlock("hull_grate",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(4.0F, 8.0F)
+                    .noOcclusion()
+                    .isValidSpawn((state, level, pos, type) -> false)
+                    .isSuffocating((state, level, pos) -> false)
+                    .isViewBlocking((state, level, pos) -> false));
+
+    /**
+     * Signal head for the surface beacons, replacing the salvaged ship engine
+     * that used to sit on the landing mast. Deliberately not a light source:
+     * the emissive band is painted rather than lit, so a mast on the horizon
+     * reads as a marker without flooding the surrounding regolith. It is a
+     * shaped model, hence {@code noOcclusion}.
+     */
+    public static final DeferredBlock<Block> BEACON_EMITTER = BLOCKS.registerSimpleBlock("beacon_emitter",
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .requiresCorrectToolForDrops().strength(3.0F, 6.0F)
+                    .noOcclusion()
+                    .isValidSpawn((state, level, pos, type) -> false));
+
     private ModBlocks() {
     }
 

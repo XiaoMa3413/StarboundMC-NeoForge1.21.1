@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " G ",
+    "PRP",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "starboundmc:hull_plating"
+    },
+    "R": {
+      "item": "starboundmc:reinforced_hull"
+    },
+    "G": {
+      "item": "minecraft:glowstone"
+    }
+  },
+  "result": {
+    "id": "starboundmc:beacon_emitter",
+    "count": 2
+  }
+}
