@@ -22,6 +22,10 @@ public final class ClientPayloadHandler {
 
     public static void handle(SyncStarStatePacket payload, IPayloadContext context) {
         ClientNetworkState.apply(payload);
+        // This packet carries the ship's location, which is both the star map's
+        // "current" marker and the departure end of the next flight route. It
+        // replaced the legacy planet sync that used to be the only thing telling the
+        // client where the ship was (§22), so both have to be applied here.
         ClientPlanetState.setStarState(payload.visited(), payload.currentEntryId());
         // The arrival cue is consumed here now. It used to be consumed by the
         // legacy planet sync, which was deleted (§22); this packet is sent on

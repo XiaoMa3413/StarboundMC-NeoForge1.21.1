@@ -179,7 +179,21 @@ public final class ClientPlanetState {
     public static synchronized String getWarpTarget(){return warpTarget;}
     public static synchronized String getWarpEntryId(){return warpEntryId;}
     public static synchronized void setFuel(int f,int m){fuel=f;maxFuel=Math.max(1,m);}public static synchronized int getFuel(){return fuel;}public static synchronized int getMaxFuel(){return maxFuel;}
-    public static synchronized void setStarState(List<String> v,String e){visited=List.copyOf(v);currentEntryId=e;}public static synchronized boolean isVisited(String e){return e!=null&&visited.contains(e);}
+    /**
+     * Applies the authoritative body identity from the server.
+     *
+     * <p>One id decides two things: which body the star map marks as current, and
+     * which body the next flight route departs from. They are written together here
+     * because writing only one is a silent defect — the ship then samples its route
+     * from the wrong end and visibly flies out of another world.</p>
+     */
+    public static synchronized void setStarState(List<String> v,String e){
+        visited=List.copyOf(v);
+        if(e!=null)setCurrent(e);
+        else currentEntryId=null;
+    }
+
+    public static synchronized boolean isVisited(String e){return e!=null&&visited.contains(e);}
     /**
      * The authoritative current body.
      *
