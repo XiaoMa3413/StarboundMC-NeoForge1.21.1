@@ -2,11 +2,11 @@ package com.starboundmc.client;
 
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.starboundmc.world.starmap.PlanetEntry;
 import com.starboundmc.world.starmap.StarmapBodyType;
 import com.starboundmc.world.starmap.StarmapBodyVisual;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
@@ -49,21 +49,21 @@ public final class StarMapCanvas
                 VISUAL_VERSION), null, null);
     }
 
-    public static CanvasTexture get(StarSystem system, int canvasWidth, int canvasHeight)
+    public static CanvasTexture get(StarSystemDefinition system, int canvasWidth, int canvasHeight)
     {
-        return getOrCreate(new CacheKey(system.getSystemId(), canvasWidth, canvasHeight,
+        return getOrCreate(new CacheKey(system.systemId(), canvasWidth, canvasHeight,
                 VISUAL_VERSION), system, null);
     }
 
-    public static CanvasTexture focus(StarSystem system, PlanetEntry entry,
+    public static CanvasTexture focus(StarSystemDefinition system, CelestialBodyDefinition entry,
                                       int canvasWidth, int canvasHeight)
     {
-        return getOrCreate(new CacheKey(system.getSystemId() + "_focus_"
-                        + entry.getEntryId().replace(':', '_'),
+        return getOrCreate(new CacheKey(system.systemId() + "_focus_"
+                        + entry.entryId().replace(':', '_'),
                 canvasWidth, canvasHeight, VISUAL_VERSION), system, entry);
     }
 
-    private static CanvasTexture getOrCreate(CacheKey key, StarSystem system, PlanetEntry focus)
+    private static CanvasTexture getOrCreate(CacheKey key, StarSystemDefinition system, CelestialBodyDefinition focus)
     {
         CanvasTexture cached = CACHE.get(key);
         if (cached != null)
@@ -80,12 +80,12 @@ public final class StarMapCanvas
         drawBackground(image, metrics);
         if (system == null)
         {
-            for (StarSystem candidate : StarSystems.all())
+            for (StarSystemDefinition candidate : ClientUniverseCatalog.current().allSystems())
             {
                 int[] position = StarmapGeometry.galaxyPosition(candidate);
                 drawDimStar(image, metrics.sourceX(position[0]), metrics.sourceY(position[1]),
-                        candidate.getStarColor(), metrics.sourceRadius(
-                                Math.max(10, candidate.getStarGlowSize() / 2)));
+                        candidate.starColor(), metrics.sourceRadius(
+                                Math.max(10, candidate.stellarVisual().getStarMapGlowSize() / 2)));
             }
         }
         else if (focus != null)
@@ -221,18 +221,18 @@ public final class StarMapCanvas
         });
     }
 
-    private static void drawScenery(NativeImage image, StarSystem system, CanvasMetrics metrics)
+    private static void drawScenery(NativeImage image, StarSystemDefinition system, CanvasMetrics metrics)
     {
         double cx = metrics.sourceX(StarmapGeometry.BASE_WIDTH / 2);
         double cy = metrics.sourceY(StarmapGeometry.BASE_HEIGHT / 2);
-        int starColor = system.getStarColor();
+        int starColor = system.starColor();
         int starRed = (starColor >> 16) & 0xFF;
         int starGreen = (starColor >> 8) & 0xFF;
         int starBlue = starColor & 0xFF;
 
-        if (system.getRadiationRadius() > 0)
+        if (system.stellarVisual().getStarMapRadiationRadius() > 0)
         {
-            double radius = metrics.sourceRadius(system.getRadiationRadius());
+            double radius = metrics.sourceRadius(system.stellarVisual().getStarMapRadiationRadius());
             double feather = Math.max(1.0D, metrics.sourceRadius(2.0D));
             forEachPixel(cx, cy, radius + feather, image, (x, y, distance) -> {
                 if (distance < radius)
@@ -244,31 +244,31 @@ public final class StarMapCanvas
             });
         }
 
-        for (PlanetEntry entry : system.getEntries())
+        for (CelestialBodyDefinition entry : system.bodies())
         {
-            if (entry.isMoon())
+            if (entry.orbit().isMoon())
                 continue;
-            double radius = metrics.sourceRadius(entry.getOrbitRadius());
+            double radius = metrics.sourceRadius(entry.orbit().orbitRadius());
             drawOrbitRing(image, cx, cy, radius, metrics,
                     StarmapVisualTheme.ORBIT_MAJOR_RGB,
                     StarmapVisualTheme.ORBIT_MAJOR_ALPHA);
         }
-        for (PlanetEntry entry : system.getEntries())
+        for (CelestialBodyDefinition entry : system.bodies())
         {
-            if (!entry.isMoon())
+            if (!entry.orbit().isMoon())
                 continue;
             int[] parentPosition = StarmapGeometry.moonOrbitCenter(entry);
             if (parentPosition != null)
             {
                 drawOrbitRing(image, metrics.sourceX(parentPosition[0]),
                         metrics.sourceY(parentPosition[1]),
-                        metrics.sourceRadius(entry.getOrbitRadius()), metrics,
+                        metrics.sourceRadius(entry.orbit().orbitRadius()), metrics,
                         StarmapVisualTheme.ORBIT_MINOR_RGB,
                         StarmapVisualTheme.ORBIT_MINOR_ALPHA);
             }
         }
 
-        double glow = metrics.sourceRadius(system.getStarGlowSize());
+        double glow = metrics.sourceRadius(system.stellarVisual().getStarMapGlowSize());
         double core = Math.max(2.0D, glow / 4.0D);
         forEachPixel(cx, cy, glow, image, (x, y, distance) -> {
             double t = distance / glow;
@@ -281,7 +281,7 @@ public final class StarMapCanvas
             }
         });
 
-        for (PlanetEntry entry : system.getEntries())
+        for (CelestialBodyDefinition entry : system.bodies())
         {
             int[] position = StarmapGeometry.bodyPosition(entry);
             drawBodyDisc(image, metrics, entry, position[0], position[1],
@@ -291,8 +291,8 @@ public final class StarMapCanvas
         }
     }
 
-    private static void drawFocusScenery(NativeImage image, StarSystem system,
-                                          PlanetEntry focus, CanvasMetrics metrics)
+    private static void drawFocusScenery(NativeImage image, StarSystemDefinition system,
+                                          CelestialBodyDefinition focus, CanvasMetrics metrics)
     {
         int centerX = StarmapGeometry.BASE_WIDTH / 2;
         int centerY = StarmapGeometry.BASE_HEIGHT / 2;
@@ -343,7 +343,7 @@ public final class StarMapCanvas
         }
     }
 
-    private static void drawBodyDisc(NativeImage image, CanvasMetrics metrics, PlanetEntry entry,
+    private static void drawBodyDisc(NativeImage image, CanvasMetrics metrics, CelestialBodyDefinition entry,
                                      int baseX, int baseY, int diameter,
                                      double lightDirectionX, double lightDirectionY,
                                      boolean preferFocusSprite)
@@ -351,8 +351,8 @@ public final class StarMapCanvas
         double px = metrics.sourceX(baseX);
         double py = metrics.sourceY(baseY);
         double radius = Math.max(1.0D, metrics.sourceRadius(diameter / 2.0D));
-        StarmapBodyVisual visual = entry.isReachable() ? entry.getVisual() : LOCKED_BODY_VISUAL;
-        NativeImage sprite = entry.isReachable()
+        StarmapBodyVisual visual = entry.isNavigable() ? entry.starmapVisual() : LOCKED_BODY_VISUAL;
+        NativeImage sprite = entry.isNavigable()
                 ? bodySprite(visual, preferFocusSprite) : null;
         double feather = Math.max(1.0D, metrics.sourceRadius(1.0D));
         forEachPixel(px, py, radius + feather, image, (x, y, distance) -> {

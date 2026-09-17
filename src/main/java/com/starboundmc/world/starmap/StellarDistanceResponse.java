@@ -1,5 +1,8 @@
 package com.starboundmc.world.starmap;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 /**
  * Artistic distance curve for a star. It intentionally amplifies visible size
  * changes compared with a physical inverse-distance projection.
@@ -9,6 +12,26 @@ public record StellarDistanceResponse(double referenceDistance, float baseSkyRad
                                       float distanceResponseExponent, float remotePointRadius,
                                       float coronaActivation, float effectActivation)
 {
+    public static final Codec<StellarDistanceResponse> CODEC =
+            RecordCodecBuilder.create(instance -> instance.group(
+                    Codec.DOUBLE.fieldOf("reference_distance")
+                            .forGetter(StellarDistanceResponse::referenceDistance),
+                    Codec.FLOAT.fieldOf("base_sky_radius")
+                            .forGetter(StellarDistanceResponse::baseSkyRadius),
+                    Codec.FLOAT.fieldOf("minimum_local_scale")
+                            .forGetter(StellarDistanceResponse::minimumLocalScale),
+                    Codec.FLOAT.fieldOf("maximum_local_scale")
+                            .forGetter(StellarDistanceResponse::maximumLocalScale),
+                    Codec.FLOAT.fieldOf("distance_response_exponent")
+                            .forGetter(StellarDistanceResponse::distanceResponseExponent),
+                    Codec.FLOAT.fieldOf("remote_point_radius")
+                            .forGetter(StellarDistanceResponse::remotePointRadius),
+                    Codec.FLOAT.fieldOf("corona_activation")
+                            .forGetter(StellarDistanceResponse::coronaActivation),
+                    Codec.FLOAT.fieldOf("effect_activation")
+                            .forGetter(StellarDistanceResponse::effectActivation)
+            ).apply(instance, StellarDistanceResponse::new));
+
     public StellarDistanceResponse
     {
         if (!Double.isFinite(referenceDistance) || referenceDistance <= 0.0)

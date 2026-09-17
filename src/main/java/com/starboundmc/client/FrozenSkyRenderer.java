@@ -10,7 +10,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.world.FrozenPlanet;
-import com.starboundmc.world.starmap.StarSystems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
@@ -110,7 +109,9 @@ public class FrozenSkyRenderer
         pose.pushPose();
         pose.mulPose(Axis.YP.rotationDegrees(-90.0F));
         pose.mulPose(Axis.XP.rotationDegrees(level.getTimeOfDay(partialTick) * 360.0F));
-        StellarRenderer.render(pose, StarSystems.byId(StarSystems.SYS_COLD).getStellarVisual(),
+        // The cold system's stellar profile, from the same catalog the rest of the
+        // rendering reads.
+        StellarRenderer.render(pose, coldStellarVisual(),
                 LOCAL_STAR_DIRECTION, 100.0F, 0.90F,
                 level.getGameTime() + partialTick, 0.92F);
         pose.popPose();
@@ -120,6 +121,17 @@ public class FrozenSkyRenderer
                                     float r, float g, float b, float a)
     {
         bb.addVertex(matrix, x, y, z).setColor(r, g, b, a);
+    }
+
+    /**
+     * The cold system's star, or null when the universe does not provide it.
+     *
+     * <p>Null renders nothing, the same outcome the legacy lookup's null had.</p>
+     */
+    private static com.starboundmc.world.starmap.StellarVisualProfile coldStellarVisual()
+    {
+        var system = StarmapUniverse.system(com.starboundmc.world.universe.BuiltInUniverse.COLD_SYSTEM_ID);
+        return system == null ? null : system.stellarVisual();
     }
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z, float[] rgba)

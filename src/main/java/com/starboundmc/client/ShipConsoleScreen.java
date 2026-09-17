@@ -1,14 +1,15 @@
 package com.starboundmc.client;
 
+import com.starboundmc.client.StarmapUniverse;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.StarSystemResolver;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -45,19 +46,19 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     // ---- Layout (high-resolution panel) ----
     private static final int PANEL_W = 520;
     private static final int PANEL_H = 290;
-    private StarSystem selectedSystem = null;
-    private PlanetEntry selectedEntry = null;
+    private StarSystemDefinition selectedSystem = null;
+    private CelestialBodyDefinition selectedEntry = null;
     private boolean selectedStar = false;
     private final List<StarmapBody> bodyButtons = new ArrayList<>();
     private StarmapStar starButton = null;
-    private PlanetEntry focusedEntry = null;
-    private PlanetEntry focusArmedEntry = null;
+    private CelestialBodyDefinition focusedEntry = null;
+    private CelestialBodyDefinition focusArmedEntry = null;
     private final List<FocusedBody> focusBodyButtons = new ArrayList<>();
     private SciFiButton warpButton = null;
 
     // ---- Star-map navigation state ----
     private StarmapPage page = StarmapPage.GALAXY;
-    private StarSystem selectedGalaxySystem = null;
+    private StarSystemDefinition selectedGalaxySystem = null;
     private final List<GalaxyStar> galaxyStars = new ArrayList<>();
     private SciFiButton enterButton = null;
     private SciFiButton backButton = null;
@@ -109,7 +110,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         // First click selects the star (intro panel), a second click on the
         // same star enters its system (double-click to enter).
         this.galaxyStars.clear();
-        for (StarSystem system : StarSystems.all())
+        for (StarSystemDefinition system : StarmapUniverse.allSystems())
         {
             int[] pos = StarmapGeometry.galaxyPosition(system);
             GalaxyStar star = new GalaxyStar(
@@ -154,18 +155,18 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         this.selectedGalaxySystem = null;
         if (rememberedPage == StarmapPage.GALAXY && rememberedSystemId != null)
         {
-            this.selectedGalaxySystem = StarSystems.byId(rememberedSystemId);
+            this.selectedGalaxySystem = StarmapUniverse.system(rememberedSystemId);
         }
-        PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
         if (this.selectedGalaxySystem == null)
         {
             this.selectedGalaxySystem = current != null
-                    ? StarSystems.byId(StarSystems.systemIdOfEntry(current.getEntryId()))
-                    : StarSystems.byId(StarSystems.SYS_MAIN);
+                    ? StarmapUniverse.system(StarmapUniverse.systemIdOfEntry(current.entryId()))
+                    : StarmapUniverse.system(BuiltInUniverse.MAIN_SYSTEM_ID);
         }
         if (rememberedPage.showsSystemContext() && rememberedSystemId != null)
         {
-            StarSystem sys = StarSystems.byId(rememberedSystemId);
+            StarSystemDefinition sys = StarmapUniverse.system(rememberedSystemId);
             if (sys != null)
             {
                 this.page = StarmapPage.SYSTEM;
@@ -178,8 +179,8 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                 }
                 else if (rememberedEntryId != null)
                 {
-                    PlanetEntry entry = StarSystems.entryById(rememberedEntryId);
-                    if (entry != null && sys.getEntries().contains(entry))
+                    CelestialBodyDefinition entry = StarmapUniverse.body(rememberedEntryId);
+                    if (entry != null && sys.bodies().contains(entry))
                     {
                         this.selectEntry(rememberedPage == StarmapPage.BODY_FOCUS
                                 ? entry : this.systemOverviewEntry(sys, entry));
@@ -188,8 +189,8 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                 if (rememberedPage == StarmapPage.BODY_FOCUS
                         && rememberedFocusEntryId != null)
                 {
-                    PlanetEntry focus = StarSystems.entryById(rememberedFocusEntryId);
-                    if (focus != null && sys.getEntries().contains(focus))
+                    CelestialBodyDefinition focus = StarmapUniverse.body(rememberedFocusEntryId);
+                    if (focus != null && sys.bodies().contains(focus))
                     {
                         this.page = StarmapPage.BODY_FOCUS;
                         this.focusedEntry = focus;
@@ -218,7 +219,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         {
             rememberedPage = StarmapPage.GALAXY;
             rememberedSystemId = this.selectedGalaxySystem != null
-                    ? this.selectedGalaxySystem.getSystemId() : null;
+                    ? this.selectedGalaxySystem.systemId() : null;
             rememberedEntryId = null;
             rememberedFocusEntryId = null;
             rememberedStar = false;
@@ -227,10 +228,10 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         {
             rememberedPage = this.page;
             rememberedSystemId = this.selectedSystem != null
-                    ? this.selectedSystem.getSystemId() : null;
+                    ? this.selectedSystem.systemId() : null;
             rememberedEntryId = null;
             rememberedFocusEntryId = this.page == StarmapPage.BODY_FOCUS
-                    && this.focusedEntry != null ? this.focusedEntry.getEntryId() : null;
+                    && this.focusedEntry != null ? this.focusedEntry.entryId() : null;
             rememberedStar = false;
             if (this.selectedStar)
             {
@@ -238,12 +239,12 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             }
             else if (this.selectedEntry != null)
             {
-                rememberedEntryId = this.selectedEntry.getEntryId();
+                rememberedEntryId = this.selectedEntry.entryId();
             }
         }
     }
 
-    private void selectSystem(StarSystem system)
+    private void selectSystem(StarSystemDefinition system)
     {
         this.selectedSystem = system;
         this.focusArmedEntry = null;
@@ -252,12 +253,12 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             this.removeWidget(body);
         }
         this.bodyButtons.clear();
-        for (PlanetEntry entry : system.getEntries())
+        for (CelestialBodyDefinition entry : system.bodies())
         {
             // Moons remain visible on the overview canvas, but their details
             // and warp targets belong exclusively to the parent body's focus
             // composition.
-            if (entry.isMoon())
+            if (entry.orbit().isMoon())
                 continue;
             int[] pos = this.bodyPos(entry);
             StarmapBody body = new StarmapBody(pos[0], pos[1], entry, b -> {
@@ -290,34 +291,34 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
         // Default selection: the ship's current entry if it is in this system,
         // otherwise the first reachable body.
-        PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
-        if (current != null && system.getEntries().contains(current))
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+        if (current != null && system.bodies().contains(current))
         {
             this.selectEntry(this.systemOverviewEntry(system, current));
         }
         else
         {
-            PlanetEntry first = system.getEntries().stream()
-                    .filter(entry -> !entry.isMoon())
-                    .filter(PlanetEntry::isReachable)
+            CelestialBodyDefinition first = system.bodies().stream()
+                    .filter(entry -> !entry.orbit().isMoon())
+                    .filter(CelestialBodyDefinition::isNavigable)
                     .findFirst()
-                    .orElseGet(() -> system.getEntries().stream()
-                            .filter(entry -> !entry.isMoon())
+                    .orElseGet(() -> system.bodies().stream()
+                            .filter(entry -> !entry.orbit().isMoon())
                             .findFirst()
-                            .orElse(system.getEntries().get(0)));
+                            .orElse(system.bodies().get(0)));
             this.selectEntry(first);
         }
     }
 
-    private PlanetEntry systemOverviewEntry(StarSystem system, PlanetEntry entry)
+    private CelestialBodyDefinition systemOverviewEntry(StarSystemDefinition system, CelestialBodyDefinition entry)
     {
-        if (!entry.isMoon() || entry.getParentEntryId() == null)
+        if (!entry.orbit().isMoon() || entry.parentEntryId().isEmpty())
             return entry;
-        PlanetEntry parent = StarSystems.entryById(entry.getParentEntryId());
-        return parent != null && system.getEntries().contains(parent) ? parent : entry;
+        CelestialBodyDefinition parent = StarmapUniverse.body(entry.parentEntryId().orElse(null));
+        return parent != null && system.bodies().contains(parent) ? parent : entry;
     }
 
-    private void selectGalaxyStar(StarSystem system)
+    private void selectGalaxyStar(StarSystemDefinition system)
     {
         this.selectedGalaxySystem = system;
     }
@@ -341,7 +342,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     }
 
     /** Leave the galaxy view and open the selected system's star map. */
-    private void enterSystem(StarSystem system)
+    private void enterSystem(StarSystemDefinition system)
     {
         if (system == null)
             return;
@@ -356,10 +357,10 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     }
 
     /** Open the selected body as the centered, enlarged focus composition. */
-    private void enterBodyFocus(PlanetEntry entry)
+    private void enterBodyFocus(CelestialBodyDefinition entry)
     {
         if (entry == null || this.selectedSystem == null
-                || !this.selectedSystem.getEntries().contains(entry)
+                || !this.selectedSystem.bodies().contains(entry)
                 || ClientPlanetState.isWarping())
             return;
         this.page = StarmapPage.BODY_FOCUS;
@@ -372,13 +373,13 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         this.applyMode();
     }
 
-    private void createFocusBodyButtons(PlanetEntry entry)
+    private void createFocusBodyButtons(CelestialBodyDefinition entry)
     {
         this.clearFocusBodyButtons();
         for (StarmapFocusGeometry.Placement placement
                 : StarmapFocusGeometry.placements(this.selectedSystem, entry))
         {
-            PlanetEntry placedEntry = placement.entry();
+            CelestialBodyDefinition placedEntry = placement.entry();
             FocusedBody body = new FocusedBody(
                     this.screenCanvasX(placement.x()), this.screenCanvasY(placement.y()),
                     placedEntry, placement.diameter(),
@@ -403,7 +404,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     {
         if (this.page == StarmapPage.BODY_FOCUS)
         {
-            PlanetEntry overviewEntry = this.focusedEntry == null || this.selectedSystem == null
+            CelestialBodyDefinition overviewEntry = this.focusedEntry == null || this.selectedSystem == null
                     ? null : this.systemOverviewEntry(this.selectedSystem, this.focusedEntry);
             this.page = StarmapPage.SYSTEM;
             this.focusedEntry = null;
@@ -504,7 +505,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         }
     }
 
-    private void selectEntry(PlanetEntry entry)
+    private void selectEntry(CelestialBodyDefinition entry)
     {
         this.selectedEntry = entry;
         this.selectedStar = false;
@@ -530,12 +531,12 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     {
         if (!ClientPlanetState.isWarping())
             return;
-        PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
-        PlanetEntry target = StarSystems.entryById(ClientPlanetState.getWarpEntryId());
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+        CelestialBodyDefinition target = StarmapUniverse.body(ClientPlanetState.getWarpEntryId());
         if (current == null || target == null)
             return;
-        StarSystem from = StarSystems.byId(StarSystems.systemIdOfEntry(current.getEntryId()));
-        StarSystem to = StarSystems.byId(StarSystems.systemIdOfEntry(target.getEntryId()));
+        StarSystemDefinition from = StarmapUniverse.system(StarmapUniverse.systemIdOfEntry(current.entryId()));
+        StarSystemDefinition to = StarmapUniverse.system(StarmapUniverse.systemIdOfEntry(target.entryId()));
         if (from == null || to == null || from == to)
             return;
 
@@ -551,7 +552,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     }
 
     /** Silent switch to a system view (no selection reset when already there). */
-    private void setSystemWarpView(StarSystem system)
+    private void setSystemWarpView(StarSystemDefinition system)
     {
         if (this.page != StarmapPage.SYSTEM || this.selectedSystem != system)
         {
@@ -581,14 +582,14 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     }
 
     /** Screen position of a body: around the canvas center, or around its parent for moons. */
-    private int[] bodyPos(PlanetEntry entry)
+    private int[] bodyPos(CelestialBodyDefinition entry)
     {
         int[] base = this.bodyPosInBaseCanvas(entry);
         return new int[] { this.screenCanvasX(base[0]), this.screenCanvasY(base[1]) };
     }
 
     /** Mirrors StarMapCanvas positioning exactly: truncate in base space, then project once. */
-    private int[] bodyPosInBaseCanvas(PlanetEntry entry)
+    private int[] bodyPosInBaseCanvas(CelestialBodyDefinition entry)
     {
         return StarmapGeometry.bodyPosition(entry);
     }
@@ -620,13 +621,13 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
     private void startWarp()
     {
-        if (this.selectedEntry == null || !this.selectedEntry.isReachable())
+        if (this.selectedEntry == null || !this.selectedEntry.isNavigable())
             return;
         if (ClientPlanetState.isWarping())
             return;
-        if (this.selectedEntry.getDestination() == ClientPlanetState.getCurrent())
+        if (StarmapUniverse.isCurrent(this.selectedEntry.entryId()))
             return;
-        PlanetEntry warpTarget = this.selectedEntry;
+        CelestialBodyDefinition warpTarget = this.selectedEntry;
         if (this.page == StarmapPage.BODY_FOCUS)
         {
             this.page = StarmapPage.SYSTEM;
@@ -639,7 +640,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                 this.detailDrawerOpen = false;
             this.applyMode();
         }
-        ModNetwork.sendToServer(new StartWarpPacket(warpTarget.getEntryId()));
+        ModNetwork.sendToServer(new StartWarpPacket(warpTarget.entryId()));
         // Keep the star map open: the ship animation plays on the canvas,
         // synchronized with the 3D warp transition rendered by the overlay layer.
     }
@@ -657,13 +658,13 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         boolean mapInteractive = !warping
                 && !(this.layout.compact() && this.detailDrawerOpen);
         int cost = this.selectedEntry == null ? 0
-                : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(), this.selectedEntry.getEntryId());
+                : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(), this.selectedEntry.entryId());
         if (this.warpButton != null)
         {
             this.warpButton.active = !warping
                     && this.selectedEntry != null
-                    && this.selectedEntry.isReachable()
-                    && this.selectedEntry.getDestination() != ClientPlanetState.getCurrent()
+                    && this.selectedEntry.isNavigable()
+                    && !StarmapUniverse.isCurrent(this.selectedEntry.entryId())
                     && ClientPlanetState.getFuel() >= cost;
             this.warpButton.setMessage(this.warpActionLabel(warping, cost));
         }
@@ -708,9 +709,9 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             return Component.translatable("gui.starboundmc.warping");
         if (this.selectedEntry == null)
             return Component.translatable("gui.starboundmc.starmap.action.select_destination");
-        if (!this.selectedEntry.isReachable())
+        if (!this.selectedEntry.isNavigable())
             return Component.translatable("gui.starboundmc.starmap.locked");
-        if (this.selectedEntry.getDestination() == ClientPlanetState.getCurrent())
+        if (StarmapUniverse.isCurrent(this.selectedEntry.entryId()))
             return Component.translatable("gui.starboundmc.starmap.current");
         if (ClientPlanetState.getFuel() < cost)
             return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel");
@@ -767,12 +768,12 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                     ? Component.translatable("gui.starboundmc.starmap.action.select_star") : null;
         if (this.selectedEntry == null)
             return Component.translatable("gui.starboundmc.starmap.action.select_destination");
-        if (!this.selectedEntry.isReachable())
+        if (!this.selectedEntry.isNavigable())
             return Component.translatable("gui.starboundmc.starmap.locked");
-        if (this.selectedEntry.getDestination() == ClientPlanetState.getCurrent())
+        if (StarmapUniverse.isCurrent(this.selectedEntry.entryId()))
             return Component.translatable("gui.starboundmc.starmap.current");
         int cost = ShipWarpManager.warpFuelCost(
-                ClientPlanetState.getCurrentEntryId(), this.selectedEntry.getEntryId());
+                ClientPlanetState.getCurrentEntryId(), this.selectedEntry.entryId());
         if (ClientPlanetState.getFuel() < cost)
         {
             return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail",
@@ -899,9 +900,9 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
         // Radiation label, drawn over the texture (absolute coords).
         if (this.page == StarmapPage.SYSTEM && this.selectedSystem != null
-                && this.selectedSystem.getRadiationRadius() > 0)
+                && this.selectedSystem.stellarVisual().getStarMapRadiationRadius() > 0)
         {
-            int rr = Math.round(this.selectedSystem.getRadiationRadius() * this.layout.viewport().scale());
+            int rr = Math.round(this.selectedSystem.stellarVisual().getStarMapRadiationRadius() * this.layout.viewport().scale());
             int cx = this.screenCanvasCenterX();
             int cy = this.screenCanvasCenterY();
             Component rad = Component.translatable("gui.starboundmc.starmap.radiation");
@@ -938,15 +939,15 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                 && this.selectedSystem != null && this.focusedEntry != null)
         {
             Component breadcrumb = Component.literal(
-                    Component.translatable(this.selectedSystem.getNameKey()).getString()
+                    Component.translatable(this.selectedSystem.nameKey()).getString()
                             + " > "
-                            + Component.translatable(this.focusedEntry.getNameKey()).getString());
+                            + Component.translatable(this.focusedEntry.nameKey()).getString());
             graphics.drawString(this.font, breadcrumb,
                     viewLabelX, viewLabelY, StarmapVisualTheme.TEXT_SECONDARY, true);
         }
         else if (this.selectedSystem != null)
         {
-            graphics.drawString(this.font, Component.translatable(this.selectedSystem.getNameKey()),
+            graphics.drawString(this.font, Component.translatable(this.selectedSystem.nameKey()),
                     viewLabelX, viewLabelY, StarmapVisualTheme.TEXT_SECONDARY, true);
         }
 
@@ -1033,19 +1034,19 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
      */
     private class GalaxyStar extends Button
     {
-        private final StarSystem system;
+        private final StarSystemDefinition system;
         private final int centerX;
         private final int centerY;
         private final int coreRadius;
         private final int ringRadius;
 
-        GalaxyStar(int centerX, int centerY, StarSystem system, OnPress onPress)
+        GalaxyStar(int centerX, int centerY, StarSystemDefinition system, OnPress onPress)
         {
             super(centerX - Math.max(16, ShipConsoleScreen.this.scaledCanvasSize(16)),
                     centerY - Math.max(16, ShipConsoleScreen.this.scaledCanvasSize(16)),
                     Math.max(32, ShipConsoleScreen.this.scaledCanvasSize(32)),
                     Math.max(32, ShipConsoleScreen.this.scaledCanvasSize(32)),
-                    Component.translatable(system.getNameKey()), onPress, DEFAULT_NARRATION);
+                    Component.translatable(system.nameKey()), onPress, DEFAULT_NARRATION);
             this.system = system;
             this.centerX = centerX;
             this.centerY = centerY;
@@ -1063,16 +1064,16 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
         {
             boolean selected = ShipConsoleScreen.this.selectedGalaxySystem == this.system;
-            PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
-            boolean docked = current != null && this.system.getEntries().contains(current);
-            boolean visited = this.system.getEntries().stream()
-                    .anyMatch(entry -> entry.isReachable() && ClientPlanetState.isVisited(entry.getEntryId()));
+            CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+            boolean docked = current != null && this.system.bodies().contains(current);
+            boolean visited = this.system.bodies().stream()
+                    .anyMatch(entry -> entry.isNavigable() && ClientPlanetState.isVisited(entry.entryId()));
 
             // Core: bright when visited, dim when unexplored.
             int coreAlpha = visited ? 255 : 80;
             ShipConsoleScreen.this.overlayRenderer.drawDisk(
                     graphics, this.centerX, this.centerY, this.coreRadius,
-                    (coreAlpha << 24) | (this.system.getStarColor() & 0xFFFFFF));
+                    (coreAlpha << 24) | (this.system.starColor() & 0xFFFFFF));
             if (visited)
             {
                 ShipConsoleScreen.this.overlayRenderer.drawDisk(
@@ -1103,13 +1104,13 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             }
 
             // Labels: name above, body count below.
-            Component name = Component.translatable(this.system.getNameKey());
+            Component name = Component.translatable(this.system.nameKey());
             int nameColor = selected || this.isHoveredOrFocused()
                     ? StarmapVisualTheme.TEXT_PRIMARY : StarmapVisualTheme.TEXT_STANDARD;
             graphics.drawCenteredString(ShipConsoleScreen.this.font, name,
                     this.centerX, this.centerY - this.ringRadius - 17, nameColor);
             graphics.drawCenteredString(ShipConsoleScreen.this.font,
-                    Component.translatable("gui.starboundmc.starmap.bodies", this.system.getEntries().size()),
+                    Component.translatable("gui.starboundmc.starmap.bodies", this.system.bodies().size()),
                     this.centerX, this.centerY + this.ringRadius + 7,
                     StarmapVisualTheme.TEXT_SECONDARY);
         }
@@ -1157,12 +1158,12 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     /** Click target for the enlarged body in the focus composition. */
     private class FocusedBody extends Button
     {
-        private final PlanetEntry entry;
+        private final CelestialBodyDefinition entry;
         private final int centerX;
         private final int centerY;
         private final int markerRadius;
 
-        FocusedBody(int centerX, int centerY, PlanetEntry entry,
+        FocusedBody(int centerX, int centerY, CelestialBodyDefinition entry,
                     int markerDiameter, OnPress onPress)
         {
             super(centerX - Math.max(4, ShipConsoleScreen.this.scaledCanvasSize(
@@ -1173,7 +1174,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                             markerDiameter / 2)) * 2 + 4,
                     Math.max(4, ShipConsoleScreen.this.scaledCanvasSize(
                             markerDiameter / 2)) * 2 + 4,
-                    Component.translatable(entry.getNameKey()), onPress, DEFAULT_NARRATION);
+                    Component.translatable(entry.nameKey()), onPress, DEFAULT_NARRATION);
             this.entry = entry;
             this.centerX = centerX;
             this.centerY = centerY;
@@ -1197,19 +1198,19 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
                         graphics, this.centerX, this.centerY, r + 3,
                         StarmapVisualTheme.HOVER_RING);
 
-            if (!this.entry.isReachable())
+            if (!this.entry.isNavigable())
             {
                 ShipConsoleScreen.this.overlayRenderer.drawLockedCross(
                         graphics, this.centerX, this.centerY, r,
                         StarmapVisualTheme.STATUS_DANGER);
             }
 
-            int nameColor = this.entry.isReachable()
+            int nameColor = this.entry.isNavigable()
                     ? (this.isHoveredOrFocused() || selected
                             ? StarmapVisualTheme.TEXT_PRIMARY : StarmapVisualTheme.TEXT_STANDARD)
                     : StarmapVisualTheme.TEXT_DISABLED;
             graphics.drawCenteredString(ShipConsoleScreen.this.font,
-                    Component.translatable(this.entry.getNameKey()),
+                    Component.translatable(this.entry.nameKey()),
                     this.centerX, this.centerY + r + 5, nameColor);
         }
     }
@@ -1221,23 +1222,23 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
      */
     private class StarmapBody extends Button
     {
-        private final PlanetEntry entry;
+        private final CelestialBodyDefinition entry;
         private final int centerX;
         private final int centerY;
         private final int markerRadius;
 
-        StarmapBody(int centerX, int centerY, PlanetEntry entry, OnPress onPress)
+        StarmapBody(int centerX, int centerY, CelestialBodyDefinition entry, OnPress onPress)
         {
-            super(centerX - Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.getMarkerSize() / 2)) - 2,
-                    centerY - Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.getMarkerSize() / 2)) - 2,
-                    Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.getMarkerSize() / 2)) * 2 + 4,
-                    Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.getMarkerSize() / 2)) * 2 + 4,
-                    Component.translatable(entry.getNameKey()), onPress, DEFAULT_NARRATION);
+            super(centerX - Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.markerSize() / 2)) - 2,
+                    centerY - Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.markerSize() / 2)) - 2,
+                    Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.markerSize() / 2)) * 2 + 4,
+                    Math.max(3, ShipConsoleScreen.this.scaledCanvasSize(entry.markerSize() / 2)) * 2 + 4,
+                    Component.translatable(entry.nameKey()), onPress, DEFAULT_NARRATION);
             this.entry = entry;
             this.centerX = centerX;
             this.centerY = centerY;
             this.markerRadius = Math.max(3,
-                    ShipConsoleScreen.this.scaledCanvasSize(entry.getMarkerSize() / 2));
+                    ShipConsoleScreen.this.scaledCanvasSize(entry.markerSize() / 2));
         }
 
         private boolean containsPoint(double mouseX, double mouseY)
@@ -1267,7 +1268,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             }
 
             // Locked: red cross over the disk.
-            if (!this.entry.isReachable())
+            if (!this.entry.isNavigable())
             {
                 ShipConsoleScreen.this.overlayRenderer.drawLockedCross(
                         graphics, this.centerX, this.centerY, r,
@@ -1276,8 +1277,8 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
             // Docked: the ship triangle sits above the body (see renderShip).
             // Name label below the body, leaving the space above free for the ship.
-            Component name = Component.translatable(this.entry.getNameKey());
-            int nameColor = this.entry.isReachable()
+            Component name = Component.translatable(this.entry.nameKey());
+            int nameColor = this.entry.isNavigable()
                     ? (this.isHoveredOrFocused() || selected
                             ? StarmapVisualTheme.TEXT_PRIMARY : StarmapVisualTheme.TEXT_STANDARD)
                     : StarmapVisualTheme.TEXT_DISABLED;

@@ -3,7 +3,7 @@ package com.starboundmc.client.starmap;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
-import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.starmap.StarmapGalaxyGraph;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.client.gui.GuiGraphics;
@@ -72,16 +72,16 @@ final class StarmapSceneElement extends UIElement {
                 width / 2.0F, height / 2.0F, width, height);
         float centerX = x + center.x();
         float centerY = y + center.y();
-        for (PlanetEntry entry : system.getEntries()) {
-            if (entry.isMoon())
+        for (CelestialBodyDefinition entry : system.bodies()) {
+            if (entry.orbit().isMoon())
                 continue;
             float radius = root.systemOrbitRadius(entry, width, height);
             StarmapVectorDrawing.drawOrbit(graphics, centerX, centerY, radius,
                     entry == root.getSelectedEntry() ? ORBIT_SELECTED : ORBIT);
             float[] point = root.systemPointF(entry, width, height, root.renderOrbitClock());
-            for (PlanetEntry moon : system.getEntries()) {
-                if (!moon.isMoon()
-                        || !java.util.Objects.equals(moon.getParentEntryId(), entry.getEntryId()))
+            for (CelestialBodyDefinition moon : system.bodies()) {
+                if (!moon.orbit().isMoon()
+                        || !java.util.Objects.equals(moon.parentEntryId().orElse(null), entry.entryId()))
                     continue;
                 StarmapVectorDrawing.drawOrbit(graphics, x + point[0], y + point[1],
                         root.viewTransform().scaleLength(root.moonDisplayRadius(
@@ -100,8 +100,8 @@ final class StarmapSceneElement extends UIElement {
                 width / 2.0F, height / 2.0F, width, height);
         float centerX = x + center.x();
         float centerY = y + center.y();
-        for (PlanetEntry entry : system.getEntries()) {
-            if (!entry.isMoon() || !entry.getParentEntryId().equals(focusedPlanet.getEntryId()))
+        for (CelestialBodyDefinition entry : system.bodies()) {
+            if (!entry.orbit().isMoon() || !entry.parentEntryId().orElse(null).equals(focusedPlanet.entryId()))
                 continue;
             float radius = root.viewTransform().scaleLength(root.moonDisplayRadius(
                     system, entry, width, height, true));

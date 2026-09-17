@@ -1,13 +1,17 @@
 package com.starboundmc.world.starmap;
 
 import com.starboundmc.warp.ShipSpace;
-import com.starboundmc.world.Planet;
 import net.minecraft.world.phys.Vec3;
+import com.starboundmc.world.universe.BuiltInUniverse;
+import com.starboundmc.warp.UniverseNavigation;
+import com.starboundmc.world.universe.UniverseTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 class StarSystemLayoutTest
 {
     /** Current resolver fade reaches zero at 0.72 + 0.55 influence radii. */
@@ -16,10 +20,10 @@ class StarSystemLayoutTest
     @Test
     void systemCentresLeaveADeepSpaceVisualGap()
     {
-        StarSystem main = StarSystems.byId(StarSystems.SYS_MAIN);
-        StarSystem cold = StarSystems.byId(StarSystems.SYS_COLD);
-        double centreDistance = main.getNavigationCenter().distanceTo(cold.getNavigationCenter());
-        double visualOuterSum = (main.getInfluenceRadius() + cold.getInfluenceRadius())
+        StarSystemDefinition main = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
+        StarSystemDefinition cold = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID);
+        double centreDistance = main.navigationCenter().toLocalVec3().distanceTo(cold.navigationCenter().toLocalVec3());
+        double visualOuterSum = (main.influenceRadius() + cold.influenceRadius())
                 * VISUAL_OUTER_RATIO;
 
         assertTrue(centreDistance >= 39_000.0 && centreDistance <= 41_000.0);
@@ -32,11 +36,11 @@ class StarSystemLayoutTest
     @Test
     void coldSystemReadsAsASeparateDistanceLayerFromTheStarterOrbit()
     {
-        Vec3 starterDock = ShipSpace.vDock(Planet.LUSH);
-        double localStarDistance = StarSystems.byId(StarSystems.SYS_MAIN)
-                .getStellarVisual().getVirtualPosition().distanceTo(starterDock);
-        double coldStarDistance = StarSystems.byId(StarSystems.SYS_COLD)
-                .getStellarVisual().getVirtualPosition().distanceTo(starterDock);
+        Vec3 starterDock = UniverseNavigation.vDock("sys1:lush");
+        double localStarDistance = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID)
+                .stellarVisual().getVirtualPosition().distanceTo(starterDock);
+        double coldStarDistance = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID)
+                .stellarVisual().getVirtualPosition().distanceTo(starterDock);
 
         assertTrue(coldStarDistance >= localStarDistance * 1.9,
                 "the remote red dwarf must sit visibly behind the local star");
@@ -47,8 +51,8 @@ class StarSystemLayoutTest
     @Test
     void galaxyMapNodesUseTheExpandedComposition()
     {
-        GalaxyMapPosition main = StarSystems.byId(StarSystems.SYS_MAIN).getGalaxyMapPosition();
-        GalaxyMapPosition cold = StarSystems.byId(StarSystems.SYS_COLD).getGalaxyMapPosition();
+        GalaxyMapPosition main = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID).galaxyMapPosition();
+        GalaxyMapPosition cold = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID).galaxyMapPosition();
         int mainX = main.pixelX(250);
         int mainY = main.pixelY(220);
         int coldX = cold.pixelX(250);
@@ -66,38 +70,38 @@ class StarSystemLayoutTest
     @Test
     void frozenDockAndRedDwarfMoveWithTheColdSystem()
     {
-        StarSystem cold = StarSystems.byId(StarSystems.SYS_COLD);
-        Vec3 centre = cold.getNavigationCenter();
-        Vec3 star = cold.getStellarVisual().getVirtualPosition();
+        StarSystemDefinition cold = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID);
+        Vec3 centre = cold.navigationCenter().toLocalVec3();
+        Vec3 star = cold.stellarVisual().getVirtualPosition();
 
-        assertEquals(centre, ShipSpace.vDock(Planet.FROZEN));
+        assertEquals(centre, UniverseNavigation.vDock("sys2:frozen"));
         assertEquals(new Vec3(6000.0, 6898.0, 11000.0), star.subtract(centre));
-        assertEquals(cold.getStellarVisual().getDistanceResponse().referenceDistance(),
-                star.distanceTo(ShipSpace.vDock(Planet.FROZEN)), 0.1);
+        assertEquals(cold.stellarVisual().getDistanceResponse().referenceDistance(),
+                star.distanceTo(UniverseNavigation.vDock("sys2:frozen")), 0.1);
     }
 
     @Test
     void distantStarsConvergeOnTheBatchPointCoreRadius()
     {
-        assertEquals(1.45F, StarSystems.byId(StarSystems.SYS_MAIN).getStellarVisual()
+        assertEquals(1.45F, UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID).stellarVisual()
                 .getDistanceResponse().remotePointRadius(), 1.0E-6F);
-        assertEquals(1.45F, StarSystems.byId(StarSystems.SYS_COLD).getStellarVisual()
+        assertEquals(1.45F, UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID).stellarVisual()
                 .getDistanceResponse().remotePointRadius(), 1.0E-6F);
     }
 
     @Test
     void countsOnlyDirectSatellitesOfAPlanet()
     {
-        StarSystem main = StarSystems.byId(StarSystems.SYS_MAIN);
-        PlanetEntry lush = StarSystems.entryById("sys1:lush");
-        PlanetEntry gasGiant = StarSystems.entryById("sys1:gasgiant");
-        PlanetEntry barren = StarSystems.entryById("sys1:barren");
-        PlanetEntry moon = StarSystems.entryById("sys1:molten");
+        StarSystemDefinition main = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
+        CelestialBodyDefinition lush = UniverseTestSupport.body("sys1:lush");
+        CelestialBodyDefinition gasGiant = UniverseTestSupport.body("sys1:gasgiant");
+        CelestialBodyDefinition barren = UniverseTestSupport.body("sys1:barren");
+        CelestialBodyDefinition moon = UniverseTestSupport.body("sys1:molten");
 
-        assertEquals(1, main.getMoonCount(lush));
-        assertEquals(1, main.getMoonCount(gasGiant));
-        assertEquals(0, main.getMoonCount(barren));
-        assertEquals(0, main.getMoonCount(moon));
-        assertEquals(0, main.getMoonCount(null));
+        assertEquals(1, main.moonCount(lush.entryId()));
+        assertEquals(1, main.moonCount(gasGiant.entryId()));
+        assertEquals(0, main.moonCount(barren.entryId()));
+        assertEquals(0, main.moonCount(moon.entryId()));
+        assertEquals(0, main.moonCount(null));
     }
 }

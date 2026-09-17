@@ -2,10 +2,10 @@ package com.starboundmc.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.LayeredDraw;
+import com.starboundmc.client.StarmapUniverse;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.SpaceRenderState;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.StarSystemDefinition;
 
 /**
  * Short full-screen arrival flash. The hyperspace breakthrough is rendered as
@@ -34,11 +34,12 @@ public class WarpFlashOverlay
         SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + partialTick);
         boolean warping = space.warping();
         long now = System.currentTimeMillis();
-        if (warping && space.targetBody() != null)
+        if (warping && space.targetBodyId() != null)
         {
-            StarSystem targetSystem = StarSystems.systemOfPlanet(space.targetBody());
+            StarSystemDefinition targetSystem =
+                    StarmapUniverse.system(StarmapUniverse.systemIdOfEntry(space.targetBodyId()));
             if (targetSystem != null)
-                arrivalFlashRgb = targetSystem.getStellarVisual().getCoreColor() & 0xFFFFFF;
+                arrivalFlashRgb = targetSystem.stellarVisual().getCoreColor() & 0xFFFFFF;
         }
         if (wasWarping && !warping)
             arrivalFlashStartMillis = now;

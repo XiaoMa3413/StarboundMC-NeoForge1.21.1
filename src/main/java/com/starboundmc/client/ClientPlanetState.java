@@ -4,23 +4,36 @@ import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
-import com.starboundmc.warp.ShipSpace;
-import com.starboundmc.world.Planet;
+import com.starboundmc.warp.UniverseNavigation;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+
 import java.util.List;
 
-/** Client mirror that continuously re-samples the same manoeuvre curve as the server. */
+/**
+ * Client mirror that continuously re-samples the same manoeuvre curve as the
+ * server.
+ *
+ * <p>The ship's location is identified by body <b>entry id</b>, not by the legacy
+ * {@code Planet} enum (migration step A6). That matters because the entry id is
+ * what the save, the flight packets and the universe registry all agree on,
+ * whereas the enum can only ever name the four bodies that existed when it was
+ * written.</p>
+ */
 public final class ClientPlanetState {
-    private static Planet current=Planet.LUSH,warpTarget; private static String warpEntryId,currentEntryId;
+    private static String current=BuiltInUniverse.STARTER_BODY_ID,warpTarget;
+    private static String warpEntryId,currentEntryId;
     private static int fuel=100,maxFuel=100,elapsedTicks,totalTicks=1; private static List<String> visited=List.of();
     private static long revision=-1,receivedNanos; private static boolean arrivalCue; private static FlightPhase phase=FlightPhase.DOCKED;
-    private static Vec3 position=ShipSpace.vDock(Planet.LUSH),velocity=Vec3.ZERO; private static float yaw,pitch,roll;
-    private static UniversePosition synchronizedUniversePosition=UniversePosition.fromLegacy(position);
+    private static Vec3 position=UniverseNavigation.vDock(BuiltInUniverse.STARTER_BODY_ID),velocity=Vec3.ZERO; private static float yaw,pitch,roll;
+    private static UniversePosition synchronizedUniversePosition=UniverseNavigation.universeDock(BuiltInUniverse.STARTER_BODY_ID);
     private static final FlightVisualClock VISUAL_CLOCK = new FlightVisualClock();
     private ClientPlanetState(){}
+
     /** Start a new network session so a restarted server may begin its snapshot revision at zero. */
     public static synchronized void resetConnectionState(){
         revision=-1;receivedNanos=System.nanoTime();arrivalCue=false;phase=FlightPhase.DOCKED;
@@ -28,9 +41,18 @@ public final class ClientPlanetState {
         VISUAL_CLOCK.reset();
         snapDock(current);
     }
-    public static synchronized void setCurrent(Planet p){if(phase!=FlightPhase.DOCKED&&p!=current)arrivalCue=true;current=p;if(phase==FlightPhase.DOCKED)snapDock(p);}
-    public static synchronized void startWarp(Planet t,int duration,String entry){
-        warpTarget=t;warpEntryId=entry;totalTicks=Math.max(1,duration);
+    public static synchronized void setCurrent(String entryId){
+        if(entryId==null)return;
+        if(phase!=FlightPhase.DOCKED&&!entryId.equals(current))arrivalCue=true;
+        current=entryId;
+        // The synced entry id is the authoritative identity for the star map, so
+        // acknowledge it here instead of waiting for a star-state packet.
+        currentEntryId=entryId;
+        if(phase==FlightPhase.DOCKED)snapDock(entryId);
+    }
+    public static synchronized void startWarp(String targetEntryId,int duration,String entry){
+        if(targetEntryId==null)return;
+        warpTarget=targetEntryId;warpEntryId=entry;totalTicks=Math.max(1,duration);
         // WarpStartPacket can arrive a frame before the first authoritative
         // flight snapshot. Mark the client as entering TURN immediately so
         // the destination is not rendered at its raw far-away coordinate and
@@ -41,7 +63,7 @@ public final class ClientPlanetState {
             velocity=Vec3.ZERO;
             VISUAL_CLOCK.reset();
         }
-        preloadPlanetSystem(t);
+        preloadPlanetSystem(targetEntryId);
     }
     public static void applyFlightSnapshot(long rev,long serverTick,FlightPhase next,double x,double y,double z,double vx,double vy,double vz,float yv,float pv,float rv,int elapsed,int total,String entry){
         applyFlightSnapshot(rev,serverTick,next,UniversePosition.fromLegacy(new Vec3(x,y,z)),new UniverseDelta(vx,vy,vz),yv,pv,rv,elapsed,total,entry);
@@ -51,10 +73,10 @@ public final class ClientPlanetState {
         // Keep client interpolation monotonic: if we have extrapolated ahead of the new packet, don't snap back one frame (causes the planet to flash to front). Instead bias receivedNanos so sampledTicks continues from where we were.
         double prevSample = isWarping() && warpTarget != null ? sampledTicks() : elapsedTicks;
         revision=rev;phase=next;synchronizedUniversePosition=nextPosition;position=new Vec3(nextPosition.localX(),nextPosition.localY(),nextPosition.localZ());velocity=nextVelocity.toVec3();yaw=yv;pitch=pv;roll=rv;elapsedTicks=Math.max(0,elapsed);totalTicks=Math.max(1,total);warpEntryId=entry;
-        var pe=entry==null?null:com.starboundmc.world.starmap.StarSystems.entryById(entry);
-        Planet nextTarget=pe==null?null:pe.getDestination();
-        if(nextTarget!=null&&nextTarget!=warpTarget)preloadPlanetSystem(nextTarget);
-        warpTarget=nextTarget;
+        // The target entry id arrives on the wire, so the destination identity no
+        // longer has to be re-derived from the legacy enum.
+        if(entry!=null&&!entry.equals(warpTarget))preloadPlanetSystem(entry);
+        warpTarget=entry;
         long now = System.nanoTime();
         if (isWarping() && warpTarget != null && prevSample > elapsedTicks)
         {
@@ -65,7 +87,26 @@ public final class ClientPlanetState {
         }
         else receivedNanos = now;
     }
-    private static void snapDock(Planet p){synchronizedUniversePosition=ShipSpace.universeDock(p);position=synchronizedUniversePosition.toLocalVec3();velocity=Vec3.ZERO;yaw=(float)ShipSpace.yawDock(p);pitch=roll=0;}
+    private static void snapDock(String entryId){
+        String bodyId = entryId!=null&&UniverseNavigation.isNavigable(entryId)
+                ? entryId : BuiltInUniverse.STARTER_BODY_ID;
+        synchronizedUniversePosition=UniverseNavigation.universeDock(bodyId);
+        position=synchronizedUniversePosition.toLocalVec3();velocity=Vec3.ZERO;
+        yaw=(float)UniverseNavigation.yawDock(bodyId);pitch=roll=0;}
+
+    /**
+     * Entry id safe to sample a route with.
+     *
+     * <p>A warp needs both ends navigable. If the warp target is not (a
+     * placeholder body, or an id from a datapack the current server does not
+     * have), the curve falls back to the current body so a frame cannot sample an
+     * undefined route.</p>
+     */
+    private static boolean isNavigable(String entryId){
+        return entryId!=null&&UniverseNavigation.isNavigable(entryId);}
+    /** True when a route between the current body and the target is well defined. */
+    private static boolean canSampleRoute(){
+        return isWarping()&&isNavigable(current)&&isNavigable(warpTarget);}
     private static double sampledTicks(){
         if (!isWarping() || warpTarget == null)
         {
@@ -84,20 +125,25 @@ public final class ClientPlanetState {
      */
     public static synchronized VisualSnapshot captureVisualSnapshot()
     {
-        Planet snapshotTarget = warpTarget;
+        String snapshotTarget = warpTarget;
         boolean snapshotWarping = phase != FlightPhase.DOCKED;
-        boolean canSampleCurve = snapshotWarping && snapshotTarget != null;
+        // Both ends must be real bodies in the current universe. An unknown target
+        // (a datapack the server no longer has) must not sample a route at all,
+        // which matches the server refusing to fly to an unknown place.
+        boolean canSampleCurve = snapshotWarping && isNavigable(current) && isNavigable(snapshotTarget);
         double ticks = canSampleCurve ? sampledTicks() : elapsedTicks;
+        String fromId = current;
+        String toId = snapshotTarget;
         UniversePosition snapshotUniverse = canSampleCurve
-                ? ShipFlightController.sampleUniversePosition(current, snapshotTarget, totalTicks, ticks)
+                ? ShipFlightController.sampleUniversePosition(fromId, toId, totalTicks, ticks)
                 : synchronizedUniversePosition;
         Vec3 snapshotPosition = snapshotUniverse.toLocalVec3();
         double snapshotYaw = canSampleCurve
-                ? ShipFlightController.sampleYaw(current, snapshotTarget, totalTicks, ticks) : yaw;
+                ? ShipFlightController.sampleYaw(fromId, toId, totalTicks, ticks) : yaw;
         double snapshotPitch = canSampleCurve
-                ? ShipFlightController.samplePitch(current, snapshotTarget, totalTicks, ticks) : pitch;
+                ? ShipFlightController.samplePitch(fromId, toId, totalTicks, ticks) : pitch;
         double snapshotRoll = canSampleCurve
-                ? ShipFlightController.sampleRoll(current, snapshotTarget, totalTicks, ticks) : roll;
+                ? ShipFlightController.sampleRoll(fromId, toId, totalTicks, ticks) : roll;
         float progress = Mth.clamp((float) (ticks / Math.max(1, totalTicks)), 0.0F, 1.0F);
         return new VisualSnapshot(snapshotPosition, snapshotUniverse, velocity,
                 snapshotYaw, snapshotPitch, snapshotRoll, phase, snapshotWarping,
@@ -106,39 +152,88 @@ public final class ClientPlanetState {
 
     public static synchronized Vec3 getShipPosition(){return getShipUniversePosition().toLocalVec3();}
     public static synchronized UniversePosition getShipUniversePosition(){
-        return !isWarping()||warpTarget==null?synchronizedUniversePosition
-                :ShipFlightController.sampleUniversePosition(current,warpTarget,totalTicks,sampledTicks());
+        if(!canSampleRoute())return synchronizedUniversePosition;
+        return ShipFlightController.sampleUniversePosition(
+                current,warpTarget,totalTicks,sampledTicks());
     }
     public static synchronized Vec3 getShipVelocity(){return velocity;}
-    public static synchronized double getShipYaw(){return !isWarping()||warpTarget==null?yaw:ShipFlightController.sampleYaw(current,warpTarget,totalTicks,sampledTicks());}
-    public static synchronized double getShipPitch(){return !isWarping()||warpTarget==null?pitch:ShipFlightController.samplePitch(current,warpTarget,totalTicks,sampledTicks());}
-    public static synchronized double getShipRoll(){return !isWarping()||warpTarget==null?roll:ShipFlightController.sampleRoll(current,warpTarget,totalTicks,sampledTicks());}
+    public static synchronized double getShipYaw(){
+        if(!canSampleRoute())return yaw;
+        return ShipFlightController.sampleYaw(
+                current,warpTarget,totalTicks,sampledTicks());}
+    public static synchronized double getShipPitch(){
+        if(!canSampleRoute())return pitch;
+        return ShipFlightController.samplePitch(
+                current,warpTarget,totalTicks,sampledTicks());}
+    public static synchronized double getShipRoll(){
+        if(!canSampleRoute())return roll;
+        return ShipFlightController.sampleRoll(
+                current,warpTarget,totalTicks,sampledTicks());}
     public static synchronized FlightPhase getFlightPhase(){return phase;} public static synchronized boolean isWarping(){return phase!=FlightPhase.DOCKED;}
     public static synchronized boolean consumeArrivalCue(){boolean c=arrivalCue;arrivalCue=false;return c;}
     public static synchronized float warpProgress(){return Mth.clamp((float)(sampledTicks()/totalTicks),0,1);} public static synchronized int getWarpDurationTicks(){return totalTicks;}
     public static synchronized double getShipX(){return getShipPosition().x;}public static synchronized double getShipY(){return getShipPosition().y;}public static synchronized double getShipZ(){return getShipPosition().z;}
-    public static synchronized Planet getCurrent(){return current;}public static synchronized Planet getWarpTarget(){return warpTarget;}public static synchronized String getWarpEntryId(){return warpEntryId;}
+    /** The body the ship is docked at or travelling from, as an entry id. */
+    public static synchronized String getCurrent(){return current;}
+    /** The body being flown to, or null when docked. */
+    public static synchronized String getWarpTarget(){return warpTarget;}
+    public static synchronized String getWarpEntryId(){return warpEntryId;}
     public static synchronized void setFuel(int f,int m){fuel=f;maxFuel=Math.max(1,m);}public static synchronized int getFuel(){return fuel;}public static synchronized int getMaxFuel(){return maxFuel;}
-    public static synchronized void setStarState(List<String> v,String e){visited=List.copyOf(v);currentEntryId=e;}public static synchronized boolean isVisited(String e){return e!=null&&visited.contains(e);}public static synchronized String getCurrentEntryId(){return currentEntryId;}
+    public static synchronized void setStarState(List<String> v,String e){visited=List.copyOf(v);currentEntryId=e;}public static synchronized boolean isVisited(String e){return e!=null&&visited.contains(e);}
+    /**
+     * The authoritative current body.
+     *
+     * <p>Falls back to the locally tracked body while the star-state packet has
+     * not arrived, so a screen opened immediately after joining still shows the
+     * right place instead of nothing.</p>
+     */
+    public static synchronized String getCurrentEntryId(){return currentEntryId!=null?currentEntryId:current;}
 
     /** Immutable state used to render one frame without mixing network updates. */
     public record VisualSnapshot(Vec3 position, UniversePosition universePosition,
                                  Vec3 velocity, double yaw, double pitch, double roll,
                                  FlightPhase flightPhase, boolean warping,
                                  float warpProgress, int warpDurationTicks,
-                                 Planet currentBody, Planet targetBody,
+                                 String currentBody, String targetBody,
                                  String currentEntryId, String targetEntryId) {}
 
     /** Decode destination textures off-thread while the ship is still in transit. */
-    private static void preloadPlanetSystem(Planet planet)
+    private static void preloadPlanetSystem(String entryId)
     {
-        if (planet == null)
+        if (entryId == null)
             return;
-        var textures = Minecraft.getInstance().getTextureManager();
-        textures.preload(planet.texture(), Util.backgroundExecutor());
-        Planet companion = planet == Planet.LUSH ? Planet.MOLTEN
-                : planet == Planet.MOLTEN ? Planet.LUSH : null;
-        if (companion != null)
-            textures.preload(companion.texture(), Util.backgroundExecutor());
+        var body = UniverseNavigation.body(entryId);
+        if (body == null)
+            return;
+        // Preloading is a smoothness optimisation. The texture manager does not
+        // exist before the client is up (and never in a headless test), so a
+        // missing client must not be able to stop a warp from starting.
+        Minecraft client = Minecraft.getInstance();
+        if (client == null)
+            return;
+        var textures = client.getTextureManager();
+        preload(textures, body);
+        // Bodies sharing this one's sky, so a primary and its moon do not decode
+        // one after the other and pop in separately.
+        for (var companion : UniverseNavigation.companionBodies(entryId))
+            preload(textures, companion);
+    }
+
+    /**
+     * Warms one body's ship-window texture.
+     *
+     * <p>Bodies with an authored sprite use it; the rest still resolve through the
+     * legacy per-planet texture, which is why that path is kept here rather than
+     * dropped.</p>
+     */
+    private static void preload(net.minecraft.client.renderer.texture.TextureManager textures,
+                                com.starboundmc.world.universe.CelestialBodyDefinition body)
+    {
+        // Every body the renderer draws authors its own texture, so there is no
+        // legacy per-planet path to fall back to. A body without one is simply
+        // not preloaded, which costs a decode later but never shows wrong art.
+        String authored = body.spaceVisual().flatMap(visual -> visual.texture()).orElse(null);
+        if (authored != null)
+            textures.preload(ResourceLocation.parse(authored), Util.backgroundExecutor());
     }
 }

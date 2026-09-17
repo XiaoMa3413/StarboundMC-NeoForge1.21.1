@@ -1,6 +1,7 @@
 package com.starboundmc.client.space;
 
-import com.starboundmc.world.starmap.StarSystem;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 
 /**
@@ -10,19 +11,19 @@ import com.starboundmc.world.starmap.StellarVisualProfile;
  */
 public final class GalaxyEnvironmentBlend
 {
-    private final StarSystem[] systems;
+    private final StarSystemDefinition[] systems;
     private final float[] influences;
     private int count;
     private int skyTintColor = 0xFFFFFFFF;
     private float skyTintAmount;
     private float radiationLevel;
     private float environmentPresence;
-    private StarSystem dominantSystem;
+    private StarSystemDefinition dominantSystem;
     private float dominantInfluence;
 
     GalaxyEnvironmentBlend(int capacity)
     {
-        systems = new StarSystem[capacity];
+        systems = new StarSystemDefinition[capacity];
         influences = new float[capacity];
     }
 
@@ -41,14 +42,14 @@ public final class GalaxyEnvironmentBlend
         for (int i = 0; i < count; i++)
         {
             StarSystemResolver.VisibleStar star = field.star(i);
-            StarSystem system = star.system();
+            StarSystemDefinition system = star.system();
             float influence = clamp(star.systemInfluence());
             systems[i] = system;
             influences[i] = influence;
             if (influence <= 0.001F)
                 continue;
 
-            StellarVisualProfile profile = system.getStellarVisual();
+            StellarVisualProfile profile = system.stellarVisual();
             int color = profile.getCoronaColor();
             tintR += ((color >> 16) & 0xFF) * influence;
             tintG += ((color >> 8) & 0xFF) * influence;
@@ -94,18 +95,26 @@ public final class GalaxyEnvironmentBlend
         dominantInfluence = 0.0F;
     }
 
-    public float influence(StarSystem system)
+    /**
+     * Id-based lookup for the star-map UI, which works in definition types.
+     *
+     * <p>Matching on the system id rather than object identity lets a caller that
+     * holds a {@link StarSystemDefinition} read the same blend the flight
+     * resolver produced, without the UI having to reach for the legacy registry
+     * just to find the matching instance.</p>
+     */
+    public float influence(StarSystemDefinition system)
     {
         if (system == null)
             return 0.0F;
         for (int i = 0; i < count; i++)
-            if (systems[i] == system)
+            if (systems[i] != null && system.systemId().equals(systems[i].systemId()))
                 return influences[i];
         return 0.0F;
     }
 
     /** Weight available to a future per-system ambient music mixer. */
-    public float soundscapeWeight(StarSystem system)
+    public float soundscapeWeight(StarSystemDefinition system)
     {
         return influence(system);
     }
@@ -135,7 +144,7 @@ public final class GalaxyEnvironmentBlend
         return radiationLevel;
     }
 
-    public StarSystem dominantSystem()
+    public StarSystemDefinition dominantSystem()
     {
         return dominantSystem;
     }

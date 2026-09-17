@@ -4,7 +4,6 @@ import com.starboundmc.client.ClientPlanetState;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
-import com.starboundmc.world.Planet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,22 +27,22 @@ class ClientPayloadHandlerTest {
     private static void resetState() {
         ClientNetworkState.resetConnectionState();
         ClientPlanetState.resetConnectionState();
-        ClientPlanetState.setCurrent(Planet.LUSH);
+        ClientPlanetState.setCurrent("sys1:lush");
         ClientPlanetState.setFuel(100, 100);
         ClientPlanetState.setStarState(List.of(), null);
     }
 
     @Test
     void appliesPlanetFuelAndStarPayloadsToRenderingState() {
-        ClientPayloadHandler.handle(new SyncPlanetPacket("frozen"), null);
         ClientPayloadHandler.handle(new SyncFuelPacket(640, 1000), null);
         ClientPayloadHandler.handle(new SyncStarStatePacket(
                 List.of("sys1:lush", "sys1:frozen"), "sys1:frozen"), null);
 
-        assertEquals(Planet.FROZEN, ClientPlanetState.getCurrent());
+        // The star-state packet is now the only carrier of the body identity: the
+        // legacy planet sync packet was removed once the arrival cue moved here.
+        assertEquals("sys1:frozen", ClientPlanetState.getCurrentEntryId());
         assertEquals(640, ClientPlanetState.getFuel());
         assertEquals(1000, ClientPlanetState.getMaxFuel());
-        assertEquals("sys1:frozen", ClientPlanetState.getCurrentEntryId());
         assertTrue(ClientPlanetState.isVisited("sys1:frozen"));
     }
 

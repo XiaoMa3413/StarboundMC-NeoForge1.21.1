@@ -3,11 +3,12 @@ package com.starboundmc.client.starmap;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
 import com.starboundmc.world.starmap.StarmapBodyType;
 import com.starboundmc.world.starmap.StarmapBodyVisual;
 import net.minecraft.resources.ResourceLocation;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import javax.imageio.ImageIO;
@@ -23,17 +24,17 @@ final class StarmapBodyTextureResolverTest {
 
     @Test
     void resolvesFocusNormalAndFallbackPathsWithoutMissingTextures() {
-        PlanetEntry barren = StarSystems.entryById("sys1:barren");
-        PlanetEntry molten = StarSystems.entryById("sys1:molten");
-        PlanetEntry gasGiant = StarSystems.entryById("sys1:gasgiant");
+        CelestialBodyDefinition barren = UniverseTestSupport.body("sys1:barren");
+        CelestialBodyDefinition molten = UniverseTestSupport.body("sys1:molten");
+        CelestialBodyDefinition gasGiant = UniverseTestSupport.body("sys1:gasgiant");
 
         assertEquals(ResourceLocation.parse(
                         "starboundmc:textures/gui/starmap/bodies/barren_focus.png"),
-                resolver.resolve(barren.getVisual(), true));
+                resolver.resolve(barren.starmapVisual(), true));
         assertEquals(ResourceLocation.parse(
                         "starboundmc:textures/gui/starmap/bodies/molten.png"),
-                resolver.resolve(molten.getVisual(), true));
-        assertNull(resolver.resolve(gasGiant.getVisual(), true));
+                resolver.resolve(molten.starmapVisual(), true));
+        assertNull(resolver.resolve(gasGiant.starmapVisual(), true));
         GuiTextureGroup sprite = assertInstanceOf(GuiTextureGroup.class,
                 resolver.texture(barren, 32.0F, true));
         GuiTextureGroup fallback = assertInstanceOf(GuiTextureGroup.class,
@@ -58,10 +59,10 @@ final class StarmapBodyTextureResolverTest {
 
     @Test
     void allDeclaredSpritesAreSquareAndUseTheAuthoredSizes() throws Exception {
-        for (var system : StarSystems.all()) {
-            for (PlanetEntry entry : system.getEntries()) {
-                assertDimensions(entry.getVisual().getTextureId(), 64);
-                assertDimensions(entry.getVisual().getFocusTextureId(), 128);
+        for (var system : UniverseTestSupport.universe().allSystems()) {
+            for (CelestialBodyDefinition entry : system.bodies()) {
+                assertDimensions(entry.starmapVisual().getTextureId(), 64);
+                assertDimensions(entry.starmapVisual().getFocusTextureId(), 128);
             }
         }
     }

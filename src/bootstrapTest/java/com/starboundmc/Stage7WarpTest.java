@@ -5,12 +5,13 @@ import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.Planet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import com.starboundmc.warp.UniverseNavigation;
+import com.starboundmc.world.universe.UniverseTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 final class Stage7WarpTest {
     @Test
     void everyRouteAdvancesThroughTheExpectedDeterministicPhases() {
-        for (Planet from : Planet.values()) {
-            for (Planet to : Planet.values()) {
+        for (String from : UniverseTestSupport.navigableEntryIds()) {
+            for (String to : UniverseTestSupport.navigableEntryIds()) {
                 if (from == to) {
                     continue;
                 }
@@ -38,7 +39,7 @@ final class Stage7WarpTest {
                 FlightPhase travel = flight.isShortRoute() ? FlightPhase.CRUISE : FlightPhase.HYPERSPACE;
                 assertEquals(List.of(FlightPhase.TURN, FlightPhase.ACCELERATE, travel,
                         FlightPhase.DECELERATE, FlightPhase.ARRIVE), phases, from + " -> " + to);
-                assertEquals(ShipSpace.universeDock(to), flight.getUniversePosition());
+                assertEquals(UniverseNavigation.universeDock(to), flight.getUniversePosition());
                 assertEquals(new UniverseDelta(0.0, 0.0, 0.0), flight.getUniverseVelocity());
                 assertEquals(0L, flight.getRemainingTicks());
             }
@@ -47,8 +48,8 @@ final class Stage7WarpTest {
 
     @Test
     void allSampledRoutesStayOutsideEveryPlanetKeepOutShell() {
-        for (Planet from : Planet.values()) {
-            for (Planet to : Planet.values()) {
+        for (String from : UniverseTestSupport.navigableEntryIds()) {
+            for (String to : UniverseTestSupport.navigableEntryIds()) {
                 if (from == to) {
                     continue;
                 }
@@ -56,10 +57,10 @@ final class Stage7WarpTest {
                 for (int tick = 0; tick <= flight.getTotalTicks(); tick++) {
                     var position = ShipFlightController.sampleUniversePosition(
                             from, to, flight.getTotalTicks(), tick);
-                    for (Planet body : Planet.values()) {
-                        UniverseDelta delta = position.deltaTo(ShipSpace.universeBodyPosition(body));
+                    for (String body : UniverseTestSupport.navigableEntryIds()) {
+                        UniverseDelta delta = position.deltaTo(UniverseNavigation.universeBodyPosition(body));
                         double planarDistance = Math.hypot(delta.x(), delta.z());
-                        assertTrue(planarDistance + 1.0e-6 >= ShipSpace.radius(body) * 1.44,
+                        assertTrue(planarDistance + 1.0e-6 >= UniverseNavigation.radius(body) * 1.44,
                                 from + " -> " + to + " entered " + body + " shell at tick " + tick);
                     }
                 }
@@ -69,8 +70,8 @@ final class Stage7WarpTest {
 
     @Test
     void routeDurationsAndFuelCostsPreserveGameplayContract() {
-        ShipFlightController local = new ShipFlightController(Planet.LUSH, Planet.MOLTEN);
-        ShipFlightController crossSystem = new ShipFlightController(Planet.LUSH, Planet.FROZEN);
+        ShipFlightController local = new ShipFlightController("sys1:lush", "sys1:molten");
+        ShipFlightController crossSystem = new ShipFlightController("sys1:lush", "sys2:frozen");
         assertEquals(220, local.getTotalTicks());
         assertTrue(crossSystem.getTotalTicks() >= 360 && crossSystem.getTotalTicks() <= 560);
         assertEquals(20, ShipWarpManager.warpFuelCost("sys1:lush", "sys1:molten"));
@@ -87,7 +88,12 @@ final class Stage7WarpTest {
         assertTrue(handler.contains("menu.stillValid(player)"));
         assertTrue(actions.contains("instanceof WarpControlMenu menu && menu.stillValid(player)"));
         assertTrue(manager.contains("player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)"));
-        assertTrue(manager.contains("entry == null || !entry.isReachable()"));
+        // Migration A5 renamed the reachability check: a warp target must be
+        // navigable (has flight geometry), which is deliberately not the same as
+        // landable (has a surface dimension). Assert both, so a later edit cannot
+        // silently swap one for the other and admit the gas giant as a destination.
+        assertTrue(manager.contains("entry == null || !entry.isNavigable()"));
+        assertFalse(manager.contains("!entry.isLandable()"));
         assertTrue(manager.contains("getFuel() < cost"));
         assertTrue(manager.contains("canTravelWithinSystem(server)"));
         assertTrue(manager.contains("canTravelBetweenSystems(server)"));

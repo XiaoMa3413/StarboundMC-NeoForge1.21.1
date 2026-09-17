@@ -1,5 +1,8 @@
 package com.starboundmc.world.starmap;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 /**
  * An art-directed position on the galaxy map, stored independently from the
  * physical navigation coordinates of a star system.
@@ -10,6 +13,12 @@ package com.starboundmc.world.starmap;
  */
 public record GalaxyMapPosition(double normalizedX, double normalizedY)
 {
+    public static final Codec<GalaxyMapPosition> CODEC =
+            RecordCodecBuilder.create(instance -> instance.group(
+                    Codec.DOUBLE.fieldOf("x").forGetter(GalaxyMapPosition::normalizedX),
+                    Codec.DOUBLE.fieldOf("y").forGetter(GalaxyMapPosition::normalizedY)
+            ).apply(instance, GalaxyMapPosition::new));
+
     private static final double FALLBACK_MARGIN = 0.14D;
     private static final double FALLBACK_SPAN = 1.0D - FALLBACK_MARGIN * 2.0D;
 

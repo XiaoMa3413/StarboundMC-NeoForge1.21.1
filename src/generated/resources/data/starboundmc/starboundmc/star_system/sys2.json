@@ -1,0 +1,100 @@
+{
+  "bodies": [
+    {
+      "description_key": "starmap.entry.sys2.frozen.desc",
+      "entry_id": "sys2:frozen",
+      "name_key": "starmap.entry.sys2.frozen.name",
+      "navigation": {
+        "body_position": {
+          "x": 32408.8,
+          "y": 103.1,
+          "z": 20549.945
+        },
+        "body_radius": 5.5,
+        "dock_position": {
+          "x": 32400.0,
+          "y": 102.0,
+          "z": 20550.0
+        },
+        "dock_yaw": 90.0
+      },
+      "orbit": {
+        "orbit_angle": 270.0,
+        "orbit_radius": 84
+      },
+      "space_visual": {
+        "atmosphere_blue": 1.0,
+        "atmosphere_green": 0.78,
+        "atmosphere_peak": 0.23,
+        "atmosphere_red": 0.55,
+        "night_floor": 0.14,
+        "orientation_tilt": 32.0,
+        "orientation_yaw": 125.0,
+        "point_color": -7350273,
+        "spin_rate": 0.00225,
+        "terminator_width": 0.3,
+        "texture": "starboundmc:textures/planet/frozen.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -6629121,
+        "atmosphere_strength": 0.24,
+        "body_type": "ICY",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/frozen_focus.png",
+        "marker_size": 18,
+        "primary_color": -10442520,
+        "ring_color": -10442520,
+        "secondary_color": -4724481,
+        "surface_detail": 0.58,
+        "texture": "starboundmc:textures/gui/starmap/bodies/frozen.png",
+        "texture_seed": 1236518754
+      },
+      "surface": {
+        "dimension": "starboundmc:frozen",
+        "environment": {
+          "breathable": false,
+          "cold_tier": 3
+        }
+      },
+      "threat_level": 4,
+      "type_key": "planet.starboundmc.frozen"
+    }
+  ],
+  "description_key": "starmap.system.sys2.desc",
+  "galaxy_map_position": {
+    "x": 0.834,
+    "y": 0.6931818181818182
+  },
+  "influence_radius": 4500.0,
+  "name_key": "starmap.system.sys2",
+  "navigation_center": {
+    "x": 32400.0,
+    "y": 102.0,
+    "z": 20550.0
+  },
+  "star_type_key": "starmap.type.red_dwarf",
+  "stellar_visual": {
+    "core_color": -16240,
+    "corona_color": -53208,
+    "distance_response": {
+      "base_sky_radius": 7.5,
+      "corona_activation": 0.15,
+      "distance_response_exponent": 1.6,
+      "effect_activation": 0.38,
+      "maximum_local_scale": 2.4,
+      "minimum_local_scale": 0.6,
+      "reference_distance": 14303.2,
+      "remote_point_radius": 1.45
+    },
+    "flare_strength": 0.22,
+    "glow_scale": 3.25,
+    "position_x": 38400.0,
+    "position_y": 7000.0,
+    "position_z": 31550.0,
+    "pulse_speed": 0.037,
+    "radiation_strength": 0.9,
+    "starmap_glow_size": 18,
+    "starmap_radiation_radius": 44,
+    "surface_color": -3384776
+  },
+  "system_id": "sys2"
+}

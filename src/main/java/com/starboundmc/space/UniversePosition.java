@@ -1,5 +1,7 @@
 package com.starboundmc.space;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
@@ -12,6 +14,19 @@ public final class UniversePosition
 {
     public static final double SECTOR_SIZE = 100_000.0;
     public static final double HALF_SECTOR_SIZE = SECTOR_SIZE * 0.5;
+
+    /**
+     * Datapack form: sector plus local offset. Definitions are authored as
+     * sector 0 with the local coordinate, which is exactly how the legacy
+     * virtual-space vectors convert ({@link #fromLegacy(Vec3)}).
+     */
+    public static final Codec<UniversePosition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            SectorCoordinate.CODEC.optionalFieldOf("sector", SectorCoordinate.ZERO)
+                    .forGetter(UniversePosition::sector),
+            Codec.DOUBLE.fieldOf("x").forGetter(UniversePosition::localX),
+            Codec.DOUBLE.fieldOf("y").forGetter(UniversePosition::localY),
+            Codec.DOUBLE.fieldOf("z").forGetter(UniversePosition::localZ)
+    ).apply(instance, UniversePosition::of));
 
     private final SectorCoordinate sector;
     private final double localX;

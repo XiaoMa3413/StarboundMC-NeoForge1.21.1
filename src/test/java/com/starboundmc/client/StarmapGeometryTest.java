@@ -1,7 +1,8 @@
 package com.starboundmc.client;
 
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -34,10 +35,10 @@ class StarmapGeometryTest
     @Test
     void overviewMoonsAreSmallerAndOrbitTheirParentPositions()
     {
-        PlanetEntry lush = StarSystems.entryById("sys1:lush");
-        PlanetEntry molten = StarSystems.entryById("sys1:molten");
-        PlanetEntry gasGiant = StarSystems.entryById("sys1:gasgiant");
-        PlanetEntry rockyMoon = StarSystems.entryById("sys1:rockymoon");
+        CelestialBodyDefinition lush = UniverseTestSupport.body("sys1:lush");
+        CelestialBodyDefinition molten = UniverseTestSupport.body("sys1:molten");
+        CelestialBodyDefinition gasGiant = UniverseTestSupport.body("sys1:gasgiant");
+        CelestialBodyDefinition rockyMoon = UniverseTestSupport.body("sys1:rockymoon");
 
         assertEquals(18, StarmapGeometry.overviewDiameter(lush));
         assertEquals(8, StarmapGeometry.overviewDiameter(molten));
@@ -59,7 +60,7 @@ class StarmapGeometryTest
 
     private static void assertPosition(String entryId, int x, int y)
     {
-        PlanetEntry entry = StarSystems.entryById(entryId);
+        CelestialBodyDefinition entry = UniverseTestSupport.body(entryId);
         assertArrayEquals(new int[] { x, y }, StarmapGeometry.bodyPosition(entry));
     }
 }

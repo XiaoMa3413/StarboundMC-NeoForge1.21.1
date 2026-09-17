@@ -1,10 +1,10 @@
 package com.starboundmc.client;
 
 import com.starboundmc.warp.ShipFlightController;
-import com.starboundmc.world.Planet;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseCatalog;
 import net.minecraft.client.gui.GuiGraphics;
 
 /** Draws live star-map markers and flight graphics in high-density space. */
@@ -20,25 +20,25 @@ public final class StarmapOverlayRenderer
     }
 
     /** Renders the docked ship or the system-side portion of an active warp. */
-    public void renderSystemShip(GuiGraphics graphics, StarSystem viewedSystem,
+    public void renderSystemShip(GuiGraphics graphics, StarSystemDefinition viewedSystem,
                                  int panelX, int panelY, StarmapLayout layout)
     {
         if (viewedSystem == null)
             return;
-        PlanetEntry current = resolveCurrentEntry();
+        CelestialBodyDefinition current = resolveCurrentEntry();
         if (current == null)
             return;
         boolean warping = ClientPlanetState.isWarping();
-        PlanetEntry target = null;
+        CelestialBodyDefinition target = null;
         if (warping)
         {
-            target = StarSystems.entryById(ClientPlanetState.getWarpEntryId());
+            target = catalog().body(ClientPlanetState.getWarpEntryId()).orElse(null);
             if (target == null)
                 return;
         }
 
-        boolean startHere = viewedSystem.getEntries().contains(current);
-        boolean targetHere = target != null && viewedSystem.getEntries().contains(target);
+        boolean startHere = viewedSystem.bodies().contains(current);
+        boolean targetHere = target != null && viewedSystem.bodies().contains(target);
         if (!startHere && !targetHere)
             return;
 
@@ -145,13 +145,17 @@ public final class StarmapOverlayRenderer
     {
         if (!ClientPlanetState.isWarping())
             return;
-        PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
-        PlanetEntry target = StarSystems.entryById(ClientPlanetState.getWarpEntryId());
+        CelestialBodyDefinition current = catalog().body(ClientPlanetState.getCurrentEntryId())
+                .orElse(null);
+        CelestialBodyDefinition target = catalog().body(ClientPlanetState.getWarpEntryId())
+                .orElse(null);
         if (current == null || target == null)
             return;
-        StarSystem from = StarSystems.byId(StarSystems.systemIdOfEntry(current.getEntryId()));
-        StarSystem to = StarSystems.byId(StarSystems.systemIdOfEntry(target.getEntryId()));
-        if (from == null || to == null || from == to)
+        // Ownership and the same-system test both come from the catalog, so a
+        // datapack body whose id does not start with its system id still works.
+        StarSystemDefinition from = catalog().systemOfBody(current.entryId()).orElse(null);
+        StarSystemDefinition to = catalog().systemOfBody(target.entryId()).orElse(null);
+        if (from == null || to == null || from.systemId().equals(to.systemId()))
             return;
 
         double half = warpHalf();
@@ -174,31 +178,32 @@ public final class StarmapOverlayRenderer
         drawRouteShip(graphics, centerX, centerY, rotation);
     }
 
-    /** Resolves the initial client state before the entry id has been synced. */
-    private static PlanetEntry resolveCurrentEntry()
+    /**
+     * Resolves the initial client state before the entry id has been synced.
+     *
+     * <p>The legacy planet is the fallback only for clients that have not yet
+     * received a star-state packet; once the entry id is known it is
+     * authoritative.</p>
+     */
+    private static CelestialBodyDefinition resolveCurrentEntry()
     {
-        PlanetEntry current = StarSystems.entryById(ClientPlanetState.getCurrentEntryId());
-        if (current != null)
-            return current;
-        Planet currentPlanet = ClientPlanetState.getCurrent();
-        for (StarSystem system : StarSystems.all())
-        {
-            for (PlanetEntry entry : system.getEntries())
-            {
-                if (entry.getDestination() == currentPlanet)
-                    return entry;
-            }
-        }
-        return null;
+        // The client tracks an entry id directly now, so this is a plain lookup;
+        // the previous legacy-planet fallback is no longer needed.
+        return catalog().body(ClientPlanetState.getCurrentEntryId()).orElse(null);
     }
 
-    private static int[] dockPosition(PlanetEntry entry, int panelX, int panelY,
+    private static UniverseCatalog catalog()
+    {
+        return ClientUniverseCatalog.current();
+    }
+
+    private static int[] dockPosition(CelestialBodyDefinition entry, int panelX, int panelY,
                                       StarmapLayout layout)
     {
         int[] base = StarmapGeometry.bodyPosition(entry);
         int x = screenCanvasX(base[0], panelX, layout);
         int y = screenCanvasY(base[1], panelY, layout);
-        return new int[] { x, y - entry.getMarkerSize() / 2 - 12 };
+        return new int[] { x, y - entry.markerSize() / 2 - 12 };
     }
 
     private static int screenCanvasX(int baseX, int panelX, StarmapLayout layout)

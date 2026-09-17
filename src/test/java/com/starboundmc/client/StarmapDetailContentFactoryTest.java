@@ -1,9 +1,10 @@
 package com.starboundmc.client;
 
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,7 +18,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void galaxyOnlyAddsStatusWhenShipIsInThatSystem()
     {
-        StarSystem system = StarSystems.byId(StarSystems.SYS_MAIN);
+        StarSystemDefinition system = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
 
         StarmapDetailContent remote = StarmapDetailContentFactory.buildGalaxy(system, false);
         StarmapDetailContent docked = StarmapDetailContentFactory.buildGalaxy(system, true);
@@ -31,7 +32,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void starUsesOnlyItsRealScanCategory()
     {
-        StarSystem system = StarSystems.byId(StarSystems.SYS_MAIN);
+        StarSystemDefinition system = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
         StarmapDetailContent content = StarmapDetailContentFactory.buildStar(system);
 
         assertEquals(List.of("scan"), sectionIds(content));
@@ -45,10 +46,10 @@ class StarmapDetailContentFactoryTest
     @Test
     void reachableEntryContainsNavigationAndPrioritizesCurrentStatus()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:lush");
+        CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:lush");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
-                entry, entry.getEntryId(), true, ShipWarpManager.WARP_FUEL_COST);
+                entry, entry.entryId(), true, ShipWarpManager.WARP_FUEL_COST);
 
         assertEquals(List.of("scan", "navigation", "status"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.FUEL,
@@ -60,7 +61,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void lockedEntryHasNoEmptyNavigationCategory()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:gasgiant");
+        CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:gasgiant");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, 0);
@@ -75,7 +76,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void unvisitedReachableEntryDoesNotCreateAnEmptyStatusCategory()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:barren");
+        CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:barren");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, ShipWarpManager.WARP_FUEL_COST);

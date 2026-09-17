@@ -3,7 +3,6 @@ package com.starboundmc.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
-import com.starboundmc.world.Planet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.level.Level;
@@ -43,6 +42,31 @@ public class MoltenMoonRenderer
     /** Fixed brightness: the phase shows as a SHAPE, not a brightness cycle. */
     private static final float BRIGHTNESS = 0.93F;
     private static final Vector3f[] PHASE_SUN_DIRECTIONS = new Vector3f[8];
+
+    /**
+     * The body that appears as the overworld's moon.
+     *
+     * <p>Resolved once from the universe: it is the body orbiting the overworld's
+     * own body. Falls back to the authored molten sprite so the sky still renders
+     * if the universe is unavailable.</p>
+     */
+    private static net.minecraft.resources.ResourceLocation moltenMoonTexture()
+    {
+        com.starboundmc.world.universe.CelestialBodyDefinition moon =
+                com.starboundmc.client.StarmapUniverse.body(MOLTEN_MOON_ID);
+        if (moon != null)
+        {
+            String authored = moon.spaceVisual()
+                    .flatMap(visual -> visual.texture()).orElse(null);
+            if (authored != null)
+                return net.minecraft.resources.ResourceLocation.parse(authored);
+        }
+        return net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+                StarboundMC.MODID, "textures/planet/molten.png");
+    }
+
+    /** The body the overworld shows as its moon. */
+    private static final String MOLTEN_MOON_ID = "sys1:molten";
 
     static
     {
@@ -88,7 +112,9 @@ public class MoltenMoonRenderer
         pose.mulPose(Axis.ZP.rotationDegrees(90.0F));
         Matrix4f matrix = pose.last().pose();
 
-        PlanetRenderer.drawPlanetSphere(pose, matrix, Planet.MOLTEN.texture(),
+        // The moon texture comes from the molten body's own definition, so the
+        // pairing is data rather than a hardcoded enum constant.
+        PlanetRenderer.drawPlanetSphere(pose, matrix, moltenMoonTexture(),
                 0.0F, 0.0F, 0.0F, MOON_SCALE, sunLocal, BRIGHTNESS, 1.0F);
 
         pose.popPose();

@@ -359,6 +359,8 @@
   "message.starboundmc.warp.arrive": "已抵达 %1$s",
   "message.starboundmc.warp.already_here": "飞船已停靠在该星球",
   "message.starboundmc.warp.no_fuel": "燃料不足，无法跃迁！",
+  "message.starboundmc.warp.unknown_location": "飞船所在位置已不存在于当前世界，无法进行跃迁。",
+  "message.starboundmc.warp.unknown_destination": "未知目的地",
    "message.starboundmc.warp.start": "跃迁已启动，目标：%1$s",
    "message.starboundmc.warp.core_offline": "飞船核心系统离线",
    "message.starboundmc.warp.sublight_offline": "亚光速引擎离线",

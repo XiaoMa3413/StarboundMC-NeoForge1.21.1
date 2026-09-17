@@ -1,8 +1,8 @@
 package com.starboundmc.client;
 
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public final class StarmapDetailContentFactory
     private boolean cachedState;
     private StarmapDetailContent cachedContent;
 
-    public StarmapDetailContent galaxy(StarSystem system)
+    public StarmapDetailContent galaxy(StarSystemDefinition system)
     {
         if (system == null)
             return SELECTION_HINT;
@@ -34,7 +34,7 @@ public final class StarmapDetailContentFactory
                 buildGalaxy(system, dockedHere));
     }
 
-    public StarmapDetailContent star(StarSystem system)
+    public StarmapDetailContent star(StarSystemDefinition system)
     {
         if (system == null)
             return SELECTION_HINT;
@@ -43,21 +43,21 @@ public final class StarmapDetailContentFactory
         return cache(Kind.STAR, system, null, false, buildStar(system));
     }
 
-    public StarmapDetailContent entry(PlanetEntry entry)
+    public StarmapDetailContent entry(CelestialBodyDefinition entry)
     {
         if (entry == null)
             return SELECTION_HINT;
         String currentEntryId = ClientPlanetState.getCurrentEntryId();
-        boolean visited = ClientPlanetState.isVisited(entry.getEntryId());
+        boolean visited = ClientPlanetState.isVisited(entry.entryId());
         if (matches(Kind.ENTRY, entry, currentEntryId, visited))
             return cachedContent;
-        int fuelCost = entry.isReachable()
-                ? ShipWarpManager.warpFuelCost(currentEntryId, entry.getEntryId()) : 0;
+        int fuelCost = entry.isNavigable()
+                ? ShipWarpManager.warpFuelCost(currentEntryId, entry.entryId()) : 0;
         return cache(Kind.ENTRY, entry, currentEntryId, visited,
                 buildEntry(entry, currentEntryId, visited, fuelCost));
     }
 
-    static StarmapDetailContent buildGalaxy(StarSystem system, boolean dockedHere)
+    static StarmapDetailContent buildGalaxy(StarSystemDefinition system, boolean dockedHere)
     {
         Objects.requireNonNull(system, "system");
         List<StarmapDetailSection> sections = new ArrayList<>();
@@ -65,7 +65,7 @@ public final class StarmapDetailContentFactory
                 Component.translatable("gui.starboundmc.starmap.detail.system"),
                 StarmapDetailLine.of(
                         Component.translatable("gui.starboundmc.starmap.bodies",
-                                system.getEntries().size()),
+                                system.bodies().size()),
                         StarmapDetailLine.Tone.ATTENTION)));
         if (dockedHere)
         {
@@ -74,18 +74,18 @@ public final class StarmapDetailContentFactory
                     StarmapDetailLine.Tone.CURRENT)));
         }
         return new StarmapDetailContent(
-                Component.translatable(system.getNameKey()),
-                Component.translatable(system.getStarTypeKey()),
-                Component.translatable(system.getDescriptionKey()), sections);
+                Component.translatable(system.nameKey()),
+                Component.translatable(system.starTypeKey()),
+                Component.translatable(system.descriptionKey()), sections);
     }
 
-    static StarmapDetailContent buildStar(StarSystem system)
+    static StarmapDetailContent buildStar(StarSystemDefinition system)
     {
         Objects.requireNonNull(system, "system");
         return new StarmapDetailContent(
-                Component.translatable(system.getNameKey()),
-                Component.translatable(system.getStarTypeKey()),
-                Component.translatable(system.getDescriptionKey()),
+                Component.translatable(system.nameKey()),
+                Component.translatable(system.starTypeKey()),
+                Component.translatable(system.descriptionKey()),
                 List.of(StarmapDetailSection.labeled("scan",
                         Component.translatable("gui.starboundmc.starmap.detail.scan"),
                         StarmapDetailLine.of(
@@ -94,20 +94,20 @@ public final class StarmapDetailContentFactory
                                 StarmapDetailLine.Tone.ATTENTION))));
     }
 
-    static StarmapDetailContent buildEntry(PlanetEntry entry, String currentEntryId,
+    static StarmapDetailContent buildEntry(CelestialBodyDefinition entry, String currentEntryId,
                                            boolean visited, int fuelCost)
     {
         Objects.requireNonNull(entry, "entry");
         List<StarmapDetailSection> sections = new ArrayList<>();
-        Component threat = entry.isReachable()
+        Component threat = entry.isNavigable()
                 ? Component.translatable("gui.starboundmc.starmap.detail.threat",
-                        entry.getThreatLevel())
+                        entry.threatLevel())
                 : Component.translatable("gui.starboundmc.starmap.detail.threat_unknown");
         sections.add(StarmapDetailSection.labeled("scan",
                 Component.translatable("gui.starboundmc.starmap.detail.scan"),
                 StarmapDetailLine.of(threat, StarmapDetailLine.Tone.ATTENTION)));
 
-        if (entry.isReachable())
+        if (entry.isNavigable())
         {
             boolean crossSystem = fuelCost >= ShipWarpManager.CROSS_SYSTEM_FUEL_COST;
             sections.add(StarmapDetailSection.labeled("navigation",
@@ -119,13 +119,13 @@ public final class StarmapDetailContentFactory
         }
 
         StarmapDetailLine status = null;
-        if (!entry.isReachable())
+        if (!entry.isNavigable())
         {
             status = StarmapDetailLine.of(
                     Component.translatable("gui.starboundmc.starmap.locked"),
                     StarmapDetailLine.Tone.DANGER);
         }
-        else if (entry.getEntryId().equals(currentEntryId))
+        else if (entry.entryId().equals(currentEntryId))
         {
             status = StarmapDetailLine.of(
                     Component.translatable("gui.starboundmc.starmap.current"),
@@ -141,9 +141,9 @@ public final class StarmapDetailContentFactory
             sections.add(statusSection(status));
 
         return new StarmapDetailContent(
-                Component.translatable(entry.getNameKey()),
-                Component.translatable(entry.getTypeKey()),
-                Component.translatable(entry.getDescriptionKey()), sections);
+                Component.translatable(entry.nameKey()),
+                Component.translatable(entry.typeKey()),
+                Component.translatable(entry.descriptionKey()), sections);
     }
 
     private static StarmapDetailSection statusSection(StarmapDetailLine line)
@@ -152,13 +152,13 @@ public final class StarmapDetailContentFactory
                 Component.translatable("gui.starboundmc.starmap.detail.status"), line);
     }
 
-    private static boolean containsEntry(StarSystem system, String entryId)
+    private static boolean containsEntry(StarSystemDefinition system, String entryId)
     {
         if (entryId == null)
             return false;
-        for (PlanetEntry entry : system.getEntries())
+        for (CelestialBodyDefinition entry : system.bodies())
         {
-            if (entryId.equals(entry.getEntryId()))
+            if (entryId.equals(entry.entryId()))
                 return true;
         }
         return false;

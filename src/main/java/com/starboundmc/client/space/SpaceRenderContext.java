@@ -2,7 +2,6 @@ package com.starboundmc.client.space;
 
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.space.UniversePosition;
-import com.starboundmc.world.Planet;
 import net.minecraft.world.phys.Vec3;
 
 /** Immutable per-frame snapshot consumed by the astronomical renderers. */
@@ -11,7 +10,7 @@ public record SpaceRenderContext(Vec3 shipPosition, UniversePosition universePos
                                  double yaw, double pitch, double roll,
                                  FlightPhase flightPhase, boolean warping,
                                  float warpProgress, int warpDurationTicks,
-                                 Planet currentBody, Planet targetBody,
+                                 String currentBodyId, String targetBodyId,
                                  String currentSystemHint, String targetSystemHint,
                                  float animationTicks)
 {
@@ -22,7 +21,7 @@ public record SpaceRenderContext(Vec3 shipPosition, UniversePosition universePos
         return new SpaceRenderContext(provider.position(), provider.universePosition(), provider.velocity(),
                 provider.yaw(), provider.pitch(), provider.roll(),
                 provider.flightPhase(), provider.isWarping(), provider.warpProgress(),
-                provider.warpDurationTicks(), provider.currentBody(), provider.targetBody(),
+                provider.warpDurationTicks(), provider.currentBodyId(), provider.targetBodyId(),
                 provider.currentSystemHint(), provider.targetSystemHint(), animationTicks);
     }
 }

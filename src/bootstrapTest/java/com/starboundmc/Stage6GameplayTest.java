@@ -78,8 +78,29 @@ final class Stage6GameplayTest {
     void travelHasSafeFallbackUntilTheShipDimensionIsRestored() throws IOException {
         String travel = source("world/Stage6TravelService.java");
         assertTrue(travel.contains("server.getLevel(SHIP_LEVEL)"));
-        assertTrue(travel.contains("teleportToOverworldSpawn(player, false)"));
-        assertTrue(travel.contains("overworld.getSharedSpawnPos()"));
+        // Migration A8 moved the overworld landing into the shared service, so the
+        // fallback is now reached through it in both directions.
+        assertTrue(travel.contains("SurfaceLandingService.teleportToOverworldSpawn(player, false)"));
+        assertTrue(travel.contains("SurfaceLandingService.teleportToOverworldSpawn(player, true)"));
+        String landing = source("world/SurfaceLandingService.java");
+        assertTrue(landing.contains("overworld.getSharedSpawnPos()"));
+        assertTrue(landing.contains("player.getRespawnPosition()"));
+    }
+
+    /**
+     * A8 removed the per-planet {@code switch}: the destination now comes from the
+     * body's surface definition, so a new body needs no branch here.
+     */
+    @Test
+    void surfaceTravelDoesNotSwitchOverThePlanetEnum() throws IOException {
+        String travel = source("world/Stage6TravelService.java");
+        assertFalse(travel.contains("switch (current)"));
+        assertFalse(travel.contains("case MOLTEN"));
+        assertFalse(travel.contains("case FROZEN"));
+        assertFalse(travel.contains("case BARREN"));
+        assertFalse(travel.contains("case LUSH"));
+        assertTrue(travel.contains("SurfaceLandingService.teleportToSurface(player, body)"));
+        assertTrue(travel.contains("UniverseNavigation.body(currentEntryId)"));
     }
 
     private static String source(String relativePath) throws IOException {

@@ -249,6 +249,8 @@
   "starmap.type.red_dwarf": "Red Dwarf",
   "gui.starboundmc.starmap.star": "Star",
   "message.starboundmc.warp.start": "Warp initiated to %1$s",
+  "message.starboundmc.warp.unknown_location": "The ship is at a location this world no longer provides. Warp travel is unavailable.",
+  "message.starboundmc.warp.unknown_destination": "an unknown destination",
   "message.starboundmc.warp.core_offline": "Ship core is offline",
   "message.starboundmc.warp.sublight_offline": "Sublight engine is offline",
   "message.starboundmc.warp.hyperdrive_offline": "Hyperspace engine is offline",
