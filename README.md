@@ -177,10 +177,10 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 
 ## 参与开发
 
-StarboundMC 现已按 MIT License 开源，欢迎提交 Issue、改进代码、修复测试或完善文档。
+StarboundMC 的程序代码现按 MPL-2.0 发布，欢迎提交 Issue、改进代码、修复测试或完善文档。
 提交 Pull Request 前请先确认：
 
-- 新增的代码和原创素材可以按本项目许可证发布；
+- 新增代码和原创素材的权利归属及许可方式已经明确；
 - 第三方素材已经获得与用途匹配的许可，并在
   [第三方素材说明](THIRD_PARTY_NOTICES.md) 中记录来源和署名要求；
 - 没有把本地依赖源码、构建缓存、运行存档、截图或日志提交进仓库；
@@ -188,13 +188,14 @@ StarboundMC 现已按 MIT License 开源，欢迎提交 Issue、改进代码、�
 
 如果改动涉及游戏存档、网络协议、注册 ID 或迁移兼容性，请在 PR 描述中说明影响范围。
 
-## 许可与素材
+## License / 许可证
 
-### 项目代码与原创内容
+- **Code:** [MPL-2.0](LICENSE)。它适用于项目贡献者有权授权的 StarboundMC 程序代码，包括 Java 源代码、项目自有构建脚本和其他程序代码。
+- **Original project assets:** [All Rights Reserved unless otherwise stated](LICENSE-ASSETS.md)。除具体文件或目录另有明确声明外，原创贴图、模型、声音、音乐、结构资源、艺术作品、标识和叙事文本等非代码资源不由 MPL-2.0 覆盖。
+- **Third-party content:** 由各自权利人及其适用许可证约束，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+- 过去已经按 MIT 发布的旧版本和旧提交，仍可按适用于那些版本的 MIT 许可证使用；本次变更不撤销既有授权。
 
-除下方明确列出的第三方素材外，StarboundMC 的源代码、原创 UI、模型、方块/物品纹理和文档均由 **StarboundMC Team** 按 [MIT License](LICENSE) 发布。
-
-MIT License 允许使用、复制、修改、合并、发布、再许可和销售这些项目内容，但再分发时必须保留版权声明和许可证文本。
+新增 StarboundMC 程序代码建议在文件开头使用 `// SPDX-License-Identifier: MPL-2.0`。本次不为现有 Java 文件批量添加许可证头。
 
 ### 第三方行星贴图
 
