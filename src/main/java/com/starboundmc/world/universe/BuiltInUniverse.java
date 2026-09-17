@@ -98,8 +98,6 @@ public final class BuiltInUniverse
                                         .texture("starboundmc:textures/gui/starmap/bodies/barren.png")
                                         .focusTexture("starboundmc:textures/gui/starmap/bodies/barren_focus.png")
                                         .build(),
-                                // Only four bodies are navigable today. The gas giant
-                                // and its moon stay visible-but-unreachable.
                                 navigation(-5000.0, 102.0, -2000.0,
                                         -5002.668504563659, 102.8, -1994.1827254324958,
                                         4.0, 335.0),

@@ -81,14 +81,38 @@ final class Stage6GameplayTest {
         assertTrue(source("client/ModKeyBindings.java").contains("value = Dist.CLIENT"));
     }
 
+    /**
+     * Returning to the ship still falls back when the ship dimension is gone, but a
+     * surface landing must not.
+     *
+     * <p>Those are different situations. A missing ship dimension is a broken world
+     * and the player needs somewhere safe to go; a missing surface means the body
+     * they asked for is not there, and sending them to the overworld instead would
+     * relocate them to a planet they never chose — one the story code counts as a
+     * surface, so it would also complete the prologue's landing mission. Landings
+     * therefore refuse and report, and this pins that difference.</p>
+     */
     @Test
-    void travelHasSafeFallbackUntilTheShipDimensionIsRestored() throws IOException {
+    void travelFallsBackForTheShipButRefusesAFailedLanding() throws IOException {
         String travel = source("world/Stage6TravelService.java");
         assertTrue(travel.contains("server.getLevel(SHIP_LEVEL)"));
-        // Migration A8 moved the overworld landing into the shared service, so the
-        // fallback is now reached through it in both directions.
+        // The ship-dimension fallback survives: that is a broken world, not a
+        // landing, so there is no better destination than the overworld spawn.
         assertTrue(travel.contains("SurfaceLandingService.teleportToOverworldSpawn(player, false)"));
-        assertTrue(travel.contains("SurfaceLandingService.teleportToOverworldSpawn(player, true)"));
+
+        // A failed landing must refuse instead. The overworld-spawn call that used to
+        // be reachable from the landing path is gone, and the refusal table replaced it.
+        assertFalse(travel.contains("SurfaceLandingService.teleportToOverworldSpawn(player, true)"),
+                "a failed landing must refuse, not relocate the player to the overworld");
+        assertTrue(travel.contains("landingRefusal("),
+                "the landing path must consult the refusal table");
+
+        // The story hooks are driven only by a landing that actually happened.
+        int landingCall = travel.indexOf("SurfaceLandingService.teleportToSurface(player, body)");
+        int storyCall = travel.indexOf("ShipStoryService.onPlanetSurfaceArrival(player)");
+        assertTrue(landingCall > 0 && storyCall > landingCall,
+                "the surface mission must be driven after a successful landing, not before");
+
         String landing = source("world/SurfaceLandingService.java");
         assertTrue(landing.contains("overworld.getSharedSpawnPos()"));
         assertTrue(landing.contains("player.getRespawnPosition()"));

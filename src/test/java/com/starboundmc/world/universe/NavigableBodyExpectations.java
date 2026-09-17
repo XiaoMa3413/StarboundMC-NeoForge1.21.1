@@ -8,13 +8,17 @@ import java.util.Map;
 
 import com.starboundmc.warp.ShipSpace;
 /**
- * The authored flight geometry of the four navigable bodies, as literals.
+ * The authored flight geometry of the four inner-system bodies, as literals.
  *
  * <p>These numbers were captured from the shipped model before the data layer
  * existed: the first pass read them out of {@code ShipSpace}, which is where the
  * legacy code kept them. Migration step A5 then moved that data into the body
  * definitions and reduced {@code ShipSpace} to pure math, so a test can no longer
  * ask {@code ShipSpace} what a dock position is.</p>
+ *
+ * <p>These four are the bodies whose geometry the migration had to reproduce
+ * exactly, which is why they are the ones pinned as literals. The gas giant and
+ * the rocky moon are covered by their own berth tests.</p>
  *
  * <p>Keeping them here as literals is the stronger arrangement: the expectation
  * no longer comes from the implementation under test, so the two cannot drift
@@ -108,7 +112,7 @@ final class NavigableBodyExpectations
         return FLIGHT_DISTANCE.get(fromEntryId + "->" + toEntryId);
     }
 
-    /** The four navigable bodies, in the order the legacy enum declared them. */
+    /** The four captured bodies, in the order the legacy enum declared them. */
     static List<String> entryIds()
     {
         return List.of("sys1:lush", "sys1:molten", "sys1:barren", "sys2:frozen");

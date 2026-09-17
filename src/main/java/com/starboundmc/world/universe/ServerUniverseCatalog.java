@@ -24,7 +24,12 @@ import net.minecraft.server.MinecraftServer;
  */
 public final class ServerUniverseCatalog
 {
-    private static final UniverseCatalogStore STORE = new UniverseCatalogStore("Server");
+    /**
+     * The server's store is the fail-fast one: see {@link UniverseCatalogStore}.
+     * A running server owns its universe data, so a registry it cannot use is a
+     * startup failure, not something to paper over with the built-in universe.
+     */
+    private static final UniverseCatalogStore STORE = new UniverseCatalogStore("Server", true);
 
     private ServerUniverseCatalog()
     {
@@ -51,6 +56,19 @@ public final class ServerUniverseCatalog
             return;
         }
         STORE.refreshFrom(server.registryAccess());
+    }
+
+    /**
+     * Builds the catalog from a registry access directly.
+     *
+     * <p>Package-visible so the fail-fast contract can be driven through the real
+     * production path — this is the call {@link #initialize} makes — rather than by
+     * constructing a store, which would test the store but not the wiring that
+     * decides which side fails fast.</p>
+     */
+    static void refreshFrom(net.minecraft.core.RegistryAccess registryAccess)
+    {
+        STORE.refreshFrom(registryAccess);
     }
 
     /** Drops the catalog when the server stops, so no world's universe outlives it. */

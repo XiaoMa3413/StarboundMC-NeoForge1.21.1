@@ -686,8 +686,8 @@ public class PlanetRenderer
             drawDistanceSq[i] = UniverseNavigation
                     .universeBodyPosition(drawOrder[i].entryId()).distanceToSqr(ship);
 
-        // Reusable insertion sort; four planets make this cheaper than building
-        // and sorting a per-frame celestial collection.
+        // Reusable insertion sort; the celestial count is small enough that this
+        // beats building and sorting a per-frame collection.
         for (int i = 1; i < drawOrder.length; i++)
         {
             CelestialBodyDefinition body = drawOrder[i];

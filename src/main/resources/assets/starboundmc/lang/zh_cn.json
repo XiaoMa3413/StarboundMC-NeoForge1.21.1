@@ -375,6 +375,8 @@
    "message.starboundmc.warp.sublight_offline": "亚光速引擎离线",
    "message.starboundmc.warp.hyperdrive_offline": "超空间引擎离线",
   "message.starboundmc.warp.no_landing": "%1$s没有可供降落的固体表面",
+  "message.starboundmc.warp.unknown_landing": "飞船所在位置已不存在于当前世界，无处可供降落。",
+  "message.starboundmc.warp.surface_unavailable": "当前世界不存在%1$s的地表",
   "planet.starboundmc.barren": "荒芜星球",
   "planet.starboundmc.frozen": "冰封星球",
   "planet.starboundmc.lush": "翠绿星球",

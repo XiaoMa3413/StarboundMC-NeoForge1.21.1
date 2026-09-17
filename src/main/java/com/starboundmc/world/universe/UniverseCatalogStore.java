@@ -28,6 +28,21 @@ import java.util.List;
  * <p>Replacing rather than merging is deliberate: a datapack that removes a
  * system must actually remove it, so a live registry is authoritative whenever
  * it is available.</p>
+ *
+ * <h2>Falling back versus failing fast</h2>
+ *
+ * <p>The two sides differ once a world is running, and the difference is
+ * deliberate. A client keeps the baseline when the registry is missing or
+ * malformed: it cannot repair the server's data, and a blank star map over a
+ * datapack it merely has not synced yet would be a worse failure than showing the
+ * shipped universe.</p>
+ *
+ * <p>A server is the authority, and its registry is loaded from the very world it
+ * is about to serve — so a registry it cannot use is not a transient condition,
+ * it means the save's universe disagrees with the data on disk. Continuing would
+ * silently substitute a different universe than the save was written against,
+ * which is exactly how a ship ends up parked at a body this build cannot place.
+ * A server therefore fails fast and names the problem.</p>
  */
 final class UniverseCatalogStore
 {
@@ -42,12 +57,26 @@ final class UniverseCatalogStore
     /** Distinguishes the two sides in log output. */
     private final String label;
 
+    /**
+     * Whether an unusable registry is fatal.
+     *
+     * <p>True for the server, which owns the data; false for the client, which is
+     * told what the universe is and must keep working when it has not been told.</p>
+     */
+    private final boolean failFastOnUnusableRegistry;
+
     private volatile UniverseCatalog current = BASELINE;
     private volatile boolean syncedFromRegistry;
 
     UniverseCatalogStore(String label)
     {
+        this(label, false);
+    }
+
+    UniverseCatalogStore(String label, boolean failFastOnUnusableRegistry)
+    {
         this.label = label;
+        this.failFastOnUnusableRegistry = failFastOnUnusableRegistry;
     }
 
     /** The active universe. Never null, never empty. */
@@ -70,18 +99,33 @@ final class UniverseCatalogStore
     /**
      * Replaces the catalog with the systems the supplied registry access holds.
      *
-     * <p>An absent or empty registry is not an error: a client in the main menu,
-     * or a server that has not finished loading, keeps the baseline. Failing
-     * loudly here would break a case that has a perfectly good answer.</p>
+     * <p>A client keeps the baseline when the registry is absent or unusable, which
+     * is the main-menu and not-yet-synced case. A server configured to fail fast
+     * refuses instead, because it is looking at the data its own world loaded: see
+     * the class comment.</p>
      */
     void refreshFrom(RegistryAccess registryAccess)
     {
         if (registryAccess == null)
+        {
+            if (failFastOnUnusableRegistry)
+                throw new IllegalStateException(label
+                        + " universe: no registry access was supplied for a running world");
             return;
+        }
         Registry<StarSystemDefinition> registry = registryAccess
                 .registry(ModUniverseRegistries.STAR_SYSTEM).orElse(null);
         if (registry == null || registry.size() == 0)
         {
+            if (failFastOnUnusableRegistry)
+            {
+                // The mod ships this registry, so a running server that cannot see
+                // it has not loaded its own data. Substituting the built-in universe
+                // here would serve a different universe than the save assumes.
+                throw new IllegalStateException(label
+                        + " universe: the " + ModUniverseRegistries.STAR_SYSTEM.location()
+                        + " registry is empty or absent in a running world");
+            }
             // Log only on the transition, not per call: this runs from
             // render-driven and login-driven paths and would otherwise spam.
             if (syncedFromRegistry)
@@ -90,7 +134,19 @@ final class UniverseCatalogStore
             return;
         }
 
-        List<StarSystemDefinition> systems = registry.stream().toList();
+        installValidated(registry.stream().toList(), "the universe registry");
+    }
+
+    /**
+     * Indexes the supplied systems, or falls back (or refuses) when they are invalid.
+     *
+     * <p>Separate from {@link #refreshFrom} because this is the decision, and the
+     * registry is only where the systems come from. Keeping them apart means the
+     * fallback-versus-fail-fast contract can be tested without standing up a
+     * {@code RegistryAccess}.</p>
+     */
+    void installValidated(List<StarSystemDefinition> systems, String source)
+    {
         try
         {
             current = UniverseCatalog.of(systems);
@@ -98,9 +154,14 @@ final class UniverseCatalogStore
         }
         catch (IllegalArgumentException invalid)
         {
-            // A malformed universe must not take the caller down with it.
-            LOGGER.warn("{} rejected the universe registry ({}); using the built-in universe.",
-                    label, invalid.getMessage());
+            if (failFastOnUnusableRegistry)
+            {
+                throw new IllegalStateException(label + " universe: " + source
+                        + " was rejected: " + invalid.getMessage(), invalid);
+            }
+            // A malformed universe must not take the client down with it.
+            LOGGER.warn("{} rejected {} ({}); using the built-in universe.",
+                    label, source, invalid.getMessage());
             install(null);
         }
     }

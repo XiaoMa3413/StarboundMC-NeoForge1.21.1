@@ -269,6 +269,8 @@
   "message.starboundmc.fuel.full": "Fuel tank is full!",
   "message.starboundmc.warp.no_fuel": "Not enough fuel to warp!",
   "message.starboundmc.warp.no_landing": "%1$s has no solid surface to land on.",
+  "message.starboundmc.warp.unknown_landing": "The ship is at a location this world no longer provides. There is nowhere to land.",
+  "message.starboundmc.warp.surface_unavailable": "The surface of %1$s is not available in this world.",
   "gui.starboundmc.fuel": "Fuel: %1$s/%2$s",
   "gui.starboundmc.fuel_controller.add": "Refuel",
   "gui.starboundmc.fuel_controller.tip": "Place fuel items and press \"Refuel\" to add them all at once; surplus stays when the tank is full",

@@ -172,11 +172,10 @@ public final class UniverseNavigation
     /**
      * Bodies that take part in route obstacle avoidance.
      *
-     * <p>Only navigable bodies are returned. The gas giant and the rocky moon used
-     * to have no navigation profile, so they stayed out of route shaping exactly as
-     * they did when this iterated the four-planet enum. Both are flyable now, and
-     * both were already in the legacy four-planet avoidance set under their own
-     * names, so the set this returns is the same one the enum produced.</p>
+     * <p>Every navigable body is one: a course has to clear the body it departs
+     * from and the one it arrives at like any other. That is the same set the
+     * legacy code used, which iterated the whole planet enum rather than only the
+     * bodies the ship could be sent to.</p>
      */
     public static java.util.List<CelestialBodyDefinition> avoidanceBodies()
     {

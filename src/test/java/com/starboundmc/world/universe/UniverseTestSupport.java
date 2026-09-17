@@ -42,8 +42,9 @@ public final class UniverseTestSupport
      * Entry ids of the bodies that can be flown to.
      *
      * <p>This is the shape tests iterate where they used to loop over
-     * {@code Planet.values()}. The four navigable bodies are the same four, so a
-     * test that covered every route still covers every route.</p>
+     * {@code Planet.values()}: the set is read from the universe rather than
+     * restated, so a test that covered every route keeps covering every route as
+     * the shipped universe grows.</p>
      */
     public static java.util.List<String> navigableEntryIds()
     {

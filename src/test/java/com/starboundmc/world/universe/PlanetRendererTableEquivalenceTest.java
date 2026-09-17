@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * tables exactly.
  *
  * <p>The values below were read out of {@code PlanetRenderer} before it was
- * migrated, where they lived as four {@code EnumMap}s and three {@code switch}
+ * migrated, where they lived as per-body {@code EnumMap}s and three {@code switch}
  * statements. Losing one of them would not fail any other test — the planet would
  * just quietly lose its atmosphere glow, spin at the wrong rate, or come out
  * flat-shaded — so they are pinned here individually.</p>
