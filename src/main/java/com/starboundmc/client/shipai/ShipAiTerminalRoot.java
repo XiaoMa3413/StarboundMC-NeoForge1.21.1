@@ -52,13 +52,13 @@ public final class ShipAiTerminalRoot extends UIElement
     private final Label portraitState = new Label();
     private final Label linkStatus = new Label();
     private final ScrollerView history = new ScrollerView();
-    private final Button returnLatest = new Button();
+    private final Button returnLatest = new NovaTerminalButton();
     private final Label optionHint = new Label();
-    private final Button singleAction = new Button();
+    private final Button singleAction = new NovaTerminalButton();
     private final UIElement topicControls = new UIElement();
     private final Map<SituationTopic, Button> topicButtons =
             new EnumMap<>(SituationTopic.class);
-    private final Button progressionButton = new Button();
+    private final Button progressionButton = new NovaTerminalButton();
     private final ClientShipAiTerminalState.Session session =
             ClientShipAiTerminalState.current();
     private final List<Label> transcriptLabels = new ArrayList<>();
@@ -68,6 +68,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private long observedUpdateSequence;
     private int observedRepairInventoryState = Integer.MIN_VALUE;
     private boolean applyingAutoScroll;
+    private final NovaCommandLayout commandLayout;
 
     public ShipAiTerminalRoot(int containerId)
     {
@@ -82,17 +83,12 @@ public final class ShipAiTerminalRoot extends UIElement
                 .alignItems(AlignItems.CENTER)
                 .justifyContent(AlignContent.CENTER));
 
-        UIElement shell = new UIElement().addClass("ship-ai-shell");
-        shell.setOverflowVisible(false);
-        shell.layout(layout -> layout
-                .widthPercent(90)
-                .heightPercent(88)
-                .maxWidth(360)
-                .maxHeight(210)
-                .minHeight(96)
-                .flexDirection(FlexDirection.COLUMN));
-        shell.addChildren(buildHeader(), buildBody());
-        addChild(shell);
+        commandLayout = new NovaCommandLayout(containerId, portrait, buildConversationPane(), text -> {
+            session.selectOption(Component.translatable("gui.starboundmc.tasks.ask_question"), text,
+                    ClientShipAiTerminalState.CompletionIntent.NONE, null);
+            syncPresentation();
+        });
+        addChild(commandLayout);
 
         addEventListener(UIEvents.TICK, event -> tickTerminal());
         refreshAuthoritativeSnapshot();
@@ -233,8 +229,8 @@ public final class ShipAiTerminalRoot extends UIElement
         UIElement logHeader = new UIElement().addClass("ship-ai-log-header");
         logHeader.layout(layout -> layout
                 .widthPercent(100)
-                .height(11)
-                .flexShrink(1)
+                .height(18)
+                .flexShrink(0)
                 .gapAll(4)
                 .alignItems(AlignItems.CENTER)
                 .flexDirection(FlexDirection.ROW));
@@ -253,7 +249,7 @@ public final class ShipAiTerminalRoot extends UIElement
         returnLatest.addClass("ship-ai-return-button");
         returnLatest.setDisplay(false);
         returnLatest.setOverflowVisible(false);
-        returnLatest.layout(layout -> layout.width(62).height(12));
+        returnLatest.layout(layout -> layout.width(72).height(16));
         returnLatest.text.setAllowHitTest(false);
         returnLatest.textStyle(style -> style
                 .adaptiveWidth(false)
@@ -287,11 +283,11 @@ public final class ShipAiTerminalRoot extends UIElement
                 .minScrollPixel(8)
                 .maxScrollPixel(22));
         history.viewPort(view -> view
-                .layout(layout -> layout.paddingAll(5))
+                .layout(layout -> layout.paddingAll(9))
                 .style(style -> style.backgroundTexture(IGuiTexture.EMPTY)));
         history.viewContainer(view -> view.layout(layout -> layout
                 .widthPercent(100)
-                .gapAll(5)
+                .gapAll(12)
                 .flexDirection(FlexDirection.COLUMN)));
 
         history.viewContainer.addEventListener(UIEvents.LAYOUT_CHANGED, event ->
@@ -327,7 +323,7 @@ public final class ShipAiTerminalRoot extends UIElement
         section.setOverflowVisible(false);
         section.layout(layout -> layout
                 .widthPercent(100)
-                .height(58)
+                .height(80)
                 .minHeight(40)
                 .flexShrink(1)
                 .justifyContent(AlignContent.CENTER)
@@ -344,7 +340,7 @@ public final class ShipAiTerminalRoot extends UIElement
                 .textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
 
-        configureButton(singleAction, "ship-ai-primary-action", Horizontal.CENTER);
+        configureButton(singleAction, "ship-ai-primary-action", Horizontal.LEFT);
         singleAction.setDisplay(false);
         singleAction.layout(layout -> layout.widthPercent(100).height(22));
         singleAction.addEventListener(UIEvents.CLICK, event ->
@@ -385,16 +381,16 @@ public final class ShipAiTerminalRoot extends UIElement
             row.layout(layout -> layout
                     .widthPercent(100)
                     .flex(1)
-                    .minHeight(9)
+                    .minHeight(14)
                     .flexShrink(1)
                     .gapAll(3)
                     .flexDirection(FlexDirection.ROW));
             for (int columnIndex = 0; columnIndex < 2; columnIndex++)
             {
                 SituationTopic topic = topics[rowIndex * 2 + columnIndex];
-                Button button = new Button();
+                Button button = new NovaTerminalButton();
                 configureButton(button, "ship-ai-topic-button", Horizontal.LEFT);
-                button.layout(layout -> layout.flex(1).heightPercent(100).minHeight(9));
+                button.layout(layout -> layout.flex(1).heightPercent(100).minHeight(14));
                 button.addEventListener(UIEvents.CLICK, event ->
                 {
                     if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && button.isActive())
@@ -409,7 +405,7 @@ public final class ShipAiTerminalRoot extends UIElement
             topicGrid.addChild(row);
         }
 
-        configureButton(progressionButton, "ship-ai-next-button", Horizontal.CENTER);
+        configureButton(progressionButton, "ship-ai-next-button", Horizontal.LEFT);
         progressionButton.addEventListener(UIEvents.CLICK, event ->
         {
             if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && progressionButton.isActive())
@@ -446,6 +442,7 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private void tickTerminal()
     {
+        commandLayout.tick(session.isTransmitting());
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
         int repairInventoryState = localRepairInventoryState();
         boolean repairInventoryChanged = repairInventoryState != observedRepairInventoryState;
@@ -673,6 +670,7 @@ public final class ShipAiTerminalRoot extends UIElement
             case ACTIVATE_SURFACE_MISSION -> ShipAiActionPacket.activateSurfaceMission(
                     containerId, requestId);
             case SUBMIT_SUBLIGHT_REPAIR -> throw new IllegalArgumentException("Repair requires an engine socket");
+            case CLAIM_TASK_REWARD, TRACK_TASK -> throw new IllegalArgumentException("Task requests use the command page");
         };
         ModNetwork.sendToServer(packet);
         syncPresentation();
@@ -1033,20 +1031,40 @@ public final class ShipAiTerminalRoot extends UIElement
     private void appendTranscriptView(int messageIndex)
     {
         preserveManualScroll();
+        var message = session.message(messageIndex);
+        boolean fromPlayer = message.speaker() == ClientShipAiTerminalState.Speaker.PLAYER;
+        UIElement row = new UIElement();
+        row.setAllowHitTest(false);
+        row.layout(l -> l.widthPercent(100).flexShrink(0).flexDirection(FlexDirection.ROW)
+                .justifyContent(fromPlayer ? AlignContent.FLEX_END : AlignContent.FLEX_START));
+        UIElement entry = new UIElement().addClass(fromPlayer ? "ship-ai-message-player" : "ship-ai-message-nova");
+        entry.setAllowHitTest(false);
+        entry.layout(l -> l.widthPercent(92).flexShrink(0).gapAll(4).flexDirection(FlexDirection.COLUMN));
+        Label speaker = new Label();
+        speaker.addClass("ship-ai-message-speaker");
+        speaker.setAllowHitTest(false);
+        speaker.layout(l -> l.widthPercent(100).height(9).flexShrink(0));
+        speaker.setText(Component.translatable(message.speaker().translationKey())
+                .withStyle(style -> style.withColor(speakerColor(message.speaker()))));
+        speaker.textStyle(s -> s.adaptiveWidth(false).textWrap(TextWrap.HIDE)
+                .textAlignHorizontal(fromPlayer ? Horizontal.RIGHT : Horizontal.LEFT));
         Label label = new Label();
         label.addClass("ship-ai-history-text");
         label.setAllowHitTest(false);
         label.setOverflowVisible(false);
-        label.layout(layout -> layout.widthPercent(100).minHeight(9));
+        label.layout(layout -> layout.widthPercent(100).minHeight(11).flexShrink(0));
         label.textStyle(style -> style
                 .adaptiveWidth(false)
                 .adaptiveHeight(true)
                 .textWrap(TextWrap.WRAP)
-                .lineSpacing(2));
+                .textAlignHorizontal(fromPlayer ? Horizontal.RIGHT : Horizontal.LEFT)
+                .lineSpacing(3));
 
         transcriptLabels.add(label);
         updateTranscriptLine(messageIndex);
-        history.addScrollViewChild(label);
+        entry.addChildren(speaker, label);
+        row.addChild(entry);
+        history.addScrollViewChild(row);
     }
 
     private void updateTranscriptLine(int messageIndex)
@@ -1055,11 +1073,7 @@ public final class ShipAiTerminalRoot extends UIElement
         Component body = session.isStreamingLine(messageIndex)
                 ? Component.literal(session.visibleStreamingText())
                 : message.body().copy();
-        transcriptLabels.get(messageIndex).setText(
-                Component.translatable(message.speaker().translationKey())
-                        .withStyle(style -> style.withColor(speakerColor(message.speaker())))
-                        .append(Component.literal("  "))
-                        .append(body.copy().withStyle(style -> style.withColor(BODY_COLOR))));
+        transcriptLabels.get(messageIndex).setText(body.copy().withStyle(style -> style.withColor(BODY_COLOR)));
     }
 
     private static int speakerColor(ClientShipAiTerminalState.Speaker speaker)

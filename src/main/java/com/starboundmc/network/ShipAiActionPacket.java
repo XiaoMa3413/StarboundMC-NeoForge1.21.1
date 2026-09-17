@@ -1,6 +1,7 @@
 package com.starboundmc.network;
 
 import com.starboundmc.story.SituationTopic;
+import com.starboundmc.story.NovaTask;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -24,6 +25,9 @@ public record ShipAiActionPacket(int containerId, long requestId,
             throw new IllegalArgumentException("action cannot be null");
         if (action == Action.MARK_SITUATION_READ)
             SituationTopic.fromMask(argument);
+        else if (action == Action.CLAIM_TASK_REWARD || action == Action.TRACK_TASK) {
+            if (action != Action.TRACK_TASK || argument != -1) NovaTask.fromId(argument);
+        }
         else if (argument != 0)
             throw new IllegalArgumentException(action + " does not accept an argument");
     }
@@ -89,7 +93,9 @@ public record ShipAiActionPacket(int containerId, long requestId,
         CONFIRM_IDENTITY(1),
         MARK_SITUATION_READ(2),
         ACTIVATE_SURFACE_MISSION(3),
-        SUBMIT_SUBLIGHT_REPAIR(4);
+        SUBMIT_SUBLIGHT_REPAIR(4),
+        CLAIM_TASK_REWARD(5),
+        TRACK_TASK(6);
 
         private final int wireId;
 

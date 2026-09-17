@@ -7,6 +7,7 @@ import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.PlayerStoryState;
 import com.starboundmc.story.SharedShipProgress;
 import com.starboundmc.story.SurfaceMissionState;
+import com.starboundmc.story.NovaTaskProgress;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -26,6 +27,7 @@ public final class ClientShipStoryState
     private static final Deque<Long> acknowledgedRequestIds = new ArrayDeque<>();
     private static SharedView shared;
     private static PlayerView player;
+    private static NovaTaskProgress tasks;
 
     private ClientShipStoryState()
     {
@@ -45,6 +47,7 @@ public final class ClientShipStoryState
         acknowledgedRequestIds.clear();
         shared = null;
         player = null;
+        tasks = null;
     }
 
     public static boolean apply(int activeContainerId, ShipStorySnapshotPacket snapshot)
@@ -53,6 +56,9 @@ public final class ClientShipStoryState
             return false;
         if (snapshot.containerId() != containerId)
             beginContainer(snapshot.containerId());
+        if (tasks == null || snapshot.tasks().revision() > tasks.revision()
+                || snapshot.tasks().revision() == tasks.revision()
+                && snapshot.tasks().schemaVersion() > tasks.schemaVersion()) tasks = snapshot.tasks();
         if (shared == null || snapshot.sharedRevision() > shared.revision()
                 || snapshot.sharedRevision() == shared.revision()
                 && snapshot.sharedSchemaVersion() > shared.schemaVersion())
@@ -95,6 +101,10 @@ public final class ClientShipStoryState
     public static boolean hasSnapshot(int expectedContainerId)
     {
         return containerId == expectedContainerId && shared != null && player != null;
+    }
+
+    public static NovaTaskProgress tasks(int expectedContainerId) {
+        return containerId == expectedContainerId && tasks != null ? tasks : NovaTaskProgress.DEFAULT;
     }
 
     public static Snapshot snapshot(int expectedContainerId)

@@ -42,7 +42,7 @@ public final class ShipStoryService
         SharedShipProgress shared = ShipStateData.get(server).getStoryProgress();
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
         ModNetwork.sendToPlayer(player, snapshotFor(
-                containerId, 0L, shared, personal, server.overworld().getGameTime()));
+                containerId, 0L, shared, personal, server.overworld().getGameTime()).withTasks(NovaTaskService.refresh(player)));
     }
 
     static ShipStorySnapshotPacket snapshotFor(int containerId,
@@ -130,6 +130,17 @@ public final class ShipStoryService
             {
                 // Retain wire ID 4 for older clients, but never accept terminal repair requests.
             }
+            case CLAIM_TASK_REWARD -> {
+                try { NovaTaskService.claim(player, NovaTask.fromId(argument)); }
+                catch (IllegalArgumentException ignored) { }
+            }
+            case TRACK_TASK -> {
+                NovaTaskProgress before = NovaTaskService.refresh(player);
+                try {
+                    NovaTaskProgress after = before.track(argument);
+                    if (after != before) player.setData(ModAttachments.NOVA_TASKS, after);
+                } catch (IllegalArgumentException ignored) { }
+            }
         }
 
         if (sharedChanged)
@@ -157,6 +168,7 @@ public final class ShipStoryService
             ShipEnvironmentService.syncOpenMenus(server);
         }
         ShipStoryBroadcastService.tick(server);
+        NovaTaskService.tick(server);
     }
 
     /**
@@ -183,6 +195,7 @@ public final class ShipStoryService
         // Mission completion is shared, but the arrival confirmation is a
         // personal cue so every player gets the same first sentence once.
         ShipStoryBroadcastService.sendSurfaceArrivalOnce(player);
+        NovaTaskService.onSurfaceArrival(player);
         if (missionChanged)
         {
             syncOpenTerminalOwners(server, null, 0L);
@@ -283,7 +296,7 @@ public final class ShipStoryService
                 containerId, requestId,
                 ShipStateData.get(server).getStoryProgress(),
                 player.getData(ModAttachments.PLAYER_STORY),
-                server.overworld().getGameTime()));
+                server.overworld().getGameTime()).withTasks(NovaTaskService.refresh(player)));
     }
 
     private static void syncOpenTerminalOwners(MinecraftServer server,
@@ -301,7 +314,7 @@ public final class ShipStoryService
                         menu.containerId, acknowledgement,
                         ShipStateData.get(server).getStoryProgress(),
                         onlinePlayer.getData(ModAttachments.PLAYER_STORY),
-                        server.overworld().getGameTime()));
+                        server.overworld().getGameTime()).withTasks(NovaTaskService.refresh(onlinePlayer)));
             }
         }
     }

@@ -136,7 +136,7 @@ final class NovaBroadcastHudRoot extends UIElement
         link.addClass("nova-remote-link");
         configureSingleLine(link, Horizontal.RIGHT);
         link.layout(layout -> layout.flex(1).height(9));
-        header.addChildren(speaker, link);
+        header.addChild(speaker);
 
         body.addClass("nova-remote-body");
         body.setText(Component.empty());

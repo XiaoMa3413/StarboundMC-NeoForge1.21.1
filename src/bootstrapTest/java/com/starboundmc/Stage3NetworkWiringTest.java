@@ -13,7 +13,7 @@ final class Stage3NetworkWiringTest {
     @Test
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
-        assertTrue(network.contains("PROTOCOL_VERSION = \"7\""));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"8\""));
         assertEquals(12, occurrences(network, "playToServer("));
         assertEquals(13, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));

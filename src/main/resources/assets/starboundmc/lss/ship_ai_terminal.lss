@@ -1,4 +1,49 @@
+/* Button surfaces are drawn by NovaTerminalButton; text and layout remain styled here. */
 // Shipboard AI terminal: a compact, embedded glass-and-metal console.
+/* Command terminal: quiet reading surface, fine structural dividers, no system dashboard. */
+.command-shell { background: group(rect(#fc0b121a), border(1, #66888f)); }
+.command-header { background: group(rect(#192d37), border(-1, #3d5963)); }
+.command-brand { font-size: 9; text-color: #91ded1; text-shadow: false; }
+.command-page-title { font-size: 8; text-color: #d8e7eb; text-shadow: false; }
+.command-body { background: rect(#0b151d); }
+.command-nav { background: rect(#0b151e); }
+.command-center { background: rect(#101e28); }
+.command-nova { background: group(rect(#0c1821), border(-1, #304852)); }
+.command-portrait-stage { background: group(rect(#132d36), border(1, #3e6e77)); }
+.command-objective { background: group(rect(#192f3b), border(-1, #446472)); }
+.command-reward-panel { background: group(rect(#252a2b), border(-1, #655b42)); }
+.command-reward-heading { font-size: 7; text-color: #e2c28b; text-shadow: false; text-wrap: wrap; }
+.command-task-details { background: rect(#00142630); }
+.command-milestone { background: rect(#344b56); }
+.command-milestone-done { background: rect(#6fa49e); }
+.command-milestone-current { background: rect(#b1eddf); }
+.command-nova .nova-portrait { background: rect(#081822); }
+.command-title { font-size: 10; text-color: #eef6f5; text-shadow: false; }
+.command-eyebrow { font-size: 6; text-color: #85b5ba; text-shadow: false; }
+.command-copy { font-size: 7; text-color: #c0d3da; text-shadow: false; text-wrap: wrap; }
+.command-muted { font-size: 7; text-color: #95aeb9; text-shadow: false; text-wrap: wrap; }
+.command-accent { font-size: 7; text-color: #8cddd0; text-shadow: false; text-wrap: wrap; }
+.command-archive-entry { background: rect(#00162b35); }
+.command-button:host {
+
+
+
+  padding-horizontal: 6;
+}
+.command-button .__button_text__ { flex: 1; font-size: 7; text-color: #d1e0e4; text-shadow: false; text-wrap: hide; }
+.command-selected .__button_text__ { text-color: #a0eee0; }
+.command-primary .__button_text__ { text-color: #0b2529; }
+.command-button:disabled .__button_text__ { text-color: #597480; }
+.command-scroll .__scroller_view_vertical-scroller__ { width: 3; margin-left: 3; }
+.command-scroll .__scroller_scroll_container__ { background: rect(#172c35); }
+.command-scroll .__scroller_scroll_bar__ { base-background: rect(#446772); hover-background: rect(#8bc6c1); pressed-background: rect(#a4eee0); }
+.command-shell .ship-ai-history-text { font-size: 8; text-color: #d1dfe3; }
+.command-shell .ship-ai-message-speaker { font-size: 6; text-shadow: false; }
+.command-shell .ship-ai-topic-button .__button_text__ { font-size: 7; }
+.command-shell .ship-ai-next-button .__button_text__ { font-size: 7; }
+.command-shell .ship-ai-return-button .__button_text__ { font-size: 6; }
+.command-shell .ship-ai-conversation-pane { background: rect(#0d1922); }
+.command-shell .ship-ai-history { background: rect(#000b1720); }
 // Straight edges and restrained framing keep it visually distinct from the
 // rounded starmap and from the image-backed teleporter skin.
 .ship-ai-screen {
@@ -114,9 +159,9 @@
 }
 
 .ship-ai-topic-button:host {
-  base-background: group(rect(#111719), border(1, #596164));
-  hover-background: group(rect(#1c2729), border(1, #9da6a8));
-  pressed-background: group(rect(#071012), border(1, #79e3df));
+
+
+
   padding-horizontal: 4;
 }
 
@@ -136,34 +181,15 @@
   text-color: #626a6c;
 }
 
-.ship-ai-topic-read:host {
-  base-background: group(rect(#11201f), border(1, #568a86));
-  hover-background: group(rect(#1a302f), border(1, #86d8d3));
-  pressed-background: group(rect(#071312), border(1, #79e3df));
-}
-
-.ship-ai-topic-current:host {
-  base-background: group(rect(#173133), border(1, #8cefeb));
-  hover-background: group(rect(#214244), border(1, #c5fffc));
-  pressed-background: group(rect(#0a2022), border(1, #ffffff));
-}
-
-/* Disabled is a distinct state from persistent read/current selection. */
-.ship-ai-topic-button:disabled:host {
-  base-background: group(rect(#0c1011), border(1, #3d4446));
-  hover-background: group(rect(#0c1011), border(1, #3d4446));
-  pressed-background: group(rect(#0c1011), border(1, #3d4446));
-}
-
 .ship-ai-topic-button:disabled:host .__button_text__ {
   text-color: #687174;
   text-shadow: false;
 }
 
 .ship-ai-next-button:host {
-  base-background: group(rect(#141b1d), border(1, #6d7779));
-  hover-background: group(rect(#202b2d), border(1, #b3bdbe));
-  pressed-background: group(rect(#091113), border(1, #79e3df));
+
+
+
   padding-horizontal: 5;
 }
 
@@ -173,10 +199,6 @@
   text-color: #edf1f1;
   text-shadow: false;
   text-wrap: hide;
-}
-
-.ship-ai-next-button:disabled:host {
-  base-background: group(rect(#0c1011), border(1, #3d4446));
 }
 
 .ship-ai-next-button:disabled .__button_text__ {

@@ -14,6 +14,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClientShipStoryStateTest
 {
+    @Test void taskRevisionsAndWireRoundTripDoNotReplayOlderClaims() {
+        var progress = com.starboundmc.story.NovaTaskProgress.DEFAULT.observe(true, true, true, false, true)
+                .claim(com.starboundmc.story.NovaTask.SURFACE);
+        var packet = snapshot(7, 1, CoreState.ONLINE, 1, true).withTasks(progress);
+        var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+        try {
+            ShipStorySnapshotPacket.STREAM_CODEC.encode(buffer, packet);
+            assertEquals(packet, ShipStorySnapshotPacket.STREAM_CODEC.decode(buffer));
+        } finally { buffer.release(); }
+        ClientShipStoryState.apply(7, packet);
+        ClientShipStoryState.apply(7, snapshot(7, 2, CoreState.ONLINE, 2, true));
+        assertEquals(progress, ClientShipStoryState.tasks(7));
+        ClientShipStoryState.beginContainer(8);
+        assertFalse(ClientShipStoryState.apply(8, packet));
+        assertEquals(com.starboundmc.story.NovaTaskProgress.DEFAULT, ClientShipStoryState.tasks(8));
+    }
     @BeforeEach
     void resetConnection()
     {

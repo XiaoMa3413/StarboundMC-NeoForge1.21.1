@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
@@ -20,12 +21,42 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import com.mojang.serialization.MapCodec;
 
 /** Dedicated entry block for the LDLib2 starmap redraw. */
 public final class StarmapTerminalBlock extends Block {
     public static final MapCodec<StarmapTerminalBlock> CODEC = simpleCodec(StarmapTerminalBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private static final VoxelShape TABLE_SHAPE = Shapes.or(
+            Block.box(2, 0, 2, 14, 2, 14),
+            Block.box(2, 2, 4, 14, 8, 12),
+            Block.box(1, 8, 1, 15, 11, 15));
+    private static final VoxelShape[] SHAPES = new VoxelShape[4];
+
+    static {
+        VoxelShape shape = Shapes.or(TABLE_SHAPE,
+                Block.box(1, 11, 13, 3, 13, 15), Block.box(13, 11, 13, 15, 13, 15));
+        for (int turn = 0; turn < 4; turn++) {
+            SHAPES[turn] = shape;
+            VoxelShape[] rotated = {Shapes.empty()};
+            shape.forAllBoxes((x0, y0, z0, x1, y1, z1) ->
+                    rotated[0] = Shapes.or(rotated[0], Shapes.box(1 - z1, y0, x0, 1 - z0, y1, x1)));
+            shape = rotated[0];
+        }
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPES[switch (state.getValue(FACING)) {
+            case EAST -> 1;
+            case SOUTH -> 2;
+            case WEST -> 3;
+            default -> 0;
+        }];
+    }
 
     public StarmapTerminalBlock(Properties properties) {
         super(properties);

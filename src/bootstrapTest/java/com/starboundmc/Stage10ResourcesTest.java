@@ -194,18 +194,69 @@ final class Stage10ResourcesTest {
     void shipAiTerminalUsesDedicatedAnimatedTextures() throws IOException {
         JsonObject textures = json(ASSETS.resolve("models/block/ship_ai_terminal.json"))
                 .getAsJsonObject("textures");
-        for (String texture : List.of("casing", "frame", "controls", "screen")) {
-            assertEquals("starboundmc:block/ship_ai_terminal_" + texture,
-                    textures.get(texture).getAsString(), texture);
-        }
+        assertEquals("starboundmc:block/command_deck_atlas", textures.get("atlas").getAsString());
+        assertEquals("starboundmc:block/ship_ai_terminal_screen", textures.get("screen").getAsString());
         assertFalse(textures.toString().contains("ship_console"));
+
+        BufferedImage atlas = ImageIO.read(ASSETS.resolve("textures/block/command_deck_atlas.png").toFile());
+        assertNotNull(atlas);
+        assertEquals(256, atlas.getWidth());
+        assertEquals(256, atlas.getHeight());
+        BufferedImage edges = ImageIO.read(ASSETS.resolve("textures/block/command_deck_edges.png").toFile());
+        assertNotNull(edges);
+        assertEquals(1024, edges.getWidth());
+        assertEquals(1024, edges.getHeight());
+        JsonObject navigation = json(ASSETS.resolve("models/block/starmap_terminal.json"));
+        assertEquals("minecraft:block/block", navigation.get("parent").getAsString());
+        assertFalse(navigation.getAsJsonArray("elements").isEmpty());
 
         Path screen = ASSETS.resolve("textures/block/ship_ai_terminal_screen.png");
         BufferedImage image = ImageIO.read(screen.toFile());
         assertNotNull(image);
-        assertEquals(16, image.getWidth());
-        assertEquals(48, image.getHeight());
+        assertEquals(48, image.getWidth());
+        assertEquals(96, image.getHeight());
         assertTrue(Files.isRegularFile(Path.of(screen + ".mcmeta")));
+        JsonObject animation = json(Path.of(screen + ".mcmeta")).getAsJsonObject("animation");
+        assertEquals(48, animation.get("width").getAsInt());
+        assertEquals(32, animation.get("height").getAsInt());
+    }
+
+    @Test
+    void commandDeckFacesKeepConsistentTexelDensity() throws IOException {
+        for (String name : List.of("ship_ai_terminal", "starmap_terminal")) {
+            for (JsonElement entry : json(ASSETS.resolve("models/block/" + name + ".json"))
+                    .getAsJsonArray("elements")) {
+                JsonObject element = entry.getAsJsonObject();
+                double[] size = new double[3];
+                for (int axis = 0; axis < 3; axis++) {
+                    size[axis] = element.getAsJsonArray("to").get(axis).getAsDouble()
+                            - element.getAsJsonArray("from").get(axis).getAsDouble();
+                }
+                for (var faceEntry : element.getAsJsonObject("faces").entrySet()) {
+                    JsonObject face = faceEntry.getValue().getAsJsonObject();
+                    String texture = face.get("texture").getAsString();
+                    if (texture.equals("#screen")) continue;
+                    String side = faceEntry.getKey();
+                    double width = side.equals("east") || side.equals("west") ? size[2] : size[0];
+                    double height = side.equals("up") || side.equals("down") ? size[2] : size[1];
+                    var uv = face.getAsJsonArray("uv");
+                    if (!texture.equals("#chart") && (Math.min(width, height) <= 4
+                            || side.equals("east") || side.equals("west"))) {
+                        assertEquals("#edges", texture, name + ":" + side + " needs complete tailored artwork");
+                    }
+                    assertEquals(width / height,
+                            (uv.get(2).getAsDouble() - uv.get(0).getAsDouble())
+                                    / (uv.get(3).getAsDouble() - uv.get(1).getAsDouble()),
+                            0.00001, name + ":" + side + " must not stretch");
+                    if (texture.equals("#chart")) continue;
+                    double texelsPerUv = texture.equals("#edges") ? 64 : 16;
+                    assertEquals(width * 8, texelsPerUv * (uv.get(2).getAsDouble() - uv.get(0).getAsDouble()),
+                            0.00001, name + ":" + side + " horizontal density");
+                    assertEquals(height * 8, texelsPerUv * (uv.get(3).getAsDouble() - uv.get(1).getAsDouble()),
+                            0.00001, name + ":" + side + " vertical density");
+                }
+            }
+        }
     }
 
     @Test
