@@ -99,6 +99,44 @@ final class Stage10ResourcesTest {
         }
     }
 
+    /**
+     * Loot tables are parsed by the server at startup, not by the build, so a
+     * malformed number provider is invisible until a world loads and then only shows
+     * up as a log line: the block silently drops nothing.
+     *
+     * <p>{@code set_count}'s {@code count} is a loot NumberProvider, whose uniform
+     * range is {@code min}/{@code max}. Worldgen's IntProvider spells the same idea
+     * {@code min_inclusive}/{@code max_inclusive}, and copying that form across is
+     * the mistake this catches.</p>
+     */
+    @Test
+    void everyLootTableNumberProviderUsesTheLootFieldNames() throws IOException {
+        Path lootDirectory = DATA.resolve("loot_table/blocks");
+        try (Stream<Path> files = Files.list(lootDirectory)) {
+            for (Path path : files.filter(file -> file.toString().endsWith(".json")).toList()) {
+                JsonObject root = json(path);
+                for (var pool : root.getAsJsonArray("pools")) {
+                    for (var entry : pool.getAsJsonObject().getAsJsonArray("entries")) {
+                        var functions = entry.getAsJsonObject().getAsJsonArray("functions");
+                        if (functions == null)
+                            continue;
+                        for (var function : functions) {
+                            var count = function.getAsJsonObject().get("count");
+                            if (count == null || !count.isJsonObject())
+                                continue;
+                            JsonObject provider = count.getAsJsonObject();
+                            if (!"minecraft:uniform".equals(provider.get("type").getAsString()))
+                                continue;
+                            assertTrue(provider.has("min") && provider.has("max"),
+                                    path.getFileName() + ": a uniform loot NumberProvider needs "
+                                            + "min/max, not the worldgen min_inclusive/max_inclusive");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     void engineUnitHasIndependentModelAndAnimatedPixelTextures() throws IOException {
         var model = json(ASSETS.resolve("models/block/ship_engine_unit.json"));
