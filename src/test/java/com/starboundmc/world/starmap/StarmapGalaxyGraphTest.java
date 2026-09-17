@@ -1,5 +1,6 @@
 package com.starboundmc.world.starmap;
 
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
@@ -11,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.starboundmc.world.universe.UniverseTestSupport;
 final class StarmapGalaxyGraphTest {
     @Test
     void bundledResourceDefinesAValidConnectedGraph() throws Exception {
@@ -20,7 +22,7 @@ final class StarmapGalaxyGraphTest {
             throw new AssertionError("Bundled galaxy graph resource is missing");
         try (var reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
             StarmapGalaxyGraph graph = StarmapGalaxyGraphJson.read(reader);
-            assertEquals(StarSystems.all().size(), graph.nodes().size());
+            assertEquals(UniverseTestSupport.universe().allSystems().size(), graph.nodes().size());
             assertTrue(graph.isConnected());
         }
     }
@@ -29,10 +31,10 @@ final class StarmapGalaxyGraphTest {
     void fallbackUsesStableSystemIdsAndAnExplicitConnectedRoute() {
         StarmapGalaxyGraph graph = StarmapGalaxyGraph.fallback();
 
-        assertEquals(StarSystems.all().size(), graph.nodes().size());
-        assertEquals(StarSystems.SYS_MAIN, graph.node(StarSystems.SYS_MAIN).id());
-        assertEquals(StarSystems.byId(StarSystems.SYS_MAIN).getEntries().size(),
-                graph.node(StarSystems.SYS_MAIN).bodyCount());
+        assertEquals(UniverseTestSupport.universe().allSystems().size(), graph.nodes().size());
+        assertEquals(BuiltInUniverse.MAIN_SYSTEM_ID, graph.node(BuiltInUniverse.MAIN_SYSTEM_ID).id());
+        assertEquals(UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID).bodies().size(),
+                graph.node(BuiltInUniverse.MAIN_SYSTEM_ID).bodyCount());
         assertEquals("main-cold-hyperlane", graph.routes().getFirst().id());
         assertTrue(graph.isConnected());
     }
@@ -89,10 +91,10 @@ final class StarmapGalaxyGraphTest {
     @Test
     void duplicateUndirectedRoutesAreRejected() {
         StarmapGalaxyGraph.Node main = new StarmapGalaxyGraph.Node(
-                StarSystems.SYS_MAIN, StarSystems.byId(StarSystems.SYS_MAIN),
+                BuiltInUniverse.MAIN_SYSTEM_ID, UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID),
                 new GalaxyMapPosition(0.25, 0.38), true, true);
         StarmapGalaxyGraph.Node cold = new StarmapGalaxyGraph.Node(
-                StarSystems.SYS_COLD, StarSystems.byId(StarSystems.SYS_COLD),
+                BuiltInUniverse.COLD_SYSTEM_ID, UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID),
                 new GalaxyMapPosition(0.73, 0.59), true, true);
 
         assertThrows(IllegalArgumentException.class, () -> StarmapGalaxyGraph.of(

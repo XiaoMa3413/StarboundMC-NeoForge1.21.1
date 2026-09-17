@@ -6,6 +6,8 @@ import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
 import com.starboundmc.network.ClientNetworkState;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -20,11 +22,26 @@ public final class ClientConnectionEvents {
     @SubscribeEvent
     public static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
         resetConnectionState();
+        adoptServerUniverse();
     }
 
     @SubscribeEvent
     public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         resetConnectionState();
+        // One server's universe must not outlive its session: the next world may
+        // ship different datapacks, and stale geometry would place docked ships
+        // against planets that are no longer there.
+        ClientUniverseCatalog.reset();
+    }
+
+    /**
+     * Takes the universe the server actually loaded. The synced datapack registry
+     * arrives during the configuration phase, so it is already available by the
+     * time the player joins.
+     */
+    private static void adoptServerUniverse() {
+        var connection = Minecraft.getInstance().getConnection();
+        ClientUniverseCatalog.refreshFrom(connection == null ? null : connection.registryAccess());
     }
 
     private static void resetConnectionState() {

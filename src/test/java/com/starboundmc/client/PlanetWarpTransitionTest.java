@@ -11,7 +11,6 @@ class PlanetWarpTransitionTest
     void shortRoutesKeepTheirOriginalDuration()
     {
         assertEquals(ShipFlightController.SHORT_ROUTE_TICKS,
-                new ShipFlightController(com.starboundmc.world.Planet.LUSH,
-                        com.starboundmc.world.Planet.MOLTEN).getTotalTicks());
+                new ShipFlightController("sys1:lush", "sys1:molten").getTotalTicks());
     }
 }

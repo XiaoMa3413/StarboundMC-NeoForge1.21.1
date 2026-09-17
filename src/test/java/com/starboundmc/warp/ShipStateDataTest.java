@@ -7,7 +7,6 @@ import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
 import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SurfaceMissionState;
-import com.starboundmc.world.Planet;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.RegistryAccess;
 import org.junit.jupiter.api.Test;
@@ -133,7 +132,7 @@ class ShipStateDataTest
     private static CompoundTag baseTag()
     {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Planet", Planet.LUSH.getId());
+        tag.putString("Planet", "lush");
         return tag;
     }
 }

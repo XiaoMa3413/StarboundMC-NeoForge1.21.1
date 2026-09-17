@@ -1,0 +1,17 @@
+{
+  "type": "starboundmc:giant_ore_vein",
+  "config": {
+    "size": 96,
+    "targets": [
+      {
+        "target": {
+          "predicate_type": "minecraft:tag_match",
+          "tag": "minecraft:stone_ore_replaceables"
+        },
+        "state": {
+          "Name": "starboundmc:fuel_crystal_ore"
+        }
+      }
+    ]
+  }
+}

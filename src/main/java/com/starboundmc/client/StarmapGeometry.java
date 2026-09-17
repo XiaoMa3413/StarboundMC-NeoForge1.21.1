@@ -1,8 +1,9 @@
 package com.starboundmc.client;
 
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseCatalog;
 
 /** Shared base-space geometry used by both cached scenery and live overlays. */
 public final class StarmapGeometry
@@ -22,26 +23,41 @@ public final class StarmapGeometry
     }
 
     /** System position in the fixed authoring canvas. */
-    public static int[] galaxyPosition(StarSystem system)
+    public static int[] galaxyPosition(StarSystemDefinition system)
     {
         return new int[] {
-                system.getGalaxyMapPosition().pixelX(BASE_WIDTH),
-                system.getGalaxyMapPosition().pixelY(BASE_HEIGHT)
+                system.galaxyMapPosition().pixelX(BASE_WIDTH),
+                system.galaxyMapPosition().pixelY(BASE_HEIGHT)
         };
     }
 
     /** Body position in the fixed authoring canvas, including recursive moon offsets. */
-    public static int[] bodyPosition(PlanetEntry entry)
+    public static int[] bodyPosition(CelestialBodyDefinition entry)
     {
-        double radians = Math.toRadians(entry.getOrbitAngle());
-        int dx = (int) (Math.cos(radians) * entry.getOrbitRadius());
-        int dy = (int) (Math.sin(radians) * entry.getOrbitRadius());
-        if (entry.getParentEntryId() != null)
+        return bodyPosition(entry, ClientUniverseCatalog.current());
+    }
+
+    /**
+     * Body position resolved against an explicit universe.
+     *
+     * <p>The parent is looked up in the catalog rather than the legacy registry,
+     * so a moon whose parent belongs to a datapack-added system still resolves. A
+     * body with no parent, or a parent that is not in this universe, falls back
+     * to the system centre exactly as before.</p>
+     */
+    public static int[] bodyPosition(CelestialBodyDefinition entry, UniverseCatalog catalog)
+    {
+        double radians = Math.toRadians(entry.orbit().orbitAngle());
+        int dx = (int) (Math.cos(radians) * entry.orbit().orbitRadius());
+        int dy = (int) (Math.sin(radians) * entry.orbit().orbitRadius());
+        String parentId = entry.parentEntryId().orElse(null);
+        if (parentId != null)
         {
-            PlanetEntry parent = StarSystems.entryById(entry.getParentEntryId());
+            CelestialBodyDefinition parent = catalog == null
+                    ? null : catalog.body(parentId).orElse(null);
             if (parent != null)
             {
-                int[] parentPosition = bodyPosition(parent);
+                int[] parentPosition = bodyPosition(parent, catalog);
                 return new int[] { parentPosition[0] + dx, parentPosition[1] + dy };
             }
         }
@@ -49,19 +65,21 @@ public final class StarmapGeometry
     }
 
     /** View-specific marker diameter; overview moons are intentionally subordinate thumbnails. */
-    public static int overviewDiameter(PlanetEntry entry)
+    public static int overviewDiameter(CelestialBodyDefinition entry)
     {
-        return entry.isMoon()
-                ? Math.max(6, Math.round(entry.getMarkerSize() * 0.65F))
-                : entry.getMarkerSize();
+        int markerSize = entry.starmapVisual().getMarkerSize();
+        return entry.orbit().isMoon()
+                ? Math.max(6, Math.round(markerSize * 0.65F))
+                : markerSize;
     }
 
     /** Parent position used as the centre of a moon's local orbit. */
-    public static int[] moonOrbitCenter(PlanetEntry moon)
+    public static int[] moonOrbitCenter(CelestialBodyDefinition moon)
     {
-        if (moon == null || moon.getParentEntryId() == null)
+        if (moon == null || moon.parentEntryId().isEmpty())
             return null;
-        PlanetEntry parent = StarSystems.entryById(moon.getParentEntryId());
+        CelestialBodyDefinition parent = ClientUniverseCatalog.current()
+                .body(moon.parentEntryId().orElseThrow()).orElse(null);
         return parent == null ? null : bodyPosition(parent);
     }
 }

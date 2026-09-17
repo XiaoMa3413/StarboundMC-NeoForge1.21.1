@@ -13,8 +13,8 @@ import com.starboundmc.network.Stage7ServerPayloadActions;
 import com.starboundmc.recipe.ModRecipes;
 import com.starboundmc.sound.ModSounds;
 import com.starboundmc.story.ModAttachments;
-import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.WorldgenRotationWarmup;
+import com.starboundmc.world.universe.ModUniverseRegistries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -29,7 +29,10 @@ public final class StarboundMC {
     public StarboundMC(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModNetwork::register);
-        modEventBus.addListener(ShipDimensions::registerDatagen);
+        // Ship dimension and universe definitions share one datapack-registry
+        // provider, so they are registered together in ModDatagen.
+        modEventBus.addListener(ModDatagen::register);
+        ModUniverseRegistries.register(modEventBus);
 
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);

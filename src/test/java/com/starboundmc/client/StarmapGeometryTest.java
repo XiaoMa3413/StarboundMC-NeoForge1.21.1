@@ -1,7 +1,8 @@
 package com.starboundmc.client;
 
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -27,17 +28,19 @@ class StarmapGeometryTest
         assertPosition("sys1:lush", 184, 51);
         assertPosition("sys1:molten", 184, 73);
         assertPosition("sys1:gasgiant", 16, 71);
-        assertPosition("sys1:rockymoon", 33, 80);
+        // The moon's map orbit (26) hugs the giant's 22-unit sprite from
+        // outside, so the pair reads as a close giant-moon system.
+        assertPosition("sys1:rockymoon", 38, 83);
         assertPosition("sys2:frozen", 125, 26);
     }
 
     @Test
     void overviewMoonsAreSmallerAndOrbitTheirParentPositions()
     {
-        PlanetEntry lush = StarSystems.entryById("sys1:lush");
-        PlanetEntry molten = StarSystems.entryById("sys1:molten");
-        PlanetEntry gasGiant = StarSystems.entryById("sys1:gasgiant");
-        PlanetEntry rockyMoon = StarSystems.entryById("sys1:rockymoon");
+        CelestialBodyDefinition lush = UniverseTestSupport.body("sys1:lush");
+        CelestialBodyDefinition molten = UniverseTestSupport.body("sys1:molten");
+        CelestialBodyDefinition gasGiant = UniverseTestSupport.body("sys1:gasgiant");
+        CelestialBodyDefinition rockyMoon = UniverseTestSupport.body("sys1:rockymoon");
 
         assertEquals(18, StarmapGeometry.overviewDiameter(lush));
         assertEquals(8, StarmapGeometry.overviewDiameter(molten));
@@ -59,7 +62,7 @@ class StarmapGeometryTest
 
     private static void assertPosition(String entryId, int x, int y)
     {
-        PlanetEntry entry = StarSystems.entryById(entryId);
+        CelestialBodyDefinition entry = UniverseTestSupport.body(entryId);
         assertArrayEquals(new int[] { x, y }, StarmapGeometry.bodyPosition(entry));
     }
 }

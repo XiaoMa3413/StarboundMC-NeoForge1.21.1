@@ -9,7 +9,6 @@ import com.starboundmc.client.shipai.ClientNovaBroadcastState;
 import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.menu.StarmapTerminalMenu;
 import com.starboundmc.menu.TeleporterMenu;
-import com.starboundmc.world.Planet;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
@@ -23,12 +22,14 @@ public final class ClientPayloadHandler {
 
     public static void handle(SyncStarStatePacket payload, IPayloadContext context) {
         ClientNetworkState.apply(payload);
+        // This packet carries the ship's location, which is both the star map's
+        // "current" marker and the departure end of the next flight route. It
+        // replaced the legacy planet sync that used to be the only thing telling the
+        // client where the ship was (§22), so both have to be applied here.
         ClientPlanetState.setStarState(payload.visited(), payload.currentEntryId());
-    }
-
-    public static void handle(SyncPlanetPacket payload, IPayloadContext context) {
-        ClientNetworkState.apply(payload);
-        ClientPlanetState.setCurrent(Planet.fromId(payload.planetId()));
+        // The arrival cue is consumed here now. It used to be consumed by the
+        // legacy planet sync, which was deleted (§22); this packet is sent on
+        // arrival as well, so the sound still fires exactly once.
         if (ClientPlanetState.consumeArrivalCue()) {
             WarpSounds.onWarpFinished();
         }
@@ -36,8 +37,8 @@ public final class ClientPayloadHandler {
 
     public static void handle(WarpStartPacket payload, IPayloadContext context) {
         ClientNetworkState.apply(payload);
-        ClientPlanetState.startWarp(Planet.fromId(payload.planetId()),
-                payload.durationTicks(), emptyToNull(payload.entryId()));
+        String targetEntryId = emptyToNull(payload.entryId());
+        ClientPlanetState.startWarp(targetEntryId, payload.durationTicks(), targetEntryId);
         WarpSounds.onWarpStarted();
     }
 

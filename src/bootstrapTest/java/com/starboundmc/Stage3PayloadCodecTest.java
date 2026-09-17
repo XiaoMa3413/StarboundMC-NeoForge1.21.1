@@ -8,7 +8,6 @@ import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.network.SyncFlightPacket;
 import com.starboundmc.network.SyncFuelPacket;
-import com.starboundmc.network.SyncPlanetPacket;
 import com.starboundmc.network.SyncStarStatePacket;
 import com.starboundmc.network.TeleportToShipPacket;
 import com.starboundmc.network.TeleporterListPacket;
@@ -42,13 +41,14 @@ final class Stage3PayloadCodecTest {
     void payloadTypesAreUniqueAndNamespaced() {
         List<CustomPacketPayload.Type<?>> types = List.of(
                 UpgradeMatterManipulatorPacket.TYPE, StartWarpPacket.TYPE,
-                SyncStarStatePacket.TYPE, SyncPlanetPacket.TYPE, WarpStartPacket.TYPE,
+                SyncStarStatePacket.TYPE, WarpStartPacket.TYPE,
                 SyncFuelPacket.TYPE, TeleporterListPacket.TYPE, TeleporterUsePacket.TYPE,
                 TeleporterRenamePacket.TYPE, TeleportToShipPacket.TYPE,
                 AddFuelPacket.TYPE, SyncFlightPacket.TYPE,
                 ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE,
                 ShipEnvironmentSnapshotPacket.TYPE, NovaBroadcastPacket.TYPE);
-        assertEquals(16, Set.copyOf(types).size());
+        // 15 after SyncPlanetPacket was removed (migration §22).
+        assertEquals(15, Set.copyOf(types).size());
         assertTrue(types.stream().allMatch(type -> type.id().getNamespace().equals("starboundmc")));
     }
 
@@ -72,12 +72,11 @@ final class Stage3PayloadCodecTest {
 
     @Test
     void roundTripsPlanetState() {
-        assertRoundTrip(new SyncPlanetPacket("frozen"), SyncPlanetPacket.STREAM_CODEC);
     }
 
     @Test
     void roundTripsWarpStart() {
-        assertRoundTrip(new WarpStartPacket("barren", 420, "system:barren"),
+        assertRoundTrip(new WarpStartPacket("system:barren", 420),
                 WarpStartPacket.STREAM_CODEC);
     }
 

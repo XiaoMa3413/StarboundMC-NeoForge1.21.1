@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 final class StarmapNodeElement extends UIElement {
     private final StarmapTerminalRoot root;
     private final StarSystemRef systemRef;
-    private final com.starboundmc.world.starmap.PlanetEntry entry;
+    private final com.starboundmc.world.universe.CelestialBodyDefinition entry;
     private final boolean centralStar;
     private NodePlacement simulationPlacement = new NodePlacement(0, 0, 0, false, false);
     private NodePlacement renderPlacement = simulationPlacement;
@@ -23,7 +23,7 @@ final class StarmapNodeElement extends UIElement {
     private boolean styleInitialized;
 
     StarmapNodeElement(StarmapTerminalRoot root, StarSystemRef systemRef,
-                       com.starboundmc.world.starmap.PlanetEntry entry, boolean centralStar) {
+                       com.starboundmc.world.universe.CelestialBodyDefinition entry, boolean centralStar) {
         this.root = root;
         this.systemRef = systemRef;
         this.entry = entry;
@@ -52,7 +52,7 @@ final class StarmapNodeElement extends UIElement {
         // A system overview shows moons as orientation dots only. They must
         // not turn into a second selection target when the user clicks them;
         // the root maps the click to the owning planet instead.
-        if (entry != null && entry.isMoon() && root.getLevel() == StarmapLevel.SYSTEM) {
+        if (entry != null && entry.orbit().isMoon() && root.getLevel() == StarmapLevel.SYSTEM) {
             root.selectEntry(entry);
             event.stopPropagation();
             return;
@@ -85,7 +85,7 @@ final class StarmapNodeElement extends UIElement {
         float centerX = root.getPositionX() + renderPlacement.x();
         float centerY = root.getPositionY() + renderPlacement.y();
         float radius = StarmapHitGeometry.radius(root.getLevel(), entry == null,
-                entry != null && entry.isMoon(), entry == root.getFocusedPlanet(),
+                entry != null && entry.orbit().isMoon(), entry == root.getFocusedPlanet(),
                 root.viewTransform().scale());
         return StarmapHitGeometry.contains(localX, localY, centerX, centerY, radius);
     }
@@ -164,7 +164,7 @@ final class StarmapNodeElement extends UIElement {
         int centerX = Math.round(getPositionX() + getSizeWidth() / 2F);
         int centerY = Math.round(getPositionY() + getSizeHeight() / 2F);
         int half = Math.max(7, Math.round(getSizeWidth() * 0.68F));
-        int rgb = systemRef.system().getStarColor() & 0x00FFFFFF;
+        int rgb = systemRef.system().starColor() & 0x00FFFFFF;
         for (int offset = -half; offset <= half; offset++) {
             int distance = Math.abs(offset);
             int taper = Math.max(1, Math.round((half - distance) * 0.30F) + 1);
@@ -220,11 +220,11 @@ final class StarmapNodeElement extends UIElement {
                 style(style -> style.backgroundTexture(com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture.EMPTY));
                 return;
             }
-            style(style -> style.backgroundTexture(SDFRectTexture.of(systemRef.system().getStarColor())
+            style(style -> style.backgroundTexture(SDFRectTexture.of(systemRef.system().starColor())
                     .setRadius(size / 2F).setBorderColor(0x885B91A5).setStroke(1)));
         }
     }
 
-    record StarSystemRef(com.starboundmc.world.starmap.StarSystem system) {}
+    record StarSystemRef(com.starboundmc.world.universe.StarSystemDefinition system) {}
     record NodePlacement(float x, float y, float size, boolean visible, boolean selected) {}
 }

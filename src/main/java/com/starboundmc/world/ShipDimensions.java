@@ -20,7 +20,6 @@ import net.minecraft.world.level.biome.FixedBiomeSource;
 import net.minecraft.world.level.biome.MobSpawnSettings;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 import java.util.OptionalLong;
 
@@ -40,11 +39,22 @@ public class ShipDimensions
      * Generates the three dynamic-registry resources that define the ship
      * dimension. Keeping these values in code makes schema drift visible when
      * datagen is run against a newer Minecraft API.
+     *
+     * <p>The bootstraps are contributed through {@link #applyTo(RegistrySetBuilder)}
+     * so every datapack registry in the mod can be registered by a single
+     * {@code createDatapackRegistryObjects} call. NeoForge names that provider
+     * "Registries", so a second call from the same mod is a duplicate-provider
+     * error rather than a second provider.</p>
      */
-    public static final RegistrySetBuilder BUILDER = new RegistrySetBuilder()
-            .add(Registries.DIMENSION_TYPE, ShipDimensions::bootstrapDimensionType)
-            .add(Registries.BIOME, ShipDimensions::bootstrapBiome)
-            .add(Registries.LEVEL_STEM, ShipDimensions::bootstrapLevelStem);
+    public static final RegistrySetBuilder BUILDER = applyTo(new RegistrySetBuilder());
+
+    public static RegistrySetBuilder applyTo(RegistrySetBuilder builder)
+    {
+        return builder
+                .add(Registries.DIMENSION_TYPE, ShipDimensions::bootstrapDimensionType)
+                .add(Registries.BIOME, ShipDimensions::bootstrapBiome)
+                .add(Registries.LEVEL_STEM, ShipDimensions::bootstrapLevelStem);
+    }
 
     private static void bootstrapDimensionType(BootstrapContext<DimensionType> context)
     {
@@ -91,11 +101,6 @@ public class ShipDimensions
                 context.lookup(Registries.DIMENSION_TYPE).getOrThrow(SHIP_DIMENSION_TYPE),
                 new ShipChunkGenerator(
                         new FixedBiomeSource(context.lookup(Registries.BIOME).getOrThrow(SHIP_BIOME)))));
-    }
-
-    public static void registerDatagen(GatherDataEvent event)
-    {
-        event.createDatapackRegistryObjects(BUILDER);
     }
 
     public static void teleportToShip(ServerPlayer player)

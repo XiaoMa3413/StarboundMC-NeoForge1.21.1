@@ -47,8 +47,6 @@ public final class ModNetwork {
 
         registrar.playToClient(SyncStarStatePacket.TYPE,
                 SyncStarStatePacket.STREAM_CODEC, ClientPayloadHandler::handle);
-        registrar.playToClient(SyncPlanetPacket.TYPE,
-                SyncPlanetPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(WarpStartPacket.TYPE,
                 WarpStartPacket.STREAM_CODEC, ClientPayloadHandler::handle);
         registrar.playToClient(SyncFuelPacket.TYPE,

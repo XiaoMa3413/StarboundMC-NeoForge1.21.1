@@ -5,7 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.mojang.logging.LogUtils;
-import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.starmap.StarmapBodyVisual;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -51,15 +51,15 @@ final class StarmapBodyTextureResolver {
         return resolveId(visual.getTextureId());
     }
 
-    IGuiTexture texture(PlanetEntry entry, float size, boolean preferFocus) {
-        ResourceLocation resolved = entry == null ? null : resolve(entry.getVisual(), preferFocus);
+    IGuiTexture texture(CelestialBodyDefinition entry, float size, boolean preferFocus) {
+        ResourceLocation resolved = entry == null ? null : resolve(entry.starmapVisual(), preferFocus);
         return texture(entry, size, resolved);
     }
 
-    IGuiTexture texture(PlanetEntry entry, float size, ResourceLocation resolved) {
+    IGuiTexture texture(CelestialBodyDefinition entry, float size, ResourceLocation resolved) {
         if (entry == null)
             return IGuiTexture.EMPTY;
-        StarmapBodyVisual visual = entry.getVisual();
+        StarmapBodyVisual visual = entry.starmapVisual();
         IGuiTexture body = resolved != null
                 ? SpriteTexture.of(resolved)
                 : SDFRectTexture.of(visual.getPrimaryColor())

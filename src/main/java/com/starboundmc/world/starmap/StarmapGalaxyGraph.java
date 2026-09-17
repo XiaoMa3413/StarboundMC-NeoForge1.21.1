@@ -1,5 +1,10 @@
 package com.starboundmc.world.starmap;
 
+import com.starboundmc.world.universe.BuiltInUniverse;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseCatalog;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,7 +15,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/** Immutable, explicitly edged data graph used by the deep-space starmap. */
+/**
+ * Immutable, explicitly edged data graph used by the deep-space starmap.
+ *
+ * <p>The graph owns the UI composition (which node sits where, which routes are
+ * drawn). The system each node refers to comes from the universe catalog, so the
+ * graph no longer carries its own copy of the universe.</p>
+ */
 public final class StarmapGalaxyGraph {
     private final List<Node> nodes;
     private final List<Route> routes;
@@ -52,16 +63,47 @@ public final class StarmapGalaxyGraph {
         return new StarmapGalaxyGraph(nodes, routes, byId);
     }
 
-    /** Built-in recovery graph used if a client resource is missing or invalid. */
+    /**
+     * Built-in recovery graph used if a client resource is missing or invalid.
+     *
+     * <p>Derived from the active universe rather than a fixed pair of ids, so a
+     * datapack that renames or adds systems still gets a usable graph when its
+     * own graph resource fails to load. The shipped two-system universe keeps its
+     * authored hyperlane id and direction; any other shape falls back to linking
+     * the systems in declaration order, which is enough to keep the map
+     * navigable and connected.</p>
+     */
     public static StarmapGalaxyGraph fallback() {
-        List<Node> nodes = StarSystems.all().stream()
-                .map(system -> new Node(system.getSystemId(), system,
-                        system.getGalaxyMapPosition(), true, true))
+        return forUniverse(ClientUniverseCatalog.current());
+    }
+
+    static StarmapGalaxyGraph forUniverse(UniverseCatalog universe) {
+        List<Node> nodes = universe.allSystems().stream()
+                .map(system -> new Node(system.systemId(), system,
+                        system.galaxyMapPosition(), true, true))
                 .toList();
-        List<Route> routes = List.of(new Route("main-cold-hyperlane",
-                StarSystems.SYS_MAIN, StarSystems.SYS_COLD, true, true));
+        List<StarSystemDefinition> systems = universe.allSystems();
+        List<Route> routes;
+        if (universe.system(BuiltInUniverse.MAIN_SYSTEM_ID).isPresent()
+                && universe.system(BuiltInUniverse.COLD_SYSTEM_ID).isPresent())
+        {
+            routes = List.of(new Route(MAIN_HYPERLANE,
+                    BuiltInUniverse.MAIN_SYSTEM_ID, BuiltInUniverse.COLD_SYSTEM_ID, true, true));
+        }
+        else
+        {
+            routes = new ArrayList<>();
+            for (int i = 1; i < systems.size(); i++) {
+                routes.add(new Route("link-" + systems.get(i - 1).systemId()
+                        + "-" + systems.get(i).systemId(),
+                        systems.get(i - 1).systemId(), systems.get(i).systemId(), true, true));
+            }
+        }
         return of(nodes, routes);
     }
+
+    /** The authored hyperlane id for the shipped two-system universe. */
+    public static final String MAIN_HYPERLANE = "main-cold-hyperlane";
 
     public List<Node> nodes() {
         return nodes;
@@ -75,8 +117,8 @@ public final class StarmapGalaxyGraph {
         return id == null ? null : nodesById.get(id);
     }
 
-    public Node node(StarSystem system) {
-        return system == null ? null : node(system.getSystemId());
+    public Node node(StarSystemDefinition system) {
+        return system == null ? null : node(system.systemId());
     }
 
     /** Connectivity ignores access state; it validates the authored topology itself. */
@@ -102,30 +144,30 @@ public final class StarmapGalaxyGraph {
         return visited.size() == nodes.size();
     }
 
-    public record Node(String id, StarSystem system, GalaxyMapPosition position,
+    public record Node(String id, StarSystemDefinition system, GalaxyMapPosition position,
                        boolean unlocked, boolean reachable) {
         public Node {
             requireId("Galaxy node", id);
             Objects.requireNonNull(system, "system");
             Objects.requireNonNull(position, "position");
-            if (!id.equals(system.getSystemId()))
+            if (!id.equals(system.systemId()))
                 throw new IllegalArgumentException("Galaxy node id must match its star system id");
         }
 
         public String nameKey() {
-            return system.getNameKey();
+            return system.nameKey();
         }
 
         public String descriptionKey() {
-            return system.getDescriptionKey();
+            return system.descriptionKey();
         }
 
         public String starTypeKey() {
-            return system.getStarTypeKey();
+            return system.starTypeKey();
         }
 
         public int bodyCount() {
-            return system.getEntries().size();
+            return system.bodies().size();
         }
 
         public boolean available() {

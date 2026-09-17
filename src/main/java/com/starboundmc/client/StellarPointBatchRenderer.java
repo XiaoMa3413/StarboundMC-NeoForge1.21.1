@@ -125,7 +125,7 @@ public final class StellarPointBatchRenderer
             upZ = dy >= 0.0F ? -1.0F : 1.0F;
         }
 
-        StellarVisualProfile profile = star.system().getStellarVisual();
+        StellarVisualProfile profile = star.system().stellarVisual();
         float radius = POINT_HALO_RADIUS;
         int color = profile.getCoreColor();
         float red = ((color >> 16) & 0xFF) / 255.0F;

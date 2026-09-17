@@ -1,8 +1,9 @@
 package com.starboundmc.client.starmap;
 
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -13,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 final class StarmapNavigationStateTest {
     @Test
     void levelChangesPreserveContextButNeverCarryASelection() {
-        StarSystem system = StarSystems.byId(StarSystems.SYS_MAIN);
-        PlanetEntry planet = system.getEntries().stream()
-                .filter(entry -> !entry.isMoon())
+        StarSystemDefinition system = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
+        CelestialBodyDefinition planet = system.bodies().stream()
+                .filter(entry -> !entry.orbit().isMoon())
                 .findFirst().orElseThrow();
-        PlanetEntry moon = system.getEntries().stream()
-                .filter(PlanetEntry::isMoon)
+        CelestialBodyDefinition moon = system.bodies().stream()
+                .filter(entry -> entry.orbit().isMoon())
                 .findFirst().orElseThrow();
 
         StarmapNavigationState galaxySelection = new StarmapNavigationState(

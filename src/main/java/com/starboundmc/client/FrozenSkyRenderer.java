@@ -10,7 +10,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.world.FrozenPlanet;
-import com.starboundmc.world.starmap.StarSystems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.GameRenderer;
@@ -44,8 +43,12 @@ public class FrozenSkyRenderer
         if (!FrozenPlanet.FROZEN_LEVEL.equals(level.dimension()))
             return;
 
-        renderSky(event.getPoseStack(), level,
-                event.getPartialTick().getGameTimeDeltaPartialTick(false));
+        PoseStack pose = event.getPoseStack();
+        // AFTER_SKY hands out a fresh identity stack; the camera rotation is
+        // only in getModelViewMatrix(). Without this mulPose the sky is pinned
+        // to the screen instead of surrounding the world.
+        pose.mulPose(event.getModelViewMatrix());
+        renderSky(pose, level, event.getPartialTick().getGameTimeDeltaPartialTick(false));
     }
 
     private static void renderSky(PoseStack pose, ClientLevel level, float partialTick)
@@ -66,7 +69,9 @@ public class FrozenSkyRenderer
         BufferBuilder bb = Tesselator.getInstance().begin(
                 VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        float s = 500.0F;
+        // 430 keeps the cube corners (430*√3 ≈ 745) inside the default far plane
+        // (render distance 12 → 768); a larger dome gets clipped at the corners.
+        float s = 430.0F;
         // A cube around the camera acts as a skybox: it covers every view direction
         // instead of a flat quad that can look like a wall from the side.
         addFace(bb, matrix, -s, -s, -s, s, -s, -s, s, s, -s, -s, s, -s);
@@ -97,7 +102,7 @@ public class FrozenSkyRenderer
 
     private static float[] skyColor(float y)
     {
-        float t = Mth.clamp((y + 500.0F) / 1000.0F, 0.0F, 1.0F);
+        float t = Mth.clamp((y + 430.0F) / 860.0F, 0.0F, 1.0F);
         // Bottom: pale gray-blue; top: dark cold night blue.
         float r = Mth.lerp(t, 0.30F, 0.06F);
         float g = Mth.lerp(t, 0.36F, 0.10F);
@@ -110,7 +115,9 @@ public class FrozenSkyRenderer
         pose.pushPose();
         pose.mulPose(Axis.YP.rotationDegrees(-90.0F));
         pose.mulPose(Axis.XP.rotationDegrees(level.getTimeOfDay(partialTick) * 360.0F));
-        StellarRenderer.render(pose, StarSystems.byId(StarSystems.SYS_COLD).getStellarVisual(),
+        // The cold system's stellar profile, from the same catalog the rest of the
+        // rendering reads.
+        StellarRenderer.render(pose, coldStellarVisual(),
                 LOCAL_STAR_DIRECTION, 100.0F, 0.90F,
                 level.getGameTime() + partialTick, 0.92F);
         pose.popPose();
@@ -120,6 +127,17 @@ public class FrozenSkyRenderer
                                     float r, float g, float b, float a)
     {
         bb.addVertex(matrix, x, y, z).setColor(r, g, b, a);
+    }
+
+    /**
+     * The cold system's star, or null when the universe does not provide it.
+     *
+     * <p>Null renders nothing, the same outcome the legacy lookup's null had.</p>
+     */
+    private static com.starboundmc.world.starmap.StellarVisualProfile coldStellarVisual()
+    {
+        var system = StarmapUniverse.system(com.starboundmc.world.universe.BuiltInUniverse.COLD_SYSTEM_ID);
+        return system == null ? null : system.stellarVisual();
     }
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z, float[] rgba)
