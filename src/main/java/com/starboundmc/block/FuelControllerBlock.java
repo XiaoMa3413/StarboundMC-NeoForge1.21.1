@@ -23,8 +23,6 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -112,14 +110,4 @@ public class FuelControllerBlock extends BaseEntityBlock
         }
     }
 
-    public static int fuelValue(Item item)
-    {
-        if (item == Items.COAL)
-            return 10;
-        if (item == Items.CHARCOAL)
-            return 5;
-        if (item == Items.BLAZE_POWDER)
-            return 20;
-        return 0;
-    }
 }

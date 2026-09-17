@@ -1,6 +1,10 @@
 package com.starboundmc.world.starmap;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Data-only visual description for a body on the star map.
@@ -11,6 +15,61 @@ import java.util.Objects;
  */
 public final class StarmapBodyVisual
 {
+    /**
+     * Datapack form.
+     *
+     * <p>Colours and strengths are written out even when they merely repeat a
+     * default, so a definition round-trips value for value. The three optional
+     * sprite ids are the only fields that may be absent.</p>
+     */
+    public static final Codec<StarmapBodyVisual> CODEC =
+            RecordCodecBuilder.create(instance -> instance.group(
+                    StarmapBodyType.CODEC.fieldOf("body_type").forGetter(StarmapBodyVisual::getBodyType),
+                    Codec.INT.fieldOf("marker_size").forGetter(StarmapBodyVisual::getMarkerSize),
+                    Codec.INT.fieldOf("primary_color").forGetter(StarmapBodyVisual::getPrimaryColor),
+                    Codec.INT.optionalFieldOf("secondary_color")
+                            .forGetter(v -> Optional.of(v.getSecondaryColor())),
+                    Codec.LONG.optionalFieldOf("texture_seed", 0L).forGetter(StarmapBodyVisual::getTextureSeed),
+                    Codec.INT.optionalFieldOf("atmosphere_color")
+                            .forGetter(v -> Optional.of(v.getAtmosphereColor())),
+                    Codec.FLOAT.optionalFieldOf("atmosphere_strength", 0.0F)
+                            .forGetter(StarmapBodyVisual::getAtmosphereStrength),
+                    Codec.FLOAT.optionalFieldOf("surface_detail", 0.0F)
+                            .forGetter(StarmapBodyVisual::getSurfaceDetail),
+                    Codec.FLOAT.optionalFieldOf("band_strength", 0.0F)
+                            .forGetter(StarmapBodyVisual::getBandStrength),
+                    Codec.INT.optionalFieldOf("ring_color")
+                            .forGetter(v -> Optional.of(v.getRingColor())),
+                    Codec.FLOAT.optionalFieldOf("ring_strength", 0.0F)
+                            .forGetter(StarmapBodyVisual::getRingStrength),
+                    Codec.STRING.optionalFieldOf("texture")
+                            .forGetter(v -> Optional.ofNullable(v.getTextureId())),
+                    Codec.STRING.optionalFieldOf("focus_texture")
+                            .forGetter(v -> Optional.ofNullable(v.getFocusTextureId())),
+                    Codec.STRING.optionalFieldOf("texture_mask")
+                            .forGetter(v -> Optional.ofNullable(v.getTextureMaskId()))
+            ).apply(instance, StarmapBodyVisual::fromCodec));
+
+    private static StarmapBodyVisual fromCodec(StarmapBodyType bodyType, int markerSize, int primaryColor,
+                                               Optional<Integer> secondaryColor, long textureSeed,
+                                               Optional<Integer> atmosphereColor, float atmosphereStrength,
+                                               float surfaceDetail, float bandStrength,
+                                               Optional<Integer> ringColor, float ringStrength,
+                                               Optional<String> texture, Optional<String> focusTexture,
+                                               Optional<String> textureMask)
+    {
+        Builder builder = builder(bodyType, primaryColor, markerSize, textureSeed)
+                .secondaryColor(secondaryColor.orElse(primaryColor))
+                .surfaceDetail(surfaceDetail)
+                .bands(bandStrength)
+                .atmosphere(atmosphereColor.orElse(primaryColor), atmosphereStrength)
+                .rings(ringColor.orElse(primaryColor), ringStrength);
+        texture.ifPresent(builder::texture);
+        focusTexture.ifPresent(builder::focusTexture);
+        textureMask.ifPresent(builder::textureMask);
+        return builder.build();
+    }
+
     private final StarmapBodyType bodyType;
     private final int markerSize;
     private final int primaryColor;
@@ -141,6 +200,50 @@ public final class StarmapBodyVisual
     public boolean hasRings()
     {
         return ringStrength > 0.0F;
+    }
+
+    /**
+     * Value equality. This type is an immutable description of a body's marker
+     * art, so two instances built from the same values are interchangeable; the
+     * definition layer relies on that to compare a coded round trip against the
+     * original.
+     */
+    @Override
+    public boolean equals(Object object)
+    {
+        if (this == object)
+            return true;
+        if (!(object instanceof StarmapBodyVisual other))
+            return false;
+        return markerSize == other.markerSize
+                && primaryColor == other.primaryColor
+                && secondaryColor == other.secondaryColor
+                && textureSeed == other.textureSeed
+                && atmosphereColor == other.atmosphereColor
+                && Float.compare(atmosphereStrength, other.atmosphereStrength) == 0
+                && Float.compare(surfaceDetail, other.surfaceDetail) == 0
+                && Float.compare(bandStrength, other.bandStrength) == 0
+                && ringColor == other.ringColor
+                && Float.compare(ringStrength, other.ringStrength) == 0
+                && bodyType == other.bodyType
+                && Objects.equals(textureId, other.textureId)
+                && Objects.equals(focusTextureId, other.focusTextureId)
+                && Objects.equals(textureMaskId, other.textureMaskId);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(bodyType, markerSize, primaryColor, secondaryColor, textureSeed,
+                atmosphereColor, atmosphereStrength, surfaceDetail, bandStrength,
+                ringColor, ringStrength, textureId, focusTextureId, textureMaskId);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "StarmapBodyVisual[" + bodyType + ", size=" + markerSize
+                + ", primary=0x" + Integer.toHexString(primaryColor) + "]";
     }
 
     public static final class Builder

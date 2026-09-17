@@ -23,10 +23,13 @@ import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
-import com.starboundmc.world.Planet;
+import com.starboundmc.warp.UniverseNavigation;
+import com.starboundmc.world.GasGiantGeometry;
+import com.starboundmc.world.universe.BodySpaceVisualProfile;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import com.starboundmc.world.ShipDimensions;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.client.StarmapUniverse;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -42,6 +45,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -91,25 +95,49 @@ public class PlanetRenderer
     /** Full surround layer extending ahead, beside and behind the ship. */
     private static final int SURROUND_STREAK_COUNT = 260;
 
-    private static final Map<Planet, Vector3f> ATMOSPHERE_COLORS = new EnumMap<>(Planet.class);
-    private static final Map<Planet, Float> ATMOSPHERE_PEAK = new EnumMap<>(Planet.class);
-    /** Fixed body orientation in virtual space; no orbital or axial animation yet. */
-    private static final Map<Planet, Vector3f> BODY_ORIENTATION = new EnumMap<>(Planet.class);
-    private static final Map<Planet, Vector3f> FIXED_SUN_DIRECTIONS = new EnumMap<>(Planet.class);
-    private static final Map<Planet, Vector3f> STELLAR_CORONA_COLORS = new EnumMap<>(Planet.class);
-    private static final Planet[] PLANET_DRAW_ORDER = Planet.values();
-    private static final double[] PLANET_DISTANCE_SQ = new double[PLANET_DRAW_ORDER.length];
+    /** Corona colour per system id, for the arrival tunnel tint. */
+    private static final Map<String, Vector3f> STELLAR_CORONA_COLORS = new HashMap<>();
+    /**
+     * Bodies drawn outside the window, in draw order. Sourced from the universe
+     * catalog and re-read when it changes, so a datapack body renders without a
+     * new enum constant.
+     */
+    private static CelestialBodyDefinition[] drawOrder = new CelestialBodyDefinition[0];
+    private static double[] drawDistanceSq = new double[0];
     /** Distance-driven body quality with a temporal blend to avoid popping. */
-    private static final CelestialLodTransitions PLANET_LOD_TRANSITIONS =
-            new CelestialLodTransitions(PLANET_DRAW_ORDER.length * 2);
-    private static final int[] PLANET_POINT_COLORS = new int[PLANET_DRAW_ORDER.length];
-    /** Resource locations are immutable and reused; distant bodies never touch the texture manager. */
-    private static final Map<Planet, ResourceLocation> PLANET_TEXTURES = new EnumMap<>(Planet.class);
+    /**
+     * Distance-driven body quality with a temporal blend to avoid popping.
+     *
+     * <p>Null until the draw order is known: the table rejects a zero capacity, and
+     * the catalog is not readable during class initialisation.</p>
+     */
+    private static CelestialLodTransitions planetLodTransitions;
+    /** The catalog the arrays above were built from, so a rebuild is detectable. */
+    private static Object drawOrderCatalog;
     private static final float PLANET_SKY_DISTANCE = 280.0F;
     private static final float MIN_PLANET_SKY_RADIUS = 0.12F;
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
-    private static final Map<Planet, VertexBuffer> PLANET_SURFACE_BUFFERS = new EnumMap<>(Planet.class);
-    private static final Map<Planet, Float> PLANET_SURFACE_TICKS = new EnumMap<>(Planet.class);
+    private static final Map<String, VertexBuffer> PLANET_SURFACE_BUFFERS = new HashMap<>();
+    private static final Map<String, Float> PLANET_SURFACE_TICKS = new HashMap<>();
+    /** Ringed-body support: strip texture plus equatorial quad geometry (see buildRingBand). */
+    private static final int RING_SEGMENTS = 144;
+    /** Real Saturn proportions: the main rings span ~1.24-2.27 planetary radii. */
+    private static final float RING_INNER = GasGiantGeometry.RING_INNER_RADII;
+    private static final float RING_OUTER = GasGiantGeometry.RING_OUTER_RADII;
+    private static final float RING_ALPHA = 0.90F;
+    /** The strip texture supplies the colour; only a faint warm lift on top. */
+    private static final float RING_TINT_R = 1.00F;
+    private static final float RING_TINT_G = 0.97F;
+    private static final float RING_TINT_B = 0.92F;
+    /** 4 corners per segment: inner(a0), outer(a0), outer(a1), inner(a1). Local, PLANET_RADIUS units. */
+    private static final float[] RING_VX = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VY = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VZ = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VU = new float[RING_SEGMENTS * 4];
+    /** Segment centroid in the same oriented local frame, for the far/near draw split. */
+    private static final float[] RING_MID_X = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Y = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Z = new float[RING_SEGMENTS];
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
@@ -118,49 +146,224 @@ public class PlanetRenderer
 
     static
     {
-        // Atmospheric glow per planet: tint and peak alpha of the additive halo.
-        ATMOSPHERE_COLORS.put(Planet.LUSH, new Vector3f(0.30F, 0.60F, 1.0F));
-        ATMOSPHERE_COLORS.put(Planet.MOLTEN, new Vector3f(1.0F, 0.45F, 0.20F));
-        ATMOSPHERE_COLORS.put(Planet.FROZEN, new Vector3f(0.55F, 0.78F, 1.0F));
-        ATMOSPHERE_COLORS.put(Planet.BARREN, new Vector3f(0.75F, 0.65F, 0.50F));
-
-        ATMOSPHERE_PEAK.put(Planet.LUSH, 0.20F);
-        ATMOSPHERE_PEAK.put(Planet.MOLTEN, 0.26F);
-        ATMOSPHERE_PEAK.put(Planet.FROZEN, 0.23F);
-        ATMOSPHERE_PEAK.put(Planet.BARREN, 0.15F);
-
-        // x=axis tilt, y=fixed body yaw, z=fixed axial roll. These orient the
-        // texture and poles in the common virtual-space frame but never animate.
-        BODY_ORIENTATION.put(Planet.LUSH, new Vector3f(23.0F, 15.0F, 0.0F));
-        BODY_ORIENTATION.put(Planet.MOLTEN, new Vector3f(6.0F, 210.0F, 0.0F));
-        BODY_ORIENTATION.put(Planet.FROZEN, new Vector3f(32.0F, 125.0F, 0.0F));
-        BODY_ORIENTATION.put(Planet.BARREN, new Vector3f(12.0F, 285.0F, 0.0F));
-
-        for (Planet planet : Planet.values())
+        // Corona colour per system, so the arrival tunnel tint can be resolved from
+        // the destination body's owning system.
+        for (var system : StarmapUniverse.allSystems())
         {
-            PLANET_TEXTURES.put(planet, planet.texture());
-            Vec3 sun = ShipSpace.sunDirection(planet);
-            FIXED_SUN_DIRECTIONS.put(planet, new Vector3f((float) sun.x, (float) sun.y, (float) sun.z));
-            StellarVisualProfile profile = stellarProfile(planet);
-            int color = profile.getCoronaColor();
-            STELLAR_CORONA_COLORS.put(planet, new Vector3f(
+            int color = system.stellarVisual().getCoronaColor();
+            STELLAR_CORONA_COLORS.put(system.systemId(), new Vector3f(
                     ((color >> 16) & 0xFF) / 255.0F,
                     ((color >> 8) & 0xFF) / 255.0F,
                     (color & 0xFF) / 255.0F));
-            PLANET_POINT_COLORS[planet.ordinal()] = pointColor(planet);
+        }
+        buildRingBand();
+    }
+
+    /**
+     * Whether a body draws a ring band.
+     *
+     * <p>Read from the body's profile rather than from its identity, so a body
+     * added by a datapack can be ringed without a branch here. The baked geometry
+     * is shared: ring proportions are canonical ratios (see
+     * {@code GasGiantGeometry}), and the far/near split is resolved per draw from
+     * the actual camera position, so one bake serves any ringed body.</p>
+     */
+    private static boolean hasRings(CelestialBodyDefinition body)
+    {
+        return visual(body).hasRings();
+    }
+
+    /**
+     * Bakes the gas giant's ring as quads in the body-local <b>equatorial</b>
+     * plane (x/z, pole on +y). The ring is deliberately left un-oriented:
+     * every caller composes its own body frame into the model matrix, exactly
+     * as it already does for the sphere. That is what keeps the ring glued to
+     * the band texture's equator from the ship berth <i>and</i> from the rocky
+     * moon's sky, which run different body-frame transforms. The strip texture
+     * supplies per-radius alpha; the far/near split is resolved at draw time.
+     */
+    private static void buildRingBand()
+    {
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            double a0 = Math.PI * 2.0 * seg / RING_SEGMENTS;
+            double a1 = Math.PI * 2.0 * (seg + 1) / RING_SEGMENTS;
+            float cos0 = (float) Math.cos(a0), sin0 = (float) Math.sin(a0);
+            float cos1 = (float) Math.cos(a1), sin1 = (float) Math.sin(a1);
+
+            // Corner order: inner@a0 (u0), outer@a0 (u1), outer@a1 (u1), inner@a1 (u0).
+            for (int corner = 0; corner < 4; corner++)
+            {
+                float radius = (corner == 0 || corner == 3) ? RING_INNER : RING_OUTER;
+                float angleCos = (corner <= 1) ? cos0 : cos1;
+                float angleSin = (corner <= 1) ? sin0 : sin1;
+                float u = (corner == 1 || corner == 2) ? 1.0F : 0.0F;
+                int idx = seg * 4 + corner;
+                RING_VX[idx] = angleCos * radius * PLANET_RADIUS;
+                RING_VY[idx] = 0.0F;
+                RING_VZ[idx] = angleSin * radius * PLANET_RADIUS;
+                RING_VU[idx] = u;
+            }
+            RING_MID_X[seg] = 0.25F * (RING_VX[seg * 4] + RING_VX[seg * 4 + 1]
+                    + RING_VX[seg * 4 + 2] + RING_VX[seg * 4 + 3]);
+            RING_MID_Y[seg] = 0.0F;
+            RING_MID_Z[seg] = 0.25F * (RING_VZ[seg * 4] + RING_VZ[seg * 4 + 1]
+                    + RING_VZ[seg * 4 + 2] + RING_VZ[seg * 4 + 3]);
         }
     }
 
-    private static int pointColor(Planet planet)
+    /**
+     * Draws the pre-oriented ring band, restricted to the far half (nearPass =
+     * false, drawn before the disk) or the near half (nearPass = true, drawn
+     * after the disk). A segment is "near" when its centroid lands closer to the
+     * camera than the body centre: |c + o|^2 < |c|^2.
+     */
+    private static void drawPlanetRings(PoseStack pose, CelestialBodyDefinition body,
+                                        float cx, float cy, float cz,
+                                        float scale, float shipYaw, float shipPitch,
+                                        float alpha, boolean nearPass)
     {
-        return switch (planet)
-        {
-            case LUSH -> 0xFF68D68A;
-            case MOLTEN -> 0xFFFF8A4C;
-            case FROZEN -> 0xFF8FD7FF;
-            case BARREN -> 0xFFD0B07A;
-        };
+        // Match the disk's orientation-minus-spin so ring and surface tilt
+        // together: the baked ring is equatorial, so the body frame has to be
+        // composed here, before the ship-view rotation.
+        BodySpaceVisualProfile profile = visual(body);
+        String ringTexture = profile.ringTexture().orElse(null);
+        if (ringTexture == null)
+            return;
+        Matrix4f model = new Matrix4f()
+                .translate(cx, cy, cz)
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw))
+                .mul(bodyOrientation(profile))
+                .scale(scale);
+        drawRingPass(pose, model, ResourceLocation.parse(ringTexture), alpha, nearPass);
     }
+
+    /**
+     * Draws one half of the baked ring band. {@code model} maps the ring's local
+     * PLANET_RADIUS-unit frame (centred on the body) into the pose's frame; the
+     * far/near split is classified by each segment centroid's distance to the
+     * camera, which sits at the origin of the pose's outermost frame. Any caller
+     * (ship berth view, a moon's sky) therefore gets correct occlusion against
+     * its own disc for free.
+     */
+    static void drawRingPass(PoseStack pose, Matrix4f model, ResourceLocation texture,
+                             float alpha, boolean nearPass)
+    {
+        if (alpha <= 0.002F || texture == null)
+            return;
+
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.disableCull();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
+
+        Matrix4f full = new Matrix4f(pose.last().pose()).mul(model);
+        Vector3f centre = full.transformPosition(new Vector3f());
+        Vector3f centroid = new Vector3f();
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        int drawn = 0;
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            full.transformPosition(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg], centroid);
+            boolean near = centroid.lengthSquared() < centre.lengthSquared();
+            if (near != nearPass)
+                continue;
+            drawn++;
+            for (int corner = 0; corner < 4; corner++)
+            {
+                int idx = seg * 4 + corner;
+                bb.addVertex(full, RING_VX[idx], RING_VY[idx], RING_VZ[idx])
+                        .setUv(RING_VU[idx], 0.5F)
+                        .setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1.0F);
+            }
+        }
+        if (drawn > 0)
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableCull();
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * The body's shared frame: the surface bake applies yaw about Y first and the
+     * axial tilt about X second, so this composes as {@code Rx(tilt) * Ry(yaw)}.
+     * The sphere bake and the ring both go through it, so the band texture's
+     * equator and the ring plane can never separate.
+     */
+    static Matrix4f bodyOrientation(BodySpaceVisualProfile profile)
+    {
+        return new Matrix4f()
+                .rotateX((float) Math.toRadians(profile.orientationTilt()))
+                .rotateY((float) Math.toRadians(profile.orientationYaw()));
+    }
+
+    /**
+     * Rebuilds the draw arrays when the active universe changes.
+     *
+     * <p>Compared by identity for the same reason the route cache is: the arrays
+     * bake in positions and radii, and a rebuilt catalog invalidates all of them.
+     * A transient empty catalog (a client that has not synced yet) keeps the
+     * previous arrays rather than blanking the sky.</p>
+     */
+    private static void refreshDrawOrder()
+    {
+        Object catalog = StarmapUniverse.catalogIdentity();
+        if (drawOrderCatalog == catalog && drawOrder.length > 0)
+            return;
+
+        java.util.List<CelestialBodyDefinition> bodies = StarmapUniverse.spaceRenderedBodies();
+        if (bodies.isEmpty())
+            return;
+
+        drawOrder = bodies.toArray(CelestialBodyDefinition[]::new);
+        drawDistanceSq = new double[drawOrder.length];
+        planetLodTransitions = new CelestialLodTransitions(drawOrder.length * 2);
+        drawOrderCatalog = catalog;
+    }
+
+    /**
+     * The cockpit-window visual for a body, or a neutral default.
+     *
+     * <p>Falls back rather than throwing: the renderer is called from the frame
+     * loop, and a body with no authored visual should draw plainly, not crash the
+     * client. The default is only reachable for a body whose definition omits the
+     * optional profile.</p>
+     */
+    private static BodySpaceVisualProfile visual(CelestialBodyDefinition body)
+    {
+        return body.spaceVisual().orElse(FALLBACK_VISUAL);
+    }
+
+    private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
+            java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
+            0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
+            java.util.Optional.empty());
+
+    /**
+     * The texture for a body's sphere.
+     *
+     * <p>Every body the renderer draws authors its own texture, so there is no
+     * fallback to the legacy per-planet naming. A body that somehow lacks one
+     * draws as a visible missing-texture marker rather than silently borrowing
+     * another body's art.</p>
+     */
+    private static ResourceLocation textureOf(CelestialBodyDefinition body)
+    {
+        String authored = visual(body).texture().orElse(null);
+        return authored == null ? MISSING_TEXTURE : ResourceLocation.parse(authored);
+    }
+
+    private static final ResourceLocation MISSING_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "textures/planet/missing.png");
 
     // Arrival crossfade: the target planet grows and fades in over the last ~28%
     // of the warp while the ship swings back to face it. Package-visible so the
@@ -474,40 +677,42 @@ public class PlanetRenderer
         boolean longRoute = space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS;
         float warpProgress = space.warpProgress();
         UniversePosition ship = space.universePosition();
-        StarSystem sourceSystem = space.currentBody() == null
-                ? null : StarSystems.systemOfPlanet(space.currentBody());
-        StarSystem targetSystem = space.targetBody() == null
-                ? null : StarSystems.systemOfPlanet(space.targetBody());
-        for (int i = 0; i < PLANET_DRAW_ORDER.length; i++)
-            PLANET_DISTANCE_SQ[i] = ShipSpace.universeBodyPosition(PLANET_DRAW_ORDER[i]).distanceToSqr(ship);
+        // Ownership now comes from the universe catalog rather than a Planet
+        // lookup, so the comparison below is id-based.
+        String sourceSystemId = StarmapUniverse.systemIdOfEntry(space.currentBodyId());
+        String targetSystemId = StarmapUniverse.systemIdOfEntry(space.targetBodyId());
+        refreshDrawOrder();
+        for (int i = 0; i < drawOrder.length; i++)
+            drawDistanceSq[i] = UniverseNavigation
+                    .universeBodyPosition(drawOrder[i].entryId()).distanceToSqr(ship);
 
-        // Reusable insertion sort; four planets make this cheaper than building
-        // and sorting a per-frame celestial collection.
-        for (int i = 1; i < PLANET_DRAW_ORDER.length; i++)
+        // Reusable insertion sort; the celestial count is small enough that this
+        // beats building and sorting a per-frame collection.
+        for (int i = 1; i < drawOrder.length; i++)
         {
-            Planet body = PLANET_DRAW_ORDER[i];
-            double distance = PLANET_DISTANCE_SQ[i];
+            CelestialBodyDefinition body = drawOrder[i];
+            double distance = drawDistanceSq[i];
             int j = i;
-            while (j > 0 && PLANET_DISTANCE_SQ[j - 1] < distance)
+            while (j > 0 && drawDistanceSq[j - 1] < distance)
             {
-                PLANET_DRAW_ORDER[j] = PLANET_DRAW_ORDER[j - 1];
-                PLANET_DISTANCE_SQ[j] = PLANET_DISTANCE_SQ[j - 1];
+                drawOrder[j] = drawOrder[j - 1];
+                drawDistanceSq[j] = drawDistanceSq[j - 1];
                 j--;
             }
-            PLANET_DRAW_ORDER[j] = body;
-            PLANET_DISTANCE_SQ[j] = distance;
+            drawOrder[j] = body;
+            drawDistanceSq[j] = distance;
         }
 
-        for (Planet body : PLANET_DRAW_ORDER)
+        for (CelestialBodyDefinition body : drawOrder)
         {
-            StarSystem system = StarSystems.systemOfPlanet(body);
+            StarSystemDefinition system = StarmapUniverse.systemOf(body.entryId());
             float systemVisibility = stellarVisibility(stars, system);
             boolean departingSystemBody = space.warping() && longRoute
                     && warpProgress < WarpVisualTiming.ARRIVAL_FADE_START
-                    && sourceSystem != null && system == sourceSystem;
+                    && sourceSystemId != null && sourceSystemId.equals(system.systemId());
             boolean arrivingSystemBody = space.warping() && longRoute
                     && warpProgress >= WarpVisualTiming.ARRIVAL_FADE_START
-                    && targetSystem != null && system == targetSystem;
+                    && targetSystemId != null && targetSystemId.equals(system.systemId());
             // Keep the entire source system during the departure leg. This
             // preserves the primary/companion relationship (for example the
             // lush world and its molten moon) instead of dropping every body
@@ -519,14 +724,19 @@ public class PlanetRenderer
                 continue;
             }
 
-            Vec3 bodyCenter = virtualToView(ShipSpace.universeBodyPosition(body), space);
+            Vec3 bodyCenter = virtualToView(UniverseNavigation.universeBodyPosition(body.entryId()), space);
             double distance = bodyCenter.length();
             double angularDiameter = CelestialLodPolicy.angularDiameterDegrees(
-                    ShipSpace.radius(body), distance);
-            CelestialLod previous = PLANET_LOD_TRANSITIONS.currentLod(body.getId());
+                    UniverseNavigation.radius(body.entryId()), distance);
+            CelestialLod previous = planetLodTransitions.currentLod(body.entryId());
             CelestialLod requested = CelestialLodPolicy.hysteretic(
                     angularDiameter, previous, routePriority ? CelestialLod.POINT : CelestialLod.CULLED);
-            if (systemVisibility <= 0.20F && !routePriority)
+            // The star's alpha fades with the system's VISUAL influence, but a
+            // system's outer berths (the gas giant) sit far beyond that fade.
+            // Bodies stay renderable while the ship is inside the system's
+            // planet field regardless of how dim the remote star looks.
+            if (systemVisibility <= 0.20F && !insidePlanetField(space.universePosition(), system)
+                    && !routePriority)
                 requested = CelestialLod.CULLED;
             float detail = updatePlanetLod(body, requested, space.animationTicks());
 
@@ -539,29 +749,39 @@ public class PlanetRenderer
         }
     }
 
-    private static float updatePlanetLod(Planet body, CelestialLod requested, float animationTicks)
+    private static float updatePlanetLod(CelestialBodyDefinition body, CelestialLod requested, float animationTicks)
     {
-        return PLANET_LOD_TRANSITIONS.update(body.getId(), requested, animationTicks);
+        return planetLodTransitions.update(body.entryId(), requested, animationTicks);
     }
-    private static float stellarVisibility(StarSystemResolver.ResolvedStarField stars, StarSystem system)
+    private static float stellarVisibility(StarSystemResolver.ResolvedStarField stars, StarSystemDefinition system)
     {
         if (system == null)
             return 0.0F;
         for (int i = 0; i < stars.count(); i++)
         {
             StarSystemResolver.VisibleStar star = stars.star(i);
-            if (star.system() == system)
+            // The resolver still reports the legacy system type; compare by id so
+            // the two representations of "the same system" agree.
+            if (star.system() != null && star.system().systemId().equals(system.systemId()))
                 return star.alpha();
         }
         return 0.0F;
     }
 
+    /** Whether the ship sits inside the system's body-rendering field. */
+    private static boolean insidePlanetField(UniversePosition ship, StarSystemDefinition system)
+    {
+        return system != null
+                && ship.distanceToSqr(system.navigationCenter())
+                        <= system.planetFieldRadius() * system.planetFieldRadius();
+    }
+
     /** Draw one body at true near distance or angularly projected on the sky shell. */
-    private static void renderVirtualPlanet(PoseStack pose, Camera camera, Planet body,
+    private static void renderVirtualPlanet(PoseStack pose, Camera camera, CelestialBodyDefinition body,
                                             SpaceRenderContext space, float alpha, float lodDetail)
     {
-        Vec3 bodyCenter = virtualToView(ShipSpace.universeBodyPosition(body), space);
-        float bodyScale = (float) (ShipSpace.radius(body) / PLANET_RADIUS);
+        Vec3 bodyCenter = virtualToView(UniverseNavigation.universeBodyPosition(body.entryId()), space);
+        float bodyScale = (float) (UniverseNavigation.radius(body.entryId()) / PLANET_RADIUS);
         double distance = bodyCenter.length();
         if (distance > PLANET_SKY_DISTANCE)
         {
@@ -615,10 +835,11 @@ public class PlanetRenderer
         return ShipSpace.rotatePitch(relative, -space.pitch());
     }
 
-    private static StellarVisualProfile stellarProfile(Planet planet)
+    /** The owning system's stellar visual, or null when the body has no system. */
+    private static StellarVisualProfile stellarProfile(CelestialBodyDefinition body)
     {
-        StarSystem system = StarSystems.systemOfPlanet(planet);
-        return system == null ? null : system.getStellarVisual();
+        StarSystemDefinition system = StarmapUniverse.systemOf(body.entryId());
+        return system == null ? null : system.stellarVisual();
     }
 
     private static void renderSystemStars(PoseStack pose, SpaceRenderContext space,
@@ -647,7 +868,7 @@ public class PlanetRenderer
             double yawZ = -star.relativeX() * yawSin + star.relativeZ() * yawCos;
             double viewY = star.relativeY() * pitchCos - yawZ * pitchSin;
             double viewZ = star.relativeY() * pitchSin + yawZ * pitchCos;
-            StellarVisualProfile profile = star.system().getStellarVisual();
+            StellarVisualProfile profile = star.system().stellarVisual();
             float apparentScale = star.projectedRadius() / profile.getApparentRadius();
             if (simplifiedWeight > 0.002F)
                 StellarRenderer.render(pose, profile, viewX, viewY, viewZ,
@@ -667,7 +888,7 @@ public class PlanetRenderer
      * SkyType.NONE, so without this the sky behind the starfield is just the
      * clear color; the dome guarantees a proper deep-space backdrop.
      */
-    private static void renderSpaceDome(PoseStack pose)
+    static void renderSpaceDome(PoseStack pose)
     {
         Matrix4f matrix = pose.last().pose();
         FogRenderer.setupNoFog();
@@ -721,7 +942,7 @@ public class PlanetRenderer
      * rotated by the ship heading, so during the turn the stars sweep across the
      * view exactly like the planet does.
      */
-    private static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
+    static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
                                         float alpha, float convergence,
                                         int tintColor, float tintAmount)
     {
@@ -825,12 +1046,14 @@ public class PlanetRenderer
      * brightest at the limb and fades to zero at the outer edge of the shell, so
      * the halo always hugs the planet and never has a bright outer rim.
      */
-    private static void renderAtmosphereGlow(PoseStack pose, Planet planet, float scale, float alpha,
+    private static void renderAtmosphereGlow(PoseStack pose, CelestialBodyDefinition body, float scale, float alpha,
                                              float cx, float cy, float cz)
     {
         Matrix4f matrix = pose.last().pose();
-        Vector3f color = ATMOSPHERE_COLORS.get(planet);
-        float peak = ATMOSPHERE_PEAK.get(planet);
+        BodySpaceVisualProfile profile = visual(body);
+        Vector3f color = new Vector3f(profile.atmosphereRed(),
+                profile.atmosphereGreen(), profile.atmosphereBlue());
+        float peak = profile.atmospherePeak();
 
         float distC = (float) Math.sqrt(cx * cx + cy * cy + cz * cz);
         float axisX = cx / distC;
@@ -897,9 +1120,10 @@ public class PlanetRenderer
         RenderSystem.disableBlend();
     }
 
-    private static Vector3f fixedSunDirection(Planet planet)
+    private static Vector3f fixedSunDirection(CelestialBodyDefinition body)
     {
-        return FIXED_SUN_DIRECTIONS.get(planet);
+        Vec3 sun = UniverseNavigation.sunDirection(body.entryId());
+        return new Vector3f((float) sun.x, (float) sun.y, (float) sun.z);
     }
 
     private static float smoothstep(float t)
@@ -918,13 +1142,13 @@ public class PlanetRenderer
      * The eight-sided marker is intentionally softer than a square billboard,
      * so distant planets do not look like stray pixels in the starfield.
      */
-    private static void renderPlanetPoint(PoseStack pose, Planet planet, float alpha,
+    private static void renderPlanetPoint(PoseStack pose, CelestialBodyDefinition body, float alpha,
                                           float cx, float cy, float cz, float projectedRadius)
     {
         if (alpha <= 0.002F)
             return;
         float size = Math.max(0.30F, Math.min(1.10F, projectedRadius * 0.85F));
-        int color = PLANET_POINT_COLORS[planet.ordinal()];
+        int color = visual(body).pointColor();
         float r = ((color >> 16) & 0xFF) / 255.0F;
         float g = ((color >> 8) & 0xFF) / 255.0F;
         float b = (color & 0xFF) / 255.0F;
@@ -963,18 +1187,24 @@ public class PlanetRenderer
         RenderSystem.disableBlend();
     }
 
-    private static void renderPlanet(PoseStack pose, Camera cam, Planet planet, float scale, float alpha,
+    private static void renderPlanet(PoseStack pose, Camera cam, CelestialBodyDefinition body, float scale, float alpha,
                                      float cx, float cy, float cz, float shipYaw, float shipPitch,
                                      float animationTicks)
     {
         // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
-        drawOrientedPlanetSphere(pose, pose.last().pose(), planet, cx, cy, cz, scale,
-                fixedSunDirection(planet), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        // The ring writes no depth either, so its far half is drawn first, the disk
+        // second, and the near half last to read as orbiting the body.
+        if (hasRings(body))
+            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, false);
+        drawOrientedPlanetSphere(pose, pose.last().pose(), body, cx, cy, cz, scale,
+                fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        if (hasRings(body))
+            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
-    private static void drawOrientedPlanetSphere(PoseStack pose, Matrix4f matrix, Planet planet,
+    private static void drawOrientedPlanetSphere(PoseStack pose, Matrix4f matrix, CelestialBodyDefinition body,
                                                   float cx, float cy, float cz, float scale,
                                                   Vector3f worldSun, float brightness, float alpha,
                                                   float shipYaw, float shipPitch, float animationTicks)
@@ -985,7 +1215,7 @@ public class PlanetRenderer
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, PLANET_TEXTURES.get(planet));
+        RenderSystem.setShaderTexture(0, textureOf(body));
         RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
         // The VBO contains body-oriented positions and fixed per-vertex light.
@@ -997,9 +1227,9 @@ public class PlanetRenderer
                 .translate(cx, cy, cz)
                 .rotateX((float) Math.toRadians(-shipPitch))
                 .rotateY((float) Math.toRadians(-shipYaw))
-                .rotateY((float) Math.toRadians(animationTicks * spinRate(planet)))
+                .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
                 .scale(scale);
-        VertexBuffer surface = getPlanetSurfaceBuffer(planet, worldSun, animationTicks);
+        VertexBuffer surface = getPlanetSurfaceBuffer(body, worldSun, animationTicks);
         surface.bind();
         surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
         VertexBuffer.unbind();
@@ -1007,11 +1237,11 @@ public class PlanetRenderer
         RenderSystem.setShaderColor(1,1,1,1); RenderSystem.depthMask(true); RenderSystem.disableBlend();
     }
 
-    private static VertexBuffer getPlanetSurfaceBuffer(Planet planet, Vector3f worldSun,
+    private static VertexBuffer getPlanetSurfaceBuffer(CelestialBodyDefinition body, Vector3f worldSun,
                                                         float animationTicks)
     {
-        VertexBuffer cached = PLANET_SURFACE_BUFFERS.get(planet);
-        Float cachedTick = PLANET_SURFACE_TICKS.get(planet);
+        VertexBuffer cached = PLANET_SURFACE_BUFFERS.get(body.entryId());
+        Float cachedTick = PLANET_SURFACE_TICKS.get(body.entryId());
         if (cached != null && !cached.isInvalid() && cachedTick != null
                 && Float.compare(cachedTick, animationTicks) == 0)
             return cached;
@@ -1021,7 +1251,7 @@ public class PlanetRenderer
         // The model rotates by +spin below. Bake the opposite rotation into
         // the light vector so the stellar direction remains fixed in world
         // space while the surface texture turns underneath it.
-        float spin = (float) Math.toRadians(animationTicks * spinRate(planet));
+        float spin = (float) Math.toRadians(animationTicks * spinRate(body));
         float spinCos = (float) Math.cos(-spin);
         float spinSin = (float) Math.sin(-spin);
         Vector3f compensatedSun = new Vector3f(
@@ -1033,7 +1263,9 @@ public class PlanetRenderer
         float sunY = compensatedSun.y;
         float sunZ = compensatedSun.z;
         Vector3f bakedSun = new Vector3f(sunX, sunY, sunZ);
-        Vector3f orientation = BODY_ORIENTATION.getOrDefault(planet, new Vector3f());
+        BodySpaceVisualProfile profile = visual(body);
+        Vector3f orientation = new Vector3f(profile.orientationTilt(),
+                profile.orientationYaw(), profile.orientationRoll());
         float yaw = (float) Math.toRadians(orientation.y);
         float pitch = (float) Math.toRadians(orientation.x);
         float yawCos = (float) Math.cos(yaw);
@@ -1055,15 +1287,15 @@ public class PlanetRenderer
             float worldZ = localY * pitchSin + yawZ * pitchCos;
             addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i],
                     bakedSun,
-                    terminatorWidth(planet), nightFloor(planet));
+                    terminatorWidth(body), nightFloor(body));
         }
 
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
         buffer.upload(bb.buildOrThrow());
         VertexBuffer.unbind();
-        PLANET_SURFACE_BUFFERS.put(planet, buffer);
-        PLANET_SURFACE_TICKS.put(planet, animationTicks);
+        PLANET_SURFACE_BUFFERS.put(body.entryId(), buffer);
+        PLANET_SURFACE_TICKS.put(body.entryId(), animationTicks);
         return buffer;
     }
 
@@ -1124,38 +1356,20 @@ public class PlanetRenderer
         return moonSurfaceBuffer;
     }
 
-    private static float terminatorWidth(Planet planet)
+    private static float terminatorWidth(CelestialBodyDefinition body)
     {
-        return switch (planet)
-        {
-            case MOLTEN -> 0.16F;
-            case LUSH -> 0.24F;
-            case FROZEN -> 0.30F;
-            case BARREN -> 0.18F;
-        };
+        return visual(body).terminatorWidth();
     }
 
     /** Degrees per game tick; one revolution takes several real minutes. */
-    private static float spinRate(Planet planet)
+    private static float spinRate(CelestialBodyDefinition body)
     {
-        return switch (planet)
-        {
-            case MOLTEN -> 0.0075F;
-            case LUSH -> 0.00375F;
-            case FROZEN -> 0.00225F;
-            case BARREN -> 0.00275F;
-        };
+        return visual(body).spinRate();
     }
 
-    private static float nightFloor(Planet planet)
+    private static float nightFloor(CelestialBodyDefinition body)
     {
-        return switch (planet)
-        {
-            case MOLTEN -> 0.16F;
-            case LUSH -> 0.10F;
-            case FROZEN -> 0.14F;
-            case BARREN -> 0.06F;
-        };
+        return visual(body).nightFloor();
     }
 
     private static void addLitSphereVertex(BufferBuilder bb, float x, float y, float z,
@@ -1253,10 +1467,10 @@ public class PlanetRenderer
         // linking the jump flash to the stellar identity of the destination.
         float tintAmount = 0.0F;
         Vector3f arrivalTint = null;
-        Planet target = space.targetBody();
-        if (target != null && progress >= WarpVisualTiming.ARRIVAL_FADE_START)
+        String targetSystemId = StarmapUniverse.systemIdOfEntry(space.targetBodyId());
+        if (targetSystemId != null && progress >= WarpVisualTiming.ARRIVAL_FADE_START)
         {
-            arrivalTint = STELLAR_CORONA_COLORS.get(target);
+            arrivalTint = STELLAR_CORONA_COLORS.get(targetSystemId);
             tintAmount = smoothstep((progress - WarpVisualTiming.ARRIVAL_FADE_START)
                     / (1.0F - WarpVisualTiming.ARRIVAL_FADE_START)) * 0.65F;
         }

@@ -1,0 +1,15 @@
+{
+  "type": "starboundmc:rockymoon",
+  "generator": {
+    "type": "starboundmc:rocky_moon",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:checkerboard",
+      "period": 8,
+      "biomes": [
+        "starboundmc:rocky_wastes",
+        "starboundmc:rocky_craters"
+      ]
+    }
+  }
+}

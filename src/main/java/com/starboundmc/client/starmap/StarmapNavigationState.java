@@ -1,22 +1,22 @@
 package com.starboundmc.client.starmap;
 
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 
 /** Pure page-context transitions, kept independent of the client UI runtime. */
-record StarmapNavigationState(StarmapLevel level, StarSystem selectedSystem,
-                              PlanetEntry selectedEntry, PlanetEntry focusedPlanet,
+record StarmapNavigationState(StarmapLevel level, StarSystemDefinition selectedSystem,
+                              CelestialBodyDefinition selectedEntry, CelestialBodyDefinition focusedPlanet,
                               boolean centralStarSelected) {
-    StarmapNavigationState enterSystem(StarSystem system) {
+    StarmapNavigationState enterSystem(StarSystemDefinition system) {
         if (system == null)
             return this;
         return new StarmapNavigationState(StarmapLevel.SYSTEM, system,
                 null, null, false);
     }
 
-    StarmapNavigationState enterPlanet(PlanetEntry planet) {
+    StarmapNavigationState enterPlanet(CelestialBodyDefinition planet) {
         if (level != StarmapLevel.SYSTEM || selectedSystem == null
-                || planet == null || planet.isMoon())
+                || planet == null || planet.orbit().isMoon())
             return this;
         return new StarmapNavigationState(StarmapLevel.PLANET, selectedSystem,
                 null, planet, false);

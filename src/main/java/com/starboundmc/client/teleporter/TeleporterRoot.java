@@ -17,6 +17,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.ClientPlanetState;
+import com.starboundmc.client.StarmapUniverse;
 import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.ClientTeleporterState;
 import com.starboundmc.client.ui.ShipSystemLockOverlay;
@@ -606,10 +607,13 @@ public final class TeleporterRoot extends UIElement {
                         .top(2)
                         .width(16)
                         .height(16));
-                ResourceLocation sprite = ResourceLocation.fromNamespaceAndPath(
-                        StarboundMC.MODID,
-                        "textures/gui/starmap/bodies/"
-                                + ClientPlanetState.getCurrent().getId() + ".png");
+                // The starmap body sprite for wherever the ship currently is.
+                // Resolved through the catalog's authored sprite id rather than by
+                // splitting the entry id: a body's sprite is data, and an id that
+                // does not follow the built-in naming convention would otherwise
+                // point at a texture that does not exist.
+                ResourceLocation sprite = StarmapUniverse.bodySprite(
+                        ClientPlanetState.getCurrentEntryId());
                 planet.style(style -> style.backgroundTexture(GuiTextureGroup.of(
                         SpriteTexture.of(sprite),
                         SDFRectTexture.of(0x00000000)

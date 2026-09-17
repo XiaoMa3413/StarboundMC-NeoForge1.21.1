@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:tungsten_ore",
+    "starboundmc:fuel_crystal_ore",
+    "starboundmc:titanium_alloy_furnace"
+  ]
+}

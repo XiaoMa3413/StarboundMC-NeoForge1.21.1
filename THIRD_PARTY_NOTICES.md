@@ -12,8 +12,11 @@
 - `src/main/resources/assets/starboundmc/textures/planet/molten.png`：Venus surface
 - `src/main/resources/assets/starboundmc/textures/planet/frozen.png`：Eris fictional
 - `src/main/resources/assets/starboundmc/textures/planet/barren.png`：Mars
+- `src/main/resources/assets/starboundmc/textures/planet/gasgiant.png`：Saturn，仅格式转换（JPEG→RGBA PNG）
+- `src/main/resources/assets/starboundmc/textures/planet/rockymoon.png`：Moon，缩采样至 4096×2048 并转为 RGBA PNG
+- `src/main/resources/assets/starboundmc/textures/planet/gasgiant_ring.png`：Saturn ring alpha，原分辨率 8192×500 直接使用
 
-这些文件是 4096×2048 的项目内修改版本。再分发或修改时，请保留 Solar System Scope 的署名、
+这些文件是项目内的修改或转码版本（表面图 4096×2048，环带条图 8192×500）。星图界面 `textures/gui/starmap/bodies/` 下的天体精灵为上述贴图的球面投影缩略图，同样基于这些素材。再分发或修改时，请保留 Solar System Scope 的署名、
 来源链接、CC BY 4.0 许可证链接，并说明所做修改。
 
 ## Minecraft、NeoForge 与 LDLib2

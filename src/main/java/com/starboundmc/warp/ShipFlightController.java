@@ -2,7 +2,8 @@ package com.starboundmc.warp;
 
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
-import com.starboundmc.world.Planet;
+import com.starboundmc.world.GasGiantGeometry;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -37,17 +38,17 @@ public final class ShipFlightController
     /** Compatibility constants retained for callers. */
     public static final int DEPART_TICKS=TURN_TICKS+ACCEL_TICKS, DOCK_TICKS=ARRIVE_TICKS;
 
-    private final Planet from,target; private final UniversePosition start,end; private final boolean shortRoute; private final int totalTicks;
+    private final String from,target; private final UniversePosition start,end; private final boolean shortRoute; private final int totalTicks;
     private int elapsedTicks; private FlightPhase phase; private UniversePosition pos; private UniverseDelta velocity=new UniverseDelta(0.0,0.0,0.0); private double yaw,pitch;
 
-    public ShipFlightController(Planet from,Planet target){this(from,target,ShipSpace.universeDock(from),0,null,0,0,0);}
-    public ShipFlightController(Planet from,Planet target,Vec3 persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
+    public ShipFlightController(String from,String target){this(from,target,UniverseNavigation.universeDock(from),0,null,0,0,0);}
+    public ShipFlightController(String from,String target,Vec3 persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
     {
         this(from,target,UniversePosition.fromLegacy(persisted),elapsed,persistedPhase,yaw,pitch,ignoredRoll);
     }
-    public ShipFlightController(Planet from,Planet target,UniversePosition persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
+    public ShipFlightController(String from,String target,UniversePosition persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
     {
-        this.from=from;this.target=target;this.start=ShipSpace.universeDock(from);this.end=ShipSpace.universeDock(target);
+        this.from=from;this.target=target;this.start=UniverseNavigation.universeDock(from);this.end=UniverseNavigation.universeDock(target);
         double distance=Math.sqrt(start.distanceToSqr(end));this.shortRoute=distance<=LONG_ROUTE_MIN;this.totalTicks=durationFor(distance,shortRoute);
         this.elapsedTicks=clamp(elapsed,0,totalTicks);this.pos=sampleUniversePosition(from,target,totalTicks,this.elapsedTicks);
         this.phase=samplePhase(from,target,totalTicks,this.elapsedTicks);
@@ -78,10 +79,10 @@ public final class ShipFlightController
     public void tick(){if(isLanded())return;elapsedTicks=Math.min(totalTicks,elapsedTicks+1);UniversePosition old=pos;pos=sampleUniversePosition(from,target,totalTicks,elapsedTicks);velocity=isLanded()?new UniverseDelta(0.0,0.0,0.0):old.deltaTo(pos).scale(TPS);phase=samplePhase(from,target,totalTicks,elapsedTicks);updatePose();}
     private void updatePose(){yaw=sampleYaw(from,target,totalTicks,elapsedTicks);pitch=samplePitch(from,target,totalTicks,elapsedTicks);}
 
-    private static boolean isShort(Planet a,Planet b){return ShipSpace.flightDistance(a,b)<=LONG_ROUTE_MIN;}
+    private static boolean isShort(String a,String b){return UniverseNavigation.flightDistance(a,b)<=LONG_ROUTE_MIN;}
     private static int decelStart(int total){return total-DECEL_TICKS-ARRIVE_TICKS;}
     private static int travelStart(){return TURN_TICKS+ACCEL_TICKS;}
-    public static FlightPhase samplePhase(Planet from,Planet to,int total,double tick)
+    public static FlightPhase samplePhase(String from,String to,int total,double tick)
     {
         if(tick<TURN_TICKS)return FlightPhase.TURN;
         // The 11-second moon route exactly equals the authored manoeuvre
@@ -102,18 +103,18 @@ public final class ShipFlightController
      * radial leg into the arrival dock. Scalar progress is one continuous
      * S-curve over the route's whole arclength, so start/stop feel unchanged.
      */
-    public static Vec3 samplePosition(Planet from,Planet to,int total,double tick)
+    public static Vec3 samplePosition(String from,String to,int total,double tick)
     {
         return sampleUniversePosition(from, to, total, tick).toLocalVec3();
     }
 
-    public static UniversePosition sampleUniversePosition(Planet from,Planet to,int total,double tick)
+    public static UniversePosition sampleUniversePosition(String from,String to,int total,double tick)
     {
         FlightRoute route = route(from, to);
         return route.universePointAtProgress(routeProgress(from, to, route, total, tick));
     }
 
-    public static double sampleYaw(Planet from,Planet to,int total,double tick)
+    public static double sampleYaw(String from,String to,int total,double tick)
     {
         // Follow the corridor itself. Interpolating only between dock headings
         // made interplanetary travel look like sideways translation whenever
@@ -122,8 +123,8 @@ public final class ShipFlightController
         // Heading must sample the same phase-aware route clock as position or it
         // will point at the wrong corridor section during hyperspace/deceleration.
         double u = routeProgress(from, to, route, total, tick);
-        double dockFrom = ShipSpace.yawDock(from);
-        double dockTo = ShipSpace.yawDock(to);
+        double dockFrom = UniverseNavigation.yawDock(from);
+        double dockTo = UniverseNavigation.yawDock(to);
 
         // A broad eased transition gives the turn visible mass. The route
         // heading itself uses look-ahead, so small avoidance vertices cannot
@@ -150,7 +151,7 @@ public final class ShipFlightController
      * legs with a Hermite hyperspace segment between them; matching boundary
      * speeds keeps position and heading continuous when the visual phase changes.
      */
-    private static double routeProgress(Planet from, Planet to, FlightRoute route,
+    private static double routeProgress(String from, String to, FlightRoute route,
                                         int total, double tick)
     {
         double safeTotal = Math.max(1.0, total);
@@ -203,7 +204,7 @@ public final class ShipFlightController
                 + (t3 - t2) * toSpeed * duration;
         return Math.max(from, Math.min(to, value));
     }
-    public static double samplePitch(Planet from,Planet to,int total,double tick)
+    public static double samplePitch(String from,String to,int total,double tick)
     {
         double accelerate=smoother((tick-TURN_TICKS)/(double)ACCEL_TICKS);
         double decelerate=smoother((tick-decelStart(total))/(double)DECEL_TICKS);
@@ -211,7 +212,7 @@ public final class ShipFlightController
         return 2.2*accelerate*(1-decelerate)-1.4*decelerate*(1-arrival);
     }
     /** Bank into turns, derived from the same smoothed heading used for yaw. */
-    public static double sampleRoll(Planet from,Planet to,int total,double tick)
+    public static double sampleRoll(String from,String to,int total,double tick)
     {
         double half = 4.0;
         double before = sampleYaw(from, to, total, tick - half);
@@ -235,7 +236,17 @@ public final class ShipFlightController
     // geometrically incapable of entering a body.
     private static final double KEEP_OUT_FACTOR = 1.45;
     private static final int ARC_POINTS = 48;
-    private static final Map<Integer, FlightRoute> ROUTES = new ConcurrentHashMap<>();
+    private static final Map<String, FlightRoute> ROUTES = new ConcurrentHashMap<>();
+    /**
+     * The universe the cached routes were built against. Routes bake in dock
+     * coordinates, radii and keep-out arcs, so a rebuilt catalog invalidates
+     * every one of them; comparing identity is enough and cannot be forgotten
+     * the way an explicit invalidation call can.
+     */
+    private static volatile Object routeCatalog;
+    /** Max corridor-segment length near the giant's disc before subdivision. */
+    private static final double MAX_DENSIFY_STEP = 2.0;
+    private static final int MAX_DENSIFY_STEPS = 400;
 
     /** Dense deterministic polyline (vertices + cumulative 2D arc-length). */
     private static final class FlightRoute
@@ -296,17 +307,36 @@ public final class ShipFlightController
         }
     }
 
-    private static FlightRoute route(Planet from, Planet to)
+    private static FlightRoute route(String from, String to)
     {
-        int key = (from.ordinal() << 8) | to.ordinal();
+        Object catalog = UniverseNavigation.active();
+        if (routeCatalog != catalog)
+        {
+            ROUTES.clear();
+            routeCatalog = catalog;
+        }
+        String key = from + '\u0000' + to;
         return ROUTES.computeIfAbsent(key, ignored -> buildRoute(from, to));
     }
 
-    private static FlightRoute buildRoute(Planet from, Planet to)
+    /** Drops cached routes. Called automatically when the catalog changes. */
+    public static void clearRouteCache()
     {
-        UniverseRouteFrame frame = new UniverseRouteFrame(ShipSpace.universeDock(from));
+        ROUTES.clear();
+        routeCatalog = null;
+    }
+
+    /** Number of cached routes; for tests that assert the cache is bounded. */
+    static int cachedRouteCount()
+    {
+        return ROUTES.size();
+    }
+
+    private static FlightRoute buildRoute(String from, String to)
+    {
+        UniverseRouteFrame frame = new UniverseRouteFrame(UniverseNavigation.universeDock(from));
         Vec3 a = Vec3.ZERO;
-        Vec3 b = frame.toRelative(ShipSpace.universeDock(to));
+        Vec3 b = frame.toRelative(UniverseNavigation.universeDock(to));
         // Docking yaw points from the ship toward the planet. Both departure
         // and approach therefore use the opposite side of the dock: the ship
         // leaves away from the planet, then approaches the target from outside
@@ -316,11 +346,11 @@ public final class ShipFlightController
         // the opening leg. Pick the tangent which bends most naturally toward
         // the destination; the required departure turn is at most 90 degrees.
         Vec3 departureLeft = a.add(ShipSpace.rotateYaw(new Vec3(0.0, 0.0, DOCK_LEAD_DISTANCE),
-                ShipSpace.yawDock(from) - 90.0));
+                UniverseNavigation.yawDock(from) - 90.0));
         Vec3 departureRight = a.add(ShipSpace.rotateYaw(new Vec3(0.0, 0.0, DOCK_LEAD_DISTANCE),
-                ShipSpace.yawDock(from) + 90.0));
+                UniverseNavigation.yawDock(from) + 90.0));
         Vec3 toLead = b.subtract(ShipSpace.rotateYaw(new Vec3(0.0, 0.0, DOCK_LEAD_DISTANCE),
-                ShipSpace.yawDock(to)));
+                UniverseNavigation.yawDock(to)));
         Vec3 fromLead = departureLeft.distanceTo(toLead) <= departureRight.distanceTo(toLead)
                 ? departureLeft : departureRight;
         List<Vec3> poly = new ArrayList<>();
@@ -329,13 +359,22 @@ public final class ShipFlightController
         poly.add(toLead);
         poly.add(b);
         // Peel the source, then the target, then the remaining bodies defensively.
-        List<Planet> order = new ArrayList<>(List.of(from, to));
-        for (Planet p : Planet.values())
-            if (p != from && p != to) order.add(p);
-        for (Planet body : order)
-            poly = peel(poly, frame.toRelative(ShipSpace.universeBodyPosition(body)),
-                    ShipSpace.radius(body) * KEEP_OUT_FACTOR);
+        // Only navigable bodies take part: the gas giant and rocky moon have no
+        // navigation profile, so letting them in would bend every existing course.
+        List<String> order = new ArrayList<>(List.of(from, to));
+        for (CelestialBodyDefinition body : UniverseNavigation.avoidanceBodies())
+        {
+            if (!body.entryId().equals(from) && !body.entryId().equals(to))
+                order.add(body.entryId());
+        }
+        for (String bodyEntryId : order)
+            poly = peel(poly, frame.toRelative(UniverseNavigation.universeBodyPosition(bodyEntryId)),
+                    UniverseNavigation.radius(bodyEntryId) * KEEP_OUT_FACTOR);
         poly = smoothPolyline(poly);
+        // Long routes are only a couple of dozen vertices, so a segment can jump
+        // clean across the giant's ring disc between two samples; densify the
+        // corridor there first so the ring lift below has points to act on.
+        poly = densifyNearRings(frame, poly);
 
         // Densify into a cumulative-arc-length polyline; y follows along by arc-length.
         int count = poly.size();
@@ -354,7 +393,157 @@ public final class ShipFlightController
             Vec3 p = poly.get(i);
             pts[i] = new Vec3(p.x, y, p.z);
         }
-        return new FlightRoute(frame, ShipSpace.universeDock(to), pts, cum, total);
+        liftRouteOverRings(frame, pts, cum, total);
+        return new FlightRoute(frame, UniverseNavigation.universeDock(to), pts, cum, total);
+    }
+
+    /**
+     * Subdivides any corridor segment that reaches a ringed body's ring disc so
+     * the ring lift has a dense polyline to work with. Adds vertices only (the
+     * subdivisions are collinear), so cumulative arc length and therefore every
+     * route duration are unchanged.
+     */
+    private static List<Vec3> densifyNearRings(UniverseRouteFrame frame, List<Vec3> poly)
+    {
+        List<Vec3> out = poly;
+        for (CelestialBodyDefinition body : UniverseNavigation.ringedBodies())
+        {
+            out = densifyNearRing(frame, out, body.entryId());
+        }
+        return out;
+    }
+
+    private static List<Vec3> densifyNearRing(UniverseRouteFrame frame, List<Vec3> poly, String entryId)
+    {
+        Vec3 center = frame.toRelative(UniverseNavigation.universeBodyPosition(entryId));
+        double radius = UniverseNavigation.radius(entryId);
+        double reach = GasGiantGeometry.ringOuterDistance(radius) + radius * 0.5;
+        if (!segmentCouldReachDisc(poly, center, reach))
+            return poly;
+
+        List<Vec3> out = new ArrayList<>();
+        for (int i = 0; i < poly.size() - 1; i++)
+        {
+            Vec3 p = poly.get(i);
+            Vec3 q = poly.get(i + 1);
+            out.add(p);
+            double segmentLength = p.distanceTo(q);
+            if (segmentLength > MAX_DENSIFY_STEP
+                    && (distXY(center, p) <= reach || distXY(center, q) <= reach
+                        || segmentWithinDisc(p, q, center, reach)))
+            {
+                int steps = Math.min(MAX_DENSIFY_STEPS, (int) Math.ceil(segmentLength / MAX_DENSIFY_STEP));
+                for (int k = 1; k < steps; k++)
+                    out.add(p.lerp(q, k / (double) steps));
+            }
+        }
+        out.add(poly.get(poly.size() - 1));
+        return out;
+    }
+
+    /** Cheap pre-check: does any segment pass near the disc? */
+    private static boolean segmentCouldReachDisc(List<Vec3> poly, Vec3 center, double reach)
+    {
+        for (int i = 0; i < poly.size() - 1; i++)
+        {
+            if (distXY(center, poly.get(i)) <= reach
+                    || segmentWithinDisc(poly.get(i), poly.get(i + 1), center, reach))
+                return true;
+        }
+        return false;
+    }
+
+    /** Whether the segment's closest planar approach to the centre is inside the reach. */
+    private static boolean segmentWithinDisc(Vec3 p, Vec3 q, Vec3 center, double reach)
+    {
+        double px = p.x - center.x, pz = p.z - center.z;
+        double dx = q.x - p.x, dz = q.z - p.z;
+        double l2 = dx * dx + dz * dz;
+        double t = l2 <= 1e-12 ? 0 : clamp01(-(px * dx + pz * dz) / l2);
+        double ex = px + dx * t, ez = pz + dz * t;
+        return ex * ex + ez * ez <= reach * reach;
+    }
+
+    /**
+     * Lifts the corridor's mid-section out of a ringed body's ring plane. The
+     * route planner works in the XZ plane, so a route that crosses the ring's
+     * XZ footprint (which every giant berth route does — the giant's own dock
+     * sits inside the band at ~1.6 radii) passes straight through the annulus.
+     * A single smooth hump, sized to the worst crossing, raises the path onto
+     * one side of the plane; the hump tapers to zero over a margin band outside
+     * the disc and is exactly zero at both docks, so endpoints never move.
+     *
+     * <p>All coordinates here live in the route frame's relative space, like
+     * {@link #peel}; plane offsets are translation-invariant, so the side test
+     * still reads the same authored dock geometry.</p>
+     */
+    private static void liftRouteOverRings(UniverseRouteFrame frame, Vec3[] pts,
+                                           double[] cum, double total)
+    {
+        for (CelestialBodyDefinition body : UniverseNavigation.ringedBodies())
+        {
+            liftRouteOverRing(frame, pts, cum, total, body.entryId());
+        }
+    }
+
+    private static void liftRouteOverRing(UniverseRouteFrame frame, Vec3[] pts,
+                                          double[] cum, double total, String entryId)
+    {
+        if (total <= 0.0 || pts.length < 2)
+            return;
+        Vec3 center = frame.toRelative(UniverseNavigation.universeBodyPosition(entryId));
+        double radius = UniverseNavigation.radius(entryId);
+        Vec3 normal = GasGiantGeometry.ringPlaneNormal();
+        if (Math.abs(normal.y) < 1.0e-6)
+            return;
+        double inner = GasGiantGeometry.ringInnerDistance(radius);
+        double outer = GasGiantGeometry.ringOuterDistance(radius);
+        double margin = radius * 0.5;
+
+        // The hump always lifts to the side the body's dock already leans
+        // toward, so the ship dives under or climbs over instead of threading
+        // through a knife-edge crossing. Plane offset is translation-invariant,
+        // so the world-space dock test matches the relative-space points.
+        double departureOffset = GasGiantGeometry.planeOffset(
+                UniverseNavigation.vDock(entryId), UniverseNavigation.qPos(entryId));
+        double side = departureOffset < 0.0 ? -1.0 : 1.0;
+        double desiredOffset = side * radius * 0.35;
+
+        // Worst required lift over points actually inside the disc; the taper
+        // lives outside the disc so every crossing point reaches full height.
+        // The lift is signed: a negative side dives below the plane.
+        double peak = 0.0;
+        double sStart = Double.MAX_VALUE;
+        double sEnd = -Double.MAX_VALUE;
+        for (int i = 0; i < pts.length; i++)
+        {
+            double planar = GasGiantGeometry.planarRadius(pts[i], center);
+            if (planar < inner - margin || planar > outer + margin)
+                continue;
+            sStart = Math.min(sStart, cum[i]);
+            sEnd = Math.max(sEnd, cum[i]);
+            if (planar < inner || planar > outer)
+                continue;
+            double offset = GasGiantGeometry.planeOffset(pts[i], center);
+            double needed = (desiredOffset - offset) / normal.y;
+            if (Math.abs(needed) > Math.abs(peak))
+                peak = needed;
+        }
+        if (Math.abs(peak) <= 0.001 || sEnd <= sStart)
+            return;
+
+        double ramp = Math.max(6.0, (sEnd - sStart) * 0.35);
+        for (int i = 0; i < pts.length; i++)
+        {
+            double s = cum[i];
+            double rise = clamp01((s - sStart) / ramp);
+            double fall = clamp01((sEnd - s) / ramp);
+            double bump = smoother(rise) * smoother(fall);
+            if (bump <= 0.0)
+                continue;
+            Vec3 p = pts[i];
+            pts[i] = new Vec3(p.x, p.y + peak * bump, p.z);
+        }
     }
 
     /**
@@ -539,7 +728,7 @@ public final class ShipFlightController
 
     private static double smoother(double t){t=clamp01(t);return t*t*t*(t*(t*6-15)+10);}private static double clamp01(double t){return Math.max(0,Math.min(1,t));}
     private static double lerpAngle(double a,double b,double t){return a+Math.IEEEremainder(b-a,360)*clamp01(t);}private static int clamp(int v,int a,int b){return Math.max(a,Math.min(b,v));}
-    public Planet getFrom(){return from;}public Planet getTarget(){return target;}public Vec3 getPos(){return pos.toLocalVec3();}public Vec3 getVelocity(){return velocity.toVec3();}
+    public String getFrom(){return from;}public String getTarget(){return target;}public Vec3 getPos(){return pos.toLocalVec3();}public Vec3 getVelocity(){return velocity.toVec3();}
     public UniversePosition getUniversePosition(){return pos;}public UniverseDelta getUniverseVelocity(){return velocity;}
     public double getYaw(){return yaw;}public double getPitch(){return pitch;}public double getRoll(){return sampleRoll(from,target,totalTicks,elapsedTicks);}public FlightPhase getPhase(){return phase;}
     public int getElapsedTicks(){return elapsedTicks;}public int getTotalTicks(){return totalTicks;}public boolean isShortRoute(){return shortRoute;}

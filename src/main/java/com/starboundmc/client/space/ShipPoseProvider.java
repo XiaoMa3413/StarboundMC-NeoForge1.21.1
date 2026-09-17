@@ -2,7 +2,6 @@ package com.starboundmc.client.space;
 
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.space.UniversePosition;
-import com.starboundmc.world.Planet;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -35,9 +34,16 @@ public interface ShipPoseProvider
 
     int warpDurationTicks();
 
-    Planet currentBody();
+    /**
+     * Body the ship is docked at or departing from, as a universe entry id.
+     *
+     * <p>An id rather than the legacy {@code Planet} enum, so a renderer never
+     * needs the enum and a datapack body renders without a new enum constant.</p>
+     */
+    String currentBodyId();
 
-    Planet targetBody();
+    /** Body being flown to as a universe entry id, or null when docked. */
+    String targetBodyId();
 
     String currentSystemHint();
 

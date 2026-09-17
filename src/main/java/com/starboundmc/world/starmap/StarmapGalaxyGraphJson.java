@@ -4,6 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.starboundmc.world.universe.ClientUniverseCatalog;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseCatalog;
 
 import java.io.Reader;
 import java.util.ArrayList;
@@ -11,13 +14,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Strict reader for the resource-pack configurable galaxy graph. */
+/**
+ * Strict reader for the resource-pack configurable galaxy graph.
+ *
+ * <p>The graph is UI composition and stays a client resource; it is deliberately
+ * not part of the server datapack. The server must never trust it to decide
+ * whether a warp is permitted, so nothing here feeds travel authority.</p>
+ *
+ * <p>Validation runs against the active universe, which means the graph must
+ * describe whatever systems that universe actually has. Previously the check was
+ * "every built-in system is present"; it is now "every system in the active
+ * universe is present", which is what makes a datapack-added system fail loudly
+ * instead of rendering as an unreachable node.</p>
+ */
 public final class StarmapGalaxyGraphJson {
     public static final int SCHEMA_VERSION = 1;
 
     private StarmapGalaxyGraphJson() {}
 
     public static StarmapGalaxyGraph read(Reader reader) {
+        return read(reader, ClientUniverseCatalog.current());
+    }
+
+    public static StarmapGalaxyGraph read(Reader reader, UniverseCatalog universe) {
         JsonElement parsed = JsonParser.parseReader(reader);
         if (!parsed.isJsonObject())
             throw new IllegalArgumentException("Galaxy graph root must be a JSON object");
@@ -26,26 +45,26 @@ public final class StarmapGalaxyGraphJson {
         if (version != SCHEMA_VERSION)
             throw new IllegalArgumentException("Unsupported galaxy graph schema version: " + version);
 
-        List<StarmapGalaxyGraph.Node> nodes = readNodes(requiredArray(root, "nodes"));
+        List<StarmapGalaxyGraph.Node> nodes = readNodes(requiredArray(root, "nodes"), universe);
         List<StarmapGalaxyGraph.Route> routes = readRoutes(requiredArray(root, "routes"));
         Set<String> configuredSystems = new HashSet<>();
         nodes.forEach(node -> configuredSystems.add(node.id()));
-        for (StarSystem system : StarSystems.all()) {
-            if (!configuredSystems.contains(system.getSystemId()))
+        for (StarSystemDefinition system : universe.allSystems()) {
+            if (!configuredSystems.contains(system.systemId()))
                 throw new IllegalArgumentException(
-                        "Galaxy graph is missing star system: " + system.getSystemId());
+                        "Galaxy graph is missing star system: " + system.systemId());
         }
         return StarmapGalaxyGraph.of(nodes, routes);
     }
 
-    private static List<StarmapGalaxyGraph.Node> readNodes(JsonArray values) {
+    private static List<StarmapGalaxyGraph.Node> readNodes(JsonArray values, UniverseCatalog universe) {
         List<StarmapGalaxyGraph.Node> nodes = new ArrayList<>();
         for (JsonElement value : values) {
             if (!value.isJsonObject())
                 throw new IllegalArgumentException("Galaxy node must be a JSON object");
             JsonObject object = value.getAsJsonObject();
             String systemId = required(object, "system_id").getAsString();
-            StarSystem system = StarSystems.byId(systemId);
+            StarSystemDefinition system = universe.system(systemId).orElse(null);
             if (system == null)
                 throw new IllegalArgumentException("Unknown star system in galaxy graph: " + systemId);
             double x = required(object, "x").getAsDouble();

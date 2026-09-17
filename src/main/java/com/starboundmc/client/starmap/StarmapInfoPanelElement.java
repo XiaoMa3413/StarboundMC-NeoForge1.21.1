@@ -13,7 +13,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
 import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import net.minecraft.network.chat.Component;
-import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
 
 import java.util.List;
 import java.util.Objects;
@@ -159,7 +159,7 @@ final class StarmapInfoPanelElement extends UIElement {
     }
 
     void refresh() {
-        PlanetEntry entry = root.getSelectedEntry();
+        CelestialBodyDefinition entry = root.getSelectedEntry();
         var system = root.getSelectedSystem();
         boolean visible = root.isInfoPanelVisible() && (system != null || entry != null);
         String nextContentKey = visible ? root.selectionTargetKey() : null;
@@ -186,16 +186,16 @@ final class StarmapInfoPanelElement extends UIElement {
         StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
         panel.layout(layout -> layout.left(0).top(0).width(next.width()).height(next.height()));
         prepareFrame(width, height);
-        title.setText(entry == null ? Component.translatable(system.getNameKey())
-                : Component.translatable(entry.getNameKey()));
-        subtitle.setText(entry == null ? Component.translatable(system.getStarTypeKey())
-                : Component.translatable(entry.getTypeKey()));
+        title.setText(entry == null ? Component.translatable(system.nameKey())
+                : Component.translatable(entry.nameKey()));
+        subtitle.setText(entry == null ? Component.translatable(system.starTypeKey())
+                : Component.translatable(entry.typeKey()));
 
         if (entry == null) {
             satelliteCount.setDisplay(false);
             metadata.setText(Component.translatable(
-                    "gui.starboundmc.starmap.redraw.body_count", system.getEntries().size()));
-            description.setText(Component.translatable(system.getDescriptionKey()));
+                    "gui.starboundmc.starmap.redraw.body_count", system.bodies().size()));
+            description.setText(Component.translatable(system.descriptionKey()));
             boolean galaxy = root.getLevel() == StarmapLevel.GALAXY;
             boolean canEnter = galaxy && root.canEnterSelectedSystem();
             Component reason = galaxy ? root.actionStatus() : null;
@@ -207,17 +207,17 @@ final class StarmapInfoPanelElement extends UIElement {
                 action.setText(root.actionLabel());
                 action.setActive(canEnter);
             }
-            preview.style(style -> style.backgroundTexture(SDFRectTexture.of(system.getStarColor())
+            preview.style(style -> style.backgroundTexture(SDFRectTexture.of(system.starColor())
                     .setRadius(16).setBorderColor(ACCENT).setStroke(1)));
         } else {
-            int moons = system == null ? 0 : system.getMoonCount(entry);
+            int moons = system == null ? 0 : system.moonCount(entry.entryId());
             satelliteCount.setDisplay(moons > 0);
             if (moons > 0)
                 satelliteCount.setText(Component.translatable(
                         "gui.starboundmc.starmap.redraw.moon_count", moons));
             metadata.setText(Component.translatable("gui.starboundmc.starmap.threat",
-                    entry.getThreatLevel()));
-            description.setText(Component.translatable(entry.getDescriptionKey()));
+                    entry.threatLevel()));
+            description.setText(Component.translatable(entry.descriptionKey()));
             action.setDisplay(true);
             action.setText(root.actionLabel());
             action.setActive(root.isActionAvailable());

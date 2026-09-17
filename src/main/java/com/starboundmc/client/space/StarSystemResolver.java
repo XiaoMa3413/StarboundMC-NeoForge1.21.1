@@ -2,8 +2,9 @@ package com.starboundmc.client.space;
 
 import com.mojang.logging.LogUtils;
 import com.starboundmc.space.UniversePosition;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.client.StarmapUniverse;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseCatalog;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 import com.starboundmc.world.starmap.StellarDistanceResponse;
 import org.slf4j.Logger;
@@ -22,7 +23,8 @@ public final class StarSystemResolver
     private static final int QUERY_SECTOR_RADIUS = 1;
     private static final long CANDIDATE_REFRESH_TICKS = 10L;
     private static final double CANDIDATE_REFRESH_DISTANCE_SQR = 10_000.0 * 10_000.0;
-    private static final StarSystem[] CANDIDATES = new StarSystem[MAX_CANDIDATE_SYSTEMS];
+    private static final StarSystemDefinition[] CANDIDATES =
+            new StarSystemDefinition[MAX_CANDIDATE_SYSTEMS];
     private static final ResolvedStarField RESULT = new ResolvedStarField(MAX_CANDIDATE_SYSTEMS);
     private static final StellarLodTransitions LOD_TRANSITIONS =
             new StellarLodTransitions(MAX_CANDIDATE_SYSTEMS * 2);
@@ -30,6 +32,8 @@ public final class StarSystemResolver
     private static int candidateCount;
     private static long lastCandidateRefreshTick = Long.MIN_VALUE;
     private static String lastActiveSystemId;
+    /** The catalog the candidate hints were resolved against. */
+    private static UniverseCatalog candidatesCatalog;
     private static String lastCurrentHint;
     private static String lastTargetHint;
     private static boolean initialized;
@@ -45,25 +49,25 @@ public final class StarSystemResolver
         UniversePosition ship = context.universePosition();
         long animationTick = (long) context.animationTicks();
         refreshCandidatesIfNeeded(ship, animationTick, context.currentSystemHint(), context.targetSystemHint());
-        StarSystem active = resolveActive(ship, context.currentSystemHint(), !initialized);
+        StarSystemDefinition active = resolveActive(ship, context.currentSystemHint(), !initialized);
         initialized = true;
-        lastActiveSystemId = active == null ? null : active.getSystemId();
+        lastActiveSystemId = active == null ? null : active.systemId();
         RESULT.activeSystem = active;
         RESULT.count = 0;
 
         for (int candidateIndex = 0; candidateIndex < candidateCount; candidateIndex++)
         {
-            StarSystem system = CANDIDATES[candidateIndex];
+            StarSystemDefinition system = CANDIDATES[candidateIndex];
             VisibleStar slot = RESULT.slots[RESULT.count++];
-            StellarVisualProfile profile = system.getStellarVisual();
+            StellarVisualProfile profile = system.stellarVisual();
             UniversePosition star = profile.getUniversePosition();
             double rx = ship.deltaXTo(star);
             double ry = ship.deltaYTo(star);
             double rz = ship.deltaZTo(star);
             double starDistance = Math.sqrt(rx * rx + ry * ry + rz * rz);
 
-            double navigationDistance = Math.sqrt(ship.distanceToSqr(system.getUniverseNavigationCenter()));
-            double normalized = navigationDistance / Math.max(1.0, system.getInfluenceRadius());
+            double navigationDistance = Math.sqrt(ship.distanceToSqr(system.navigationCenter()));
+            double normalized = navigationDistance / Math.max(1.0, system.influenceRadius());
             float influence = 1.0F - smoothstep((float) ((normalized - 0.72) / 0.55));
             float alpha = 0.14F + influence * 0.86F;
             // Stellar light remains readable in deep space. Keep this separate
@@ -99,14 +103,14 @@ public final class StarSystemResolver
         {
             VisibleStar star = RESULT.slots[i];
             star.navigationTarget = RESULT.targetSystemId != null
-                    && RESULT.targetSystemId.equals(star.system.getSystemId());
+                    && RESULT.targetSystemId.equals(star.system.systemId());
         }
         StellarLodPolicy.assign(RESULT);
         for (int i = 0; i < RESULT.count; i++)
         {
             VisibleStar star = RESULT.slots[i];
             star.lodDetail = LOD_TRANSITIONS.update(
-                    star.system.getSystemId(), star.lod, context.animationTicks());
+                    star.system.systemId(), star.lod, context.animationTicks());
         }
         RESULT.environment.update(RESULT);
         logDebugState(ship, animationTick);
@@ -128,8 +132,18 @@ public final class StarSystemResolver
             return;
 
         int reservedHints = reservedHintCount(currentHint, targetHint);
-        candidateCount = StarSystems.spatialIndex().queryNearby(
+        // The catalog's sector view replaces the legacy spatial index; both are
+        // keyed on the system's navigation centre sector.
+        UniverseCatalog catalog = StarmapUniverse.catalog();
+        candidateCount = catalog.spatialIndex().queryNearby(
                 ship.sector(), QUERY_SECTOR_RADIUS, CANDIDATES, CANDIDATES.length - reservedHints);
+        // A rebuilt catalog invalidates the memoised hints with it.
+        if (candidatesCatalog != catalog)
+        {
+            candidatesCatalog = catalog;
+            lastCurrentHint = null;
+            lastTargetHint = null;
+        }
         candidateCount = appendHintCandidate(currentHint, candidateCount);
         candidateCount = appendHintCandidate(targetHint, candidateCount);
         candidateAnchor = ship;
@@ -140,7 +154,7 @@ public final class StarSystemResolver
 
     private static int appendHintCandidate(String systemId, int count)
     {
-        StarSystem hinted = StarSystems.byId(systemId);
+        StarSystemDefinition hinted = StarmapUniverse.system(systemId);
         if (hinted == null || count >= CANDIDATES.length)
             return count;
         for (int i = 0; i < count; i++)
@@ -152,23 +166,23 @@ public final class StarSystemResolver
 
     private static int reservedHintCount(String currentHint, String targetHint)
     {
-        StarSystem current = StarSystems.byId(currentHint);
-        StarSystem target = StarSystems.byId(targetHint);
+        StarSystemDefinition current = StarmapUniverse.system(currentHint);
+        StarSystemDefinition target = StarmapUniverse.system(targetHint);
         if (current == null)
             return target == null ? 0 : 1;
         return target == null || target == current ? 1 : 2;
     }
 
-    private static StarSystem resolveActive(UniversePosition ship, String hintId, boolean seedFromHint)
+    private static StarSystemDefinition resolveActive(UniversePosition ship, String hintId, boolean seedFromHint)
     {
-        StarSystem previous = StarSystems.byId(lastActiveSystemId);
-        StarSystem nearest = null;
+        StarSystemDefinition previous = StarmapUniverse.system(lastActiveSystemId);
+        StarSystemDefinition nearest = null;
         double nearestScore = Double.POSITIVE_INFINITY;
         for (int i = 0; i < candidateCount; i++)
         {
-            StarSystem system = CANDIDATES[i];
-            double distance = Math.sqrt(ship.distanceToSqr(system.getUniverseNavigationCenter()));
-            double score = distance / Math.max(1.0, system.getInfluenceRadius());
+            StarSystemDefinition system = CANDIDATES[i];
+            double distance = Math.sqrt(ship.distanceToSqr(system.navigationCenter()));
+            double score = distance / Math.max(1.0, system.influenceRadius());
             if (score <= 1.0 && score < nearestScore)
             {
                 nearest = system;
@@ -178,9 +192,9 @@ public final class StarSystemResolver
 
         if (previous != null)
         {
-            double previousDistance = Math.sqrt(ship.distanceToSqr(previous.getUniverseNavigationCenter()));
-            double previousScore = previousDistance / Math.max(1.0, previous.getInfluenceRadius());
-            boolean insideHysteresis = previousDistance <= previous.getInfluenceRadius() + HYSTERESIS_UNITS;
+            double previousDistance = Math.sqrt(ship.distanceToSqr(previous.navigationCenter()));
+            double previousScore = previousDistance / Math.max(1.0, previous.influenceRadius());
+            boolean insideHysteresis = previousDistance <= previous.influenceRadius() + HYSTERESIS_UNITS;
             if (insideHysteresis && (nearest == null || nearest == previous
                     || nearestScore + SWITCH_ADVANTAGE >= previousScore))
                 return previous;
@@ -190,7 +204,7 @@ public final class StarSystemResolver
             return nearest;
         // Hints seed old saves and docked states but do not override a valid
         // coordinate result, so manual flight remains coordinate-authoritative.
-        return seedFromHint ? StarSystems.byId(hintId) : null;
+        return seedFromHint ? StarmapUniverse.system(hintId) : null;
     }
 
     public static void reset()
@@ -203,6 +217,7 @@ public final class StarSystemResolver
         lastCurrentHint = null;
         lastTargetHint = null;
         lastDebugLogTick = Long.MIN_VALUE;
+        candidatesCatalog = null;
         LOD_TRANSITIONS.reset();
         RESULT.environment.reset();
     }
@@ -231,12 +246,12 @@ public final class StarSystemResolver
             return;
         lastDebugLogTick = animationTick;
         LOGGER.info("Stellar debug ship={} active={} candidates={}", ship,
-                RESULT.activeSystem == null ? "deep-space" : RESULT.activeSystem.getSystemId(), RESULT.count);
+                RESULT.activeSystem == null ? "deep-space" : RESULT.activeSystem.systemId(), RESULT.count);
         for (int i = 0; i < RESULT.count; i++)
         {
             VisibleStar star = RESULT.slots[i];
             LOGGER.info("Stellar debug system={} distance={} influence={} brightness={} distanceScale={} skyRadius={} stage={} lod={} blend={}",
-                    star.system.getSystemId(), String.format("%.1f", star.distance),
+                    star.system.systemId(), String.format("%.1f", star.distance),
                     String.format("%.3f", star.systemInfluence), String.format("%.3f", star.stellarBrightness),
                     String.format("%.3f", star.distanceScale),
                     String.format("%.2f", star.projectedRadius), star.visualStage(), star.lod,
@@ -261,7 +276,7 @@ public final class StarSystemResolver
         private final VisibleStar[] slots;
         private final GalaxyEnvironmentBlend environment;
         private int count;
-        private StarSystem activeSystem;
+        private StarSystemDefinition activeSystem;
         private String targetSystemId;
 
         private ResolvedStarField(int capacity)
@@ -284,7 +299,7 @@ public final class StarSystemResolver
             return slots[index];
         }
 
-        public StarSystem activeSystem()
+        public StarSystemDefinition activeSystem()
         {
             return activeSystem;
         }
@@ -333,7 +348,7 @@ public final class StarSystemResolver
 
     public static final class VisibleStar
     {
-        private StarSystem system;
+        private StarSystemDefinition system;
         private double relativeX;
         private double relativeY;
         private double relativeZ;
@@ -349,7 +364,7 @@ public final class StarSystemResolver
         private float lodDetail;
         private boolean navigationTarget;
 
-        private void set(StarSystem system, double relativeX, double relativeY, double relativeZ,
+        private void set(StarSystemDefinition system, double relativeX, double relativeY, double relativeZ,
                          double distance, float alpha, float stellarBrightness,
                          float systemInfluence, float distanceScale,
                          float projectedRadius, float coronaDetail, float effectDetail)
@@ -368,7 +383,7 @@ public final class StarSystemResolver
             this.effectDetail = effectDetail;
         }
 
-        public StarSystem system() { return system; }
+        public StarSystemDefinition system() { return system; }
         public double relativeX() { return relativeX; }
         public double relativeY() { return relativeY; }
         public double relativeZ() { return relativeZ; }

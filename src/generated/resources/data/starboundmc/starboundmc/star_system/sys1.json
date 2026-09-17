@@ -1,0 +1,316 @@
+{
+  "bodies": [
+    {
+      "description_key": "starmap.entry.sys1.barren.desc",
+      "entry_id": "sys1:barren",
+      "name_key": "starmap.entry.sys1.barren.name",
+      "navigation": {
+        "body_position": {
+          "x": -5002.668504563659,
+          "y": 102.8,
+          "z": -1994.1827254324958
+        },
+        "body_radius": 4.0,
+        "dock_position": {
+          "x": -5000.0,
+          "y": 102.0,
+          "z": -2000.0
+        },
+        "dock_yaw": 335.0
+      },
+      "orbit": {
+        "orbit_angle": 135.0,
+        "orbit_radius": 52
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.5,
+        "atmosphere_green": 0.65,
+        "atmosphere_peak": 0.15,
+        "atmosphere_red": 0.75,
+        "night_floor": 0.06,
+        "orientation_tilt": 12.0,
+        "orientation_yaw": 285.0,
+        "point_color": -3100550,
+        "spin_rate": 0.00275,
+        "terminator_width": 0.18,
+        "texture": "starboundmc:textures/planet/barren.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -3628960,
+        "body_type": "ROCKY",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/barren_focus.png",
+        "marker_size": 18,
+        "primary_color": -3628960,
+        "ring_color": -3628960,
+        "secondary_color": -9021130,
+        "surface_detail": 0.78,
+        "texture": "starboundmc:textures/gui/starmap/bodies/barren.png",
+        "texture_seed": 1511503073
+      },
+      "surface": {
+        "dimension": "starboundmc:barren"
+      },
+      "threat_level": 2,
+      "type_key": "planet.starboundmc.barren"
+    },
+    {
+      "description_key": "starmap.entry.sys1.lush.desc",
+      "entry_id": "sys1:lush",
+      "name_key": "starmap.entry.sys1.lush.name",
+      "navigation": {
+        "body_position": {
+          "x": 0.06,
+          "y": 103.2,
+          "z": 9.6
+        },
+        "body_radius": 6.0,
+        "dock_position": {
+          "x": 0.0,
+          "y": 102.0,
+          "z": 0.0
+        },
+        "dock_yaw": 0.0
+      },
+      "orbit": {
+        "orbit_angle": 315.0,
+        "orbit_radius": 84
+      },
+      "space_visual": {
+        "atmosphere_blue": 1.0,
+        "atmosphere_green": 0.6,
+        "atmosphere_peak": 0.2,
+        "atmosphere_red": 0.3,
+        "orientation_tilt": 23.0,
+        "orientation_yaw": 15.0,
+        "point_color": -9906550,
+        "terminator_width": 0.24,
+        "texture": "starboundmc:textures/planet/lush.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -7549953,
+        "atmosphere_strength": 0.48,
+        "body_type": "TERRESTRIAL",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/lush_focus.png",
+        "marker_size": 18,
+        "primary_color": -10959784,
+        "ring_color": -10959784,
+        "secondary_color": -14128315,
+        "surface_detail": 0.66,
+        "texture": "starboundmc:textures/gui/starmap/bodies/lush.png",
+        "texture_seed": 885599601
+      },
+      "surface": {
+        "dimension": "minecraft:overworld",
+        "landing_policy": "OVERWORLD_RESPAWN"
+      },
+      "threat_level": 1,
+      "type_key": "planet.starboundmc.lush"
+    },
+    {
+      "description_key": "starmap.entry.sys1.molten.desc",
+      "entry_id": "sys1:molten",
+      "name_key": "starmap.entry.sys1.molten.name",
+      "navigation": {
+        "body_position": {
+          "x": -83.94,
+          "y": 99.2,
+          "z": -2.4000000000000004
+        },
+        "body_radius": 1.6348773841961852,
+        "dock_position": {
+          "x": -82.64625654611092,
+          "y": 98.87302452316077,
+          "z": -4.673526941779457
+        },
+        "dock_yaw": 330.0
+      },
+      "orbit": {
+        "parent": "sys1:lush",
+        "orbit_angle": 90.0,
+        "orbit_radius": 22
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.2,
+        "atmosphere_green": 0.45,
+        "atmosphere_peak": 0.26,
+        "atmosphere_red": 1.0,
+        "night_floor": 0.16,
+        "orientation_tilt": 6.0,
+        "orientation_yaw": 210.0,
+        "point_color": -30132,
+        "spin_rate": 0.0075,
+        "terminator_width": 0.16,
+        "texture": "starboundmc:textures/planet/molten.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -38350,
+        "atmosphere_strength": 0.16,
+        "body_type": "VOLCANIC",
+        "marker_size": 12,
+        "primary_color": -2072512,
+        "ring_color": -2072512,
+        "secondary_color": -20424,
+        "surface_detail": 0.84,
+        "texture": "starboundmc:textures/gui/starmap/bodies/molten.png",
+        "texture_seed": 1905208259
+      },
+      "surface": {
+        "dimension": "starboundmc:molten",
+        "environment": {
+          "breathable": false,
+          "heat_tier": 3
+        }
+      },
+      "threat_level": 6,
+      "type_key": "planet.starboundmc.molten"
+    },
+    {
+      "description_key": "starmap.entry.sys1.gasgiant.desc",
+      "entry_id": "sys1:gasgiant",
+      "name_key": "starmap.entry.sys1.gasgiant.name",
+      "navigation": {
+        "body_position": {
+          "x": -16062.900463338801,
+          "y": 110.0,
+          "z": -7511.819124830719
+        },
+        "body_radius": 40.0,
+        "dock_position": {
+          "x": -16000.0,
+          "y": 102.0,
+          "z": -7500.0
+        },
+        "dock_yaw": 259.0
+      },
+      "orbit": {
+        "orbit_angle": 200.0,
+        "orbit_radius": 116
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.7,
+        "atmosphere_green": 0.91,
+        "atmosphere_peak": 0.24,
+        "atmosphere_red": 0.99,
+        "night_floor": 0.22,
+        "orientation_tilt": 26.7,
+        "orientation_yaw": 40.0,
+        "point_color": -1783661,
+        "ring_texture": "starboundmc:textures/planet/gasgiant_ring.png",
+        "spin_rate": 0.009,
+        "terminator_width": 0.42,
+        "texture": "starboundmc:textures/planet/gasgiant.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -10592,
+        "atmosphere_strength": 0.62,
+        "band_strength": 0.88,
+        "body_type": "GAS_GIANT",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png",
+        "marker_size": 22,
+        "primary_color": -1529760,
+        "ring_color": -2570080,
+        "ring_strength": 0.46,
+        "secondary_color": -4692408,
+        "texture": "starboundmc:textures/gui/starmap/bodies/gasgiant.png",
+        "texture_seed": 651667740
+      },
+      "threat_level": 8,
+      "type_key": "starmap.type.gas_giant"
+    },
+    {
+      "description_key": "starmap.entry.sys1.rockymoon.desc",
+      "entry_id": "sys1:rockymoon",
+      "name_key": "starmap.entry.sys1.rockymoon.name",
+      "navigation": {
+        "body_position": {
+          "x": -15787.716310869539,
+          "y": 90.0,
+          "z": -7460.111463601716
+        },
+        "body_radius": 5.0,
+        "dock_position": {
+          "x": -15781.273564177154,
+          "y": 89.0,
+          "z": -7464.854196469775
+        },
+        "dock_yaw": 306.0
+      },
+      "orbit": {
+        "parent": "sys1:gasgiant",
+        "orbit_angle": 30.0,
+        "orbit_radius": 26
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.6,
+        "atmosphere_green": 0.55,
+        "atmosphere_peak": 0.03,
+        "atmosphere_red": 0.55,
+        "night_floor": 0.03,
+        "orientation_tilt": 8.0,
+        "orientation_yaw": 160.0,
+        "point_color": -4933442,
+        "spin_rate": 0.002,
+        "terminator_width": 0.12,
+        "texture": "starboundmc:textures/planet/rockymoon.png"
+      },
+      "starmap_visual": {
+        "atmosphere_color": -7303024,
+        "body_type": "ROCKY",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/rockymoon_focus.png",
+        "marker_size": 10,
+        "primary_color": -7303024,
+        "ring_color": -7303024,
+        "secondary_color": -10591640,
+        "surface_detail": 0.9,
+        "texture": "starboundmc:textures/gui/starmap/bodies/rockymoon.png",
+        "texture_seed": 1675709109
+      },
+      "surface": {
+        "dimension": "starboundmc:rockymoon",
+        "environment": {
+          "breathable": false
+        }
+      },
+      "threat_level": 5,
+      "type_key": "starmap.type.rocky_moon"
+    }
+  ],
+  "description_key": "starmap.system.sys1.desc",
+  "galaxy_map_position": {
+    "x": 0.25,
+    "y": 0.3840909090909091
+  },
+  "influence_radius": 5500.0,
+  "name_key": "starmap.system.sys1",
+  "navigation_center": {
+    "x": -1500.0,
+    "y": 102.0,
+    "z": -700.0
+  },
+  "planet_field_radius": 24000.0,
+  "star_type_key": "starmap.type.yellow_dwarf",
+  "stellar_visual": {
+    "core_color": -1571,
+    "corona_color": -18358,
+    "distance_response": {
+      "base_sky_radius": 11.5,
+      "corona_activation": 0.18,
+      "distance_response_exponent": 1.8,
+      "effect_activation": 0.45,
+      "maximum_local_scale": 2.2,
+      "minimum_local_scale": 0.65,
+      "reference_distance": 24478.0,
+      "remote_point_radius": 1.45
+    },
+    "flare_strength": 0.42,
+    "glow_scale": 2.75,
+    "position_x": 18000.0,
+    "position_y": 9000.0,
+    "position_z": -14000.0,
+    "pulse_speed": 0.018,
+    "radiation_strength": 0.0,
+    "starmap_glow_size": 34,
+    "surface_color": -861813
+  },
+  "system_id": "sys1"
+}

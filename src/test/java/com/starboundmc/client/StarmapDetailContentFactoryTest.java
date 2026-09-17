@@ -1,9 +1,13 @@
 package com.starboundmc.client;
 
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.starmap.PlanetEntry;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.BodyOrbitDefinition;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
+import com.starboundmc.world.universe.UniverseTestSupport;
+import com.starboundmc.world.universe.BuiltInUniverse;
+import com.starboundmc.world.starmap.StarmapBodyType;
+import com.starboundmc.world.starmap.StarmapBodyVisual;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -17,7 +21,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void galaxyOnlyAddsStatusWhenShipIsInThatSystem()
     {
-        StarSystem system = StarSystems.byId(StarSystems.SYS_MAIN);
+        StarSystemDefinition system = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
 
         StarmapDetailContent remote = StarmapDetailContentFactory.buildGalaxy(system, false);
         StarmapDetailContent docked = StarmapDetailContentFactory.buildGalaxy(system, true);
@@ -31,7 +35,7 @@ class StarmapDetailContentFactoryTest
     @Test
     void starUsesOnlyItsRealScanCategory()
     {
-        StarSystem system = StarSystems.byId(StarSystems.SYS_MAIN);
+        StarSystemDefinition system = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID);
         StarmapDetailContent content = StarmapDetailContentFactory.buildStar(system);
 
         assertEquals(List.of("scan"), sectionIds(content));
@@ -45,10 +49,10 @@ class StarmapDetailContentFactoryTest
     @Test
     void reachableEntryContainsNavigationAndPrioritizesCurrentStatus()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:lush");
+        CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:lush");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
-                entry, entry.getEntryId(), true, ShipWarpManager.WARP_FUEL_COST);
+                entry, entry.entryId(), true, ShipWarpManager.WARP_FUEL_COST);
 
         assertEquals(List.of("scan", "navigation", "status"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.FUEL,
@@ -60,7 +64,10 @@ class StarmapDetailContentFactoryTest
     @Test
     void lockedEntryHasNoEmptyNavigationCategory()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:gasgiant");
+        // A body the ship cannot fly to has no navigation profile. Every shipped
+        // body is now navigable, so the locked detail-card path needs a synthetic
+        // one to stay under test.
+        CelestialBodyDefinition entry = lockedBody();
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, 0);
@@ -75,12 +82,27 @@ class StarmapDetailContentFactoryTest
     @Test
     void unvisitedReachableEntryDoesNotCreateAnEmptyStatusCategory()
     {
-        PlanetEntry entry = StarSystems.entryById("sys1:barren");
+        CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:barren");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, ShipWarpManager.WARP_FUEL_COST);
 
         assertEquals(List.of("scan", "navigation"), sectionIds(content));
+    }
+
+    /**
+     * A body the ship cannot fly to: no navigation profile, but still described.
+     *
+     * <p>Built rather than looked up because every shipped body is navigable, so
+     * there is no longer a real locked entry to assert against.</p>
+     */
+    private static CelestialBodyDefinition lockedBody()
+    {
+        return new CelestialBodyDefinition("synthetic:locked", "starmap.entry.locked.name",
+                "starmap.type.gas_giant", "starmap.entry.locked.desc", 0,
+                BodyOrbitDefinition.aroundStar(200, 0.0F),
+                StarmapBodyVisual.builder(StarmapBodyType.GAS_GIANT, 0xFFE8A860, 22, 1L).build(),
+                java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty());
     }
 
     private static List<String> sectionIds(StarmapDetailContent content)

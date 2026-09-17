@@ -13,9 +13,11 @@ final class Stage3NetworkWiringTest {
     @Test
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
-        assertTrue(network.contains("PROTOCOL_VERSION = \"7\""));
+        // Bumped when SyncPlanetPacket was removed (migration §22).
+        assertTrue(network.contains("PROTOCOL_VERSION = \"8\""));
         assertEquals(12, occurrences(network, "playToServer("));
-        assertEquals(13, occurrences(network, "playToClient("));
+        // 12 after SyncPlanetPacket was removed (migration §22).
+        assertEquals(12, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("NovaBroadcastPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
@@ -30,7 +32,10 @@ final class Stage3NetworkWiringTest {
         String server = source("network/ServerPayloadHandler.java");
         assertFalse(client.contains("ServerPlayer"));
         assertTrue(client.contains("ClientPlanetState.setStarState"));
-        assertTrue(client.contains("ClientPlanetState.setCurrent"));
+        // The body identity now arrives with the star-state packet, so the client
+        // handler no longer translates a legacy planet name (migration §21/§22).
+        assertFalse(client.contains("Planet.fromId"));
+        assertFalse(client.contains("SyncPlanetPacket"));
         assertTrue(client.contains("ClientPlanetState.startWarp"));
         assertTrue(client.contains("ClientPlanetState.setFuel"));
         assertTrue(client.contains("ClientPlanetState.applyFlightSnapshot"));

@@ -3,6 +3,7 @@ package com.starboundmc.event;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.warp.ShipWarpManager;
 import com.starboundmc.world.Stage6TravelService;
+import com.starboundmc.world.universe.ServerUniverseCatalog;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -17,6 +18,9 @@ public class ShipWarpEvents
     @SubscribeEvent
     public static void onServerStarted(ServerStartedEvent event)
     {
+        // The universe is built from the registries this world actually loaded,
+        // before warp init so travel can consult the catalog immediately.
+        ServerUniverseCatalog.initialize(event.getServer());
         ShipWarpManager.init(event.getServer());
     }
 
@@ -24,6 +28,9 @@ public class ShipWarpEvents
     public static void onServerStopped(ServerStoppedEvent event)
     {
         ShipWarpManager.reset();
+        // One world's universe must not outlive it: the next save in this JVM may
+        // ship different datapacks.
+        ServerUniverseCatalog.clear();
     }
 
     @SubscribeEvent

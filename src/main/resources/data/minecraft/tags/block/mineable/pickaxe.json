@@ -1,0 +1,18 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:tungsten_ore",
+    "starboundmc:titanium_ore",
+    "starboundmc:durasteel_ore",
+    "starboundmc:star_core_ore",
+    "starboundmc:fuel_crystal_ore",
+    "starboundmc:titanium_alloy_furnace",
+    "starboundmc:hull_plating",
+    "starboundmc:reinforced_hull",
+    "starboundmc:industrial_light",
+    "starboundmc:hull_hazard",
+    "starboundmc:hull_grate",
+    "starboundmc:hull_window",
+    "starboundmc:beacon_emitter"
+  ]
+}

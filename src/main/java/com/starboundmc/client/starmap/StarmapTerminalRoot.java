@@ -1,5 +1,6 @@
 package com.starboundmc.client.starmap;
 
+import com.starboundmc.client.StarmapUniverse;
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
@@ -10,10 +11,9 @@ import com.starboundmc.client.ui.ShipSystemLockOverlay;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartWarpPacket;
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.starmap.PlanetEntry;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.starmap.StarmapGalaxyGraph;
-import com.starboundmc.world.starmap.StarSystem;
-import com.starboundmc.world.starmap.StarSystems;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
@@ -29,9 +29,9 @@ public final class StarmapTerminalRoot extends UIElement {
     private static final int SYSTEM_ORBIT_SCALE = 300;
 
     private StarmapLevel level = StarmapLevel.GALAXY;
-    private StarSystem selectedSystem;
-    private PlanetEntry selectedEntry;
-    private PlanetEntry focusedPlanet;
+    private StarSystemDefinition selectedSystem;
+    private CelestialBodyDefinition selectedEntry;
+    private CelestialBodyDefinition focusedPlanet;
     /** True when the central star is explicitly selected in the system view. */
     private boolean centralStarSelected;
     private final StarmapGalaxyGraph galaxyGraph;
@@ -92,12 +92,12 @@ public final class StarmapTerminalRoot extends UIElement {
                         .positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE))
                 .setAllowHitTest(false);
         for (StarmapGalaxyGraph.Node graphNode : galaxyGraph.nodes()) {
-            StarSystem system = graphNode.system();
+            StarSystemDefinition system = graphNode.system();
             StarmapNodeElement.StarSystemRef ref = new StarmapNodeElement.StarSystemRef(system);
             StarmapNodeElement starNode = new StarmapNodeElement(this, ref, null, false);
             nodes.add(starNode);
             nodeLayer.addChild(starNode);
-            for (PlanetEntry entry : system.getEntries()) {
+            for (CelestialBodyDefinition entry : system.bodies()) {
                 StarmapNodeElement bodyNode = new StarmapNodeElement(this, ref, entry, false);
                 nodes.add(bodyNode);
                 nodeLayer.addChild(bodyNode);
@@ -227,11 +227,11 @@ public final class StarmapTerminalRoot extends UIElement {
     /** The ship's current system is the only deep-space signal available before hyperdrive repair. */
     private String currentSystemId() {
         String entryId = ClientPlanetState.getCurrentEntryId();
-        String systemId = StarSystems.systemIdOfEntry(entryId);
+        String systemId = StarmapUniverse.systemIdOfEntry(entryId);
         if (systemId != null)
             return systemId;
-        StarSystem current = StarSystems.systemOfPlanet(ClientPlanetState.getCurrent());
-        return current == null ? null : current.getSystemId();
+        StarSystemDefinition current = StarmapUniverse.systemOf(ClientPlanetState.getCurrentEntryId());
+        return current == null ? null : current.systemId();
     }
 
     boolean isSublightOnline() {
@@ -247,13 +247,13 @@ public final class StarmapTerminalRoot extends UIElement {
      * incomplete signal for every other system, without exposing selectable
      * bodies or details from those systems.
      */
-    boolean isSystemRevealed(StarSystem system) {
+    boolean isSystemRevealed(StarSystemDefinition system) {
         if (system == null || isEnvironmentLocked())
             return false;
-        return isHyperdriveOnline() || java.util.Objects.equals(system.getSystemId(), currentSystemId());
+        return isHyperdriveOnline() || java.util.Objects.equals(system.systemId(), currentSystemId());
     }
 
-    boolean isSystemSelectable(StarSystem system) {
+    boolean isSystemSelectable(StarSystemDefinition system) {
         return isSystemRevealed(system);
     }
 
@@ -310,15 +310,15 @@ public final class StarmapTerminalRoot extends UIElement {
         return containerId;
     }
 
-    StarSystem getSelectedSystem() {
+    StarSystemDefinition getSelectedSystem() {
         return selectedSystem;
     }
 
-    PlanetEntry getSelectedEntry() {
+    CelestialBodyDefinition getSelectedEntry() {
         return selectedEntry;
     }
 
-    PlanetEntry getFocusedPlanet() {
+    CelestialBodyDefinition getFocusedPlanet() {
         return focusedPlanet;
     }
 
@@ -334,9 +334,9 @@ public final class StarmapTerminalRoot extends UIElement {
         return renderOrbitClock;
     }
 
-    float systemOrbitRadius(PlanetEntry entry, int width, int height) {
+    float systemOrbitRadius(CelestialBodyDefinition entry, int width, int height) {
         return viewTransform.scaleLength(Math.max(18,
-                entry.getOrbitRadius() * Math.min(width, height) / SYSTEM_ORBIT_SCALE));
+                entry.orbit().orbitRadius() * Math.min(width, height) / SYSTEM_ORBIT_SCALE));
     }
 
     boolean isCentralStarSelected() {
@@ -385,7 +385,7 @@ public final class StarmapTerminalRoot extends UIElement {
         infoPanelSide = null;
     }
 
-    void selectSystem(StarSystem system) {
+    void selectSystem(StarSystemDefinition system) {
         if (isEnvironmentLocked() || !isSystemSelectable(system))
             return;
         selectedSystem = system;
@@ -394,7 +394,7 @@ public final class StarmapTerminalRoot extends UIElement {
         refreshComponents();
     }
 
-    void enterSystem(StarSystem system) {
+    void enterSystem(StarSystemDefinition system) {
         if (isEnvironmentLocked() || !isSystemSelectable(system))
             return;
         StarmapGalaxyGraph.Node graphNode = galaxyGraph.node(system);
@@ -406,7 +406,7 @@ public final class StarmapTerminalRoot extends UIElement {
         playLevelTransition();
     }
 
-    void selectCentralStar(StarSystem system) {
+    void selectCentralStar(StarSystemDefinition system) {
         if (isEnvironmentLocked() || system == null || level != StarmapLevel.SYSTEM
                 || system != selectedSystem)
             return;
@@ -416,12 +416,12 @@ public final class StarmapTerminalRoot extends UIElement {
         refreshComponents();
     }
 
-    void selectEntry(PlanetEntry entry) {
+    void selectEntry(CelestialBodyDefinition entry) {
         if (isEnvironmentLocked() || entry == null)
             return;
         if (level == StarmapLevel.SYSTEM) {
-            if (entry.isMoon())
-                entry = StarSystems.entryById(entry.getParentEntryId());
+            if (entry.orbit().isMoon())
+                entry = StarmapUniverse.body(entry.parentEntryId().orElse(null));
             if (entry == null)
                 return;
             centralStarSelected = false;
@@ -494,34 +494,34 @@ public final class StarmapTerminalRoot extends UIElement {
         };
     }
 
-    ResourceLocation previewTexture(PlanetEntry entry) {
+    ResourceLocation previewTexture(CelestialBodyDefinition entry) {
         if (entry == null)
             return null;
-        return bodyTextures.resolve(entry.getVisual(), level == StarmapLevel.PLANET);
+        return bodyTextures.resolve(entry.starmapVisual(), level == StarmapLevel.PLANET);
     }
 
-    ResourceLocation nodeTexture(PlanetEntry entry) {
+    ResourceLocation nodeTexture(CelestialBodyDefinition entry) {
         // Overview satellites are deliberately dots; a full sprite at this
         // scale reads as noise and makes neighbouring moons appear merged.
-        if (entry != null && entry.isMoon() && level == StarmapLevel.SYSTEM)
+        if (entry != null && entry.orbit().isMoon() && level == StarmapLevel.SYSTEM)
             return null;
         return previewTexture(entry);
     }
 
-    IGuiTexture bodyTexture(PlanetEntry entry, float size, ResourceLocation resolved) {
+    IGuiTexture bodyTexture(CelestialBodyDefinition entry, float size, ResourceLocation resolved) {
         return bodyTextures.texture(entry, size, resolved);
     }
 
-    IGuiTexture previewBodyTexture(PlanetEntry entry, float size) {
+    IGuiTexture previewBodyTexture(CelestialBodyDefinition entry, float size) {
         return bodyTextures.texture(entry, size, previewTexture(entry));
     }
 
-    StarmapNodeElement.NodePlacement nodePlacement(StarSystem system, PlanetEntry entry,
+    StarmapNodeElement.NodePlacement nodePlacement(StarSystemDefinition system, CelestialBodyDefinition entry,
                                                    boolean centralStar, int width, int height) {
         return nodePlacement(system, entry, centralStar, width, height, orbitClock);
     }
 
-    StarmapNodeElement.NodePlacement nodePlacement(StarSystem system, PlanetEntry entry,
+    StarmapNodeElement.NodePlacement nodePlacement(StarSystemDefinition system, CelestialBodyDefinition entry,
                                                    boolean centralStar, int width, int height,
                                                    double phaseClock) {
         if (system == null)
@@ -547,7 +547,7 @@ public final class StarmapTerminalRoot extends UIElement {
             return new StarmapNodeElement.NodePlacement(0, 0, 0, false, false);
         if (level == StarmapLevel.SYSTEM) {
             float[] point = systemPointF(entry, width, height, phaseClock);
-            if (entry.isMoon()) {
+            if (entry.orbit().isMoon()) {
                 // Satellites remain visible as subordinate dots in the system
                 // view, but are intentionally not selectable (see node input).
                 return new StarmapNodeElement.NodePlacement(point[0], point[1],
@@ -563,15 +563,15 @@ public final class StarmapTerminalRoot extends UIElement {
                 return new StarmapNodeElement.NodePlacement(center.x(), center.y(),
                         viewTransform.scaleLength(54), true, entry == selectedEntry);
             }
-            if (entry.isMoon() && focusedPlanet != null
-                    && entry.getParentEntryId().equals(focusedPlanet.getEntryId())) {
+            if (entry.orbit().isMoon() && focusedPlanet != null
+                    && entry.parentEntryId().orElse(null).equals(focusedPlanet.entryId())) {
                 StarmapViewTransform.Point center = viewTransform.toScreen(
                         width / 2.0F, height / 2.0F, width, height);
                 float radius = viewTransform.scaleLength(
                         moonDisplayRadius(system, entry, width, height, true));
                 float[] point = orbitPointF(center.x(), center.y(), radius,
                         moonDisplayAngle(system, entry),
-                        StarmapOrbitMotion.moonPhase(phaseClock, entry.getOrbitRadius()));
+                        StarmapOrbitMotion.moonPhase(phaseClock, entry.orbit().orbitRadius()));
                 return new StarmapNodeElement.NodePlacement(point[0], point[1],
                         viewTransform.scaleLength(14), true, entry == selectedEntry);
             }
@@ -585,7 +585,7 @@ public final class StarmapTerminalRoot extends UIElement {
         int panelHeight;
         if (selectedEntry != null) {
             int moonCount = selectedSystem == null ? 0
-                    : selectedSystem.getMoonCount(selectedEntry);
+                    : selectedSystem.moonCount(selectedEntry.entryId());
             panelHeight = 122 + (moonCount > 0 ? 11 : 0);
         } else if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             panelHeight = 122;
@@ -618,7 +618,7 @@ public final class StarmapTerminalRoot extends UIElement {
         if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             float[] point = galaxyPointF(selectedSystem, 0, 0, width, height);
             return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(22.0F),
-                    "galaxy:" + selectedSystem.getSystemId());
+                    "galaxy:" + selectedSystem.systemId());
         }
         if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
             if (centralStarSelected) {
@@ -626,13 +626,13 @@ public final class StarmapTerminalRoot extends UIElement {
                         width / 2.0F, height / 2.0F, width, height);
                 return new SelectedVisual(center.x(), center.y(),
                         viewTransform.scaleLength(28.0F),
-                        "system:" + selectedSystem.getSystemId() + ":star");
+                        "system:" + selectedSystem.systemId() + ":star");
             }
             if (selectedEntry != null) {
                 float[] point = systemPointF(selectedEntry, width, height, phaseClock);
                 return new SelectedVisual(point[0], point[1],
                         viewTransform.scaleLength(16.0F),
-                        "system:" + selectedEntry.getEntryId());
+                        "system:" + selectedEntry.entryId());
             }
             return null;
         }
@@ -643,10 +643,10 @@ public final class StarmapTerminalRoot extends UIElement {
                     width / 2.0F, height / 2.0F, width, height);
             return new SelectedVisual(center.x(), center.y(),
                     viewTransform.scaleLength(54.0F),
-                    "planet:" + selectedEntry.getEntryId());
+                    "planet:" + selectedEntry.entryId());
         }
-        if (!selectedEntry.isMoon() || focusedPlanet == null
-                || !java.util.Objects.equals(selectedEntry.getParentEntryId(), focusedPlanet.getEntryId()))
+        if (!selectedEntry.orbit().isMoon() || focusedPlanet == null
+                || !java.util.Objects.equals(selectedEntry.parentEntryId().orElse(null), focusedPlanet.entryId()))
             return null;
         StarmapViewTransform.Point center = viewTransform.toScreen(
                 width / 2.0F, height / 2.0F, width, height);
@@ -654,23 +654,23 @@ public final class StarmapTerminalRoot extends UIElement {
                 moonDisplayRadius(selectedSystem, selectedEntry, width, height, true));
         float[] point = orbitPointF(center.x(), center.y(), radius,
                 moonDisplayAngle(selectedSystem, selectedEntry),
-                StarmapOrbitMotion.moonPhase(phaseClock, selectedEntry.getOrbitRadius()));
+                StarmapOrbitMotion.moonPhase(phaseClock, selectedEntry.orbit().orbitRadius()));
         return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(14.0F),
-                "planet:" + selectedEntry.getEntryId());
+                "planet:" + selectedEntry.entryId());
     }
 
     String selectionTargetKey() {
         if (level == StarmapLevel.GALAXY && selectedSystem != null)
-            return "galaxy:" + selectedSystem.getSystemId();
+            return "galaxy:" + selectedSystem.systemId();
         if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
             if (centralStarSelected)
-                return "system:" + selectedSystem.getSystemId() + ":star";
+                return "system:" + selectedSystem.systemId() + ":star";
             if (selectedEntry != null)
-                return "system:" + selectedEntry.getEntryId();
+                return "system:" + selectedEntry.entryId();
             return null;
         }
         if (level == StarmapLevel.PLANET && selectedEntry != null)
-            return "planet:" + selectedEntry.getEntryId();
+            return "planet:" + selectedEntry.entryId();
         return null;
     }
 
@@ -681,15 +681,15 @@ public final class StarmapTerminalRoot extends UIElement {
         }
         if (selectedEntry == null)
             return;
-        if (level == StarmapLevel.SYSTEM && !selectedEntry.isMoon()) {
+        if (level == StarmapLevel.SYSTEM && !selectedEntry.orbit().isMoon()) {
             enterPlanet(selectedEntry);
         } else if (level == StarmapLevel.PLANET && isWarpAvailable()) {
-            ModNetwork.sendToServer(new StartWarpPacket(selectedEntry.getEntryId()));
+            ModNetwork.sendToServer(new StartWarpPacket(selectedEntry.entryId()));
         }
     }
 
     /** Change page context without carrying an implicit selection into it. */
-    private void enterPlanet(PlanetEntry planet) {
+    private void enterPlanet(CelestialBodyDefinition planet) {
         StarmapNavigationState current = navigationState();
         StarmapNavigationState next = current.enterPlanet(planet);
         if (next.equals(current))
@@ -731,27 +731,27 @@ public final class StarmapTerminalRoot extends UIElement {
         }
         if (level == StarmapLevel.SYSTEM) {
             return StarmapActionAvailability.system(selectedEntry != null,
-                    selectedEntry != null && selectedEntry.isMoon());
+                    selectedEntry != null && selectedEntry.orbit().isMoon());
         }
         if (selectedEntry == null)
             return StarmapActionAvailability.planet(false, false, false,
                     false, 0, 0);
         int fuel = ClientPlanetState.getFuel();
         int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
-                selectedEntry.getEntryId());
+                selectedEntry.entryId());
         String currentSystem = currentSystemId();
-        String targetSystem = StarSystems.systemIdOfEntry(selectedEntry.getEntryId());
+        String targetSystem = StarmapUniverse.systemIdOfEntry(selectedEntry.entryId());
         boolean sameSystem = currentSystem != null && currentSystem.equals(targetSystem);
-        return StarmapActionAvailability.planet(true, selectedEntry.isReachable(),
+        return StarmapActionAvailability.planet(true, selectedEntry.isNavigable(),
                 ClientPlanetState.isWarping(),
-                selectedEntry.getDestination() == ClientPlanetState.getCurrent(),
+                StarmapUniverse.isCurrent(selectedEntry.entryId()),
                 sameSystem, isSublightOnline(), isHyperdriveOnline(),
                 fuel, cost);
     }
 
-    float[] galaxyPointF(StarSystem system, float x, float y, float width, float height) {
+    float[] galaxyPointF(StarSystemDefinition system, float x, float y, float width, float height) {
         StarmapGalaxyGraph.Node node = galaxyGraph.node(system);
-        var position = node == null ? system.getGalaxyMapPosition() : node.position();
+        var position = node == null ? system.galaxyMapPosition() : node.position();
         float worldX = position.pixelX(BASE_WIDTH) * width / (float) BASE_WIDTH;
         float worldY = position.pixelY(BASE_HEIGHT) * height / (float) BASE_HEIGHT;
         StarmapViewTransform.Point point = viewTransform.toScreen(
@@ -766,54 +766,54 @@ public final class StarmapTerminalRoot extends UIElement {
                 centerY + (float) Math.sin(radians) * radius };
     }
 
-    float[] systemPointF(PlanetEntry entry, int width, int height, double phaseClock) {
+    float[] systemPointF(CelestialBodyDefinition entry, int width, int height, double phaseClock) {
         StarmapViewTransform.Point center = viewTransform.toScreen(
                 width / 2.0F, height / 2.0F, width, height);
-        if (!entry.isMoon()) {
+        if (!entry.orbit().isMoon()) {
             float radius = systemOrbitRadius(entry, width, height);
-            return orbitPointF(center.x(), center.y(), radius, entry.getOrbitAngle(),
-                    StarmapOrbitMotion.phase(phaseClock, entry.getOrbitRadius()));
+            return orbitPointF(center.x(), center.y(), radius, entry.orbit().orbitAngle(),
+                    StarmapOrbitMotion.phase(phaseClock, entry.orbit().orbitRadius()));
         }
-        PlanetEntry parent = StarSystems.entryById(entry.getParentEntryId());
+        CelestialBodyDefinition parent = StarmapUniverse.body(entry.parentEntryId().orElse(null));
         if (parent == null)
             return new float[] { center.x(), center.y() };
         float[] parentPoint = systemPointF(parent, width, height, phaseClock);
-        StarSystem system = systemForEntry(entry);
+        StarSystemDefinition system = systemForEntry(entry);
         float radius = viewTransform.scaleLength(
                 moonDisplayRadius(system, entry, width, height, false));
         return orbitPointF(parentPoint[0], parentPoint[1], radius,
                 moonDisplayAngle(system, entry),
-                StarmapOrbitMotion.moonPhase(phaseClock, entry.getOrbitRadius()));
+                StarmapOrbitMotion.moonPhase(phaseClock, entry.orbit().orbitRadius()));
     }
 
-    private StarSystem systemForEntry(PlanetEntry entry) {
+    private StarSystemDefinition systemForEntry(CelestialBodyDefinition entry) {
         if (entry == null)
             return selectedSystem;
-        String systemId = StarSystems.systemIdOfEntry(entry.getEntryId());
-        StarSystem system = StarSystems.byId(systemId);
+        String systemId = StarmapUniverse.systemIdOfEntry(entry.entryId());
+        StarSystemDefinition system = StarmapUniverse.system(systemId);
         return system == null ? selectedSystem : system;
     }
 
     /** Visual radius for a moon, including room for the parent node and a gap. */
-    int moonDisplayRadius(StarSystem system, PlanetEntry moon, int width,
+    int moonDisplayRadius(StarSystemDefinition system, CelestialBodyDefinition moon, int width,
                           int height, boolean focusedPlanetView) {
         int minDimension = Math.max(1, Math.min(width, height));
         int ordinal = moonOrdinal(system, moon);
         int authored = focusedPlanetView
-                ? moon.getOrbitRadius() * minDimension / 150
-                : moon.getOrbitRadius() * minDimension / 320;
+                ? moon.orbit().orbitRadius() * minDimension / 150
+                : moon.orbit().orbitRadius() * minDimension / 320;
         int minimum = focusedPlanetView ? 44 : 18;
         int spacing = focusedPlanetView ? 16 : 12;
         return Math.max(minimum, authored) + ordinal * spacing;
     }
 
-    private int moonOrdinal(StarSystem system, PlanetEntry moon) {
+    private int moonOrdinal(StarSystemDefinition system, CelestialBodyDefinition moon) {
         if (system == null || moon == null)
             return 0;
         int ordinal = 0;
-        for (PlanetEntry candidate : system.getEntries()) {
-            if (candidate.isMoon()
-                    && java.util.Objects.equals(candidate.getParentEntryId(), moon.getParentEntryId())) {
+        for (CelestialBodyDefinition candidate : system.bodies()) {
+            if (candidate.orbit().isMoon()
+                    && java.util.Objects.equals(candidate.parentEntryId().orElse(null), moon.parentEntryId().orElse(null))) {
                 if (candidate == moon)
                     return ordinal;
                 ordinal++;
@@ -823,21 +823,21 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     /** Spread authored angles into deterministic slots when a parent has many moons. */
-    float moonDisplayAngle(StarSystem system, PlanetEntry moon) {
+    float moonDisplayAngle(StarSystemDefinition system, CelestialBodyDefinition moon) {
         if (system == null || moon == null)
-            return moon == null ? 0.0F : moon.getOrbitAngle();
+            return moon == null ? 0.0F : moon.orbit().orbitAngle();
         int count = 0;
-        for (PlanetEntry candidate : system.getEntries()) {
-            if (candidate.isMoon()
-                    && java.util.Objects.equals(candidate.getParentEntryId(), moon.getParentEntryId()))
+        for (CelestialBodyDefinition candidate : system.bodies()) {
+            if (candidate.orbit().isMoon()
+                    && java.util.Objects.equals(candidate.parentEntryId().orElse(null), moon.parentEntryId().orElse(null)))
                 count++;
         }
         if (count <= 1)
-            return moon.getOrbitAngle();
+            return moon.orbit().orbitAngle();
         int ordinal = moonOrdinal(system, moon);
         // Keep a small trace of the authored angle while guaranteeing even
         // separation for dense systems.
-        return ordinal * (360.0F / count) + moon.getOrbitAngle() * 0.2F;
+        return ordinal * (360.0F / count) + moon.orbit().orbitAngle() * 0.2F;
     }
 
     record SelectedVisual(float x, float y, float diameter, String key) {

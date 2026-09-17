@@ -3,7 +3,6 @@ package com.starboundmc.client.space;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
-import com.starboundmc.world.Planet;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -60,13 +59,13 @@ public interface FreeFlightPoseProvider extends ShipPoseProvider
     }
 
     @Override
-    default Planet currentBody()
+    default String currentBodyId()
     {
         return null;
     }
 
     @Override
-    default Planet targetBody()
+    default String targetBodyId()
     {
         return null;
     }

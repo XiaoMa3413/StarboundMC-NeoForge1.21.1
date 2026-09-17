@@ -20,7 +20,7 @@ public final class ClientNetworkState {
 
     public static void resetConnectionState() {
         planetId = "lush";
-        warpTargetId = null;
+        warpEntryId = null;
         warpEntryId = null;
         warpDurationTicks = 0;
         fuel = 0;
@@ -31,12 +31,8 @@ public final class ClientNetworkState {
         flight = null;
     }
 
-    static void apply(SyncPlanetPacket payload) {
-        planetId = payload.planetId();
-    }
-
     static void apply(WarpStartPacket payload) {
-        warpTargetId = payload.planetId();
+        // The destination is the entry id; there is no separate legacy target.
         warpEntryId = payload.entryId().isEmpty() ? null : payload.entryId();
         warpDurationTicks = payload.durationTicks();
     }

@@ -1,39 +1,37 @@
 package com.starboundmc.network;
 
-import com.starboundmc.world.Planet;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/** Server -> client notification that an authoritative warp has begun. */
-public record WarpStartPacket(String planetId, int durationTicks, String entryId)
+/**
+ * Server to client notification that an authoritative warp has begun.
+ *
+ * <p>Carries the destination as a universe entry id. It used to carry a legacy
+ * planet name as well, which the client decoded through the planet enum; that
+ * field is gone, so the destination cannot be misread as the starter planet when
+ * a body has no legacy name (migration §21).</p>
+ */
+public record WarpStartPacket(String entryId, int durationTicks)
         implements CustomPacketPayload {
     public static final Type<WarpStartPacket> TYPE = PayloadSupport.type("warp_start");
     public static final StreamCodec<FriendlyByteBuf, WarpStartPacket> STREAM_CODEC =
             CustomPacketPayload.codec(WarpStartPacket::write, WarpStartPacket::new);
 
     public WarpStartPacket {
-        planetId = PayloadSupport.requireString(planetId, PayloadSupport.MAX_ID_LENGTH, "planetId");
-        entryId = PayloadSupport.requireString(
-                entryId == null ? "" : entryId, PayloadSupport.MAX_ID_LENGTH, "entryId");
+        entryId = PayloadSupport.requireString(entryId, PayloadSupport.MAX_ID_LENGTH, "entryId");
         if (durationTicks < 0) {
             throw new IllegalArgumentException("durationTicks cannot be negative");
         }
     }
 
-    public WarpStartPacket(Planet planet, int durationTicks, String entryId) {
-        this(planet.getId(), durationTicks, entryId);
-    }
-
     private WarpStartPacket(FriendlyByteBuf buffer) {
-        this(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH), buffer.readVarInt(),
-                buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
+        this(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH), buffer.readVarInt());
     }
 
     private void write(FriendlyByteBuf buffer) {
-        buffer.writeUtf(planetId, PayloadSupport.MAX_ID_LENGTH);
-        buffer.writeVarInt(durationTicks);
         buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
+        buffer.writeVarInt(durationTicks);
     }
 
     @Override

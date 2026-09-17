@@ -3,8 +3,8 @@ package com.starboundmc.client.space;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
-import com.starboundmc.world.starmap.StarSystems;
 import org.junit.jupiter.api.AfterEach;
+import com.starboundmc.world.universe.BuiltInUniverse;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,8 +42,8 @@ class FreeFlightPoseProviderTest
         assertFalse(context.warping());
         assertEquals(0.0F, context.warpProgress());
         assertEquals(1, context.warpDurationTicks());
-        assertNull(context.currentBody());
-        assertNull(context.targetBody());
+        assertNull(context.currentBodyId());
+        assertNull(context.targetBodyId());
         assertNull(context.currentSystemHint());
         assertNull(context.targetSystemHint());
     }
@@ -58,12 +58,12 @@ class FreeFlightPoseProviderTest
 
         SpaceRenderContext beforeContext = SpaceRenderState.capture(10.0F);
         StarSystemResolver.ResolvedStarField beforeField = StarSystemResolver.resolve(beforeContext);
-        double beforeRelativeX = relativeX(beforeField, StarSystems.SYS_MAIN);
+        double beforeRelativeX = relativeX(beforeField, BuiltInUniverse.MAIN_SYSTEM_ID);
 
         provider.position = provider.position.add(new UniverseDelta(1.0, 0.0, 0.0));
         SpaceRenderContext afterContext = SpaceRenderState.capture(11.0F);
         StarSystemResolver.ResolvedStarField afterField = StarSystemResolver.resolve(afterContext);
-        double afterRelativeX = relativeX(afterField, StarSystems.SYS_MAIN);
+        double afterRelativeX = relativeX(afterField, BuiltInUniverse.MAIN_SYSTEM_ID);
 
         assertTrue(beforeContext.shipPosition().x > 49_999.0);
         assertTrue(afterContext.shipPosition().x < -49_999.0);
@@ -75,7 +75,7 @@ class FreeFlightPoseProviderTest
     private static double relativeX(StarSystemResolver.ResolvedStarField field, String systemId)
     {
         for (int i = 0; i < field.count(); i++)
-            if (systemId.equals(field.star(i).system().getSystemId()))
+            if (systemId.equals(field.star(i).system().systemId()))
                 return field.star(i).relativeX();
         throw new AssertionError("Missing star system " + systemId);
     }

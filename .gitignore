@@ -15,8 +15,9 @@ scripts/__pycache__/
 ### Generated resources ###
 src/generated/**/.cache/
 
-### Local agent skills ###
+### Local agent workspace (skills, plans) ###
 .agents/
+.zcode/
 
 ### IntelliJ IDEA ###
 .idea/
@@ -37,6 +38,10 @@ bin/
 
 ### VS Code ###
 .vscode/
+
+### Agent workspace skills (local only) ###
+.agents/
+.zcode/
 
 ### OS files ###
 .DS_Store
