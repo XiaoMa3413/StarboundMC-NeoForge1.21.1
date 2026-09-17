@@ -3,6 +3,7 @@ package com.starboundmc.client.starmap;
 import com.lowdragmc.lowdraglib2.gui.texture.GuiTextureGroup;
 import com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
+import com.starboundmc.world.universe.BodyOrbitDefinition;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.universe.UniverseTestSupport;
 import com.starboundmc.world.starmap.StarmapBodyType;
@@ -34,11 +35,15 @@ final class StarmapBodyTextureResolverTest {
         assertEquals(ResourceLocation.parse(
                         "starboundmc:textures/gui/starmap/bodies/molten.png"),
                 resolver.resolve(molten.starmapVisual(), true));
-        assertNull(resolver.resolve(gasGiant.starmapVisual(), true));
+        assertEquals(ResourceLocation.parse(
+                        "starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png"),
+                resolver.resolve(gasGiant.starmapVisual(), true));
         GuiTextureGroup sprite = assertInstanceOf(GuiTextureGroup.class,
                 resolver.texture(barren, 32.0F, true));
+        // Every shipped body now declares sprites, so the SDF fallback path needs
+        // a synthetic texture-less body to stay under test.
         GuiTextureGroup fallback = assertInstanceOf(GuiTextureGroup.class,
-                resolver.texture(gasGiant, 16.0F, true));
+                resolver.texture(texturelessBody(), 16.0F, true));
         assertInstanceOf(SpriteTexture.class, sprite.getTextures()[0]);
         assertInstanceOf(SDFRectTexture.class, sprite.getTextures()[1]);
         assertInstanceOf(SDFRectTexture.class, fallback.getTextures()[0]);
@@ -77,6 +82,20 @@ final class StarmapBodyTextureResolverTest {
         assertNotNull(image, "Unreadable body texture " + location);
         assertEquals(expectedSize, image.getWidth(), "Unexpected width for " + location);
         assertEquals(expectedSize, image.getHeight(), "Unexpected height for " + location);
+    }
+
+    /**
+     * A body that declares no sprite, so the resolver's SDF fallback draws it.
+     *
+     * <p>Built rather than looked up because every shipped body authors sprites.</p>
+     */
+    private static CelestialBodyDefinition texturelessBody()
+    {
+        return new CelestialBodyDefinition("synthetic:plain", "starmap.entry.plain.name",
+                "starmap.type.rocky_moon", "starmap.entry.plain.desc", 0,
+                BodyOrbitDefinition.aroundStar(20, 0.0F),
+                StarmapBodyVisual.builder(StarmapBodyType.ROCKY, 0xFF909090, 16, 1L).build(),
+                java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty());
     }
 
     private static boolean resourceExists(ResourceLocation location) {

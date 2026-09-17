@@ -1,6 +1,7 @@
 package com.starboundmc.world.universe;
 
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.starmap.GalaxyMapPosition;
 import com.starboundmc.world.starmap.StarmapBodyType;
 import com.starboundmc.world.starmap.StarmapBodyVisual;
@@ -81,6 +82,11 @@ public final class BuiltInUniverse
                 GalaxyMapPosition.fromPixelCenter(62, 84, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
                 UniversePosition.fromLegacy(new Vec3(-1500.0, 102.0, -700.0)),
                 5500.0,
+                // The star's art-directed fade ends long before the outer berths:
+                // the gas giant parks at ~16000 and its moon at ~16500 from this
+                // centre. The body-rendering field has to cover both, or the outer
+                // bodies vanish exactly when the ship arrives at them.
+                24000.0,
                 List.of(
                         body("sys1:barren",
                                 "starmap.entry.sys1.barren.name", "planet.starboundmc.barren",
@@ -147,37 +153,52 @@ public final class BuiltInUniverse
 
                         body("sys1:gasgiant",
                                 "starmap.entry.sys1.gasgiant.name", "starmap.type.gas_giant",
-                                "starmap.entry.sys1.gasgiant.desc", 0,
+                                "starmap.entry.sys1.gasgiant.desc", 8,
                                 BodyOrbitDefinition.aroundStar(116, 200.0F),
                                 StarmapBodyVisual.builder(StarmapBodyType.GAS_GIANT, 0xFFE8A860, 22, 0x26D7A91CL)
                                         .secondaryColor(0xFFB86648)
                                         .atmosphere(0xFFFFD6A0, 0.62F)
                                         .bands(0.88F)
                                         .rings(0xFFD8C8A0, 0.46F)
+                                        .texture("starboundmc:textures/gui/starmap/bodies/gasgiant.png")
+                                        .focusTexture("starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png")
                                         .build(),
-                                Optional.empty(),
-                                // No space visual: the renderer drew only the four
-                                // legacy planets, so the gas giant is on the star
-                                // map but not in the cockpit window. Giving it one
-                                // here would add a body to the sky, which is a
-                                // gameplay change, not a migration.
-                                Optional.empty(),
+                                navigation(-16000.0, 102.0, -7500.0,
+                                        -16062.900463338801, 110.0, -7511.819124830719,
+                                        40.0, 259.0),
+                                // Saturn-like: 26.7-degree tilt, no hard day/night line,
+                                // a fast spin so the bands never rest, and a warm night
+                                // side. The ring texture is what makes it ringed.
+                                spaceVisual("starboundmc:textures/planet/gasgiant.png",
+                                        0.99F, 0.91F, 0.70F, 0.24F,
+                                        GasGiantGeometry.AXIAL_TILT_DEGREES, GasGiantGeometry.BODY_YAW_DEGREES, 0.0F,
+                                        0xFFE4C893, 0.42F, 0.009F, 0.22F,
+                                        "starboundmc:textures/planet/gasgiant_ring.png"),
+                                // Orbit-only: no surface definition, which is what the
+                                // landing button reads to refuse with "no solid surface".
                                 Optional.empty()),
 
                         body("sys1:rockymoon",
                                 "starmap.entry.sys1.rockymoon.name", "starmap.type.rocky_moon",
-                                "starmap.entry.sys1.rockymoon.desc", 0,
-                                BodyOrbitDefinition.aroundBody("sys1:gasgiant", 20, 30.0F),
+                                "starmap.entry.sys1.rockymoon.desc", 5,
+                                BodyOrbitDefinition.aroundBody("sys1:gasgiant", 26, 30.0F),
                                 StarmapBodyVisual.builder(StarmapBodyType.ROCKY, 0xFF909090, 10, 0x63E14AB5L)
                                         .secondaryColor(0xFF5E6268)
                                         .surfaceDetail(0.90F)
+                                        .texture("starboundmc:textures/gui/starmap/bodies/rockymoon.png")
+                                        .focusTexture("starboundmc:textures/gui/starmap/bodies/rockymoon_focus.png")
                                         .build(),
-                                Optional.empty(),
-                                // As above: not drawn in the current renderer.
-                                Optional.empty(),
-                                // The rocky moon has a dimension but is not yet a
-                                // navigable destination; wiring it is a later change.
-                                Optional.empty())
+                                navigation(-15781.273564177154, 89.0, -7464.854196469775,
+                                        -15787.716310869539, 90.0, -7460.111463601716,
+                                        5.0, 306.0),
+                                // Airless rock: thin halo, a hard terminator and a black
+                                // far side, tumbled so the crater field never looks flat.
+                                spaceVisual("starboundmc:textures/planet/rockymoon.png",
+                                        0.55F, 0.55F, 0.60F, 0.03F,
+                                        8.0F, 160.0F, 0.0F,
+                                        0xFFB4B8BE, 0.12F, 0.002F, 0.03F),
+                                surface("starboundmc:rockymoon", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
+                                        new PlanetEnvironmentProfile(false, 0, 0, 0, 1.0F)))
                 ));
     }
 
@@ -259,9 +280,25 @@ public final class BuiltInUniverse
                                                                 float spinRate,
                                                                 float nightFloor)
     {
+        return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
+                pointColor, terminatorWidth, spinRate, nightFloor, null);
+    }
+
+    /** Variant for a ringed body, whose ring texture is the only extra datum. */
+    private static Optional<BodySpaceVisualProfile> spaceVisual(String texture,
+                                                                float atmoRed, float atmoGreen,
+                                                                float atmoBlue, float atmoPeak,
+                                                                float tilt, float yaw, float roll,
+                                                                int pointColor,
+                                                                float terminatorWidth,
+                                                                float spinRate,
+                                                                float nightFloor,
+                                                                String ringTexture)
+    {
         return Optional.of(new BodySpaceVisualProfile(
                 Optional.ofNullable(texture), atmoRed, atmoGreen, atmoBlue, atmoPeak,
-                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor));
+                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
+                Optional.ofNullable(ringTexture)));
     }
 
     private static Optional<BodySurfaceDefinition> surface(String dimension,

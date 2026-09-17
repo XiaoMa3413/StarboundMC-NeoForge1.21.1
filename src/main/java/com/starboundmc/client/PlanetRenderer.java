@@ -24,6 +24,7 @@ import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.UniverseNavigation;
+import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.universe.StarSystemDefinition;
@@ -118,6 +119,25 @@ public class PlanetRenderer
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
     private static final Map<String, VertexBuffer> PLANET_SURFACE_BUFFERS = new HashMap<>();
     private static final Map<String, Float> PLANET_SURFACE_TICKS = new HashMap<>();
+    /** Ringed-body support: strip texture plus equatorial quad geometry (see buildRingBand). */
+    private static final int RING_SEGMENTS = 144;
+    /** Real Saturn proportions: the main rings span ~1.24-2.27 planetary radii. */
+    private static final float RING_INNER = GasGiantGeometry.RING_INNER_RADII;
+    private static final float RING_OUTER = GasGiantGeometry.RING_OUTER_RADII;
+    private static final float RING_ALPHA = 0.90F;
+    /** The strip texture supplies the colour; only a faint warm lift on top. */
+    private static final float RING_TINT_R = 1.00F;
+    private static final float RING_TINT_G = 0.97F;
+    private static final float RING_TINT_B = 0.92F;
+    /** 4 corners per segment: inner(a0), outer(a0), outer(a1), inner(a1). Local, PLANET_RADIUS units. */
+    private static final float[] RING_VX = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VY = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VZ = new float[RING_SEGMENTS * 4];
+    private static final float[] RING_VU = new float[RING_SEGMENTS * 4];
+    /** Segment centroid in the same oriented local frame, for the far/near draw split. */
+    private static final float[] RING_MID_X = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Y = new float[RING_SEGMENTS];
+    private static final float[] RING_MID_Z = new float[RING_SEGMENTS];
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
@@ -136,6 +156,154 @@ public class PlanetRenderer
                     ((color >> 8) & 0xFF) / 255.0F,
                     (color & 0xFF) / 255.0F));
         }
+        buildRingBand();
+    }
+
+    /**
+     * Whether a body draws a ring band.
+     *
+     * <p>Read from the body's profile rather than from its identity, so a body
+     * added by a datapack can be ringed without a branch here. The baked geometry
+     * is shared: ring proportions are canonical ratios (see
+     * {@code GasGiantGeometry}), and the far/near split is resolved per draw from
+     * the actual camera position, so one bake serves any ringed body.</p>
+     */
+    private static boolean hasRings(CelestialBodyDefinition body)
+    {
+        return visual(body).hasRings();
+    }
+
+    /**
+     * Bakes the gas giant's ring as quads in the body-local <b>equatorial</b>
+     * plane (x/z, pole on +y). The ring is deliberately left un-oriented:
+     * every caller composes its own body frame into the model matrix, exactly
+     * as it already does for the sphere. That is what keeps the ring glued to
+     * the band texture's equator from the ship berth <i>and</i> from the rocky
+     * moon's sky, which run different body-frame transforms. The strip texture
+     * supplies per-radius alpha; the far/near split is resolved at draw time.
+     */
+    private static void buildRingBand()
+    {
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            double a0 = Math.PI * 2.0 * seg / RING_SEGMENTS;
+            double a1 = Math.PI * 2.0 * (seg + 1) / RING_SEGMENTS;
+            float cos0 = (float) Math.cos(a0), sin0 = (float) Math.sin(a0);
+            float cos1 = (float) Math.cos(a1), sin1 = (float) Math.sin(a1);
+
+            // Corner order: inner@a0 (u0), outer@a0 (u1), outer@a1 (u1), inner@a1 (u0).
+            for (int corner = 0; corner < 4; corner++)
+            {
+                float radius = (corner == 0 || corner == 3) ? RING_INNER : RING_OUTER;
+                float angleCos = (corner <= 1) ? cos0 : cos1;
+                float angleSin = (corner <= 1) ? sin0 : sin1;
+                float u = (corner == 1 || corner == 2) ? 1.0F : 0.0F;
+                int idx = seg * 4 + corner;
+                RING_VX[idx] = angleCos * radius * PLANET_RADIUS;
+                RING_VY[idx] = 0.0F;
+                RING_VZ[idx] = angleSin * radius * PLANET_RADIUS;
+                RING_VU[idx] = u;
+            }
+            RING_MID_X[seg] = 0.25F * (RING_VX[seg * 4] + RING_VX[seg * 4 + 1]
+                    + RING_VX[seg * 4 + 2] + RING_VX[seg * 4 + 3]);
+            RING_MID_Y[seg] = 0.0F;
+            RING_MID_Z[seg] = 0.25F * (RING_VZ[seg * 4] + RING_VZ[seg * 4 + 1]
+                    + RING_VZ[seg * 4 + 2] + RING_VZ[seg * 4 + 3]);
+        }
+    }
+
+    /**
+     * Draws the pre-oriented ring band, restricted to the far half (nearPass =
+     * false, drawn before the disk) or the near half (nearPass = true, drawn
+     * after the disk). A segment is "near" when its centroid lands closer to the
+     * camera than the body centre: |c + o|^2 < |c|^2.
+     */
+    private static void drawPlanetRings(PoseStack pose, CelestialBodyDefinition body,
+                                        float cx, float cy, float cz,
+                                        float scale, float shipYaw, float shipPitch,
+                                        float alpha, boolean nearPass)
+    {
+        // Match the disk's orientation-minus-spin so ring and surface tilt
+        // together: the baked ring is equatorial, so the body frame has to be
+        // composed here, before the ship-view rotation.
+        BodySpaceVisualProfile profile = visual(body);
+        String ringTexture = profile.ringTexture().orElse(null);
+        if (ringTexture == null)
+            return;
+        Matrix4f model = new Matrix4f()
+                .translate(cx, cy, cz)
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw))
+                .mul(bodyOrientation(profile))
+                .scale(scale);
+        drawRingPass(pose, model, ResourceLocation.parse(ringTexture), alpha, nearPass);
+    }
+
+    /**
+     * Draws one half of the baked ring band. {@code model} maps the ring's local
+     * PLANET_RADIUS-unit frame (centred on the body) into the pose's frame; the
+     * far/near split is classified by each segment centroid's distance to the
+     * camera, which sits at the origin of the pose's outermost frame. Any caller
+     * (ship berth view, a moon's sky) therefore gets correct occlusion against
+     * its own disc for free.
+     */
+    static void drawRingPass(PoseStack pose, Matrix4f model, ResourceLocation texture,
+                             float alpha, boolean nearPass)
+    {
+        if (alpha <= 0.002F || texture == null)
+            return;
+
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.disableCull();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, texture);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
+
+        Matrix4f full = new Matrix4f(pose.last().pose()).mul(model);
+        Vector3f centre = full.transformPosition(new Vector3f());
+        Vector3f centroid = new Vector3f();
+        BufferBuilder bb = Tesselator.getInstance().begin(
+                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        int drawn = 0;
+        for (int seg = 0; seg < RING_SEGMENTS; seg++)
+        {
+            full.transformPosition(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg], centroid);
+            boolean near = centroid.lengthSquared() < centre.lengthSquared();
+            if (near != nearPass)
+                continue;
+            drawn++;
+            for (int corner = 0; corner < 4; corner++)
+            {
+                int idx = seg * 4 + corner;
+                bb.addVertex(full, RING_VX[idx], RING_VY[idx], RING_VZ[idx])
+                        .setUv(RING_VU[idx], 0.5F)
+                        .setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1.0F);
+            }
+        }
+        if (drawn > 0)
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.enableCull();
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * The body's shared frame: the surface bake applies yaw about Y first and the
+     * axial tilt about X second, so this composes as {@code Rx(tilt) * Ry(yaw)}.
+     * The sphere bake and the ring both go through it, so the band texture's
+     * equator and the ring plane can never separate.
+     */
+    static Matrix4f bodyOrientation(BodySpaceVisualProfile profile)
+    {
+        return new Matrix4f()
+                .rotateX((float) Math.toRadians(profile.orientationTilt()))
+                .rotateY((float) Math.toRadians(profile.orientationYaw()));
     }
 
     /**
@@ -177,7 +345,8 @@ public class PlanetRenderer
 
     private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
             java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
-            0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F);
+            0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
+            java.util.Optional.empty());
 
     /**
      * The texture for a body's sphere.
@@ -562,7 +731,12 @@ public class PlanetRenderer
             CelestialLod previous = planetLodTransitions.currentLod(body.entryId());
             CelestialLod requested = CelestialLodPolicy.hysteretic(
                     angularDiameter, previous, routePriority ? CelestialLod.POINT : CelestialLod.CULLED);
-            if (systemVisibility <= 0.20F && !routePriority)
+            // The star's alpha fades with the system's VISUAL influence, but a
+            // system's outer berths (the gas giant) sit far beyond that fade.
+            // Bodies stay renderable while the ship is inside the system's
+            // planet field regardless of how dim the remote star looks.
+            if (systemVisibility <= 0.20F && !insidePlanetField(space.universePosition(), system)
+                    && !routePriority)
                 requested = CelestialLod.CULLED;
             float detail = updatePlanetLod(body, requested, space.animationTicks());
 
@@ -592,6 +766,14 @@ public class PlanetRenderer
                 return star.alpha();
         }
         return 0.0F;
+    }
+
+    /** Whether the ship sits inside the system's body-rendering field. */
+    private static boolean insidePlanetField(UniversePosition ship, StarSystemDefinition system)
+    {
+        return system != null
+                && ship.distanceToSqr(system.navigationCenter())
+                        <= system.planetFieldRadius() * system.planetFieldRadius();
     }
 
     /** Draw one body at true near distance or angularly projected on the sky shell. */
@@ -706,7 +888,7 @@ public class PlanetRenderer
      * SkyType.NONE, so without this the sky behind the starfield is just the
      * clear color; the dome guarantees a proper deep-space backdrop.
      */
-    private static void renderSpaceDome(PoseStack pose)
+    static void renderSpaceDome(PoseStack pose)
     {
         Matrix4f matrix = pose.last().pose();
         FogRenderer.setupNoFog();
@@ -760,7 +942,7 @@ public class PlanetRenderer
      * rotated by the ship heading, so during the turn the stars sweep across the
      * view exactly like the planet does.
      */
-    private static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
+    static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
                                         float alpha, float convergence,
                                         int tintColor, float tintAmount)
     {
@@ -1011,8 +1193,14 @@ public class PlanetRenderer
     {
         // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
+        // The ring writes no depth either, so its far half is drawn first, the disk
+        // second, and the near half last to read as orbiting the body.
+        if (hasRings(body))
+            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose, pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        if (hasRings(body))
+            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */

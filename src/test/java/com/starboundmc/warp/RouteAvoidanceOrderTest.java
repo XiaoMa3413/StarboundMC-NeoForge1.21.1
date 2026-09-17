@@ -32,17 +32,20 @@ class RouteAvoidanceOrderTest
     void everyNavigableBodyTakesPartInAvoidance()
     {
         List<CelestialBodyDefinition> avoidance = UniverseNavigation.avoidanceBodies();
-        assertEquals(4, avoidance.size(),
-                "the four navigable bodies are the four the route must avoid");
-        assertEquals(List.of("sys1:barren", "sys1:lush", "sys1:molten", "sys2:frozen"),
+        assertEquals(6, avoidance.size(),
+                "every flyable body is a route obstacle");
+        assertEquals(List.of("sys1:barren", "sys1:gasgiant", "sys1:lush", "sys1:molten",
+                        "sys1:rockymoon", "sys2:frozen"),
                 avoidance.stream().map(CelestialBodyDefinition::entryId).sorted().toList(),
                 "avoidance must cover exactly the navigable bodies");
     }
 
     /**
      * A body with no navigation profile has no keep-out circle, so it must stay
-     * out of route shaping. Letting the gas giant in would bend every course that
-     * passes its orbit.
+     * out of route shaping.
+     *
+     * <p>The gas giant and its moon were the legacy examples, and they are flyable
+     * now, so an unplaceable id stands in: it must not appear in the avoidance set.</p>
      */
     @Test
     void bodiesWithoutNavigationGeometryAreExcludedFromAvoidance()
@@ -52,11 +55,12 @@ class RouteAvoidanceOrderTest
             assertTrue(body.isNavigable(),
                     body.entryId() + " took part in avoidance without flight geometry");
         }
-        for (String locked : List.of("sys1:gasgiant", "sys1:rockymoon"))
-        {
-            assertFalse(UniverseNavigation.isNavigable(locked),
-                    locked + " must not be a route obstacle");
-        }
+        String unplaceable = "datapack:removed";
+        assertFalse(UniverseNavigation.isNavigable(unplaceable),
+                unplaceable + " must not be a route obstacle");
+        assertTrue(UniverseNavigation.avoidanceBodies().stream()
+                        .noneMatch(body -> body.entryId().equals(unplaceable)),
+                "an unplaceable body must not reach the avoidance set");
     }
 
     /**

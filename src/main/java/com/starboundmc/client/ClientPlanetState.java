@@ -222,9 +222,8 @@ public final class ClientPlanetState {
     /**
      * Warms one body's ship-window texture.
      *
-     * <p>Bodies with an authored sprite use it; the rest still resolve through the
-     * legacy per-planet texture, which is why that path is kept here rather than
-     * dropped.</p>
+     * <p>Only bodies that author a sprite are preloaded. A body without one simply
+     * decodes later, which costs a hitch but never shows the wrong art.</p>
      */
     private static void preload(net.minecraft.client.renderer.texture.TextureManager textures,
                                 com.starboundmc.world.universe.CelestialBodyDefinition body)

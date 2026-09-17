@@ -28,7 +28,9 @@ final class Stage10ResourcesTest {
             "matter_manipulator_workbench", "teleporter", "ship_console", "ship_engine",
             "captain_chair", "fuel_controller", "ship_crate", "ship_door", "tungsten_ore",
             "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
-            "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit");
+            "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit",
+            "fuel_crystal_ore", "hull_plating", "reinforced_hull", "hull_window",
+            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter");
 
     private static final List<String> ITEMS = List.of(
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
@@ -37,7 +39,9 @@ final class Stage10ResourcesTest {
             "star_core_ore", "titanium_alloy_furnace", "raw_tungsten", "raw_titanium",
             "raw_durasteel", "raw_star_core", "tungsten_ingot", "titanium_ingot",
             "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel",
-            "voxel_refinery", "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit");
+            "voxel_refinery", "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
+            "fuel_crystal_ore", "fuel_crystal", "hull_plating", "reinforced_hull", "hull_window",
+            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {
@@ -69,7 +73,7 @@ final class Stage10ResourcesTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(21, files.size());
+            assertEquals(28, files.size());
             int printingRecipes = 0;
             int decompositionRecipes = 0;
             for (Path path : files) {
@@ -182,8 +186,58 @@ final class Stage10ResourcesTest {
     }
 
     @Test
-    void shipAiPortraitTextureIsPackaged() {
-        for (String texture : List.of("nova_bust", "nova_body", "nova_eyes")) {
+    void transparentBlockTexturesDeclareARenderType() throws IOException {
+        // A block's transparency needs two separate things, and getting only one
+        // is silently wrong: partially transparent texels in the PNG, and a
+        // `render_type` in the block model telling the game to bake the block
+        // into a non-solid chunk layer. Without the second, transparent texels
+        // render as opaque black — which is how the hull window shipped looking
+        // like a solid metal slab, and the grating like a dark plate with no
+        // holes. Neither is caught by any other test, so assert the pairing.
+        //
+        // In NeoForge 1.21.1 the key is `render_type` (the vanilla BlockModel
+        // does not read it; NeoForge's ExtendedBlockModelDeserializer does) and
+        // the value is a render-type name resolved through NamedRenderTypeManager.
+        Set<String> known = Set.of("minecraft:solid", "minecraft:cutout",
+                "minecraft:cutout_mipped", "minecraft:cutout_mipped_all",
+                "minecraft:translucent", "minecraft:tripwire");
+        int checked = 0;
+        try (Stream<Path> textures = Files.list(ASSETS.resolve("textures/block"))) {
+            for (Path texture : textures.filter(p -> p.toString().endsWith(".png")).toList()) {
+                String name = texture.getFileName().toString().replace(".png", "");
+                BufferedImage image = ImageIO.read(texture.toFile());
+                assertNotNull(image, name);
+                boolean hasTransparency = false;
+                for (int x = 0; x < image.getWidth() && !hasTransparency; x++) {
+                    for (int y = 0; y < image.getHeight(); y++) {
+                        if ((image.getRGB(x, y) >>> 24) < 255) {
+                            hasTransparency = true;
+                            break;
+                        }
+                    }
+                }
+                if (!hasTransparency) {
+                    continue;
+                }
+                Path model = ASSETS.resolve("models/block/" + name + ".json");
+                assertTrue(Files.isRegularFile(model),
+                        name + " has transparent texels but no block model");
+                JsonObject root = json(model);
+                assertTrue(root.has("render_type"),
+                        name + " has transparent texels but its model declares no render_type,"
+                                + " so the gaps would render opaque");
+                assertTrue(known.contains(root.get("render_type").getAsString()),
+                        name + " declares an unknown render_type: "
+                                + root.get("render_type").getAsString());
+                checked++;
+            }
+        }
+        // Guards against the scan silently finding nothing to check.
+        assertTrue(checked > 0, "no transparent block textures were found to verify");
+    }
+
+    @Test
+    void shipAiPortraitTextureIsPackaged() {        for (String texture : List.of("nova_bust", "nova_body", "nova_eyes")) {
             assertTrue(Files.isRegularFile(
                     ASSETS.resolve("textures/gui/ship_ai/" + texture + ".png")), texture);
         }

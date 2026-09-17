@@ -58,16 +58,32 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(molten.orbit().parentEntryId().orElse("").equals("sys1:lush"),
                 "molten lost its parent link");
 
-        // The gas giant remains visible but not navigable.
+        // The gas giant is flyable but orbit-only, and ringed.
         var gasGiant = main.bodies().stream()
                 .filter(body -> body.entryId().equals("sys1:gasgiant")).findFirst().orElse(null);
         helper.assertTrue(gasGiant != null, "sys1:gasgiant missing");
-        helper.assertTrue(!gasGiant.isNavigable(), "the gas giant must not be navigable");
-        // It is on the star map but not drawn from the cockpit window, which is
-        // what the renderer did before the migration (A9 kept that unchanged).
+        helper.assertTrue(gasGiant.isNavigable(), "the gas giant must be navigable");
         helper.assertTrue(gasGiant.starmapVisual().getMarkerSize() > 0,
-                "the gas giant must still appear on the star map");
-        helper.assertTrue(!gasGiant.isSpaceRendered(), "the gas giant is not drawn in space");
+                "the gas giant must appear on the star map");
+        helper.assertTrue(gasGiant.isSpaceRendered(), "the gas giant is drawn in space");
+        helper.assertTrue(gasGiant.spaceVisual().orElseThrow().hasRings(),
+                "the gas giant lost its ring through the registry");
+
+        // Its moon survives the round trip too, ring-free and landable.
+        var rockyMoon = main.bodies().stream()
+                .filter(body -> body.entryId().equals("sys1:rockymoon")).findFirst().orElse(null);
+        helper.assertTrue(rockyMoon != null, "sys1:rockymoon missing");
+        helper.assertTrue(rockyMoon.isNavigable(), "the rocky moon must be navigable");
+        helper.assertTrue(rockyMoon.isLandable(), "the rocky moon must be landable");
+        helper.assertTrue(rockyMoon.parentEntryId().orElse("").equals("sys1:gasgiant"),
+                "the rocky moon lost its parent link");
+        // The system's body-rendering field has to reach its outer berths, or the
+        // giant and moon vanish from the sky exactly when the ship arrives.
+        double moonBerth = Math.sqrt(rockyMoon.navigation().orElseThrow().dockPosition()
+                .distanceToSqr(main.navigationCenter()));
+        helper.assertTrue(moonBerth <= main.planetFieldRadius(),
+                "the moon's berth sits outside the system's planet field: "
+                        + (long) moonBerth + " > " + (long) main.planetFieldRadius());
 
         helper.succeed();
     }
@@ -81,8 +97,9 @@ public final class UniverseRegistryGameTests
         UniverseCatalog catalog = UniverseCatalog.of(registry.stream().toList());
         helper.assertTrue(catalog.systemCount() == 2, "catalog lost a system");
         helper.assertTrue(catalog.bodyCount() == 6, "catalog lost a body");
-        helper.assertTrue(catalog.navigableBodies().size() == 4, "expected 4 navigable bodies");
-        helper.assertTrue(catalog.surfaceBodies().size() == 4, "expected 4 landable bodies");
+        helper.assertTrue(catalog.navigableBodies().size() == 6, "expected 6 navigable bodies");
+        // The gas giant is flyable but has no surface, so it is orbit-only.
+        helper.assertTrue(catalog.surfaceBodies().size() == 5, "expected 5 landable bodies");
 
         // Every navigable body must resolve to the dock the flight layer uses, so
         // the refactor cannot move a ship parked at any of them. The body list is
@@ -186,8 +203,8 @@ public final class UniverseRegistryGameTests
                     "the server universe should carry both systems");
             helper.assertTrue(ServerUniverseCatalog.current().bodyCount() == 6,
                     "the server universe should carry all six bodies");
-            helper.assertTrue(ServerUniverseCatalog.current().navigableBodies().size() == 4,
-                    "the server should see four navigable bodies");
+            helper.assertTrue(ServerUniverseCatalog.current().navigableBodies().size() == 6,
+                    "the server should see six navigable bodies");
 
             // Geometry from the server's catalog must match what the ship uses.
             var lush = ServerUniverseCatalog.current().body("sys1:lush").orElse(null);

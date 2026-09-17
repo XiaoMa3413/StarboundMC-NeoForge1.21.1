@@ -63,9 +63,19 @@ public final class Stage6TravelService {
         String currentEntryId = ShipWarpManager.currentEntryId();
         CelestialBodyDefinition body = UniverseNavigation.body(currentEntryId);
 
+        // A body that exists but has no surface (the gas giant) is orbit-only:
+        // say so instead of silently dropping the player on the overworld, which
+        // is what the landing button used to do.
+        if (body != null && !body.isLandable()) {
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.starboundmc.warp.no_landing",
+                    net.minecraft.network.chat.Component.translatable(body.nameKey())), true);
+            return false;
+        }
+
         boolean landed = body != null && SurfaceLandingService.teleportToSurface(player, body);
         if (!landed) {
-            // Ship at an unknown body, or a body with no landable surface.
+            // Ship at an unknown body, or a body whose dimension is gone.
             SurfaceLandingService.teleportToOverworldSpawn(player, true);
         }
         // Mission progression and the personal tutorial are driven only after

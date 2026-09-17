@@ -133,10 +133,11 @@ class ClientUniverseCatalogTest
         assertTrue(universe.system("sys1").isPresent());
         assertTrue(universe.system("sys2").isPresent());
         assertEquals("sys1", universe.systemOfBody("sys1:lush").orElseThrow().systemId());
-        assertEquals(4, universe.navigableBodies().size());
-        assertEquals(4, universe.surfaceBodies().size());
-        // Four: the renderer draws exactly the bodies the legacy enum covered.
-        assertEquals(4, universe.spaceRenderedBodies().size());
+        assertEquals(6, universe.navigableBodies().size());
+        // Five: every flyable body except the gas giant, which is orbit-only.
+        assertEquals(5, universe.surfaceBodies().size());
+        // Six: the renderer draws exactly the bodies the legacy enum covered.
+        assertEquals(6, universe.spaceRenderedBodies().size());
         assertEquals(1, universe.spatialIndex().occupiedSectorCount());
 
         // Queries the star map performs for parent-child moon placement.

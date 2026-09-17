@@ -21,6 +21,13 @@ final class Stage6GameplayTest {
     }
 
     @Test
+    void fuelCrystalRefillsFiftyFuel() throws IOException {
+        String service = source("warp/ShipFuelService.java");
+        assertTrue(service.contains("return 50;"), "fuel crystal must refill 50 fuel");
+        assertFalse(service.contains("return 30;"), "the old 30-fuel value must be gone");
+    }
+
+    @Test
     void realFuelAndFurnaceMenusReplaceStageTwoShells() throws IOException {
         String menus = source("menu/ModMenus.java");
         String handler = source("network/ServerPayloadHandler.java");

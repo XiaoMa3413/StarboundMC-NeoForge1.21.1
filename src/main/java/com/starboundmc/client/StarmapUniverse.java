@@ -74,6 +74,18 @@ public final class StarmapUniverse
         return catalog().body(entryId).orElse(null);
     }
 
+    /**
+     * The body that owns a dimension, or null.
+     *
+     * <p>How a surface renderer identifies its own sky: a dimension knows which
+     * body it is, which is what lets the sky stay dimension-driven rather than
+     * naming a body.</p>
+     */
+    public static CelestialBodyDefinition bodyForDimension(net.minecraft.resources.ResourceLocation dimension)
+    {
+        return dimension == null ? null : catalog().bodyByDimension(dimension).orElse(null);
+    }
+
     public static StarSystemDefinition systemOfBody(String entryId)
     {
         return catalog().systemOfBody(entryId).orElse(null);

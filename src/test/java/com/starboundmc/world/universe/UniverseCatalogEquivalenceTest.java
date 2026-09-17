@@ -195,15 +195,17 @@ class UniverseCatalogEquivalenceTest
     @Test
     void catalogLookupsReturnTheExpectedSlices()
     {
-        assertEquals(4, CATALOG.navigableBodies().size());
-        assertEquals(4, CATALOG.surfaceBodies().size());
-        // The renderer draws exactly these four; see PlanetRendererTableEquivalenceTest.
-        assertEquals(4, CATALOG.spaceRenderedBodies().size());
+        assertEquals(6, CATALOG.navigableBodies().size());
+        // The gas giant is flyable but orbit-only, so it has no surface.
+        assertEquals(5, CATALOG.surfaceBodies().size());
+        // The renderer draws exactly these six; see PlanetRendererTableEquivalenceTest.
+        assertEquals(6, CATALOG.spaceRenderedBodies().size());
 
         Set<String> navigable = new LinkedHashSet<>();
         for (CelestialBodyDefinition body : CATALOG.navigableBodies())
             navigable.add(body.entryId());
-        assertEquals(Set.of("sys1:barren", "sys1:lush", "sys1:molten", "sys2:frozen"), navigable);
+        assertEquals(Set.of("sys1:barren", "sys1:lush", "sys1:molten", "sys2:frozen",
+                "sys1:gasgiant", "sys1:rockymoon"), navigable);
 
         assertTrue(CATALOG.bodyByDimension(ResourceLocation.parse("minecraft:overworld")).isPresent());
         assertTrue(CATALOG.bodyByDimension(ResourceLocation.parse("starboundmc:barren")).isPresent());
@@ -221,7 +223,7 @@ class UniverseCatalogEquivalenceTest
             ResourceLocation dimension = body.surface().orElseThrow().dimension();
             assertTrue(dimensions.add(dimension), "duplicate dimension claim: " + dimension);
         }
-        assertEquals(4, dimensions.size());
+        assertEquals(5, dimensions.size());
         assertEquals("sys1:barren",
                 CATALOG.bodyByDimension(ResourceLocation.parse("starboundmc:barren"))
                         .orElseThrow().entryId());

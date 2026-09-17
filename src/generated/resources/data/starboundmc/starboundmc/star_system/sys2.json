@@ -71,6 +71,7 @@
     "y": 102.0,
     "z": 20550.0
   },
+  "planet_field_radius": 4500.0,
   "star_type_key": "starmap.type.red_dwarf",
   "stellar_visual": {
     "core_color": -16240,

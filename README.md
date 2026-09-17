@@ -22,9 +22,9 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 
 - 33 格长、23 格翼展的航天飞机式初始飞船，采用实机布置的内饰模板，包含半砖甲板、驾驶台、传送器、AI 终端、打印站、燃料控制器和储物箱。
 - 星域、恒星系、天体聚焦三级星图，支持响应式布局、天体信息、航线和跃迁动画。
-- 两个恒星系、四个可达天体，以及可见但尚未开放的气态巨行星和岩石卫星。
+- 两个恒星系、六个可达天体：荒芜、翠绿、熔岩卫星、气态巨行星（仅轨道可达）及其岩石卫星。岩石卫星表面由程序化撞击坑场（带环形坑缘与溅射层）构成；传送器降落点是一片开阔平坦的砾石平原，平原有信标平台与一座报废的居所舱。这颗星球按“荒凉的废弃采矿地盘”设计，地表人造物刻意稀疏：荒野中每约 740 格才可能出现一处矿苗、报废营地或残存设施，绝不会相邻成片。地下还能遇到包含几十至上百矿石的“巨型矿脉”（铁、金、能源水晶，单颗可补充 50 点飞船燃料）。
 - 服务端权威固定航线跃迁、共享燃料、飞行状态持久化和断线/重启恢复。
-- 熔岩、冰冻、荒芜三个独立行星维度；翠绿天体使用主世界表面。
+- 熔岩、冰冻、荒芜、岩石卫星四个独立行星维度；翠绿天体使用主世界表面。气态巨行星没有固体表面，只能将飞船泊入轨道观看云带与光环。
 - 飞船、当前行星与玩家命名传送器之间的传送网络。
 - 舰载人工智能终端、一次性 N.O.V.A. 状态广播和“初次登陆”任务链。
 - 抵达行星表面后约 6 秒发送探索与物质枪提示；首次拾取原木后，N.O.V.A. 会在留出探索间隔后完成一次共享轨道矿物扫描。
@@ -114,8 +114,8 @@ StarboundMC 是一个面向 Minecraft 1.21.1 / NeoForge 的 Alpha 太空探索�
 
 - 尚无自由驾驶、推进器控制或飞船碰撞。
 - 翠绿天体暂时复用主世界，没有独立维度。
-- 钨、钛、耐钢和星核矿石已有方块、掉落与加工链，但尚未加入自然世界生成。
-- 气态巨行星和岩石卫星仅为星图占位目标，当前不可到达。
+- 钨、钛、耐钢和星核矿石已有方块、掉落与加工链，但尚未加入自然世界生成（燃料水晶已随岩石卫星维度自然生成）。
+- 岩石卫星的撞击坑与采矿前哨由自定义区块生成器直接盖章，仅通过纯函数单元测试与完整构建验证；尚未经过长时间客户端世界生成实机复验。**注意：**曾有一处 section 数组下标与世界 Y 的换算错误（`min_y = -64` 的维度下把地面高度整体算高 64 格）因此长期未被发现，导致撞击坑从未真正挖出、所有人造结构悬空；该错误现已修正并由 `ChunkSectionGeometryTest` 锁定，但同类“只在加载期才暴露”的问题仍需实机复验。
 - 原版下界传送门被禁用，这是当前玩法规则。
 - 仍建议在新模组组合、不同 GUI Scale、局域网和专用服务器环境中先使用备份世界验证。
 
@@ -158,8 +158,10 @@ Gradle Wrapper 默认把 Gradle、Minecraft、NeoForge 依赖和运行资产缓�
 
 ## 验证状态
 
-- 默认测试套件：313 项，0 failures、0 errors、0 skipped。
+- 默认测试套件：404 项，0 failures、0 errors、0 skipped。
 - `runData` 和完整 `build` 通过。
+- 岩石卫星的撞击坑场、采矿前哨布局与气态巨行星航线避让由纯几何单元测试覆盖
+  （`RockyMoonTerrainTest`、`GasGiantRingClearanceTest`）。
 - 新世界已通过注册对象、设备规则、程序化飞船和四维度 RCON 烟测。
 - 客户端资源重载、声音引擎和纹理图集构建无 StarboundMC 资源错误。
 - 专用服务器可启动至 `Done`，并能正常保存全部维度后停服。
@@ -196,14 +198,17 @@ MIT License 允许使用、复制、修改、合并、发布、再许可和销�
 
 ### 第三方行星贴图
 
-以下四张 4096×2048 行星表面贴图基于 [Solar System Scope Textures](https://www.solarsystemscope.com/textures/) 提供的素材，按 [Creative Commons Attribution 4.0 International（CC BY 4.0）](https://creativecommons.org/licenses/by/4.0/) 使用：
+以下 4096×2048 行星表面贴图（及一张环带条图）基于 [Solar System Scope Textures](https://www.solarsystemscope.com/textures/) 提供的素材，按 [Creative Commons Attribution 4.0 International（CC BY 4.0）](https://creativecommons.org/licenses/by/4.0/) 使用：
 
 - `textures/planet/lush.png`：Earth day map 与 clouds 合成
 - `textures/planet/molten.png`：Venus surface
 - `textures/planet/frozen.png`：Eris fictional
 - `textures/planet/barren.png`：Mars
+- `textures/planet/gasgiant.png`：Saturn，仅 JPEG→RGBA PNG 格式转换
+- `textures/planet/rockymoon.png`：Moon，由 8192×4096 缩采样至 4096×2048 并转为 RGBA PNG
+- `textures/planet/gasgiant_ring.png`：Saturn ring alpha 条图，原分辨率 8192×500 直接使用
 
-使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+星图界面（`textures/gui/starmap/bodies/`）的天体精灵图由上述贴图经球面投影缩采样生成，随这些贴图一同受 CC BY 4.0 约束。使用或再分发这些贴图时，必须保留 Solar System Scope 的署名、许可证链接，并说明是否进行了修改。CC BY 4.0 仅适用于上述贴图，不扩展到本项目的代码或其他素材。完整记录见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ### 运行时依赖与音频边界
 

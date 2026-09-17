@@ -63,12 +63,29 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("durasteel_ore", ModBlocks.DURASTEEL_ORE);
     public static final DeferredItem<BlockItem> STAR_CORE_ORE_ITEM =
             ITEMS.registerSimpleBlockItem("star_core_ore", ModBlocks.STAR_CORE_ORE);
+    public static final DeferredItem<BlockItem> FUEL_CRYSTAL_ORE_ITEM =
+            ITEMS.registerSimpleBlockItem("fuel_crystal_ore", ModBlocks.FUEL_CRYSTAL_ORE);
     public static final DeferredItem<BlockItem> TITANIUM_ALLOY_FURNACE_ITEM =
             ITEMS.registerSimpleBlockItem("titanium_alloy_furnace", ModBlocks.TITANIUM_ALLOY_FURNACE);
     public static final DeferredItem<BlockItem> VOXEL_REFINERY_ITEM =
             ITEMS.registerSimpleBlockItem("voxel_refinery", ModBlocks.VOXEL_REFINERY);
     public static final DeferredItem<BlockItem> VOXEL_PRINTING_STATION_ITEM =
             ITEMS.registerSimpleBlockItem("voxel_printing_station", ModBlocks.VOXEL_PRINTING_STATION);
+
+    public static final DeferredItem<BlockItem> HULL_PLATING_ITEM =
+            ITEMS.registerSimpleBlockItem("hull_plating", ModBlocks.HULL_PLATING);
+    public static final DeferredItem<BlockItem> REINFORCED_HULL_ITEM =
+            ITEMS.registerSimpleBlockItem("reinforced_hull", ModBlocks.REINFORCED_HULL);
+    public static final DeferredItem<BlockItem> HULL_WINDOW_ITEM =
+            ITEMS.registerSimpleBlockItem("hull_window", ModBlocks.HULL_WINDOW);
+    public static final DeferredItem<BlockItem> INDUSTRIAL_LIGHT_ITEM =
+            ITEMS.registerSimpleBlockItem("industrial_light", ModBlocks.INDUSTRIAL_LIGHT);
+    public static final DeferredItem<BlockItem> HULL_HAZARD_ITEM =
+            ITEMS.registerSimpleBlockItem("hull_hazard", ModBlocks.HULL_HAZARD);
+    public static final DeferredItem<BlockItem> HULL_GRATE_ITEM =
+            ITEMS.registerSimpleBlockItem("hull_grate", ModBlocks.HULL_GRATE);
+    public static final DeferredItem<BlockItem> BEACON_EMITTER_ITEM =
+            ITEMS.registerSimpleBlockItem("beacon_emitter", ModBlocks.BEACON_EMITTER);
 
     public static final DeferredItem<Item> RAW_TUNGSTEN = ITEMS.registerSimpleItem("raw_tungsten");
     public static final DeferredItem<Item> RAW_TITANIUM = ITEMS.registerSimpleItem("raw_titanium");
@@ -78,6 +95,7 @@ public final class ModItems {
     public static final DeferredItem<Item> TITANIUM_INGOT = ITEMS.registerSimpleItem("titanium_ingot");
     public static final DeferredItem<Item> DURASTEEL_INGOT = ITEMS.registerSimpleItem("durasteel_ingot");
     public static final DeferredItem<Item> STAR_CORE_FRAGMENT = ITEMS.registerSimpleItem("star_core_fragment");
+    public static final DeferredItem<Item> FUEL_CRYSTAL = ITEMS.registerSimpleItem("fuel_crystal");
 
     // Currency-grade matter unit. 99 is the vanilla hard cap: item counts
     // above 99 cannot pass the creative-mode slot packet (range [1;99]).
@@ -123,9 +141,17 @@ public final class ModItems {
                         output.accept(TITANIUM_ORE_ITEM);
                         output.accept(DURASTEEL_ORE_ITEM);
                         output.accept(STAR_CORE_ORE_ITEM);
+                        output.accept(FUEL_CRYSTAL_ORE_ITEM);
                         output.accept(TITANIUM_ALLOY_FURNACE_ITEM);
                         output.accept(VOXEL_REFINERY_ITEM);
                         output.accept(VOXEL_PRINTING_STATION_ITEM);
+                        output.accept(HULL_PLATING_ITEM);
+                        output.accept(REINFORCED_HULL_ITEM);
+                        output.accept(HULL_WINDOW_ITEM);
+                        output.accept(INDUSTRIAL_LIGHT_ITEM);
+                        output.accept(HULL_HAZARD_ITEM);
+                        output.accept(HULL_GRATE_ITEM);
+                        output.accept(BEACON_EMITTER_ITEM);
                         output.accept(RAW_TUNGSTEN);
                         output.accept(RAW_TITANIUM);
                         output.accept(RAW_DURASTEEL);
@@ -135,6 +161,7 @@ public final class ModItems {
                         output.accept(TITANIUM_INGOT);
                         output.accept(DURASTEEL_INGOT);
                         output.accept(STAR_CORE_FRAGMENT);
+                        output.accept(FUEL_CRYSTAL);
                         output.accept(EMERGENCY_FOOD_CAN);
                         output.accept(SURVIVAL_KNIFE);
                     })

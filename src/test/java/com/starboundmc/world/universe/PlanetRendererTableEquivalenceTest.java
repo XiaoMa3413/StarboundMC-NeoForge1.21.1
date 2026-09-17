@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -136,10 +135,9 @@ class PlanetRendererTableEquivalenceTest
     @Test
     void everySpaceRenderedBodyHasAVisualProfile()
     {
-        // Exactly the four the old Planet.values() draw order covered. The gas
-        // giant and rocky moon are on the star map but were never drawn in the
-        // cockpit window, and A9 is a migration, not a feature addition.
-        assertEquals(4, CATALOG.spaceRenderedBodies().size(),
+        // Exactly the six the old Planet.values() draw order covered, including the
+        // gas giant and its moon, which the legacy renderer drew from their berth.
+        assertEquals(6, CATALOG.spaceRenderedBodies().size(),
                 "the renderer iterates this list instead of Planet.values()");
         for (CelestialBodyDefinition body : CATALOG.spaceRenderedBodies())
         {
@@ -149,8 +147,10 @@ class PlanetRendererTableEquivalenceTest
     }
 
     /**
-     * The drawn set must be exactly the four bodies the renderer drew before the
-     * migration. Widening it would put new planets in the sky.
+     * The drawn set must be exactly the six bodies the legacy renderer drew: it
+     * iterated {@code Planet.values()}, which covered the gas giant and its moon
+     * too. Widening it would put new planets in the sky, which is a feature, not a
+     * migration.
      */
     @Test
     void theDrawOrderCoversExactlyTheBodiesThatWereDrawnBefore()
@@ -158,16 +158,18 @@ class PlanetRendererTableEquivalenceTest
         var drawn = CATALOG.spaceRenderedBodies().stream()
                 .map(CelestialBodyDefinition::entryId).sorted().toList();
         assertEquals(java.util.List.of(
-                        "sys1:barren", "sys1:lush", "sys1:molten", "sys2:frozen"),
+                        "sys1:barren", "sys1:gasgiant", "sys1:lush", "sys1:molten",
+                        "sys1:rockymoon", "sys2:frozen"),
                 drawn,
-                "the rendered body set changed during the migration");
+                "the rendered body set must match what the legacy enum drew");
 
-        for (String notDrawn : new String[] {"sys1:gasgiant", "sys1:rockymoon"})
+        // The two outer bodies are drawn AND on the star map: the star map has its
+        // own visual, so being drawable in the sky does not imply anything about it.
+        for (String drawnId : new String[] {"sys1:gasgiant", "sys1:rockymoon"})
         {
-            var body = CATALOG.body(notDrawn).orElseThrow();
-            assertFalse(body.isSpaceRendered(), notDrawn + " must not be drawn");
-            // Still on the star map, which is what the star map consumes.
-            assertTrue(body.starmapVisual().getMarkerSize() > 0, notDrawn + " stays on the map");
+            var body = CATALOG.body(drawnId).orElseThrow();
+            assertTrue(body.isSpaceRendered(), drawnId + " must be drawn");
+            assertTrue(body.starmapVisual().getMarkerSize() > 0, drawnId + " stays on the map");
         }
     }
 }

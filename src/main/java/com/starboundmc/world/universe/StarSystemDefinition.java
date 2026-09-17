@@ -8,6 +8,7 @@ import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * One star system: its star, its physical place in the universe, its
@@ -26,6 +27,7 @@ public record StarSystemDefinition(String systemId,
                                    GalaxyMapPosition galaxyMapPosition,
                                    UniversePosition navigationCenter,
                                    double influenceRadius,
+                                   double planetFieldRadius,
                                    List<CelestialBodyDefinition> bodies)
 {
     public static final Codec<StarSystemDefinition> CODEC =
@@ -42,9 +44,34 @@ public record StarSystemDefinition(String systemId,
                             .forGetter(StarSystemDefinition::navigationCenter),
                     Codec.DOUBLE.fieldOf("influence_radius")
                             .forGetter(StarSystemDefinition::influenceRadius),
+                    // Optional so a hand-written system keeps working: leaving it out
+                    // means the field matches the influence radius, which is what the
+                    // one-argument legacy constructor did.
+                    Codec.DOUBLE.optionalFieldOf("planet_field_radius")
+                            .forGetter(system -> Optional.of(system.planetFieldRadius())),
                     CelestialBodyDefinition.CODEC.listOf().fieldOf("bodies")
                             .forGetter(StarSystemDefinition::bodies)
-            ).apply(instance, StarSystemDefinition::new));
+            ).apply(instance, (systemId, nameKey, descriptionKey, starTypeKey, stellarVisual,
+                               galaxyMapPosition, navigationCenter, influenceRadius,
+                               planetFieldRadius, bodies) ->
+                    new StarSystemDefinition(systemId, nameKey, descriptionKey, starTypeKey,
+                            stellarVisual, galaxyMapPosition, navigationCenter, influenceRadius,
+                            planetFieldRadius.orElse(null), bodies)));
+
+    /**
+     * A system whose body-rendering field matches its star influence: the shape
+     * the legacy one-argument constructor produced.
+     */
+    public StarSystemDefinition(String systemId, String nameKey, String descriptionKey,
+                                String starTypeKey, StellarVisualProfile stellarVisual,
+                                GalaxyMapPosition galaxyMapPosition,
+                                UniversePosition navigationCenter,
+                                double influenceRadius,
+                                List<CelestialBodyDefinition> bodies)
+    {
+        this(systemId, nameKey, descriptionKey, starTypeKey, stellarVisual, galaxyMapPosition,
+                navigationCenter, influenceRadius, Double.NaN, bodies);
+    }
 
     public StarSystemDefinition
     {
@@ -54,6 +81,13 @@ public record StarSystemDefinition(String systemId,
             throw new IllegalArgumentException("systemId must not be namespaced, got: " + systemId);
         if (!Double.isFinite(influenceRadius) || influenceRadius <= 0.0)
             throw new IllegalArgumentException("influenceRadius must be positive and finite");
+        // A system always renders its own bodies at least as far out as the star
+        // itself reaches, so an omitted (NaN) or smaller field collapses upward.
+        // A star's visual fade is not a reason to stop drawing a berth that is
+        // still inside the system: the outer berths live well beyond the fade.
+        planetFieldRadius = Double.isFinite(planetFieldRadius)
+                ? Math.max(influenceRadius, planetFieldRadius)
+                : influenceRadius;
         bodies = List.copyOf(bodies);
     }
 

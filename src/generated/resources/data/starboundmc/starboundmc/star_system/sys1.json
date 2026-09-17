@@ -168,43 +168,110 @@
       "description_key": "starmap.entry.sys1.gasgiant.desc",
       "entry_id": "sys1:gasgiant",
       "name_key": "starmap.entry.sys1.gasgiant.name",
+      "navigation": {
+        "body_position": {
+          "x": -16062.900463338801,
+          "y": 110.0,
+          "z": -7511.819124830719
+        },
+        "body_radius": 40.0,
+        "dock_position": {
+          "x": -16000.0,
+          "y": 102.0,
+          "z": -7500.0
+        },
+        "dock_yaw": 259.0
+      },
       "orbit": {
         "orbit_angle": 200.0,
         "orbit_radius": 116
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.7,
+        "atmosphere_green": 0.91,
+        "atmosphere_peak": 0.24,
+        "atmosphere_red": 0.99,
+        "night_floor": 0.22,
+        "orientation_tilt": 26.7,
+        "orientation_yaw": 40.0,
+        "point_color": -1783661,
+        "ring_texture": "starboundmc:textures/planet/gasgiant_ring.png",
+        "spin_rate": 0.009,
+        "terminator_width": 0.42,
+        "texture": "starboundmc:textures/planet/gasgiant.png"
       },
       "starmap_visual": {
         "atmosphere_color": -10592,
         "atmosphere_strength": 0.62,
         "band_strength": 0.88,
         "body_type": "GAS_GIANT",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/gasgiant_focus.png",
         "marker_size": 22,
         "primary_color": -1529760,
         "ring_color": -2570080,
         "ring_strength": 0.46,
         "secondary_color": -4692408,
+        "texture": "starboundmc:textures/gui/starmap/bodies/gasgiant.png",
         "texture_seed": 651667740
       },
+      "threat_level": 8,
       "type_key": "starmap.type.gas_giant"
     },
     {
       "description_key": "starmap.entry.sys1.rockymoon.desc",
       "entry_id": "sys1:rockymoon",
       "name_key": "starmap.entry.sys1.rockymoon.name",
+      "navigation": {
+        "body_position": {
+          "x": -15787.716310869539,
+          "y": 90.0,
+          "z": -7460.111463601716
+        },
+        "body_radius": 5.0,
+        "dock_position": {
+          "x": -15781.273564177154,
+          "y": 89.0,
+          "z": -7464.854196469775
+        },
+        "dock_yaw": 306.0
+      },
       "orbit": {
         "parent": "sys1:gasgiant",
         "orbit_angle": 30.0,
-        "orbit_radius": 20
+        "orbit_radius": 26
+      },
+      "space_visual": {
+        "atmosphere_blue": 0.6,
+        "atmosphere_green": 0.55,
+        "atmosphere_peak": 0.03,
+        "atmosphere_red": 0.55,
+        "night_floor": 0.03,
+        "orientation_tilt": 8.0,
+        "orientation_yaw": 160.0,
+        "point_color": -4933442,
+        "spin_rate": 0.002,
+        "terminator_width": 0.12,
+        "texture": "starboundmc:textures/planet/rockymoon.png"
       },
       "starmap_visual": {
         "atmosphere_color": -7303024,
         "body_type": "ROCKY",
+        "focus_texture": "starboundmc:textures/gui/starmap/bodies/rockymoon_focus.png",
         "marker_size": 10,
         "primary_color": -7303024,
         "ring_color": -7303024,
         "secondary_color": -10591640,
         "surface_detail": 0.9,
+        "texture": "starboundmc:textures/gui/starmap/bodies/rockymoon.png",
         "texture_seed": 1675709109
       },
+      "surface": {
+        "dimension": "starboundmc:rockymoon",
+        "environment": {
+          "breathable": false
+        }
+      },
+      "threat_level": 5,
       "type_key": "starmap.type.rocky_moon"
     }
   ],
@@ -220,6 +287,7 @@
     "y": 102.0,
     "z": -700.0
   },
+  "planet_field_radius": 24000.0,
   "star_type_key": "starmap.type.yellow_dwarf",
   "stellar_visual": {
     "core_color": -1571,

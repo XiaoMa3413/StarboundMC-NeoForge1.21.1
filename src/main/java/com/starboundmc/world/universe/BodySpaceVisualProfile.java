@@ -20,6 +20,13 @@ import java.util.Optional;
  *
  * <p>Orientation is {@code (axis tilt, fixed yaw, fixed roll)} in degrees. There
  * is no orbital or axial animation in the current model, so these are static.</p>
+ *
+ * <p>A present {@code ringTexture} means the body draws a ring band. The ring's
+ * proportions, opacity and tint are deliberately not per-body values: they are
+ * the canonical shared constants in {@code GasGiantGeometry}, which the
+ * flight-route planner also reads to keep a corridor clear of the ring plane.
+ * Keeping them in one place is what stops the drawn ring and the planned
+ * clearance from drifting apart, so only the texture varies per body.</p>
  */
 public record BodySpaceVisualProfile(Optional<String> texture,
                                      float atmosphereRed,
@@ -32,7 +39,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      int pointColor,
                                      float terminatorWidth,
                                      float spinRate,
-                                     float nightFloor)
+                                     float nightFloor,
+                                     Optional<String> ringTexture)
 {
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
@@ -61,12 +69,15 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                     Codec.FLOAT.optionalFieldOf("spin_rate", 0.00375F)
                             .forGetter(BodySpaceVisualProfile::spinRate),
                     Codec.FLOAT.optionalFieldOf("night_floor", 0.10F)
-                            .forGetter(BodySpaceVisualProfile::nightFloor)
+                            .forGetter(BodySpaceVisualProfile::nightFloor),
+                    Codec.STRING.optionalFieldOf("ring_texture")
+                            .forGetter(BodySpaceVisualProfile::ringTexture)
             ).apply(instance, BodySpaceVisualProfile::new));
 
     public BodySpaceVisualProfile
     {
         texture = texture == null ? Optional.empty() : texture;
+        ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);
         requireUnitRange("atmosphereBlue", atmosphereBlue);
@@ -90,6 +101,12 @@ public record BodySpaceVisualProfile(Optional<String> texture,
     public boolean hasAtmosphere()
     {
         return atmospherePeak > 0.0F;
+    }
+
+    /** Whether this body draws a ring band. */
+    public boolean hasRings()
+    {
+        return ringTexture.isPresent();
     }
 
     private static void requireUnitRange(String name, float value)

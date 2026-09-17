@@ -50,6 +50,8 @@ public final class Stage2ClientRegistrar {
                 new ShipDimensionEffects());
         event.register(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "frozen"),
                 new FrozenDimensionEffects());
+        event.register(ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "rockymoon"),
+                new RockyMoonDimensionEffects());
     }
 
     @SubscribeEvent

@@ -213,4 +213,75 @@ class ShipStateDataMigrationTest
         assertEquals("frozen", saved.getString("Planet"));
         assertEquals("frozen", data.legacyPlanetName());
     }
+
+    // ------------------------------------------- the two real saves on this desk
+
+    /**
+     * Save A: written by the planet-content build, so it carries both a
+     * {@code SchemaVersion} of 2 and a {@code CurrentEntry} alongside a legacy
+     * {@code Planet} name.
+     *
+     * <p>The entry id wins. Reading the legacy name instead would be harmless here
+     * because they agree, but the field order must not be load-bearing: the id is
+     * the authority and the name is only a view an older build can read.</p>
+     */
+    @Test
+    void aSchema2SaveWithBothFieldsPrefersTheEntryId()
+    {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("SchemaVersion", 2);
+        tag.putString("Planet", "");
+        tag.putString("CurrentEntry", "sys1:rockymoon");
+
+        ShipStateData restored = ShipStateData.load(tag);
+
+        assertEquals("sys1:rockymoon", restored.getCurrentEntryId());
+        assertEquals(2, restored.getSchemaVersion());
+        // No legacy name exists for this body, so the derived field stays empty
+        // rather than naming a planet the ship is not at.
+        assertNull(restored.legacyPlanetName());
+    }
+
+    /**
+     * Save B: the same world, from a build that wrote the legacy {@code Planet}
+     * name and no {@code SchemaVersion} at all.
+     *
+     * <p>{@code CurrentEntry} is present here too, which is what makes this shape
+     * loadable at all: the name {@code rockymoon} is not in the frozen legacy
+     * mapping, because the mapping only covers the four bodies that existed when
+     * that field was the only location. Were the id absent, the name would be
+     * unresolvable and the save would legitimately load with no location — the
+     * opposite of the silent relocation this migration removed.</p>
+     */
+    @Test
+    void aSchema1SaveWithAnUnmappedLegacyNameReliesOnItsEntryId()
+    {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("Planet", "rockymoon");
+        tag.putString("CurrentEntry", "sys1:rockymoon");
+
+        ShipStateData restored = ShipStateData.load(tag);
+
+        assertEquals("sys1:rockymoon", restored.getCurrentEntryId(),
+                "the entry id is authoritative even when the legacy name cannot be resolved");
+        assertEquals(1, restored.getSchemaVersion(), "a save with no version is the legacy layout");
+        assertTrue(LegacyUniverseCompatibility.parsePlanetId("rockymoon").isEmpty(),
+                "precondition: 'rockymoon' is not one of the four frozen legacy names");
+    }
+
+    /**
+     * And the trap that shape hides: with no entry id, that same legacy name must
+     * load with <em>no</em> location rather than being guessed at.
+     */
+    @Test
+    void theSameSaveWithoutAnEntryIdRefusesToGuess()
+    {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("Planet", "rockymoon");
+
+        ShipStateData restored = ShipStateData.load(tag);
+
+        assertNull(restored.getCurrentEntryId(),
+                "an unmapped legacy name must not be resolved to a body");
+    }
 }

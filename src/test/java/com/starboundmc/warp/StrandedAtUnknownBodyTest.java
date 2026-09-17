@@ -2,7 +2,11 @@ package com.starboundmc.warp;
 
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
+import com.starboundmc.world.universe.BodyNavigationProfile;
+import com.starboundmc.world.universe.BodyOrbitDefinition;
 import com.starboundmc.world.universe.BuiltInUniverse;
+import com.starboundmc.world.universe.CelestialBodyDefinition;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import com.starboundmc.world.universe.UniverseCatalog;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
@@ -24,11 +28,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * <p>Entering a world aborted with {@code IllegalArgumentException: Unknown
  * navigable body: sys1:rockymoon} during {@code ServerStartedEvent}. The save was
- * written by a build that could fly to the rocky moon; the universe this build
- * loads does not provide that body, so the id resolves to nothing. §25 explicitly
+ * written by a build that could fly to the rocky moon; the universe that build
+ * loaded did not provide that body, so the id resolved to nothing. §25 explicitly
  * requires that state to be survivable — keep the id, warn, forbid travel away —
  * but {@code persistDock()} asked for the dock position of an unresolvable body and
  * threw while the server was starting.</p>
+ *
+ * <p>The shipped universe provides the rocky moon again, so the body that caused
+ * the original crash can no longer stand in for "unknown". These tests use an id no
+ * build provides, which is the durable form of the same state: a save written by a
+ * build whose universe has since changed underneath it.</p>
  *
  * <h2>Why the existing tests missed it</h2>
  *
@@ -39,8 +48,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class StrandedAtUnknownBodyTest
 {
-    /** The exact body id from the crashing save. */
-    private static final String UNKNOWN = "sys1:rockymoon";
+    /**
+     * A body id this build does not provide.
+     *
+     * <p>Shaped like the crashing save's id — namespaced, plausible, absent — but
+     * deliberately not any shipped body, so the test keeps exercising the unresolvable
+     * path no matter how the shipped universe grows.</p>
+     */
+    private static final String UNKNOWN = "datapack:removed";
 
     private static final String LUSH = BuiltInUniverse.STARTER_BODY_ID;
 
@@ -95,7 +110,7 @@ class StrandedAtUnknownBodyTest
     void theGeometryAccessorsRefuseAnUnknownBody()
     {
         assertFalse(UniverseNavigation.isNavigable(UNKNOWN),
-                "precondition: this build does not provide the rocky moon");
+                "precondition: this build does not provide that body");
         assertThrows(IllegalArgumentException.class,
                 () -> UniverseNavigation.universeDock(UNKNOWN),
                 "the dock lookup is what used to abort server start");
@@ -184,14 +199,40 @@ class StrandedAtUnknownBodyTest
     @Test
     void reAddingTheBodyWouldResolveAgain()
     {
-        UniverseCatalog withRockyMoon = UniverseCatalog.of(List.of(
-                BuiltInUniverse.systems().get(0),
+        // The shipped universe does not provide it...
+        UniverseCatalog shipped = UniverseCatalog.of(BuiltInUniverse.systems());
+        assertTrue(shipped.body(UNKNOWN).isEmpty(),
+                "precondition: nothing ships this body");
+
+        // ...but a universe that declares it resolves the same saved id, so the
+        // player is restored rather than stranded forever.
+        UniverseCatalog withIt = UniverseCatalog.of(List.of(
+                withExtraBody(BuiltInUniverse.systems().get(0), UNKNOWN),
                 BuiltInUniverse.systems().get(1)));
-        // The shipped universe has rockymoon only as a non-navigable body; once a
-        // datapack gives it navigation it resolves, and the saved id points there.
-        assertTrue(withRockyMoon.body(UNKNOWN).isPresent(),
-                "the body is known to the universe, just not placeable");
-        assertFalse(withRockyMoon.body(UNKNOWN).orElseThrow().isNavigable());
+        assertTrue(withIt.body(UNKNOWN).isPresent(),
+                "a universe declaring the body must know it");
+        assertTrue(withIt.body(UNKNOWN).orElseThrow().isNavigable(),
+                "and the saved id must be flyable again");
+    }
+
+    /** The system, plus one navigable body, so it stands in for a restoring datapack. */
+    private static StarSystemDefinition withExtraBody(StarSystemDefinition system, String entryId)
+    {
+        List<CelestialBodyDefinition> bodies = new java.util.ArrayList<>(system.bodies());
+        bodies.add(new CelestialBodyDefinition(entryId, "starmap.entry.restored.name",
+                "starmap.type.rocky_moon", "starmap.entry.restored.desc", 1,
+                BodyOrbitDefinition.aroundStar(200, 0.0F),
+                com.starboundmc.world.starmap.StarmapBodyVisual.builder(
+                        com.starboundmc.world.starmap.StarmapBodyType.ROCKY, 0xFF909090, 10, 1L).build(),
+                java.util.Optional.of(new BodyNavigationProfile(
+                        UniversePosition.of(2000.0, 102.0, 0.0),
+                        UniversePosition.of(2010.0, 102.0, 0.0),
+                        5.0, 0.0)),
+                java.util.Optional.empty(), java.util.Optional.empty()));
+        return new StarSystemDefinition(system.systemId(), system.nameKey(),
+                system.descriptionKey(), system.starTypeKey(), system.stellarVisual(),
+                system.galaxyMapPosition(), system.navigationCenter(),
+                system.influenceRadius(), system.planetFieldRadius(), bodies);
     }
 
     /**
@@ -211,13 +252,15 @@ class StrandedAtUnknownBodyTest
         }
     }
 
-    /** Sanity: the shipped universe still has the four placeable bodies. */
+    /** Sanity: every shipped navigable body can still be docked at. */
     @Test
-    void theShippedUniverseStillProvidesTheFourNavigableBodies()
+    void everyShippedNavigableBodyCanBeDockedAt()
     {
         UniverseCatalog catalog = UniverseCatalog.of(BuiltInUniverse.systems());
-        assertEquals(4, catalog.navigableBodies().size());
-        for (String entryId : new String[] {LUSH, "sys1:molten", "sys1:barren", "sys2:frozen"})
+        assertEquals(6, catalog.navigableBodies().size(),
+                "six shipped bodies are flyable: four inner worlds, the giant and its moon");
+        for (String entryId : new String[] {LUSH, "sys1:molten", "sys1:barren", "sys2:frozen",
+                "sys1:gasgiant", "sys1:rockymoon"})
         {
             assertTrue(UniverseNavigation.isNavigable(entryId), entryId + " must be flyable");
             assertDoesNotThrow(() -> ShipWarpManager.dockPositionFor(

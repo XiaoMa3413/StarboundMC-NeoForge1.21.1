@@ -2,6 +2,7 @@ package com.starboundmc.warp;
 
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.world.universe.BodyNavigationProfile;
+import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.universe.ClientUniverseCatalog;
 import com.starboundmc.world.universe.ServerUniverseCatalog;
@@ -171,14 +172,35 @@ public final class UniverseNavigation
     /**
      * Bodies that take part in route obstacle avoidance.
      *
-     * <p>Only navigable bodies are returned. The gas giant and the rocky moon have
-     * no navigation profile, so they stay out of route shaping exactly as they did
-     * when this iterated the four-planet enum — letting them in would silently
-     * bend every existing course.</p>
+     * <p>Only navigable bodies are returned. The gas giant and the rocky moon used
+     * to have no navigation profile, so they stayed out of route shaping exactly as
+     * they did when this iterated the four-planet enum. Both are flyable now, and
+     * both were already in the legacy four-planet avoidance set under their own
+     * names, so the set this returns is the same one the enum produced.</p>
      */
     public static java.util.List<CelestialBodyDefinition> avoidanceBodies()
     {
         return active().navigableBodies();
+    }
+
+    /**
+     * Navigable bodies whose routes have to clear a ring plane.
+     *
+     * <p>Whether a body has rings is read from its visual profile rather than
+     * named, so a datapack body can be ringed without a branch in the planner.
+     * Only navigable bodies are returned: a route can start or end only at a
+     * dock, so a ringed body nobody can fly to cannot shape a corridor, and
+     * including one would bend existing courses.</p>
+     */
+    public static java.util.List<CelestialBodyDefinition> ringedBodies()
+    {
+        java.util.List<CelestialBodyDefinition> ringed = new java.util.ArrayList<>();
+        for (CelestialBodyDefinition body : active().navigableBodies())
+        {
+            if (body.spaceVisual().map(BodySpaceVisualProfile::hasRings).orElse(false))
+                ringed.add(body);
+        }
+        return ringed;
     }
 
     /**
