@@ -1,5 +1,8 @@
 # StarboundMC（星际边界）
 
+> 这是 Forge 1.20.1 的历史行为基线，不是当前 NeoForge 1.21.1 的实现说明；当前文档索引见
+> [上级 docs 索引](../README.md)。
+
 StarboundMC 是一个面向 Minecraft Forge 1.20.1 的开发中模组，目标是在 Minecraft 中建立
 “飞船基地、连续宇宙、行星跃迁、星图导航与物质枪采集”的完整玩法闭环。
 

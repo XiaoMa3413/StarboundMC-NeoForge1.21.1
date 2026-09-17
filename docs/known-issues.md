@@ -62,13 +62,14 @@
 
 本问题目前没有改变功能正确性，也没有修改现有 UI 行为；在完成优化并通过实机验证前，不标记为已解决。
 
-## 宇宙数据驱动迁移：视觉与手感待实机验收
+## 宇宙数据驱动迁移后的客户端验收
 
-**状态：待验收（代码与数据已由自动化测试覆盖）**
+**状态：实现已落地；视觉、航行手感和旧存档仍待专项实机复核**
 
 **影响范围：** 星图、舱外行星渲染、飞行曲线、存档迁移。
 
-宇宙层迁移把星球数据从 Java 硬编码改为 datapack 定义。自动化测试已覆盖数值与行为：
+宇宙层迁移把星球数据从 Java 硬编码改为 datapack 定义，已在 `b12b7ec` 落地。当前自动化测试
+覆盖数值与行为：
 
 - 行星渲染参数（大气颜色/强度、朝向、点色、晨昏线、自转、夜面、贴图）由
   `PlanetRendererTableEquivalenceTest` 逐值钉死。
@@ -85,5 +86,21 @@
 4. 老存档：建议用**存档副本**实测迁移（尤其是一份引用了已移除 datapack 的存档，
    预期行为是保留原位置 ID、记录 WARN、并禁止跃迁离开）。
 
-**验收方式：** 运行 `python run/check_section33.py` 查看自动化覆盖情况（16/16 通过），
-其余按上文逐项实机确认。
+**验收方式：** 使用当前项目的 `.\gradlew.bat test` 运行自动化测试；其余按上文逐项进游戏确认。
+
+## Rocky Moon 抵达未触发地表任务钩子
+
+**状态：待修复**
+
+**影响范围：** Rocky Moon 首次登陆任务、NOVA 地表抵达广播、任务终端进度快照和相关教程提示。
+
+`ShipStoryService.isPlanetSurface` 当前只识别主世界、熔融、冰冻和荒芜地表，遗漏
+`RockyMoonPlanet.ROCKY_MOON_LEVEL`。`Stage6TravelService` 与 `TeleporterManager` 在抵达后会调用
+`ShipStoryService.onPlanetSurfaceArrival`，但 Rocky Moon 因此不会进入该分支，玩家在 Rocky Moon
+着陆时不会触发地表任务完成、NOVA 抵达提示或任务进度刷新。
+
+**复现方式：** 在包含 Rocky Moon 的当前数据驱动宇宙中，从飞船传送器或已命名传送器选择 Rocky Moon
+地表并成功着陆，观察“第一次地表行动”任务和 NOVA 提示没有按其他地表同样更新。
+
+**修复方向：** 将 `RockyMoonPlanet.ROCKY_MOON_LEVEL` 纳入统一地表判定，并补充 Rocky Moon 的
+抵达、任务快照、个人提示和重启后状态回归测试；不要在任务层为 Rocky Moon 增加一套独立分支。

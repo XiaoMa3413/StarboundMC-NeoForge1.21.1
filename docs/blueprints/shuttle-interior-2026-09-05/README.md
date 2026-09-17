@@ -3,7 +3,8 @@
 用户确认第一版搬迁视觉后，在「燕隼号·搬迁验收」中手工修改了内饰。本目录保存该版本。
 随后根据用户要求，此处的 NBT 已逐字节复制为内置 `starter_ship.nbt`，用作默认初始飞船。
 之后又按要求仅在内置模板的储物柜中加入 1 把求生匕首和 3 罐罐头；此处归档仍保留未加补给的原始版本。
-`manifest.json` 保留导出时的历史状态；当前接入状态见 [实施说明](../../shuttle-ship-import-plan.md)。
+`manifest.json` 保留导出时的历史状态；当前接入状态见
+[归档实施说明](../../archive/shuttle-ship-import-plan.md)。
 
 读取前已确认 Minecraft 退出，日志显示 2026-09-05 20:10:55 所有维度保存完成。
 来源为 `run/saves/shuttle-import-review`，飞船维度 `starboundmc:ship`。
