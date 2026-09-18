@@ -161,7 +161,7 @@ final class StarmapInfoPanelElement extends UIElement {
     void refresh() {
         CelestialBodyDefinition entry = root.getSelectedEntry();
         var system = root.getSelectedSystem();
-        boolean visible = root.isInfoPanelVisible() && (system != null || entry != null);
+        boolean visible = root.isInfoPanelVisible() && (root.isRelaySelected() || system != null || entry != null);
         String nextContentKey = visible ? root.selectionTargetKey() : null;
         boolean visibilityChanged = visible != targetVisible;
         if (visibilityChanged) {
@@ -186,6 +186,29 @@ final class StarmapInfoPanelElement extends UIElement {
         StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
         panel.layout(layout -> layout.left(0).top(0).width(next.width()).height(next.height()));
         prepareFrame(width, height);
+        if (root.isRelaySelected()) {
+            title.setText(Component.translatable("gui.starboundmc.relay.name"));
+            subtitle.setText(Component.translatable("gui.starboundmc.relay.type"));
+            metadata.setText(root.relayLocation());
+            metadata.textStyle(s -> s.textWrap(TextWrap.HIDE));
+            metadata.style(s -> s.tooltips(root.relayLocation()));
+            satelliteCount.setDisplay(true);
+            satelliteCount.setText(Component.translatable("gui.starboundmc.relay.fuel", root.relayFuelCost()));
+            status.setDisplay(true);
+            status.layout(l -> l.height(24));
+            status.setText(root.relayStatus());
+            description.setText(Component.translatable("gui.starboundmc.relay.exploration", root.relayMission()));
+            action.setDisplay(true);
+            action.setText(root.actionLabel());
+            action.setActive(root.isActionAvailable());
+            action.style(s -> s.tooltips(root.relayStatus()));
+            preview.style(s -> s.backgroundTexture(RelayMapNode.ICON));
+            return;
+        }
+        status.layout(l -> l.height(14));
+        metadata.textStyle(s -> s.textWrap(TextWrap.NONE));
+        metadata.style(s -> s.tooltips(new Component[0]));
+        action.style(s -> s.tooltips(new Component[0]));
         title.setText(entry == null ? Component.translatable(system.nameKey())
                 : Component.translatable(entry.nameKey()));
         subtitle.setText(entry == null ? Component.translatable(system.starTypeKey())
