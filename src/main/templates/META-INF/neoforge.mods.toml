@@ -3,6 +3,9 @@ loaderVersion="${loader_version_range}"
 license="${mod_license}"
 issueTrackerURL="https://github.com/XiaoMa3413/StarboundMC-NeoForge1.21.1/issues"
 
+[[mixins]]
+config="starboundmc.mixins.json"
+
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"

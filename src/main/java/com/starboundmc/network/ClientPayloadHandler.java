@@ -17,6 +17,14 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(EvaStatePacket payload, IPayloadContext context) {
+        var player = context.player();
+        if (!player.level().dimension().location().equals(payload.dimension())) return;
+        var state = player.getData(com.starboundmc.story.ModAttachments.EVA);
+        if (state.mode != payload.mode() || !payload.dimension().equals(state.dimension)) state.clearInput();
+        state.mode = Math.clamp(payload.mode(), 0, 2);
+        state.dimension = payload.dimension();
+    }
     public static void handle(EppSnapshotPacket payload, IPayloadContext context) {
         com.starboundmc.client.epp.EppClientState.snapshot = payload;
     }
@@ -65,7 +73,7 @@ public final class ClientPayloadHandler {
                 payload.phase(), payload.position(), payload.velocity(),
                 payload.yaw(), payload.pitch(), payload.roll(),
                 payload.elapsedTicks(), payload.totalTicks(),
-                emptyToNull(payload.targetEntryId()));
+                emptyToNull(payload.targetEntryId()), payload.crewHold());
     }
 
     public static void handle(SyncVoxelWalletPacket payload, IPayloadContext context) {

@@ -21,8 +21,8 @@ public final class OxygenHudLayer implements ModularHudLayer {
     private final VisorHudProjection projection = new VisorHudProjection();
     @Override public ModularUI getModularUI() {
         var mc = Minecraft.getInstance(); var s = EppClientState.snapshot;
-        if (mc.player == null || !mc.player.isAlive() || mc.options.hideGui || s == null
-                || !(s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0)) return null;
+        if (mc.player == null || !mc.player.isAlive() || mc.options.hideGui
+                || !(showBeacon() || s != null && (s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0))) return null;
         if (ui == null) ui = ModularUI.of(UI.of(new Gauge(projection), ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         return ui;
     }
@@ -31,6 +31,11 @@ public final class OxygenHudLayer implements ModularHudLayer {
         if (current != null && validModularUI(current)) current.getWidget().render(graphics, Integer.MAX_VALUE, Integer.MAX_VALUE, dt.getGameTimeDeltaPartialTick(false));
     }
     public void reset() { if (ui != null) ui.onRemoved(); ui = null; projection.close(); }
+    private static boolean showBeacon() {
+        var player = Minecraft.getInstance().player;
+        return player != null && player.level().dimension().equals(com.starboundmc.world.ShipDimensions.SHIP_LEVEL)
+                && com.starboundmc.epp.EvaMovement.mode(player) != com.starboundmc.epp.EvaState.NORMAL;
+    }
     private static final class Gauge extends UIElement {
         private long lastFrame;
         private float lastYaw, lastPitch, driftX, driftY;
@@ -38,6 +43,7 @@ public final class OxygenHudLayer implements ModularHudLayer {
 
         Gauge(VisorHudProjection projection) { this.projection = projection; layout(l -> l.widthPercent(100).heightPercent(100)); setAllowHitTest(false); }
         @Override public void drawBackgroundAdditional(GUIContext context) {
+            if (showBeacon()) drawBeacon(context.graphics);
             var s = EppClientState.snapshot; if (s == null) return;
             var mc = Minecraft.getInstance(); var g = context.graphics;
             int x = g.guiWidth() - 140, y = g.guiHeight() - 82;
@@ -46,6 +52,36 @@ public final class OxygenHudLayer implements ModularHudLayer {
             if (oxygenVisible) projection.draw(g, x + driftX, y + driftY, canvas -> drawFlat(canvas, context.partialTick));
             if (s.coldTier() > 0 || s.coldExposure() > 0)
                 projection.draw(g, x + driftX, y + driftY + (oxygenVisible ? 40 : 0), this::drawCold);
+        }
+
+        private void drawBeacon(GuiGraphics g) {
+            var mc = Minecraft.getInstance();
+            var bearing = ShipBeaconBearing.from(mc.player.position(),
+                    net.minecraft.world.phys.Vec3.atBottomCenterOf(com.starboundmc.world.ShipStructure.SHIP_TELEPORTER_POS),
+                    mc.player.getYRot());
+            int x = g.guiWidth() / 2, y = 22;
+            g.pose().pushPose();
+            g.pose().translate(x, y, 0);
+            g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees((float) bearing.turnDegrees()));
+            for (int row = 0; row < 5; row++) g.fill(-row, row - 5, row + 1, row - 4, 0xD095E8E2);
+            g.fill(-1, 0, 2, 5, 0xD095E8E2);
+            g.pose().popPose();
+            var height = (bearing.height() >= 0 ? "+" : "") + Math.round(bearing.height());
+            g.drawCenteredString(mc.font, Component.translatable("hud.starboundmc.eva.beacon",
+                    Math.round(bearing.distance()), height), x, y + 12, 0xD095E8E2);
+            boolean thrust = com.starboundmc.epp.EvaMovement.mode(mc.player) == com.starboundmc.epp.EvaState.THRUST;
+            var hint = thrust ? Component.translatable("hud.starboundmc.eva.controls",
+                    mc.options.keyUp.getTranslatedKeyMessage(), mc.options.keyLeft.getTranslatedKeyMessage(),
+                    mc.options.keyDown.getTranslatedKeyMessage(), mc.options.keyRight.getTranslatedKeyMessage(),
+                    mc.options.keyJump.getTranslatedKeyMessage(), mc.options.keyShift.getTranslatedKeyMessage())
+                    : Component.translatable("hud.starboundmc.eva.no_thrusters",
+                            com.starboundmc.client.ModKeyBindings.returnToShip.getTranslatedKeyMessage());
+            float scale = Math.min(1f, (g.guiWidth() - 20f) / Math.max(1, mc.font.width(hint)));
+            g.pose().pushPose();
+            g.pose().translate(x, y + 24, 0);
+            g.pose().scale(scale, scale, 1);
+            g.drawCenteredString(mc.font, hint, 0, 0, thrust ? 0xB095E8E2 : 0xFFFFD17C);
+            g.pose().popPose();
         }
 
         private void drawCold(GuiGraphics g) {

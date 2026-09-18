@@ -516,12 +516,21 @@
   "tooltip.starboundmc.epp.slots": "Module slots: %s · Maximum tier: %s",
   "tooltip.starboundmc.epp.installed": "Installed: %s",
   "tooltip.starboundmc.epp.cold_protection": "Cold protection: %s",
-  "tooltip.starboundmc.epp.eva_pending": "EVA control is not available in this version.",
+  "tooltip.starboundmc.epp.eva": "Built-in EVA thrusters: camera-relative movement in zero gravity.",
   "hud.starboundmc.epp.cold": "COLD  %s%%",
   "hud.starboundmc.epp.cold_protection": "Protection %s / Cold %s",
   "message.starboundmc.nova.cold.1": "Cold exposure is rising. Your EPP heating protection is insufficient.",
   "message.starboundmc.nova.cold.2": "Cold exposure is impairing movement. Return to a temperate zone.",
   "message.starboundmc.nova.cold.3": "Severe cold exposure. Return now to avoid freezing injury.",
   "gui.starboundmc.starmap.detail.cold": "Cold hazard",
-  "gui.starboundmc.starmap.detail.cold_requirement": "Cold tier %s · Prepare a Heating module"
+  "gui.starboundmc.starmap.detail.cold_requirement": "Cold tier %s · Prepare a Heating module",
+  "hud.starboundmc.eva.beacon": "SHIP  %s m  |  Height %s m",
+  "hud.starboundmc.eva.controls": "EVA  %s%s%s%s  |  %s rise / %s descend",
+  "hud.starboundmc.eva.no_thrusters": "UNPOWERED DRIFT · Press %s for emergency recall",
+  "message.starboundmc.eva.return_manually": "Follow the ship beacon and fly back aboard. Remote recall is unavailable during EVA.",
+  "message.starboundmc.warp.crew_outside": "Crew outside the vessel. Warp is locked until everyone is back aboard.",
+  "message.starboundmc.warp.crew_hold": "Crew outside the vessel. Flight paused until everyone is back aboard.",
+  "message.starboundmc.warp.crew_resume": "All crew aboard. Resuming flight.",
+  "message.starboundmc.eva.recalled": "Emergency recall complete. Drift velocity cleared.",
+  "message.starboundmc.eva.recall_blocked": "No safe landing space in the cabin. Ask a crewmate to clear a landing spot."
 }

@@ -29,7 +29,7 @@ public final class EppItem extends Item {
             var modules = stack.getOrDefault(ModDataComponents.EPP_MODULES, net.minecraft.world.item.component.ItemContainerContents.EMPTY);
             modules.nonEmptyStream().forEach(module -> lines.add(Component.translatable("tooltip.starboundmc.epp.installed", module.getHoverName())));
             lines.add(Component.translatable("tooltip.starboundmc.epp.cold_protection", EppProtection.from(stack).coldTier()));
-            lines.add(Component.translatable("tooltip.starboundmc.epp.eva_pending"));
+            lines.add(Component.translatable("tooltip.starboundmc.epp.eva"));
         }
         lines.add(Component.translatable("tooltip.starboundmc.epp.equip"));
     }

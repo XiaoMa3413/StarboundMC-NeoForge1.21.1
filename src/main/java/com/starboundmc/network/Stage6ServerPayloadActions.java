@@ -55,6 +55,15 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
 
     @Override
     public void teleportToShip(ServerPlayer player) {
+        if (com.starboundmc.warp.ShipCrewSafety.blocksDeparture(player)) {
+            if (com.starboundmc.epp.EvaEmergencyRecall.canRequest(player)) {
+                com.starboundmc.epp.EvaEmergencyRecall.request(player);
+                return;
+            }
+            player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
+                    "message.starboundmc.eva.return_manually"), true);
+            return;
+        }
         if (!player.isSpectator() && ShipEnvironmentService.isCoreOnline(player.getServer())) {
             Stage6TravelService.teleportToShip(player);
         } else if (!player.isSpectator()) {

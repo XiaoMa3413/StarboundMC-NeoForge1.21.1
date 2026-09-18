@@ -516,12 +516,21 @@
   "tooltip.starboundmc.epp.slots": "模块槽：%s · 支持最高等级：%s",
   "tooltip.starboundmc.epp.installed": "已安装：%s",
   "tooltip.starboundmc.epp.cold_protection": "寒冷防护：%s",
-  "tooltip.starboundmc.epp.eva_pending": "本版本尚未开放 EVA 推进控制。",
+  "tooltip.starboundmc.epp.eva": "内置 EVA 推进器：在零重力中随视角移动。",
   "hud.starboundmc.epp.cold": "低温暴露  %s%%",
   "hud.starboundmc.epp.cold_protection": "防护 %s / 寒冷 %s",
   "message.starboundmc.nova.cold.1": "低温暴露正在上升。当前 EPP 加热防护不足。",
   "message.starboundmc.nova.cold.2": "低温暴露已影响行动。请尽快返回温和环境。",
   "message.starboundmc.nova.cold.3": "低温暴露严重。请立即撤离，避免冻伤。",
   "gui.starboundmc.starmap.detail.cold": "低温危险",
-  "gui.starboundmc.starmap.detail.cold_requirement": "寒冷等级 %s · 请准备加热模块"
+  "gui.starboundmc.starmap.detail.cold_requirement": "寒冷等级 %s · 请准备加热模块",
+  "hud.starboundmc.eva.beacon": "飞船  %s m  |  高差 %s m",
+  "hud.starboundmc.eva.controls": "EVA  %s%s%s%s  |  %s 上升 / %s 下降",
+  "hud.starboundmc.eva.no_thrusters": "无动力漂浮 · 按 %s 紧急召回飞船",
+  "message.starboundmc.eva.return_manually": "请沿飞船信标飞回舱内。EVA 期间无法使用远程返船。",
+  "message.starboundmc.warp.crew_outside": "检测到船员仍在舰外。全员返舱后才能跃迁。",
+  "message.starboundmc.warp.crew_hold": "检测到船员出舱，航程已暂停。全员返舱后继续。",
+  "message.starboundmc.warp.crew_resume": "船员已全部返舱，航程继续。",
+  "message.starboundmc.eva.recalled": "紧急召回完成，已清除漂移速度。",
+  "message.starboundmc.eva.recall_blocked": "船舱内没有可安全落脚的位置，紧急召回失败。请让船员清理舱内落点。"
 }

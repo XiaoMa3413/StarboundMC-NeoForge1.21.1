@@ -54,7 +54,8 @@ public final class EppGameTests {
         var channels = new java.util.HashMap<net.minecraft.resources.ResourceLocation,
                 net.neoforged.neoforge.network.registration.NetworkChannel>();
         for (var type : java.util.List.of(com.starboundmc.network.EppSnapshotPacket.TYPE,
-                com.starboundmc.network.EppVisualPacket.TYPE, com.starboundmc.network.NovaBroadcastPacket.TYPE)) {
+                com.starboundmc.network.EppVisualPacket.TYPE, com.starboundmc.network.NovaBroadcastPacket.TYPE,
+                com.starboundmc.network.EvaStatePacket.TYPE)) {
             channels.put(type.id(), new net.neoforged.neoforge.network.registration.NetworkChannel(
                     type.id(), com.starboundmc.network.ModNetwork.PROTOCOL_VERSION));
         }
@@ -67,6 +68,152 @@ public final class EppGameTests {
     }
     private static ItemStack pack(int oxygen) {
         var stack = new ItemStack(ModItems.EPP_MK1.get()); EppItem.setOxygen(stack, oxygen); return stack;
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void emergencyRecallClearsDriftWithoutRefillingOrLosingEquipment(GameTestHelper h) {
+        var destination = new BlockPos(0, 103, 0);
+        var positions = java.util.List.of(destination.below(), destination, destination.above());
+        var states = positions.stream().map(h.getLevel()::getBlockState).toList();
+        var tags = positions.stream().map(pos -> {
+            var be = h.getLevel().getBlockEntity(pos);
+            return be == null ? null : be.saveWithFullMetadata(h.getLevel().registryAccess());
+        }).toList();
+        try (var fixture = player(h.getLevel(), "EvaRescue")) {
+            var p = fixture.player;
+            for (var pos : positions) h.getLevel().setBlockAndUpdate(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            h.getLevel().setBlockAndUpdate(destination.below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            for (var equipment : java.util.List.of(ItemStack.EMPTY, pack(42))) {
+                p.setPos(-29999.5, 220, 0); p.setDeltaMovement(.1, .2, .1); p.fallDistance = 30;
+                p.setData(ModAttachments.EPP_EQUIPMENT, equipment);
+                p.getData(ModAttachments.EVA).input = EvaMotion.UP;
+                h.assertTrue(EvaEmergencyRecall.tryDestination(p, destination), "Safe rescue refused");
+                h.assertTrue(p.blockPosition().equals(destination), "Rescue did not reach cabin");
+                h.assertTrue(p.getDeltaMovement().equals(net.minecraft.world.phys.Vec3.ZERO) && p.fallDistance == 0, "Rescue retained drift/fall damage");
+                h.assertTrue(p.getData(ModAttachments.EVA).input == 0, "Rescue retained propulsion input");
+                h.assertTrue(p.getData(ModAttachments.EPP_EQUIPMENT) == equipment, "Rescue replaced equipment");
+                if (!equipment.isEmpty()) h.assertTrue(EppItem.oxygen(equipment) == 42, "Rescue refilled oxygen for free");
+            }
+            h.getLevel().setBlockAndUpdate(destination, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            var before = p.position();
+            h.assertTrue(!EvaEmergencyRecall.tryDestination(p, destination) && p.position().equals(before), "Blocked rescue moved player into blocks");
+            h.assertTrue(!EvaEmergencyRecall.tryDestination(p, new BlockPos(20, 103, 0)), "Rescue destination outside cabin accepted");
+            h.assertTrue(!EvaEmergencyRecall.canRequest(p), "Planet player gained emergency ship recall");
+        } finally {
+            for (int i = 0; i < positions.size(); i++) {
+                h.getLevel().setBlockAndUpdate(positions.get(i), states.get(i));
+                var be = h.getLevel().getBlockEntity(positions.get(i));
+                if (be != null && tags.get(i) != null) be.loadWithComponents(tags.get(i), h.getLevel().registryAccess());
+            }
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void evaPermissionsUseOnlyActivePackAndCurrentEnvironment(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "EvaPermissions")) {
+            var p = fixture.player; p.setPos(-29999.5, 220, 0);
+            h.assertTrue(EvaMovement.serverMode(p) == EvaState.DRIFT, "Vacuum must be zero gravity even without EPP");
+            p.getInventory().setItem(0, new ItemStack(ModItems.EPP_MK2.get()));
+            p.setData(ModAttachments.EPP_EQUIPMENT, pack(100));
+            EvaMovement.acceptInput(p, EvaMotion.UP);
+            h.assertTrue(EvaMovement.serverMode(p) == EvaState.DRIFT && p.getData(ModAttachments.EVA).input == 0, "Spare Mk.II or Mk.I granted thrust");
+            p.setData(ModAttachments.EPP_EQUIPMENT, new ItemStack(ModItems.EPP_MK2.get()));
+            EvaMovement.update(p); EvaMovement.acceptInput(p, EvaMotion.UP);
+            h.assertTrue(p.getData(ModAttachments.EVA).input == EvaMotion.UP, "Equipped Mk.II did not authorize thrust");
+            h.assertTrue(EppItem.oxygen(p.getData(ModAttachments.EPP_EQUIPMENT)) == 0, "EVA must not add oxygen or require a new energy resource");
+            p.setPos(-30000.5, 220, 0); EvaMovement.update(p);
+            h.assertTrue(EvaMovement.serverMode(p) == EvaState.NORMAL && p.getData(ModAttachments.EVA).input == 0, "Cabin kept stale propulsion");
+            p.setPos(-29999.5, 220, 0); p.setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+            h.assertTrue(EvaMovement.serverMode(p) == EvaState.NORMAL, "Creative movement was overridden");
+            p.setGameMode(net.minecraft.world.level.GameType.SPECTATOR);
+            h.assertTrue(EvaMovement.serverMode(p) == EvaState.NORMAL, "Spectator movement was overridden");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void evaTravelMixinMovesWithoutGravityAndRestoresNormalTravel(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "EvaTravel")) {
+            var p = fixture.player; p.setPos(-29999.5, 220, 0);
+            h.getLevel().getChunk(p.blockPosition());
+            p.setData(ModAttachments.EPP_EQUIPMENT, new ItemStack(ModItems.EPP_MK2.get()));
+            EvaMovement.update(p); p.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+            for (int i = 0; i < 20; i++) { p.tickCount++; p.travel(net.minecraft.world.phys.Vec3.ZERO); }
+            h.assertTrue(p.getY() == 220, "Zero gravity fell; Player.travel mixin not active");
+            EvaMovement.acceptInput(p, EvaMotion.UP);
+            p.fallDistance = 20; p.travel(net.minecraft.world.phys.Vec3.ZERO);
+            h.assertTrue(p.getY() > 220 && p.fallDistance == 0, "EVA failed to propel or clear fall distance");
+            p.setPos(-30000.5, 220, 0); EvaMovement.update(p);
+            p.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+            p.travel(net.minecraft.world.phys.Vec3.ZERO); p.travel(net.minecraft.world.phys.Vec3.ZERO);
+            h.assertTrue(p.getY() < 220, "Normal gravity did not resume in cabin");
+            h.assertTrue(!p.getAbilities().mayfly && !p.getAbilities().flying, "EVA leaked creative flight permission");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void evaRejectsInvalidStaleAndMenuInputs(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "EvaInputs")) {
+            var p = fixture.player; p.setPos(-29999.5, 220, 0);
+            p.setData(ModAttachments.EPP_EQUIPMENT, new ItemStack(ModItems.EPP_MK2.get()));
+            EvaMovement.update(p); EvaMovement.acceptInput(p, 255);
+            h.assertTrue(p.getData(ModAttachments.EVA).input == 0, "Invalid control mask accepted");
+            EvaMovement.acceptInput(p, EvaMotion.UP); p.tickCount += 11;
+            p.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO); p.travel(net.minecraft.world.phys.Vec3.ZERO);
+            h.assertTrue(p.getY() == 220, "Expired input kept accelerating");
+            p.containerMenu = new EppMenu(8, p.getInventory());
+            EvaMovement.acceptInput(p, EvaMotion.UP);
+            h.assertTrue(p.getData(ModAttachments.EVA).input == 0, "Open equipment menu accepted propulsion");
+            p.containerMenu = p.inventoryMenu;
+            EvaMovement.acceptInput(p, EvaMotion.UP);
+            p.setData(ModAttachments.EPP_EQUIPMENT, ItemStack.EMPTY);
+            p.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO); p.travel(net.minecraft.world.phys.Vec3.ZERO);
+            h.assertTrue(p.getY() == 220, "Unequipped pack kept thrust until next sync");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void evaUsesRealBlockCollision(GameTestHelper h) {
+        var wall = new BlockPos(-30000, 220, 2);
+        var old = h.getLevel().getBlockState(wall);
+        var oldUpper = h.getLevel().getBlockState(wall.above());
+        try (var fixture = player(h.getLevel(), "EvaCollision")) {
+            h.getLevel().setBlockAndUpdate(wall, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            h.getLevel().setBlockAndUpdate(wall.above(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+            var p = fixture.player; p.setPos(-29999.5, 220, 0);
+            p.setYRot(0); p.setXRot(0);
+            p.setData(ModAttachments.EPP_EQUIPMENT, new ItemStack(ModItems.EPP_MK2.get()));
+            EvaMovement.update(p);
+            for (int i = 0; i < 60; i++) {
+                p.tickCount++; EvaMovement.acceptInput(p, EvaMotion.FORWARD); p.travel(net.minecraft.world.phys.Vec3.ZERO);
+            }
+            h.assertTrue(p.getZ() > 1 && p.getZ() <= 1.71, "EVA bypassed wall collision or failed to reach wall");
+        } finally {
+            h.getLevel().setBlockAndUpdate(wall, old); h.getLevel().setBlockAndUpdate(wall.above(), oldUpper);
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void zeroGravityMovementDoesNotTriggerVanillaFloatingKick(GameTestHelper h) throws Exception {
+        try (var fixture = player(h.getLevel(), "EvaFloating")) {
+            var p = fixture.player; p.setPos(-29999.5, 225, 0);
+            h.getLevel().getChunk(p.blockPosition());
+            // Real movement packets require registration with the server's chunk tracker.
+            h.getLevel().addNewPlayer(p);
+            p.connection.resetPosition();
+            for (int i = 0; i < 100; i++) {
+                p.connection.handleMovePlayer(new net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Pos(
+                        p.getX(), 225, p.getZ(), false));
+                p.connection.tick();
+            }
+            h.assertTrue(fixture.channel.isOpen(), "Legitimate zero-gravity drift was kicked as flying");
+            h.assertTrue(!p.getAbilities().mayfly, "Floating exception granted unrestricted flight");
+            var floating = ServerGamePacketListenerImpl.class.getDeclaredField("clientIsFloating");
+            floating.setAccessible(true);
+            h.assertTrue(!floating.getBoolean(p.connection), "Zero gravity retained floating violation");
+            p.setPos(-30000.5, 225, 0); p.connection.resetPosition();
+            floating.setBoolean(p.connection, true); p.connection.tick();
+            h.assertTrue(floating.getBoolean(p.connection), "Floating exception leaked into ordinary gravity");
+        }
+        h.succeed();
     }
     private static EppServiceMenu service(GameTestHelper h, ServerPlayer player) {
         var pos = h.absolutePos(new BlockPos(1, 1, 1));

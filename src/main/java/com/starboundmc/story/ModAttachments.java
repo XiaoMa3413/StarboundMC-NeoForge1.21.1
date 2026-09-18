@@ -14,6 +14,9 @@ public final class ModAttachments
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, StarboundMC.MODID);
 
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.starboundmc.epp.EvaState>> EVA =
+            ATTACHMENTS.register("eva", () -> AttachmentType.builder(com.starboundmc.epp.EvaState::new).build());
+
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<net.minecraft.world.item.ItemStack>> EPP_EQUIPMENT =
             ATTACHMENTS.register("epp_equipment", () -> AttachmentType.builder(() -> net.minecraft.world.item.ItemStack.EMPTY)
                     .serialize(net.minecraft.world.item.ItemStack.OPTIONAL_CODEC).copyOnDeath().build());

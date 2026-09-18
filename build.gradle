@@ -45,6 +45,7 @@ sourceSets {
             include 'com/starboundmc/loot/VoxelLootModifiers.java'
             include 'com/starboundmc/economy/*.java'
             include 'com/starboundmc/epp/*.java'
+            include 'com/starboundmc/mixin/*.java'
             include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/recipe/*.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'

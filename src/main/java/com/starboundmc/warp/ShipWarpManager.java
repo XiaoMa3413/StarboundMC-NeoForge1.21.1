@@ -43,6 +43,7 @@ public final class ShipWarpManager
     /** A saved body id the loaded universe cannot resolve; null when all is well. */
     private static String unknownBodyEntryId;
     private static int broadcastAge;
+    private static boolean crewHold;
 
     private ShipWarpManager() {}
 
@@ -50,6 +51,7 @@ public final class ShipWarpManager
     {
         revision = Math.max(1L, server.overworld().getGameTime());
         broadcastAge = 0;
+        crewHold = false;
         state = ShipStateData.get(server);
         resolveCurrentLocation();
         if (state.isFlightActive())
@@ -111,6 +113,7 @@ public final class ShipWarpManager
     public static void reset() {
         state = null; flight = null; targetEntryId = null;
         revision = 0; broadcastAge = 0; unknownBodyEntryId = null;
+        crewHold = false;
     }
 
     /**
@@ -186,6 +189,10 @@ public final class ShipWarpManager
         }
         ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship == null) return false;
+        if (ShipCrewSafety.hasOutsideCrew(ship.players())) {
+            player.displayClientMessage(Component.translatable("message.starboundmc.warp.crew_outside"), true);
+            return false;
+        }
         int cost = warpFuelCost(state.getCurrentEntryId(), entryId);
         if (getFuel() < cost)
         {
@@ -213,6 +220,18 @@ public final class ShipWarpManager
         if (flight == null) return;
         ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship == null) return;
+        boolean hold = ShipCrewSafety.hasOutsideCrew(ship.players());
+        if (hold != crewHold) {
+            crewHold = hold;
+            revision++;
+            for (var player : ship.players()) player.displayClientMessage(Component.translatable(
+                    hold ? "message.starboundmc.warp.crew_hold" : "message.starboundmc.warp.crew_resume"), true);
+            broadcastFlight(ship);
+        }
+        if (hold) {
+            if (++broadcastAge >= SNAPSHOT_INTERVAL) { broadcastAge = 0; broadcastFlight(ship); }
+            return;
+        }
         FlightPhase previous = flight.getPhase();
         flight.tick();
         boolean phaseChanged = previous != flight.getPhase();
@@ -328,8 +347,8 @@ public final class ShipWarpManager
                     dockYawFor(entryId, stranded, state.getShipYaw()), 0, 0, 0, 0, null);
         }
         return new SyncFlightPacket(revision, ship.getGameTime(), flight.getPhase(),
-                flight.getUniversePosition(), flight.getUniverseVelocity(),
-                flight.getYaw(), flight.getPitch(), flight.getRoll(), flight.getElapsedTicks(), flight.getTotalTicks(), targetEntryId);
+                flight.getUniversePosition(), crewHold ? new UniverseDelta(0, 0, 0) : flight.getUniverseVelocity(),
+                flight.getYaw(), flight.getPitch(), flight.getRoll(), flight.getElapsedTicks(), flight.getTotalTicks(), targetEntryId, crewHold);
     }
 
     private static void broadcastFlight(ServerLevel ship)

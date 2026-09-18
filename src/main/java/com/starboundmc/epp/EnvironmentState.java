@@ -9,7 +9,7 @@ public record EnvironmentState(Atmosphere atmosphere, int coldTier, int heatTier
     public enum Atmosphere { BREATHABLE, UNBREATHABLE, VACUUM }
     public static final EnvironmentState SAFE = from(PlanetEnvironmentProfile.TEMPERATE);
     public static final EnvironmentState SHIP_INTERIOR = new EnvironmentState(Atmosphere.BREATHABLE, 0, 0, 0, 1, true);
-    public static final EnvironmentState SPACE = new EnvironmentState(Atmosphere.VACUUM, 0, 0, 0, 1, false);
+    public static final EnvironmentState SPACE = new EnvironmentState(Atmosphere.VACUUM, 0, 0, 0, 0, false);
     public boolean breathable() { return atmosphere == Atmosphere.BREATHABLE; }
     public static EnvironmentState from(PlanetEnvironmentProfile profile) {
         return new EnvironmentState(profile.breathable() ? Atmosphere.BREATHABLE : Atmosphere.UNBREATHABLE,
