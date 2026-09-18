@@ -338,3 +338,11 @@ R7a 游戏内验收顺序：
 - 广播改用 message.starboundmc.nova.relay.*，补齐 8 个双语键；保留普通操作提示。广播包在玩家循环前校验，无玩家测试也能发现前缀错误。
 - 新增回归测试扫描实际广播调用，验证每条消息的包构造、编解码及中英文翻译存在。
 - build 通过，570 项单元测试、34 项 GameTest 全部通过；日志 relay-crashfix-build.log / relay-crashfix-gametest.log。差异检查通过。修复后的实际接近/抵达仍待重启游戏复测；未修改玩家存档，未提交推送。
+
+### R8a：Mk.III 远征背包基础（2026-09-18，待提交）
+
+- 新增 EPP Mk.III 与升级套件。Mk.II + Mk.III 套件在维护工作站升级，保留自定义名称、氧气和已安装模块。
+- Mk.III 容量默认 1440，保留 EVA 推进，开放 2 个模块槽并接受 Tier II 模块；工作站安装操作追加模块，不覆盖已有模块。
+- 新增双语物品、模型、配方和资源回归，第三人称背包渲染与装备页显示 Mk.III。
+- 自动验证：build 成功；35 项 GameTest 全部通过，包含 Mk.III 升级、模块保留和第二槽安装。日志 `build/r8-mk3-build.log`、`build/r8-mk3-gametest.log`。
+- Mk.IV、Mobility Rig/Jump Thruster、Heat/Radiation 新伤害和高级模块仍未实现。

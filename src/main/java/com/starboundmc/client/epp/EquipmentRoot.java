@@ -42,7 +42,7 @@ public final class EquipmentRoot extends UIElement {
         var snapshot = EppClientState.snapshot;
         int generation = snapshot == null ? 0 : snapshot.generation();
         if (station == null && generation != lastGeneration) {
-            chassis.setText(Component.literal(generation == 2 ? "MK.II" : generation == 1 ? "MK.I" : "EPP"));
+            chassis.setText(Component.literal(generation == 3 ? "MK.III" : generation == 2 ? "MK.II" : generation == 1 ? "MK.I" : "EPP"));
             lastGeneration = generation;
         }
         Component next = station != null ? Component.translatable(!station.supplied() ? "gui.starboundmc.epp.no_air"

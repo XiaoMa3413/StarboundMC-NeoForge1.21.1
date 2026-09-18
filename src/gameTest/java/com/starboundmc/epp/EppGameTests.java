@@ -244,6 +244,29 @@ public final class EppGameTests {
         h.succeed();
     }
     @GameTest(template = "shuttle_test_empty")
+    public static void mk3UpgradeAddsSecondModuleSlotAndRetainsExistingModule(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "EppMk3")) {
+            var menu = service(h, p.player);
+            var old = new ItemStack(ModItems.EPP_MK2.get());
+            old.set(com.starboundmc.item.ModDataComponents.EPP_MODULES,
+                    net.minecraft.world.item.component.ItemContainerContents.fromItems(
+                            java.util.List.of(new ItemStack(ModItems.HEATING_MODULE_1.get()))));
+            menu.getSlot(0).set(old); menu.getSlot(2).set(new ItemStack(ModItems.EPP_MK3_UPGRADE_KIT.get()));
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Mk.III upgrade rejected");
+            var upgraded = menu.getSlot(0).getItem();
+            h.assertTrue(upgraded.is(ModItems.EPP_MK3.get()) && ((EppItem) upgraded.getItem()).moduleSlots() == 2,
+                    "Mk.III did not expose two module slots");
+            h.assertTrue(EppProtection.from(upgraded).coldTier() == 1, "Existing module was not retained");
+            menu.getSlot(1).set(new ItemStack(ModItems.HEATING_MODULE_1.get()));
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Mk.III second module rejected");
+            h.assertTrue(EppProtection.from(upgraded).coldTier() == 1
+                    && upgraded.getOrDefault(com.starboundmc.item.ModDataComponents.EPP_MODULES,
+                    net.minecraft.world.item.component.ItemContainerContents.EMPTY).nonEmptyStream().count() == 2,
+                    "Mk.III did not retain two installed modules");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
     public static void modulesRequireSupportedChassisAndReturnWithoutDuplication(GameTestHelper h) {
         try (var p = player(h.getLevel(), "EppModule")) {
             var menu = service(h, p.player); var module = new ItemStack(ModItems.HEATING_MODULE_1.get());

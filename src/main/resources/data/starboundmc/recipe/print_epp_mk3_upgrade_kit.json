@@ -1,0 +1,12 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {"ingredient": {"item": "starboundmc:basic_circuit_board"}, "count": 6},
+    {"ingredient": {"item": "starboundmc:titanium_ingot"}, "count": 8},
+    {"ingredient": {"item": "starboundmc:tungsten_ingot"}, "count": 8},
+    {"ingredient": {"item": "minecraft:gold_ingot"}, "count": 4}
+  ],
+  "voxel_cost": 120,
+  "print_seconds": 8,
+  "result": {"id": "starboundmc:epp_mk3_upgrade_kit", "count": 1}
+}

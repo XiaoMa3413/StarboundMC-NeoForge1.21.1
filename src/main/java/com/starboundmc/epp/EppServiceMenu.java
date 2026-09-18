@@ -40,7 +40,7 @@ public final class EppServiceMenu extends AbstractContainerMenu {
                     return switch (input) {
                         case 0 -> EppEquipmentResolver.valid(stack);
                         case 1 -> stack.getItem() instanceof EppModuleItem;
-                        default -> stack.is(ModItems.EPP_MK2_UPGRADE_KIT.get());
+                        default -> stack.is(ModItems.EPP_MK2_UPGRADE_KIT.get()) || stack.is(ModItems.EPP_MK3_UPGRADE_KIT.get());
                     };
                 }
                 @Override public int getMaxStackSize() { return 1; }
@@ -74,13 +74,16 @@ public final class EppServiceMenu extends AbstractContainerMenu {
         super.broadcastChanges();
     }
     public boolean canUpgrade() {
-        return EppItem.generation(tray.getItem(0)) == 1 && tray.getItem(2).is(ModItems.EPP_MK2_UPGRADE_KIT.get());
+        int generation = EppItem.generation(tray.getItem(0));
+        return (generation == 1 && tray.getItem(2).is(ModItems.EPP_MK2_UPGRADE_KIT.get()))
+                || (generation == 2 && tray.getItem(2).is(ModItems.EPP_MK3_UPGRADE_KIT.get()));
     }
     public boolean canInstall() {
         var pack = tray.getItem(0); var stack = tray.getItem(1);
         return pack.getItem() instanceof EppItem chassis && chassis.moduleSlots() > 0
                 && stack.getCount() == 1 && stack.getItem() instanceof EppModuleItem module
-                && module.tier() <= chassis.maxModuleTier() && modules(pack).nonEmptyStream().findAny().isEmpty();
+                && module.tier() <= chassis.maxModuleTier()
+                && modules(pack).nonEmptyStream().count() < chassis.moduleSlots();
     }
     public boolean canRemove() {
         return EppEquipmentResolver.valid(tray.getItem(0)) && tray.getItem(1).isEmpty()
@@ -97,7 +100,8 @@ public final class EppServiceMenu extends AbstractContainerMenu {
             case UPGRADE -> {
                 if (!canUpgrade()) return false;
                 int oxygen = EppItem.oxygen(pack);
-                var upgraded = new ItemStack(ModItems.EPP_MK2.get());
+                var upgraded = new ItemStack(pack.getItem() == ModItems.EPP_MK2.get()
+                        ? ModItems.EPP_MK3.get() : ModItems.EPP_MK2.get());
                 upgraded.applyComponents(pack.getComponentsPatch());
                 EppItem.setOxygen(upgraded, oxygen);
                 var retained = new ArrayList<ItemStack>();
@@ -117,7 +121,9 @@ public final class EppServiceMenu extends AbstractContainerMenu {
             }
             case INSTALL -> {
                 if (!canInstall()) return false;
-                pack.set(ModDataComponents.EPP_MODULES, ItemContainerContents.fromItems(List.of(tray.removeItem(1, 1))));
+                var installed = new ArrayList<>(modules(pack).nonEmptyStream().toList());
+                installed.add(tray.removeItem(1, 1));
+                pack.set(ModDataComponents.EPP_MODULES, ItemContainerContents.fromItems(installed));
             }
             case REMOVE -> {
                 if (!canRemove()) return false;
@@ -142,7 +148,7 @@ public final class EppServiceMenu extends AbstractContainerMenu {
         if (index < 3) moved = moveItemStackTo(stack, 3, 39, true);
         else if (EppEquipmentResolver.valid(stack)) moved = moveItemStackTo(stack, 0, 1, false);
         else if (stack.getItem() instanceof EppModuleItem) moved = moveItemStackTo(stack, 1, 2, false);
-        else if (stack.is(ModItems.EPP_MK2_UPGRADE_KIT.get())) moved = moveItemStackTo(stack, 2, 3, false);
+        else if (stack.is(ModItems.EPP_MK2_UPGRADE_KIT.get()) || stack.is(ModItems.EPP_MK3_UPGRADE_KIT.get())) moved = moveItemStackTo(stack, 2, 3, false);
         else moved = index < 30 ? moveItemStackTo(stack, 30, 39, false) : moveItemStackTo(stack, 3, 30, false);
         if (!moved) return ItemStack.EMPTY;
         if (stack.isEmpty()) slot.set(ItemStack.EMPTY); else slot.setChanged();

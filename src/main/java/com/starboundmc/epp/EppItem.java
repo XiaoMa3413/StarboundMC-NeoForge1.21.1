@@ -13,13 +13,15 @@ public final class EppItem extends Item {
     public EppItem(Properties properties) { this(properties, 1); }
     public EppItem(Properties properties, int generation) {
         super(properties);
-        if (generation < 1 || generation > 2) throw new IllegalArgumentException("Unsupported EPP generation");
+        if (generation < 1 || generation > 3) throw new IllegalArgumentException("Unsupported EPP generation");
         this.generation = generation;
     }
-    public int moduleSlots() { return generation == 1 ? 0 : 1; }
-    public int maxModuleTier() { return generation == 1 ? 0 : 1; }
+    public int moduleSlots() { return generation == 1 ? 0 : generation == 2 ? 1 : 2; }
+    public int maxModuleTier() { return generation == 1 ? 0 : generation == 2 ? 1 : 2; }
     public static int generation(ItemStack stack) { return stack.getItem() instanceof EppItem item ? item.generation : 0; }
-    public static int capacity(ItemStack stack) { return generation(stack) >= 2 ? EppConfig.MK2_CAPACITY.get() : EppConfig.CAPACITY.get(); }
+    public static int capacity(ItemStack stack) { return switch (generation(stack)) {
+        case 3 -> EppConfig.MK3_CAPACITY.get(); case 2 -> EppConfig.MK2_CAPACITY.get(); default -> EppConfig.CAPACITY.get();
+    }; }
     public static int oxygen(ItemStack stack) { return Math.clamp(stack.getOrDefault(ModDataComponents.EPP_OXYGEN, 0), 0, capacity(stack)); }
     public static void setOxygen(ItemStack stack, int units) { stack.set(ModDataComponents.EPP_OXYGEN, Math.clamp(units, 0, capacity(stack))); }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {

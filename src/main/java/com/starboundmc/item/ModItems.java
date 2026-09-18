@@ -29,7 +29,10 @@ public final class ModItems {
             "epp_mk1", com.starboundmc.epp.EppItem::new, new Item.Properties().stacksTo(1));
     public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK2 = ITEMS.registerItem(
             "epp_mk2", properties -> new com.starboundmc.epp.EppItem(properties, 2), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK3 = ITEMS.registerItem(
+            "epp_mk3", properties -> new com.starboundmc.epp.EppItem(properties, 3), new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> EPP_MK2_UPGRADE_KIT = ITEMS.registerSimpleItem("epp_mk2_upgrade_kit", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EPP_MK3_UPGRADE_KIT = ITEMS.registerSimpleItem("epp_mk3_upgrade_kit", new Item.Properties().stacksTo(1));
     public static final DeferredItem<com.starboundmc.epp.EppModuleItem> HEATING_MODULE_1 = ITEMS.registerItem(
             "heating_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
                     com.starboundmc.epp.EppModuleItem.Hazard.COLD, 1), new Item.Properties().stacksTo(1));
@@ -146,6 +149,8 @@ public final class ModItems {
                         output.accept(RELAY_DATA_CORE);
                         output.accept(EPP_MK2);
                         output.accept(EPP_MK2_UPGRADE_KIT);
+                        output.accept(EPP_MK3);
+                        output.accept(EPP_MK3_UPGRADE_KIT);
                         output.accept(HEATING_MODULE_1);
                         output.accept(EPP_SERVICE_STATION_ITEM);
                         output.accept(OXYGEN_CANISTER);
