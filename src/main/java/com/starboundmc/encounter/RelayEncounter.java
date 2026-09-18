@@ -82,7 +82,7 @@ public final class RelayEncounter {
     static boolean prepare(ServerLevel level, RelayData data) {
         try {
             var blocks = RelayGeometry.survey(p -> !level.getBlockState(p).isAir());
-            for (var origin : RelayGeometry.candidates(blocks)) {
+            for (var origin : RelayGeometry.candidates(blocks, com.starboundmc.epp.EppConfig.RELAY_EVA_GAP.get())) {
                 if (origin.getY() - RelayGeometry.MARGIN < level.getMinBuildHeight()
                         || origin.getY() + RelayGeometry.HEIGHT + RelayGeometry.MARGIN >= level.getMaxBuildHeight()
                         || !level.getWorldBorder().isWithinBounds(RelayGeometry.bounds(origin).inflate(RelayGeometry.MARGIN))) continue;

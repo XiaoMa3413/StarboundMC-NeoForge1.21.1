@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 public final class RelayGeometry {
     public static final int WIDTH = 31, HEIGHT = 17, DEPTH = 31, MARGIN = 8;
     public static final int SCAN_RADIUS = 128, MAX_BLOCKS = 32768;
-    public static final double MAX_DISTANCE = 160, EVA_GAP = 24;
+    public static final double MAX_DISTANCE = 160, EVA_GAP = 80;
     public static final Vec3 SHIP_CENTER = new Vec3(.5, 103, .5);
     private RelayGeometry() { }
     public static AABB bounds(BlockPos origin) { return new AABB(origin.getX(), origin.getY(), origin.getZ(), origin.getX() + WIDTH, origin.getY() + HEIGHT, origin.getZ() + DEPTH); }
@@ -45,17 +45,26 @@ public final class RelayGeometry {
         return extent;
     }
     public static List<BlockPos> candidates(List<BlockPos> ship) {
+        return candidates(ship, EVA_GAP);
+    }
+    public static List<BlockPos> candidates(List<BlockPos> ship, double gap) {
+        if (!Double.isFinite(gap) || gap < 24 || gap > 120) throw new IllegalArgumentException("EVA gap must be 24..120");
         var directions = new ArrayList<Vec3>();
         for (double yaw : new double[]{0, 25, -25, 60, -60, 90, -90}) {
             double r = Math.toRadians(yaw); directions.add(new Vec3(Math.sin(r), 0, Math.cos(r)));
         }
         directions.add(new Vec3(0, .35, 1).normalize()); directions.add(new Vec3(0, -.35, 1).normalize());
-        var result = new ArrayList<BlockPos>();
-        for (var d : directions) {
+        var result = new LinkedHashSet<BlockPos>();
+        // Try every direction at the preferred gap before searching farther out.
+        // Half-block rounding has <= sqrt(3)/2 projection error; one block keeps
+        // the requested envelope separation even on diagonal candidates.
+        for (double extra = 0; extra <= MAX_DISTANCE; extra += 16) for (var d : directions) {
             double station = .5 * (WIDTH * Math.abs(d.x) + HEIGHT * Math.abs(d.y) + DEPTH * Math.abs(d.z));
-            double distance = extent(ship, d) + station + EVA_GAP;
-            if (distance <= MAX_DISTANCE) result.add(BlockPos.containing(SHIP_CENTER.add(d.scale(distance))
-                    .subtract(WIDTH / 2.0, HEIGHT / 2.0, DEPTH / 2.0)));
+            double distance = extent(ship, d) + station + gap + extra + 1;
+            if (distance > MAX_DISTANCE + 1) continue;
+            var raw = SHIP_CENTER.add(d.scale(distance)).subtract(WIDTH / 2.0, HEIGHT / 2.0, DEPTH / 2.0);
+            var origin = new BlockPos((int)Math.round(raw.x), (int)Math.round(raw.y), (int)Math.round(raw.z));
+            if (center(origin).distanceTo(SHIP_CENTER) <= MAX_DISTANCE) result.add(origin);
         }
         return List.copyOf(result);
     }
