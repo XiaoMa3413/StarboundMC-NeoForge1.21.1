@@ -1,9 +1,9 @@
 # StarboundMC 宇宙系统总设计
 
-> 项目：StarboundMC-NeoForge1.21.1  
-> 平台：Minecraft 1.21.1 / NeoForge / Java 21  
-> 本文用途：说明为什么要重构、最终要变成什么样。  
-> 不包含具体施工步骤。
+> 项目：StarboundMC-NeoForge1.21.1
+> 平台：Minecraft 1.21.1 / NeoForge / Java 21
+> 本文用途：说明当前数据驱动宇宙架构和它解决的问题。
+> 状态：架构参考；数据驱动迁移已在 `b12b7ec` 落地，不是施工清单。
 
 ---
 
@@ -29,9 +29,8 @@
 目前一个普通行星可能同时涉及：
 
 ```text
-Planet
-StarSystems
-PlanetEntry
+UniverseCatalog
+UniverseNavigation
 ShipSpace
 ShipFlightController
 ShipWarpManager
@@ -43,7 +42,8 @@ Network
 Starmap
 ```
 
-现在只有 4 个可登陆世界，还能维护。
+当前内置宇宙有 5 个可登陆表面（主世界、荒芜、熔岩、冰冻和岩石卫星），另有 1 个只能停靠观测的
+气态巨行星。
 
 如果未来有：
 
@@ -306,22 +306,16 @@ flight target
 
 ---
 
-# 7. CurrentEntry 成为飞船当前位置
+# 7. CurrentEntry 是飞船当前位置的权威
 
-目前飞船状态同时存在：
-
-```text
-Planet
-CurrentEntry
-```
-
-未来应该只有：
+当前实现已将 `CurrentEntry` 作为飞船位置的唯一权威身份：
 
 ```text
-CurrentEntry
+CurrentEntry = sys1:barren
 ```
 
-作为真正的位置身份。
+系统通过 `UniverseCatalog` 查询它所属的星系、坐标、是否可登陆、维度和环境。旧位置字符串只
+在存档迁移和兼容边界中被读取，不再参与新的玩法分支。
 
 例如：
 
@@ -341,36 +335,14 @@ CurrentEntry = sys1:barren
 
 ---
 
-# 8. Planet enum 最终退出生产系统
+# 8. 旧 Planet 标识的兼容边界
 
-当前：
+数据驱动迁移已在 `b12b7ec` 完成。`Planet` 枚举已退出生产逻辑，旧存档中的位置字符串由
+`LegacyUniverseCompatibility` 迁移到 `CurrentEntry`；兼容读取和派生显示仍可保留，不能把它重新
+作为新功能的分支依据。
 
-```text
-Planet.LUSH
-Planet.BARREN
-Planet.MOLTEN
-Planet.FROZEN
-```
-
-参与很多逻辑。
-
-不能突然删除。
-
-迁移顺序应该是：
-
-```text
-先建立新数据
-↓
-让旧代码兼容新数据
-↓
-逐模块迁移
-↓
-Planet 不再被生产代码使用
-↓
-只保留老存档兼容
-↓
-最终删除
-```
+新增星球或航行规则应使用 `UniverseCatalog`、`UniverseNavigation` 和 entry ID。若要改变既有 ID，
+必须另行设计存档迁移，不能在本架构文档的日常迭代中直接重命名。
 
 ---
 
@@ -464,9 +436,9 @@ UniversePosition
 
 ---
 
-# 12. 重构结束后的效果
+# 12. 当前实现效果
 
-完成之后：
+在当前架构下：
 
 增加普通新星球应该不需要修改：
 
@@ -478,7 +450,7 @@ Stage6TravelService switch
 PlanetRenderer 主流程
 ```
 
-只需要增加：
+增加普通新星球通常只需要补充：
 
 ```text
 宇宙数据

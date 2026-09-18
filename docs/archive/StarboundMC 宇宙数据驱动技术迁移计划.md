@@ -1,5 +1,10 @@
 # StarboundMC 宇宙数据驱动技术迁移计划
 
+> 状态：已完成并归档（基线提交 `b12b7ec`）。宇宙 Definition、Codec、数据包注册、UniverseCatalog、
+> 星图/航行迁移和旧存档兼容已经落地；客户端画面与手感的实机复核另见
+> [已发现问题](../known-issues.md)。本文中的批次指令、未来时态和“不 commit、不 push”只记录当时
+> 的施工流程，不再是当前开发指令。
+>
 > 本文用途：Codex 实际进行基础架构重构时使用。  
 > 本文只处理技术迁移。  
 > 不加入新的行星玩法、不重新平衡游戏。
@@ -915,7 +920,7 @@ Batch 6 = A9–A10
 >
 > 建立宇宙 Definition、Codec、同步 StarSystem datapack registry 和 UniverseCatalog。
 >
-> 将当前 sys1/sys2、6 个 body、4 个可航行 body 的现有数据精确复制进新数据层。
+> 将当前 sys1/sys2、6 个 body、6 个可航行 body（其中 5 个有可登陆表面）的现有数据精确复制进新数据层。
 >
 > 不修改现有 entry ID。
 >
@@ -931,26 +936,15 @@ Batch 6 = A9–A10
 
 ---
 
-# 33. 技术迁移完成标准
+# 33. 实际完成记录（2026-09-17 归档）
 
-最终必须满足：
+以下项目已经在 `b12b7ec` 落地，并由对应测试覆盖：
 
-```text
-[ ] StarSystem 来自 datapack
-[ ] Client 收到同步 universe data
-[ ] UniverseCatalog 工作正常
-[ ] GalaxySpatialIndex 从 Catalog 构建
-[ ] Starmap 不依赖 StarSystems
-[ ] Flight 不依赖 Planet
-[ ] ShipSpace 不保存 Planet EnumMap
-[ ] ClientPlanetState 以 entryId 为权威
-[ ] ShipPoseProvider 不暴露 Planet
-[ ] Renderer 不依赖 Planet.values()
-[ ] WarpManager 以 CurrentEntry 为权威
-[ ] Surface travel 无 switch(Planet)
-[ ] 老存档能迁移
-[ ] 当前航行行为不变
-[ ] 当前视觉不变
-[ ] 当前燃料不变
-[ ] 当前剧情门禁不变
-```
+- `StarSystemDefinition` 来自 datapack registry，客户端和服务端各自维护 `UniverseCatalog`。
+- 星图、`GalaxySpatialIndex`、航行控制器、舱外渲染和地表旅行均通过 entry ID 与 catalog 查询数据。
+- `CurrentEntry` 是飞船位置的权威值；旧 `Planet` 字段只保留为字符串兼容信息。
+- 旧存档迁移、航行行为、燃料消耗和剧情门禁保持兼容，相关回归测试已加入当前测试集。
+- 当前内置宇宙包含两个恒星系、六个天体，其中五个有可登陆表面，气态巨行星仅支持轨道停靠。
+
+视觉观感、航行手感和旧存档副本的完整客户端复核不由这份历史施工计划继续跟踪，统一记录在
+[已发现问题](../known-issues.md)；后续若改变宇宙数据，应新建活动计划。

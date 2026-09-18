@@ -6,6 +6,7 @@ import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.story.TutorialTopic;
+import com.starboundmc.story.NovaTaskProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -29,7 +30,7 @@ public record ShipStorySnapshotPacket(
         boolean identityConfirmed,
         int readSituationMask,
         int tutorialMask,
-        int dismissedHintMask) implements CustomPacketPayload
+        int dismissedHintMask, NovaTaskProgress tasks) implements CustomPacketPayload
 {
     private static final int MAX_STATE_ID_LENGTH = 24;
 
@@ -49,6 +50,7 @@ public record ShipStorySnapshotPacket(
         Objects.requireNonNull(sublightEngine, "sublightEngine");
         Objects.requireNonNull(hyperdrive, "hyperdrive");
         Objects.requireNonNull(mineralScan, "mineralScan");
+        Objects.requireNonNull(tasks, "tasks");
         if (readSituationMask < 0
                 || (readSituationMask & ~SituationTopic.REQUIRED_MASK) != 0)
             throw new IllegalArgumentException("Unknown situation read bits " + readSituationMask);
@@ -57,6 +59,24 @@ public record ShipStorySnapshotPacket(
             throw new IllegalArgumentException("Unknown tutorial bits " + tutorialMask);
         if (dismissedHintMask < 0)
             throw new IllegalArgumentException("dismissedHintMask must be non-negative");
+    }
+
+    public ShipStorySnapshotPacket(int containerId, long acknowledgedRequestId, int sharedSchemaVersion,
+            long sharedRevision, CoreState core, SurfaceMissionState surfaceMission, EngineState sublightEngine,
+            EngineState hyperdrive, MineralScanState mineralScan, int rebootTicksRemaining, int playerSchemaVersion,
+            long playerRevision, boolean identityConfirmed, int readSituationMask, int tutorialMask, int dismissedHintMask) {
+        this(containerId, acknowledgedRequestId, sharedSchemaVersion, sharedRevision, core, surfaceMission,
+                sublightEngine, hyperdrive, mineralScan, rebootTicksRemaining, playerSchemaVersion, playerRevision,
+                identityConfirmed, readSituationMask, tutorialMask, dismissedHintMask, NovaTaskProgress.DEFAULT);
+    }
+
+    public ShipStorySnapshotPacket withTasks(NovaTaskProgress progress) {
+        // The first visited dimension is private server-side evidence, not UI data.
+        NovaTaskProgress view = new NovaTaskProgress(progress.schemaVersion(), progress.revision(),
+                progress.completedMask(), progress.claimedMask(), progress.evidenceMask(), progress.trackedTask(), "");
+        return new ShipStorySnapshotPacket(containerId, acknowledgedRequestId, sharedSchemaVersion, sharedRevision,
+                core, surfaceMission, sublightEngine, hyperdrive, mineralScan, rebootTicksRemaining,
+                playerSchemaVersion, playerRevision, identityConfirmed, readSituationMask, tutorialMask, dismissedHintMask, view);
     }
 
     private ShipStorySnapshotPacket(FriendlyByteBuf buffer)
@@ -69,7 +89,9 @@ public record ShipStorySnapshotPacket(
                 requireEngine(buffer.readUtf(MAX_STATE_ID_LENGTH)),
                 requireMineralScan(buffer.readUtf(MAX_STATE_ID_LENGTH)),
                 buffer.readVarInt(), buffer.readVarInt(), buffer.readVarLong(),
-                buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt());
+                buffer.readBoolean(), buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(),
+                new NovaTaskProgress(buffer.readVarInt(), buffer.readVarLong(), buffer.readVarInt(),
+                        buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), ""));
     }
 
     private void write(FriendlyByteBuf buffer)
@@ -90,6 +112,12 @@ public record ShipStorySnapshotPacket(
         buffer.writeVarInt(readSituationMask);
         buffer.writeVarInt(tutorialMask);
         buffer.writeVarInt(dismissedHintMask);
+        buffer.writeVarInt(tasks.schemaVersion());
+        buffer.writeVarLong(tasks.revision());
+        buffer.writeVarInt(tasks.completedMask());
+        buffer.writeVarInt(tasks.claimedMask());
+        buffer.writeVarInt(tasks.evidenceMask());
+        buffer.writeVarInt(tasks.trackedTask());
     }
 
     @Override

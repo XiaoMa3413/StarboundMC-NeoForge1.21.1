@@ -1,12 +1,15 @@
 # 燕隼号默认初始飞船
 
+> 状态：已完成并归档（2026-09-05）。本文记录用户确认的搬迁版本，不作为当前活动计划；后续
+> 生成规则以代码和根目录 README 为准。
+
 2026-09-05，基于 `codex/nova-prologue`。用户已确认搬迁视觉，并在验收存档中完成内饰调整。
 **默认初始飞船现已改为用户布置的存档版**，包含用户确认的开局补给。
 
 ## 唯一生成来源
 
 游戏资源 `src/main/resources/data/starboundmc/structure/starter_ship.nbt` 基于
-[用户存档结构](blueprints/shuttle-interior-2026-09-05/shuttle-interior.nbt)，仅按后续要求在储物柜中加入开局补给：
+[用户存档结构](../blueprints/shuttle-interior-2026-09-05/shuttle-interior.nbt)，仅按后续要求在储物柜中加入开局补给：
 **1 把求生匕首、3 罐应急食物罐头**。方块、朝向和其他方块实体数据保持一致，原始归档不修改。
 
 - 长 33 格、翼展 23 格、高 11 格，世界范围 `(-11,100,-15)` 至 `(11,110,17)`，船头朝 +Z。
@@ -65,4 +68,4 @@
 新建世界即可直接使用用户布置好的版本。
 `run/saves/shuttle-import-review` 是用户亲自修改的原始验收存档；再次打开它不会触发自动换船。
 
-[存档归档说明](blueprints/shuttle-interior-2026-09-05/README.md) 包含完整备份、逐格清单和哈希。
+[存档归档说明](../blueprints/shuttle-interior-2026-09-05/README.md) 包含完整备份、逐格清单和哈希。

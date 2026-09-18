@@ -123,9 +123,9 @@ final class Stage8PrologueTest
         assertTrue(chinese.contains("地层矿物扫描中................"));
         assertTrue(english.contains("Mineral survey in progress................"));
         assertTrue(chinese.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
-                + "核心系统重启中................\""));
+                + "核心系统重启中…\""));
         assertTrue(english.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
-                + "Restarting core systems................\""));
+                + "Restarting core systems…\""));
         assertTrue(chinese.contains("少量钻石"));
         assertTrue(chinese.contains("幸运的是，我们目前位于一颗宜居星球的轨道上"));
         assertTrue(chinese.contains("核▒心状▓态：#%/无法读取"));

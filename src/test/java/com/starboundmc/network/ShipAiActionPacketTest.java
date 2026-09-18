@@ -10,6 +10,21 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ShipAiActionPacketTest
 {
+    @Test void taskActionsRoundTripAndRejectUnknownTasks() {
+        for (var action : new ShipAiActionPacket.Action[]{ShipAiActionPacket.Action.CLAIM_TASK_REWARD,
+                ShipAiActionPacket.Action.TRACK_TASK}) {
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try {
+                var packet = new ShipAiActionPacket(4, 12, action, 2);
+                ShipAiActionPacket.STREAM_CODEC.encode(buffer, packet);
+                assertEquals(packet, ShipAiActionPacket.STREAM_CODEC.decode(buffer));
+                assertThrows(IllegalArgumentException.class, () -> new ShipAiActionPacket(4, 12, action, 4));
+            } finally { buffer.release(); }
+        }
+        assertEquals(-1, new ShipAiActionPacket(4, 12, ShipAiActionPacket.Action.TRACK_TASK, -1).argument());
+        assertThrows(IllegalArgumentException.class, () ->
+                new ShipAiActionPacket(4, 12, ShipAiActionPacket.Action.CLAIM_TASK_REWARD, -1));
+    }
     @Test
     void onlyReadActionAcceptsOneExactTopicBit()
     {

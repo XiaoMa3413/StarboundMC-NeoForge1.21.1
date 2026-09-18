@@ -26,6 +26,10 @@ public final class ModAttachments
                     .copyOnDeath()
                     .build());
 
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<NovaTaskProgress>> NOVA_TASKS =
+            ATTACHMENTS.register("nova_tasks", () -> AttachmentType.builder(() -> NovaTaskProgress.DEFAULT)
+                    .serialize(NovaTaskProgress.CODEC).copyOnDeath().build());
+
     private ModAttachments()
     {
     }
