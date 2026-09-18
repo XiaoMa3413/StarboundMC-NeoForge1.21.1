@@ -101,12 +101,18 @@ class StarmapDetailContentFactoryTest
         assertEquals(1, entry.surface().orElseThrow().environment().coldTier());
     }
 
-    /**
-     * A body the ship cannot fly to: no navigation profile, but still described.
-     *
-     * <p>Built rather than looked up because every shipped body is navigable, so
-     * there is no longer a real locked entry to assert against.</p>
-     */
+    @Test
+    void moltenWarnsAboutHeatWithoutAnEquipmentGate()
+    {
+        var entry = UniverseTestSupport.body("sys1:molten");
+        var content = StarmapDetailContentFactory.buildEntry(entry, "sys1:lush", false,
+                ShipWarpManager.warpFuelCost("sys1:lush", entry.entryId()));
+        assertEquals(List.of("scan", "atmosphere", "heat", "navigation"), sectionIds(content));
+        assertEquals(StarmapDetailLine.Tone.DANGER, content.sections().get(2).lines().getFirst().tone());
+        assertEquals(1, entry.surface().orElseThrow().environment().heatTier());
+    }
+
+    /** A synthetic locked body; every shipped body is navigable. */
     private static CelestialBodyDefinition lockedBody()
     {
         return new CelestialBodyDefinition("synthetic:locked", "starmap.entry.locked.name",

@@ -6,6 +6,8 @@
 }
 .machine-inventory-header { background: rect(#293d48); }
 .voxel-printing-rail { background: rect(#5dd4d3); }
+.voxel-printing-category { background: group(rect(#243d47), border(-1, #607e88)); }
+.voxel-printing-category label { font-size: 7; text-color: #e0e8e6; text-shadow: false; }
 .machine-inventory-title { font-size: 9; text-color: #e5edeb; text-shadow: false; }
 .machine-status { font-size: 7; text-color: #91c6cb; text-shadow: false; }
 .voxel-printing-wallet { font-size: 8; text-color: #e5bc66; text-shadow: false; }

@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:matter_manipulator_workbench",
+    "starboundmc:life_support_station",
+    "starboundmc:epp_service_station"
+  ]
+}

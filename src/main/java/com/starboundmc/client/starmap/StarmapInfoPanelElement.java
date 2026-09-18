@@ -186,6 +186,7 @@ final class StarmapInfoPanelElement extends UIElement {
         StarmapInfoPanelPlacement.Placement next = root.infoPanelPlacement(width, height);
         panel.layout(layout -> layout.left(0).top(0).width(next.width()).height(next.height()));
         prepareFrame(width, height);
+        description.layout(l -> l.height(28));
         if (root.isRelaySelected()) {
             title.setText(Component.translatable("gui.starboundmc.relay.name"));
             subtitle.setText(Component.translatable("gui.starboundmc.relay.type"));
@@ -241,6 +242,15 @@ final class StarmapInfoPanelElement extends UIElement {
             metadata.setText(Component.translatable("gui.starboundmc.starmap.threat",
                     entry.threatLevel()));
             description.setText(Component.translatable(entry.descriptionKey()));
+            entry.surface().map(surface -> surface.environment()).filter(e -> e.coldTier() > 0 || e.heatTier() > 0).ifPresent(environment -> {
+                description.layout(l -> l.height(56));
+                var text = Component.translatable(entry.descriptionKey());
+                if (environment.coldTier() > 0) text.append("\n").append(Component.translatable(
+                        "gui.starboundmc.starmap.detail.cold_requirement"));
+                if (environment.heatTier() > 0) text.append("\n").append(Component.translatable(
+                        "gui.starboundmc.starmap.detail.heat_requirement"));
+                description.setText(text);
+            });
             action.setDisplay(true);
             action.setText(root.actionLabel());
             action.setActive(root.isActionAvailable());

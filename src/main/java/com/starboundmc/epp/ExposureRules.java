@@ -7,11 +7,12 @@ public final class ExposureRules {
     private ExposureRules() { }
     public record Step(int exposure, int warning, boolean damage) { }
     public static Step step(int exposure, int hazardTier, int protectionTier, int accumulation, int recovery) {
-        int deficit = Math.max(0, hazardTier - protectionTier);
+        // Legacy numeric fields remain readable; temperature protection is binary.
+        boolean unprotected = hazardTier > 0 && protectionTier <= 0;
         int current = Math.clamp(exposure, 0, MAX);
-        int next = deficit > 0 ? (int) Math.min(MAX, current + (long) deficit * accumulation)
+        int next = unprotected ? (int) Math.min(MAX, current + (long) accumulation)
                 : Math.max(0, current - recovery);
         return new Step(next, next >= 75 ? 3 : next >= 50 ? 2 : next >= 25 ? 1 : 0,
-                deficit > 0 && next == MAX);
+                unprotected && next == MAX);
     }
 }

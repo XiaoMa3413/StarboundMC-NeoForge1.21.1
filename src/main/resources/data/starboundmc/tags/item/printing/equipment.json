@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:epp_mk1",
+    "starboundmc:heating_module_1",
+    "starboundmc:cooling_module_1",
+    "starboundmc:empty_oxygen_canister"
+  ]
+}

@@ -82,7 +82,7 @@ public final class EppServiceMenu extends AbstractContainerMenu {
         var pack = tray.getItem(0); var stack = tray.getItem(1);
         return pack.getItem() instanceof EppItem chassis && chassis.moduleSlots() > 0
                 && stack.getCount() == 1 && stack.getItem() instanceof EppModuleItem module
-                && module.tier() <= chassis.maxModuleTier()
+                && module.compatibleWith(chassis)
                 && modules(pack).nonEmptyStream().count() < chassis.moduleSlots();
     }
     public boolean canRemove() {
@@ -109,7 +109,7 @@ public final class EppServiceMenu extends AbstractContainerMenu {
                 var chassis = (EppItem) upgraded.getItem();
                 for (var moduleStack : modules(pack).nonEmptyStream().toList()) {
                     if (retained.size() < chassis.moduleSlots() && moduleStack.getCount() == 1
-                            && moduleStack.getItem() instanceof EppModuleItem module && module.tier() <= chassis.maxModuleTier())
+                            && moduleStack.getItem() instanceof EppModuleItem module && module.compatibleWith(chassis))
                         retained.add(moduleStack);
                     else returned.add(moduleStack);
                 }

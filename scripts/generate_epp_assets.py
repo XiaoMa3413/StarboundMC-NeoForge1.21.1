@@ -121,6 +121,21 @@ def service_assets():
         write_json(ASSETS / f'models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'starboundmc:item/' + name}})
 
 
+def cooling_assets():
+    im = Image.new('RGBA', (32, 32)); d = ImageDraw.Draw(im)
+    d.rectangle((4, 5, 27, 26), fill='#243842', outline='#99b4be', width=2)
+    d.rectangle((7, 8, 24, 23), fill='#101f29', outline='#536f7b')
+    for x in (9, 13, 17, 21):
+        d.rectangle((x, 27, x+1, 29), fill='#dbbd78')
+    for x in (10, 14, 18, 22):
+        d.line((x, 11, x, 20), fill='#7cd9f0', width=2)
+    d.line((9, 10, 23, 10), fill='#dbfbff')
+    d.line((9, 21, 23, 21), fill='#4193b9')
+    save(im, ASSETS / 'textures/item/cooling_module_1.png')
+    write_json(ASSETS / 'models/item/cooling_module_1.json', {
+        'parent': 'minecraft:item/generated', 'textures': {'layer0': 'starboundmc:item/cooling_module_1'}})
+
+
 def models():
     textures = {name: 'starboundmc:block/epp_' + name for name in ['plate', 'tank', 'dark', 'display']}
     textures['particle'] = textures['plate']
@@ -150,3 +165,4 @@ if __name__ == '__main__':
     surfaces()
     models()
     service_assets()
+    cooling_assets()

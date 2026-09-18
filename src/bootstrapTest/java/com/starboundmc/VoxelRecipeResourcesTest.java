@@ -16,6 +16,34 @@ final class VoxelRecipeResourcesTest {
     private static final Path RECIPES = Path.of("src/main/resources/data/starboundmc/recipe");
 
     @Test
+    void shippedPrintingRecipesHaveEffectiveVoxelCostsAndCategories() throws IOException {
+        var categorized = new java.util.HashSet<String>();
+        for (String category : java.util.List.of("equipment", "components", "machines", "building")) {
+            var tag = JsonParser.parseString(Files.readString(RECIPES.resolve(
+                    "../tags/item/printing/" + category + ".json"))).getAsJsonObject();
+            for (var item : tag.getAsJsonArray("values")) {
+                assertTrue(categorized.add(item.getAsString()), "Duplicate printing category: " + item);
+            }
+        }
+        try (var paths = Files.list(RECIPES)) {
+            for (Path path : paths.filter(p -> p.getFileName().toString().startsWith("print_")).toList()) {
+                var recipe = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
+                assertFalse(recipe.has("voxel_cost"), path.toString());
+                var materials = recipe.getAsJsonArray("materials");
+                assertTrue(materials.size() <= 6, path.toString());
+                long voxels = materials.asList().stream().map(e -> e.getAsJsonObject())
+                        .filter(m -> m.getAsJsonObject("ingredient").has("item")
+                                && m.getAsJsonObject("ingredient").get("item").getAsString().equals("starboundmc:voxel"))
+                        .mapToLong(m -> m.get("count").getAsLong()).sum();
+                assertTrue(voxels > 0, "Missing effective voxel cost: " + path);
+                assertTrue(categorized.remove(recipe.getAsJsonObject("result").get("id").getAsString()),
+                        "Missing category: " + path);
+            }
+        }
+        assertTrue(categorized.isEmpty(), "Category lists unprintable outputs: " + categorized);
+    }
+
+    @Test
     void modulePrintingRecipeMatchesAgreedValues() throws IOException {
         JsonObject root = JsonParser.parseString(Files.readString(
                 RECIPES.resolve("print_matter_manipulator_module.json"))).getAsJsonObject();

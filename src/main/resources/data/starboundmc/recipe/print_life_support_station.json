@@ -24,9 +24,12 @@
         "item": "minecraft:glass"
       },
       "count": 2
+    },
+    {
+      "ingredient": { "item": "starboundmc:voxel" },
+      "count": 50
     }
   ],
-  "voxel_cost": 50,
   "print_seconds": 5,
   "result": {
     "id": "starboundmc:life_support_station",

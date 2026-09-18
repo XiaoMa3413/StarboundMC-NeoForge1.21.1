@@ -18,8 +18,13 @@ public final class EppModuleItem extends Item {
     }
     public Hazard hazard() { return hazard; }
     public int tier() { return tier; }
+    public boolean compatibleWith(EppItem chassis) {
+        return chassis.moduleSlots() > 0 && (hazard != Hazard.RADIATION || tier <= chassis.maxModuleTier());
+    }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
-        lines.add(Component.translatable("tooltip.starboundmc.epp.module", tier));
+        if (hazard == Hazard.RADIATION) lines.add(Component.translatable("tooltip.starboundmc.epp.module", tier));
+        if (hazard == Hazard.COLD) lines.add(Component.translatable("tooltip.starboundmc.epp.heating"));
+        if (hazard == Hazard.HEAT) lines.add(Component.translatable("tooltip.starboundmc.epp.cooling"));
         lines.add(Component.translatable("tooltip.starboundmc.epp.service_only"));
     }
 }

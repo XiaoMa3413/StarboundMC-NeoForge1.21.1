@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Selector;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
 import com.starboundmc.client.ClientPrintQueueState;
@@ -23,6 +24,7 @@ import com.starboundmc.network.StartPrintPacket;
 import com.starboundmc.network.CancelPrintQueuePacket;
 import com.starboundmc.network.SyncPrintQueuePacket;
 import com.starboundmc.recipe.VoxelPrintingRecipe;
+import com.starboundmc.recipe.PrintingCategory;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import java.util.ArrayList;
@@ -170,18 +172,31 @@ public final class VoxelPrintingStationRoot extends UIElement {
     }
 
     private UIElement buildRecipePane() {
-        var pane = VoxelUiSupport.positioned("voxel-printing-recipe-pane", 6, 28, 136, 120);
+        var pane = VoxelUiSupport.positioned("voxel-printing-recipe-pane", 6, 28, 136, 207);
         pane.addChild(VoxelUiSupport.label(
                 Component.translatable("gui.starboundmc.voxel_printing.recipes"),
                 "voxel-pane-title", 5, 3, 95, 8));
+
+        var category = new Selector<PrintingCategory>();
+        category.setCandidateUIProvider(value -> new Label()
+                .setText(Component.translatable((value == null ? PrintingCategory.ALL : value).translationKey()))
+                .textStyle(style -> style.fontSize(7).adaptiveWidth(false).textWrap(TextWrap.HIDE))
+                .layout(layout -> layout.widthPercent(100).height(14)));
+        category.setCandidates(List.of(PrintingCategory.values()));
+        category.setSelected(PrintingCategory.ALL, false);
+        category.setOnValueChanged(this::filterRecipes);
+        category.addClass("voxel-printing-category");
+        category.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                .left(4).top(14).width(128).height(18));
+        pane.addChild(category);
 
         recipeList.addClass("voxel-recipe-list");
         recipeList.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(4)
-                .top(13)
+                .top(36)
                 .width(128)
-                .height(103));
+                .height(167));
         recipeList.scrollerStyle(style -> style
                 .mode(ScrollerMode.VERTICAL)
                 .verticalScrollDisplay(ScrollDisplay.AUTO)
@@ -196,24 +211,42 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .gapAll(2)
                 .flexDirection(FlexDirection.COLUMN)));
 
-        if (recipes.isEmpty()) {
-            emptyState.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
-            emptyState.addClass("voxel-recipe-empty");
-            emptyState.setAllowHitTest(false);
-            emptyState.layout(layout -> layout.widthPercent(100).height(32));
-            emptyState.textStyle(style -> style
-                    .adaptiveWidth(false)
-                    .textAlignHorizontal(Horizontal.CENTER)
-                    .textAlignVertical(Vertical.CENTER)
-                    .textWrap(TextWrap.WRAP));
-            recipeList.addScrollViewChild(emptyState);
-        } else {
-            for (int index = 0; index < recipes.size(); index++) {
-                addRecipeRow(index, recipes.get(index));
-            }
+        emptyState.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
+        emptyState.addClass("voxel-recipe-empty");
+        emptyState.setAllowHitTest(false);
+        emptyState.layout(layout -> layout.widthPercent(100).height(32));
+        emptyState.textStyle(style -> style
+                .adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.CENTER)
+                .textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.WRAP));
+        recipeList.addScrollViewChild(emptyState);
+        emptyState.setDisplay(recipes.isEmpty());
+        for (int index = 0; index < recipes.size(); index++) {
+            addRecipeRow(index, recipes.get(index));
         }
         pane.addChild(recipeList);
         return pane;
+    }
+
+    private void filterRecipes(PrintingCategory category) {
+        int first = -1;
+        boolean selectionVisible = false;
+        for (int index = 0; index < rows.size(); index++) {
+            boolean visible = category.matches(resultStack(recipes.get(index)));
+            rows.get(index).button.setDisplay(visible);
+            if (visible && first < 0) first = index;
+            if (visible && index == selected) selectionVisible = true;
+        }
+        if (!selectionVisible) {
+            selected = first;
+            quantity = 1;
+        }
+        emptyState.setDisplay(first < 0);
+        recipeList.verticalScroller.setNormalizedValue(0);
+        updateSelectedVisual();
+        lastDetailState = null;
+        refresh();
     }
 
     private void addRecipeRow(int index, RecipeHolder<VoxelPrintingRecipe> holder) {

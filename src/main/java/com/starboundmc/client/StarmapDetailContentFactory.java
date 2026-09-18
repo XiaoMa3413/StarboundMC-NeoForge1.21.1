@@ -116,8 +116,12 @@ public final class StarmapDetailContentFactory
         entry.surface().filter(surface -> surface.environment().coldTier() > 0).ifPresent(surface ->
                 sections.add(StarmapDetailSection.labeled("cold",
                         Component.translatable("gui.starboundmc.starmap.detail.cold"),
-                        StarmapDetailLine.of(Component.translatable("gui.starboundmc.starmap.detail.cold_requirement",
-                                surface.environment().coldTier()), StarmapDetailLine.Tone.DANGER))));
+                        StarmapDetailLine.of(Component.translatable("gui.starboundmc.starmap.detail.cold_requirement"), StarmapDetailLine.Tone.DANGER))));
+
+        entry.surface().filter(surface -> surface.environment().heatTier() > 0).ifPresent(surface ->
+                sections.add(StarmapDetailSection.labeled("heat",
+                        Component.translatable("gui.starboundmc.starmap.detail.heat"),
+                        StarmapDetailLine.of(Component.translatable("gui.starboundmc.starmap.detail.heat_requirement"), StarmapDetailLine.Tone.DANGER))));
 
         if (entry.isNavigable())
         {

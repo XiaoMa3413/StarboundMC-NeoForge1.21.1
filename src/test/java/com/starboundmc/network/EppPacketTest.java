@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EppPacketTest {
-    @Test void oxygenAndColdSnapshotRoundTripIndependently() {
-        var input = new EppSnapshotPacket(1080, 1080, 0, true, false, false, 2, 76, 3, 1);
+    @Test void oxygenColdAndHeatSnapshotRoundTripIndependently() {
+        var input = new EppSnapshotPacket(1080, 1080, 0, true, false, false, 2, 76, 3, 1, 34, 2, 0);
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
             EppSnapshotPacket.STREAM_CODEC.encode(buffer, input);

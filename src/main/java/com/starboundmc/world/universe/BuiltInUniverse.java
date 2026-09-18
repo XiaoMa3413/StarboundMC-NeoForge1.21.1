@@ -147,7 +147,7 @@ public final class BuiltInUniverse
                                         6.0F, 210.0F, 0.0F, 0xFFFF8A4C,
                                         0.16F, 0.0075F, 0.16F),
                                 surface("starboundmc:molten", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
-                                        new PlanetEnvironmentProfile(true, 0, 3, 0, 1.0F))),
+                                        new PlanetEnvironmentProfile(true, 0, 1, 0, 1.0F))),
 
                         body("sys1:gasgiant",
                                 "starmap.entry.sys1.gasgiant.name", "starmap.type.gas_giant",

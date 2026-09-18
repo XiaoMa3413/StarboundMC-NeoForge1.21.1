@@ -20,6 +20,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid = StarboundMC.MODID)
 public final class EppEvents {
+    public static final net.minecraft.resources.ResourceKey<net.minecraft.world.damagesource.DamageType> HEAT_DAMAGE =
+            net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DAMAGE_TYPE,
+                    net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "heat"));
     private EppEvents() { }
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || !player.isAlive() || player.tickCount % 20 != 0) return;
@@ -59,10 +62,26 @@ public final class EppEvents {
                 ModNetwork.sendToPlayer(player, new NovaBroadcastPacket("message.starboundmc.nova.cold." + cold.warning()));
             player.setData(ModAttachments.COLD_WARNING, cold.warning());
         } else if (cold.exposure() <= 10) player.setData(ModAttachments.COLD_WARNING, 0);
+        var heat = ExposureRules.step(player.getData(ModAttachments.HEAT_EXPOSURE), exempt ? 0 : environment.heatTier(),
+                protection.heatTier(), EppConfig.HEAT_ACCUMULATION.get(), exempt ? ExposureRules.MAX : EppConfig.HEAT_RECOVERY.get());
+        player.setData(ModAttachments.HEAT_EXPOSURE, heat.exposure());
+        if (!exempt && heat.exposure() >= 50)
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.WEAKNESS,
+                    40, heat.exposure() >= 75 ? 1 : 0, false, false, true));
+        if (!exempt && heat.damage()) player.hurt(new net.minecraft.world.damagesource.DamageSource(
+                player.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE)
+                        .getHolderOrThrow(HEAT_DAMAGE)), 1);
+        int previousHeat = player.getData(ModAttachments.HEAT_WARNING);
+        if (!exempt && heat.warning() > previousHeat) {
+            if (ShipEnvironmentService.isCoreOnline(player.getServer()))
+                ModNetwork.sendToPlayer(player, new NovaBroadcastPacket("message.starboundmc.nova.heat." + heat.warning()));
+            player.setData(ModAttachments.HEAT_WARNING, heat.warning());
+        } else if (heat.exposure() <= 10) player.setData(ModAttachments.HEAT_WARNING, 0);
         int generation = EppItem.generation(epp);
         ModNetwork.sendToPlayer(player, new EppSnapshotPacket(step.oxygen(), capacity, step.exposure(), equipped,
                 !breathable && !exempt, refill && equipped && step.oxygen() < capacity,
-                generation, cold.exposure(), environment.coldTier(), protection.coldTier()));
+                generation, cold.exposure(), environment.coldTier(), protection.coldTier(),
+                heat.exposure(), environment.heatTier(), protection.heatTier()));
         if (player.getData(ModAttachments.EPP_VISUAL) != generation) {
             player.setData(ModAttachments.EPP_VISUAL, generation);
             PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new EppVisualPacket(player.getId(), generation));

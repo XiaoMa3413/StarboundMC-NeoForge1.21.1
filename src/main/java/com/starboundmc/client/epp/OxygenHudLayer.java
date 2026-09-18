@@ -24,7 +24,8 @@ public final class OxygenHudLayer implements ModularHudLayer {
     @Override public ModularUI getModularUI() {
         var mc = Minecraft.getInstance(); var s = EppClientState.snapshot;
         if (mc.player == null || !mc.player.isAlive() || mc.options.hideGui
-                || !(showBeacon() || s != null && (s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0))) return null;
+                || !(showBeacon() || s != null && (s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0
+                || s.heatTier() > 0 || s.heatExposure() > 0))) return null;
         if (ui == null) ui = ModularUI.of(UI.of(new Gauge(projection, navigation, controls), ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         return ui;
     }
@@ -42,6 +43,8 @@ public final class OxygenHudLayer implements ModularHudLayer {
         private long lastFrame;
         private float lastYaw, lastPitch, driftX, driftY;
         private final OxygenHudFade fade = new OxygenHudFade();
+        private final OxygenHudFade coldFade = new OxygenHudFade();
+        private final OxygenHudFade heatFade = new OxygenHudFade();
         private final VisorHudProjection projection;
         private final VisorHudProjection navigation, controls;
 
@@ -56,12 +59,24 @@ public final class OxygenHudLayer implements ModularHudLayer {
             if (showBeacon()) drawBeacon(context.graphics);
             var s = EppClientState.snapshot; if (s == null) return;
             var g = context.graphics;
-            int x = g.guiWidth() - 140, y = g.guiHeight() - 82;
+            int x = g.guiWidth() - 140;
             float opacity = fade.update(mc.isPaused() ? 0 : seconds, s.airless() || s.exposure() > 0 || s.refilling());
             boolean oxygenVisible = opacity > .001f && (s.equipped() || s.airless() || s.exposure() > 0);
+            boolean coldVisible = s.coldTier() > 0 || s.coldExposure() > 0;
+            boolean heatVisible = s.heatTier() > 0 || s.heatExposure() > 0;
+            float coldOpacity = coldFade.update(mc.isPaused() ? 0 : seconds, coldVisible && s.coldProtection() <= 0);
+            float heatOpacity = heatFade.update(mc.isPaused() ? 0 : seconds, heatVisible && s.heatProtection() <= 0);
+            coldVisible &= coldOpacity > .001f;
+            heatVisible &= heatOpacity > .001f;
+            int rows = (oxygenVisible ? 1 : 0) + (coldVisible ? 1 : 0) + (heatVisible ? 1 : 0);
+            int y = g.guiHeight() - 82 - Math.max(0, rows - 2) * 40;
             if (oxygenVisible) projection.draw(g, x + driftX, y + driftY, opacity, canvas -> drawFlat(canvas, context.partialTick));
-            if (s.coldTier() > 0 || s.coldExposure() > 0)
-                projection.draw(g, x + driftX, y + driftY + (oxygenVisible ? 40 : 0), this::drawCold);
+            int row = oxygenVisible ? 40 : 0;
+            if (coldVisible) {
+                projection.draw(g, x + driftX, y + driftY + row, coldOpacity, canvas -> drawThermal(canvas, false));
+                row += 40;
+            }
+            if (heatVisible) projection.draw(g, x + driftX, y + driftY + row, heatOpacity, canvas -> drawThermal(canvas, true));
         }
 
         private void drawBeacon(GuiGraphics g) {
@@ -97,15 +112,21 @@ public final class OxygenHudLayer implements ModularHudLayer {
             g.pose().popPose();
         }
 
-        private void drawCold(GuiGraphics g) {
+        private void drawThermal(GuiGraphics g, boolean heat) {
             var s = EppClientState.snapshot;
             var font = Minecraft.getInstance().font;
-            int rgb = s.coldExposure() >= 75 ? 0xFF9477 : s.coldExposure() >= 25 ? 0xFFD17C : 0xA7DFFF;
+            int exposure = heat ? s.heatExposure() : s.coldExposure();
+            String hazard = heat ? "heat" : "cold";
+            int rgb = exposure >= 75 ? 0xFF9477 : exposure >= 25 ? 0xFFD17C : heat ? 0xF3BE96 : 0xA7DFFF;
             g.fill(6, 24, 122, 25, 0x28000000 | rgb);
-            int filled = Math.round(116f * s.coldExposure() / 100);
+            int filled = Math.round(116f * exposure / 100);
             if (filled > 0) g.fill(6, 24, 6 + filled, 25, 0xBA000000 | rgb);
-            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp.cold", s.coldExposure()), 9, 216, rgb);
-            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp.cold_protection", s.coldProtection(), s.coldTier()), 33, 184, rgb);
+            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." + hazard, exposure), 9, 216, rgb);
+            boolean protectedFromHazard = (heat ? s.heatProtection() : s.coldProtection()) > 0;
+            boolean hazardous = (heat ? s.heatTier() : s.coldTier()) > 0;
+            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." +
+                    (!hazardous ? "thermal_recovery" : protectedFromHazard ? "thermal_protected" : hazard + "_unprotected")),
+                    33, 184, rgb);
             // The localized readout uses the full row; its color and exposure bar carry the warning.
         }
 

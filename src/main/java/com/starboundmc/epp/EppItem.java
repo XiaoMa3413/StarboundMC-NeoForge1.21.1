@@ -27,10 +27,14 @@ public final class EppItem extends Item {
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> lines, TooltipFlag flag) {
         lines.add(Component.translatable("tooltip.starboundmc.epp.oxygen", oxygen(stack), capacity(stack)));
         if (moduleSlots() > 0) {
-            lines.add(Component.translatable("tooltip.starboundmc.epp.slots", moduleSlots(), maxModuleTier()));
+            lines.add(Component.translatable("tooltip.starboundmc.epp.slots", moduleSlots()));
             var modules = stack.getOrDefault(ModDataComponents.EPP_MODULES, net.minecraft.world.item.component.ItemContainerContents.EMPTY);
             modules.nonEmptyStream().forEach(module -> lines.add(Component.translatable("tooltip.starboundmc.epp.installed", module.getHoverName())));
-            lines.add(Component.translatable("tooltip.starboundmc.epp.cold_protection", EppProtection.from(stack).coldTier()));
+            var protection = EppProtection.from(stack);
+            lines.add(Component.translatable("tooltip.starboundmc.epp.cold_protection", Component.translatable(
+                    "tooltip.starboundmc.epp." + (protection.coldTier() > 0 ? "protected" : "unprotected"))));
+            lines.add(Component.translatable("tooltip.starboundmc.epp.heat_protection", Component.translatable(
+                    "tooltip.starboundmc.epp." + (protection.heatTier() > 0 ? "protected" : "unprotected"))));
             lines.add(Component.translatable("tooltip.starboundmc.epp.eva"));
         }
         lines.add(Component.translatable("tooltip.starboundmc.epp.equip"));

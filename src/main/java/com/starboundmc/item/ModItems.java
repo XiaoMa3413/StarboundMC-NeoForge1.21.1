@@ -36,6 +36,9 @@ public final class ModItems {
     public static final DeferredItem<com.starboundmc.epp.EppModuleItem> HEATING_MODULE_1 = ITEMS.registerItem(
             "heating_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
                     com.starboundmc.epp.EppModuleItem.Hazard.COLD, 1), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppModuleItem> COOLING_MODULE_1 = ITEMS.registerItem(
+            "cooling_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
+                    com.starboundmc.epp.EppModuleItem.Hazard.HEAT, 1), new Item.Properties().stacksTo(1));
     public static final DeferredItem<BlockItem> EPP_SERVICE_STATION_ITEM =
             ITEMS.registerSimpleBlockItem("epp_service_station", ModBlocks.EPP_SERVICE_STATION);
     public static final DeferredItem<com.starboundmc.epp.OxygenCanisterItem> OXYGEN_CANISTER = ITEMS.registerItem(
@@ -152,6 +155,7 @@ public final class ModItems {
                         output.accept(EPP_MK3);
                         output.accept(EPP_MK3_UPGRADE_KIT);
                         output.accept(HEATING_MODULE_1);
+                        output.accept(COOLING_MODULE_1);
                         output.accept(EPP_SERVICE_STATION_ITEM);
                         output.accept(OXYGEN_CANISTER);
                         output.accept(EMPTY_OXYGEN_CANISTER);

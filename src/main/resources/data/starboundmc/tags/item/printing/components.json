@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:basic_circuit_board",
+    "starboundmc:matter_manipulator_module",
+    "starboundmc:epp_mk2_upgrade_kit",
+    "starboundmc:epp_mk3_upgrade_kit",
+    "starboundmc:sublight_ignition_core"
+  ]
+}

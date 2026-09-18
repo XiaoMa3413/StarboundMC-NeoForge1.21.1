@@ -12,9 +12,12 @@
         "item": "minecraft:glass"
       },
       "count": 1
+    },
+    {
+      "ingredient": { "item": "starboundmc:voxel" },
+      "count": 10
     }
   ],
-  "voxel_cost": 10,
   "print_seconds": 2,
   "result": {
     "id": "starboundmc:empty_oxygen_canister",

@@ -24,9 +24,12 @@
         "item": "minecraft:iron_ingot"
       },
       "count": 2
+    },
+    {
+      "ingredient": { "item": "starboundmc:voxel" },
+      "count": 40
     }
   ],
-  "voxel_cost": 40,
   "print_seconds": 3,
   "result": {
     "id": "starboundmc:heating_module_1",

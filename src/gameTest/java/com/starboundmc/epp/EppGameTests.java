@@ -32,7 +32,8 @@ import java.util.UUID;
 @PrefixGameTestTemplate(false)
 public final class EppGameTests {
     private static final java.util.Set<BlockPos> COLD_SERVICE_POSITIONS = new java.util.HashSet<>();
-    private static final EnvironmentState COLD = new EnvironmentState(EnvironmentState.Atmosphere.BREATHABLE, 1, 0, 0, 1, false);
+    // Legacy numeric levels must not increase exposure or require a stronger thermal module.
+    private static final EnvironmentState COLD = new EnvironmentState(EnvironmentState.Atmosphere.BREATHABLE, 3, 0, 0, 1, false);
     static {
         EppEquipmentResolver.registerSource("starboundmc:gametest_extra", player ->
                 player.getTags().contains("epp_resolver_test") ? player.getInventory().getItem(35) : ItemStack.EMPTY);
@@ -42,6 +43,7 @@ public final class EppGameTests {
                 pos.getX() == -30000 ? java.util.Optional.of(EnvironmentState.SPACE)
                         : pos.getX() == -30001 ? java.util.Optional.of(EnvironmentState.SHIP_INTERIOR)
                         : pos.getX() == -30002 || COLD_SERVICE_POSITIONS.contains(pos) ? java.util.Optional.of(COLD)
+                        : pos.getX() == -30003 ? java.util.Optional.of(new EnvironmentState(EnvironmentState.Atmosphere.BREATHABLE, 0, 3, 0, 1, false))
                         : java.util.Optional.empty());
     }
     private record TestPlayer(ServerPlayer player, EmbeddedChannel channel) implements AutoCloseable {
@@ -383,6 +385,60 @@ public final class EppGameTests {
             p.player.setPos(-30001, 64, 0); p.player.invulnerableTime = 0;
             before = p.player.getHealth(); EppEvents.tickSecond(p.player);
             h.assertTrue(p.player.getHealth() == before, "Cold kept damaging in safe cabin");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void heatProtectionPersistsAndDoesNotUseOxygen(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "HeatExplorer"); var restored = player(h.getLevel(), "HeatReload")) {
+            var menu = service(h, p.player);
+            var pack = new ItemStack(ModItems.EPP_MK3.get()); EppItem.setOxygen(pack, 700);
+            menu.getSlot(0).set(pack);
+            menu.getSlot(1).set(new ItemStack(ModItems.HEATING_MODULE_1.get()));
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Heating installation failed");
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, pack);
+            p.player.setPos(-30003, 64, 0);
+            for (int i = 0; i < 30; i++) EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.HEAT_EXPOSURE) == 60, "Heating incorrectly protected from heat");
+            h.assertTrue(EppItem.oxygen(pack) == 700 && p.player.getData(ModAttachments.COLD_EXPOSURE) == 0,
+                    "Heat modified oxygen or cold exposure");
+            h.assertTrue(p.player.hasEffect(net.minecraft.world.effect.MobEffects.WEAKNESS), "Heat symptoms missing");
+            var station = menu.blockPos();
+            p.player.setPos(station.getX() + .5, station.getY() + .5, station.getZ() + .5);
+            menu.getSlot(1).set(new ItemStack(ModItems.COOLING_MODULE_1.get()));
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Cooling second slot installation failed");
+            h.assertTrue(EppProtection.from(pack).coldTier() == 1 && EppProtection.from(pack).heatTier() == 1,
+                    "Independent module protections lost");
+            p.player.setPos(-30003, 64, 0); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.HEAT_EXPOSURE) == 55, "Cooling did not recover heat exposure");
+            restored.player.load(p.player.saveWithoutId(new CompoundTag()));
+            h.assertTrue(restored.player.getData(ModAttachments.HEAT_EXPOSURE) == 55
+                    && EppProtection.from(restored.player.getData(ModAttachments.EPP_EQUIPMENT)).heatTier() == 1,
+                    "Save/load lost heat exposure or cooling module");
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, ItemStack.EMPTY); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.HEAT_EXPOSURE) == 57, "Unequipping retained cooling");
+            p.player.setPos(-30001, 64, 0); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.HEAT_EXPOSURE) == 52, "Safe cabin did not recover heat");
+            p.player.setGameMode(net.minecraft.world.level.GameType.CREATIVE); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.HEAT_EXPOSURE) == 0, "Creative retained exposure");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void heatDamagesWithoutSettingPlayerOnFire(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "HeatDamage")) {
+            for (int i = 0; i < 61; i++) p.player.tick();
+            p.player.setPos(-30003, 64, 0); p.player.invulnerableTime = 0;
+            p.player.setData(ModAttachments.HEAT_EXPOSURE, 98);
+            float before = p.player.getHealth(); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getHealth() < before && !p.player.isOnFire(), "Heat damage missing or ignited player");
+            var pack = new ItemStack(ModItems.EPP_MK2.get());
+            pack.set(com.starboundmc.item.ModDataComponents.EPP_MODULES,
+                    net.minecraft.world.item.component.ItemContainerContents.fromItems(java.util.List.of(new ItemStack(ModItems.COOLING_MODULE_1.get()))));
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, pack); p.player.invulnerableTime = 0;
+            before = p.player.getHealth(); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getHealth() == before && p.player.getData(ModAttachments.HEAT_EXPOSURE) == 95,
+                    "Full cooling did not stop heat injury");
         }
         h.succeed();
     }

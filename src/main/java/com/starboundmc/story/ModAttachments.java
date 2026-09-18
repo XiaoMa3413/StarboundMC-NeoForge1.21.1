@@ -34,6 +34,12 @@ public final class ModAttachments
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> COLD_WARNING =
             ATTACHMENTS.register("cold_warning", () -> AttachmentType.builder(() -> 0)
                     .serialize(com.mojang.serialization.Codec.intRange(0, 3)).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> HEAT_EXPOSURE =
+            ATTACHMENTS.register("heat_exposure", () -> AttachmentType.builder(() -> 0)
+                    .serialize(com.mojang.serialization.Codec.intRange(0, 100)).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> HEAT_WARNING =
+            ATTACHMENTS.register("heat_warning", () -> AttachmentType.builder(() -> 0)
+                    .serialize(com.mojang.serialization.Codec.intRange(0, 3)).build());
 
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerStoryState>> PLAYER_STORY =
             ATTACHMENTS.register("player_story", () -> AttachmentType.builder(() -> PlayerStoryState.DEFAULT)

@@ -15,6 +15,8 @@ public final class EppConfig {
             .defineInRange("relayEvaGap", 80, 24, 120);
     public static final ModConfigSpec.IntValue COLD_ACCUMULATION = BUILDER.defineInRange("coldExposurePerTierPerSecond", 2, 1, 100);
     public static final ModConfigSpec.IntValue COLD_RECOVERY = BUILDER.defineInRange("coldRecoveryPerSecond", 5, 1, 100);
+    public static final ModConfigSpec.IntValue HEAT_ACCUMULATION = BUILDER.defineInRange("heatExposurePerTierPerSecond", 2, 1, 100);
+    public static final ModConfigSpec.IntValue HEAT_RECOVERY = BUILDER.defineInRange("heatRecoveryPerSecond", 5, 1, 100);
     public static final ModConfigSpec.IntValue CONSUMPTION = BUILDER.defineInRange("oxygenPerSecond", 1, 1, 100);
     public static final ModConfigSpec.IntValue REFILL = BUILDER.defineInRange("refillPerSecond", 240, 1, 30000);
     public static final ModConfigSpec.IntValue CANISTER = BUILDER.defineInRange("canisterUnits", 180, 1, 30000);

@@ -604,6 +604,8 @@ public final class StarmapTerminalRoot extends UIElement {
             int moonCount = selectedSystem == null ? 0
                     : selectedSystem.moonCount(selectedEntry.entryId());
             panelHeight = 122 + (moonCount > 0 ? 11 : 0);
+            if (selectedEntry.surface().map(s -> s.environment().coldTier() > 0 || s.environment().heatTier() > 0).orElse(false))
+                panelHeight += 28;
         } else if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             panelHeight = 122;
         } else if (centralStarSelected) {

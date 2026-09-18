@@ -14,7 +14,7 @@ final class Stage3NetworkWiringTest {
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
         // EPP equipment plus EVA input and authoritative state snapshots.
-        assertTrue(network.contains("PROTOCOL_VERSION = \"12\""));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"13\""));
         assertEquals(15, occurrences(network, "playToServer("));
         // Existing twelve clientbound payloads are retained.
         assertEquals(16, occurrences(network, "playToClient("));
@@ -216,7 +216,7 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("maxCraftsForRequirements"));
         assertTrue(printingRoot.contains("target = Math.min(target, selectedQuantityCeiling())"));
         assertTrue(printingRoot.contains("PANEL_H = 240"));
-        assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 6, 28, 136, 120"));
+        assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 6, 28, 136, 207"));
         assertTrue(printingRoot.contains("\"voxel-printing-detail-pane\", 146, 28, detailWidth, 120"));
         assertTrue(printingRoot.contains("\"voxel-printing-queue-pane\", 340, 28, 94, 207"));
         assertTrue(printingRoot.contains("\"voxel-inventory-section\", 144, 151, 172, 84"));

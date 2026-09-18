@@ -16,10 +16,10 @@ public record EppProtection(boolean lifeSupport, int coldTier, int heatTier, int
         for (int slot = 0; slot < Math.min(chassis.moduleSlots(), modules.getSlots()); slot++) {
             var stack = modules.getStackInSlot(slot);
             if (stack.getCount() != 1 || !(stack.getItem() instanceof EppModuleItem module)
-                    || module.tier() > chassis.maxModuleTier()) continue;
+                    || !module.compatibleWith(chassis)) continue;
             switch (module.hazard()) {
-                case COLD -> cold = Math.max(cold, module.tier());
-                case HEAT -> heat = Math.max(heat, module.tier());
+                case COLD -> cold = 1;
+                case HEAT -> heat = 1;
                 case RADIATION -> radiation = Math.max(radiation, module.tier());
             }
         }
