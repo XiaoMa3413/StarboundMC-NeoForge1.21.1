@@ -6,3 +6,11 @@
 .epp-caption { font-size: 8; text-color: #9fb9c2; text-shadow: false; }
 .epp-slot { background: group(rect(#0c1921), border(-1, #344a53)); }
 .epp-socket { background: group(rect(#08151b), border(-1, #75c6c2)); }
+.epp-service-button:host {
+    base-background: group(rect(#1c353d), border(1, #55717b));
+    hover-background: group(rect(#284d54), border(1, #95e8e2));
+    pressed-background: group(rect(#10262f), border(1, #77d8ce));
+}
+.epp-service-button .__button_text__ { font-size: 8; text-color: #dbf0ed; text-shadow: false; }
+.epp-service-button.__disabled__:host { base-background: group(rect(#17262c), border(1, #344a53)); }
+.epp-service-button.__disabled__ .__button_text__ { text-color: #6e858d; }

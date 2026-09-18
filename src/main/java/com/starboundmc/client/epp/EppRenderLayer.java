@@ -16,17 +16,19 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
 public final class EppRenderLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
-    private final ItemStack model = new ItemStack(ModItems.EPP_MK1.get());
+    private final ItemStack mk1 = new ItemStack(ModItems.EPP_MK1.get());
+    private final ItemStack mk2 = new ItemStack(ModItems.EPP_MK2.get());
     public EppRenderLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> parent) { super(parent); }
     @Override public void render(PoseStack pose, MultiBufferSource buffer, int light, AbstractClientPlayer player,
                                  float swing, float amount, float dt, float age, float yaw, float pitch) {
-        if (player.isInvisible() || !player.getData(ModAttachments.EPP_VISUAL)) return;
+        int generation = player.getData(ModAttachments.EPP_VISUAL);
+        if (player.isInvisible() || generation == 0) return;
         pose.pushPose();
         getParentModel().body.translateAndRotate(pose);
         pose.translate(0, .36, .30);
         pose.mulPose(Axis.XP.rotationDegrees(180));
         pose.scale(.8f, .8f, .8f);
-        Minecraft.getInstance().getItemRenderer().renderStatic(model, ItemDisplayContext.FIXED, light,
+        Minecraft.getInstance().getItemRenderer().renderStatic(generation >= 2 ? mk2 : mk1, ItemDisplayContext.FIXED, light,
                 OverlayTexture.NO_OVERLAY, pose, buffer, player.level(), player.getId());
         pose.popPose();
     }

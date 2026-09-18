@@ -113,6 +113,12 @@ public final class StarmapDetailContentFactory
                                 ? "gui.starboundmc.starmap.detail.breathable" : "gui.starboundmc.starmap.detail.airless"),
                         surface.environment().breathable() ? StarmapDetailLine.Tone.BODY : StarmapDetailLine.Tone.DANGER))));
 
+        entry.surface().filter(surface -> surface.environment().coldTier() > 0).ifPresent(surface ->
+                sections.add(StarmapDetailSection.labeled("cold",
+                        Component.translatable("gui.starboundmc.starmap.detail.cold"),
+                        StarmapDetailLine.of(Component.translatable("gui.starboundmc.starmap.detail.cold_requirement",
+                                surface.environment().coldTier()), StarmapDetailLine.Tone.DANGER))));
+
         if (entry.isNavigable())
         {
             boolean crossSystem = fuelCost >= ShipWarpManager.CROSS_SYSTEM_FUEL_COST;

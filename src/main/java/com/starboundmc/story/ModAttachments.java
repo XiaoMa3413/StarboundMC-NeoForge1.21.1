@@ -23,8 +23,14 @@ public final class ModAttachments
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> EPP_WARNING =
             ATTACHMENTS.register("epp_warning", () -> AttachmentType.builder(() -> 0)
                     .serialize(com.mojang.serialization.Codec.intRange(0, 4)).build());
-    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Boolean>> EPP_VISUAL =
-            ATTACHMENTS.register("epp_visual", () -> AttachmentType.builder(() -> false).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> EPP_VISUAL =
+            ATTACHMENTS.register("epp_visual", () -> AttachmentType.builder(() -> 0).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> COLD_EXPOSURE =
+            ATTACHMENTS.register("cold_exposure", () -> AttachmentType.builder(() -> 0)
+                    .serialize(com.mojang.serialization.Codec.intRange(0, 100)).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<Integer>> COLD_WARNING =
+            ATTACHMENTS.register("cold_warning", () -> AttachmentType.builder(() -> 0)
+                    .serialize(com.mojang.serialization.Codec.intRange(0, 3)).build());
 
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerStoryState>> PLAYER_STORY =
             ATTACHMENTS.register("player_story", () -> AttachmentType.builder(() -> PlayerStoryState.DEFAULT)

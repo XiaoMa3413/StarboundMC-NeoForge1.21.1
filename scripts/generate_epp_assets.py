@@ -86,6 +86,41 @@ def box(start, end, texture):
         for direction, w, h in [('north', x, y), ('south', x, y), ('east', z, y), ('west', z, y), ('up', x, z), ('down', x, z)]}}
 
 
+def service_assets():
+    """Mk.II's integrated chassis and single thermal-module service tooling."""
+    textures = {name: 'starboundmc:block/epp_' + name for name in ['plate', 'tank', 'dark', 'display']}
+    textures['particle'] = textures['plate']
+    old = json.loads((ASSETS / 'models/item/epp_mk1.json').read_text())
+    pack = [box([4, 2, 5], [12, 14, 10], 'plate'),
+            box([2, 4, 6], [4, 12, 10], 'tank'), box([12, 4, 6], [14, 12, 10], 'tank'),
+            box([3, 1, 7], [6, 4, 11], 'dark'), box([10, 1, 7], [13, 4, 11], 'dark'),
+            box([5, 9, 4], [11, 13, 5], 'display'),
+            box([6, 4, 4], [10, 8, 5], 'dark'), box([7, 5, 3.5], [9, 7, 4], 'tank')]
+    write_json(ASSETS / 'models/item/epp_mk2.json', {'textures': textures, 'elements': pack, 'display': old['display']})
+    station = [box([0, 0, 0], [16, 2, 16], 'dark'), box([1, 2, 4], [15, 10, 15], 'plate'),
+               box([0, 10, 2], [16, 12, 16], 'tank'), box([2, 12, 11], [14, 16, 14], 'plate'),
+               box([3, 13, 10.5], [9, 15, 11], 'display'), box([11, 12, 10], [13, 15, 11], 'dark')]
+    write_json(ASSETS / 'models/block/epp_service_station.json', {'parent': 'minecraft:block/block', 'textures': textures, 'elements': station})
+    write_json(ASSETS / 'models/item/epp_service_station.json', {'parent': 'starboundmc:block/epp_service_station'})
+    write_json(ASSETS / 'blockstates/epp_service_station.json', {'variants': {'': {'model': 'starboundmc:block/epp_service_station'}}})
+    for name, heating in [('heating_module_1', True), ('epp_mk2_upgrade_kit', False)]:
+        im = Image.new('RGBA', (32, 32)); d = ImageDraw.Draw(im)
+        d.rectangle((4, 5, 27, 26), fill='#243842', outline='#99b4be', width=2)
+        d.rectangle((7, 8, 24, 23), fill='#101f29', outline='#536f7b')
+        for x in (9, 13, 17, 21):
+            d.rectangle((x, 27, x+1, 29), fill='#dbbd78')
+        if heating:
+            d.line([(10, 11), (21, 11), (21, 15), (10, 15), (10, 19), (21, 19)], fill='#ee9960', width=2)
+            d.line((10, 10, 20, 10), fill='#ffe1a3')
+        else:
+            d.rectangle((10, 10, 13, 21), fill='#70dad2')
+            d.rectangle((18, 10, 21, 21), fill='#70dad2')
+            d.line((10, 10, 13, 10), fill='#ddfffa')
+            d.line((18, 10, 21, 10), fill='#ddfffa')
+        save(im, ASSETS / f'textures/item/{name}.png')
+        write_json(ASSETS / f'models/item/{name}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': 'starboundmc:item/' + name}})
+
+
 def models():
     textures = {name: 'starboundmc:block/epp_' + name for name in ['plate', 'tank', 'dark', 'display']}
     textures['particle'] = textures['plate']
@@ -114,3 +149,4 @@ if __name__ == '__main__':
     canister(False)
     surfaces()
     models()
+    service_assets()

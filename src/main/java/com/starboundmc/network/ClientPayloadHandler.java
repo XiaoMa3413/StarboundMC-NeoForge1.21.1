@@ -22,7 +22,7 @@ public final class ClientPayloadHandler {
     }
     public static void handle(EppVisualPacket payload, IPayloadContext context) {
         var entity = context.player().level().getEntity(payload.entityId());
-        if (entity != null) entity.setData(com.starboundmc.story.ModAttachments.EPP_VISUAL, payload.equipped());
+        if (entity != null) entity.setData(com.starboundmc.story.ModAttachments.EPP_VISUAL, Math.clamp(payload.generation(), 0, 2));
     }
     private ClientPayloadHandler() {
     }

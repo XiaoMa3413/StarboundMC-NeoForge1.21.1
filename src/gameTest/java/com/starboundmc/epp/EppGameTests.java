@@ -31,6 +31,8 @@ import java.util.UUID;
 @GameTestHolder("starboundmc")
 @PrefixGameTestTemplate(false)
 public final class EppGameTests {
+    private static final java.util.Set<BlockPos> COLD_SERVICE_POSITIONS = new java.util.HashSet<>();
+    private static final EnvironmentState COLD = new EnvironmentState(EnvironmentState.Atmosphere.BREATHABLE, 1, 0, 0, 1, false);
     static {
         EppEquipmentResolver.registerSource("starboundmc:gametest_extra", player ->
                 player.getTags().contains("epp_resolver_test") ? player.getInventory().getItem(35) : ItemStack.EMPTY);
@@ -39,6 +41,7 @@ public final class EppGameTests {
         PlayerEnvironmentService.registerZone("starboundmc:gametest_zone", (level, pos) ->
                 pos.getX() == -30000 ? java.util.Optional.of(EnvironmentState.SPACE)
                         : pos.getX() == -30001 ? java.util.Optional.of(EnvironmentState.SHIP_INTERIOR)
+                        : pos.getX() == -30002 || COLD_SERVICE_POSITIONS.contains(pos) ? java.util.Optional.of(COLD)
                         : java.util.Optional.empty());
     }
     private record TestPlayer(ServerPlayer player, EmbeddedChannel channel) implements AutoCloseable {
@@ -64,6 +67,154 @@ public final class EppGameTests {
     }
     private static ItemStack pack(int oxygen) {
         var stack = new ItemStack(ModItems.EPP_MK1.get()); EppItem.setOxygen(stack, oxygen); return stack;
+    }
+    private static EppServiceMenu service(GameTestHelper h, ServerPlayer player) {
+        var pos = h.absolutePos(new BlockPos(1, 1, 1));
+        h.getLevel().setBlockAndUpdate(pos, ModBlocks.EPP_SERVICE_STATION.get().defaultBlockState());
+        player.setPos(pos.getX(), pos.getY(), pos.getZ());
+        var menu = new EppServiceMenu(1, player.getInventory(), pos); player.containerMenu = menu;
+        return menu;
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void upgradePreservesOriginalDeviceAndConsumesKitOnce(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "EppUpgrade")) {
+            var menu = service(h, p.player); var old = pack(321);
+            var name = net.minecraft.network.chat.Component.literal("Expedition One");
+            old.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, name);
+            menu.getSlot(0).set(old); menu.getSlot(2).set(new ItemStack(ModItems.EPP_MK2_UPGRADE_KIT.get()));
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Valid upgrade rejected");
+            var upgraded = menu.getSlot(0).getItem();
+            h.assertTrue(upgraded.is(ModItems.EPP_MK2.get()) && EppItem.oxygen(upgraded) == 321, "Upgrade reset oxygen or chassis");
+            h.assertTrue(name.equals(upgraded.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME)), "Custom name lost");
+            h.assertTrue(EppItem.capacity(upgraded) == EppConfig.MK2_CAPACITY.get(), "Mk.II capacity not applied");
+            h.assertTrue(menu.getSlot(2).getItem().isEmpty() && !menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Replay duplicated upgrade");
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, upgraded);
+            EppItem.setOxygen(upgraded, EppItem.capacity(upgraded) - EppConfig.CANISTER.get());
+            h.assertTrue(OxygenCanisterItem.canUse(p.player), "Canister still uses Mk.I capacity");
+            new ItemStack(ModItems.OXYGEN_CANISTER.get()).finishUsingItem(h.getLevel(), p.player);
+            h.assertTrue(EppItem.oxygen(upgraded) == EppItem.capacity(upgraded), "Canister did not fill Mk.II");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void modulesRequireSupportedChassisAndReturnWithoutDuplication(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "EppModule")) {
+            var menu = service(h, p.player); var module = new ItemStack(ModItems.HEATING_MODULE_1.get());
+            module.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Heater A"));
+            var expectedModule = module.copy();
+            menu.getSlot(0).set(pack(100)); menu.getSlot(1).set(module);
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Mk.I accepted a module");
+            var upgraded = new ItemStack(ModItems.EPP_MK2.get()); menu.getSlot(0).set(upgraded);
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Mk.II rejected Heating I");
+            h.assertTrue(menu.getSlot(1).getItem().isEmpty() && EppProtection.from(upgraded).coldTier() == 1, "Module not moved into pack");
+            menu.getSlot(1).set(new ItemStack(ModItems.HEATING_MODULE_1.get()));
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.INSTALL), "Second module stacked protection");
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.REMOVE), "Removal overwrote occupied tray");
+            menu.getSlot(1).set(ItemStack.EMPTY);
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.REMOVE), "Module could not be removed");
+            h.assertTrue(ItemStack.matches(expectedModule, menu.getSlot(1).getItem()), "Removed module lost its components");
+            h.assertTrue(EppProtection.from(upgraded).coldTier() == 0, "Removed module retained protection");
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.REMOVE), "Removal replay duplicated module");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void stationRejectsUnsafeRemoteStaleAndForeignActions(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "EppSecure"); var other = player(h.getLevel(), "EppOther")) {
+            var menu = service(h, p.player);
+            menu.getSlot(0).set(pack(200)); menu.getSlot(2).set(new ItemStack(ModItems.EPP_MK2_UPGRADE_KIT.get()));
+            h.assertTrue(!menu.clickMenuButton(other.player, EppServiceMenu.UPGRADE), "Foreign player changed tray");
+            COLD_SERVICE_POSITIONS.add(menu.blockPos());
+            try { h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Hazardous station allowed service"); }
+            finally { COLD_SERVICE_POSITIONS.remove(menu.blockPos()); }
+            p.player.setPos(p.player.getX() + 20, p.player.getY(), p.player.getZ());
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Remote action accepted");
+            p.player.setPos(menu.blockPos().getX(), menu.blockPos().getY(), menu.blockPos().getZ());
+            p.player.containerMenu = p.player.inventoryMenu;
+            h.assertTrue(!menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Closed menu accepted action");
+            p.player.containerMenu = menu;
+            h.getLevel().removeBlock(menu.blockPos(), false);
+            h.assertTrue(!menu.stillValid(p.player) && !menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Removed block accepted action");
+            h.assertTrue(menu.getSlot(2).getItem().getCount() == 1 && EppItem.generation(menu.getSlot(0).getItem()) == 1, "Rejected action consumed items");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void serviceTraysAreIndependentAndCloseReturnsAllInputs(GameTestHelper h) {
+        try (var a = player(h.getLevel(), "TrayAlice"); var b = player(h.getLevel(), "TrayBob")) {
+            var first = service(h, a.player); var second = service(h, b.player);
+            a.player.getInventory().setItem(9, pack(222));
+            h.assertTrue(!first.quickMoveStack(a.player, 3).isEmpty(), "Shift-click did not move EPP into tray");
+            h.assertTrue(second.getSlot(0).getItem().isEmpty(), "Players shared service input");
+            first.getSlot(1).set(new ItemStack(ModItems.HEATING_MODULE_1.get()));
+            first.getSlot(2).set(new ItemStack(ModItems.EPP_MK2_UPGRADE_KIT.get()));
+            first.removed(a.player); first.removed(a.player);
+            h.assertTrue(a.player.getInventory().countItem(ModItems.EPP_MK1.get()) == 1, "Close lost or duplicated pack");
+            h.assertTrue(a.player.getInventory().countItem(ModItems.HEATING_MODULE_1.get()) == 1
+                    && a.player.getInventory().countItem(ModItems.EPP_MK2_UPGRADE_KIT.get()) == 1, "Close lost service materials");
+            h.assertTrue(b.player.getInventory().countItem(ModItems.EPP_MK1.get()) == 0, "Return leaked to second player");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void coldProtectionRecoveryAndPersistenceAreIndependentOfOxygen(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "ColdExplorer"); var restored = player(h.getLevel(), "ColdReload")) {
+            p.player.setPos(-30002, 64, 0);
+            var pack = new ItemStack(ModItems.EPP_MK2.get()); EppItem.setOxygen(pack, 888);
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, pack);
+            for (int i = 0; i < 30; i++) EppEvents.tickSecond(p.player);
+            int exposure = p.player.getData(ModAttachments.COLD_EXPOSURE);
+            h.assertTrue(exposure == 60 && EppItem.oxygen(pack) == 888, "Cold consumed oxygen or failed to accumulate");
+            h.assertTrue(p.player.hasEffect(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN), "Cold symptoms not applied");
+            var heating = new ItemStack(ModItems.HEATING_MODULE_1.get());
+            pack.set(com.starboundmc.item.ModDataComponents.EPP_MODULES,
+                    net.minecraft.world.item.component.ItemContainerContents.fromItems(java.util.List.of(heating)));
+            EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.COLD_EXPOSURE) == 55, "Equal protection did not recover");
+            restored.player.load(p.player.saveWithoutId(new CompoundTag()));
+            var restoredPack = restored.player.getData(ModAttachments.EPP_EQUIPMENT);
+            h.assertTrue(EppItem.oxygen(restoredPack) == 888 && EppProtection.from(restoredPack).coldTier() == 1, "Module or oxygen lost on NBT round-trip");
+            h.assertTrue(restored.player.getData(ModAttachments.COLD_EXPOSURE) == 55, "Relog reset exposure");
+            p.player.setData(ModAttachments.EPP_EQUIPMENT, ItemStack.EMPTY);
+            EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.COLD_EXPOSURE) == 57, "Removing EPP retained protection");
+            p.player.setPos(-30001, 64, 0); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.COLD_EXPOSURE) == 52, "Safe cabin failed to recover");
+            p.player.setGameMode(net.minecraft.world.level.GameType.CREATIVE); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getData(ModAttachments.COLD_EXPOSURE) == 0, "Creative player accumulated exposure");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void incompatibleModulesAreInactiveButNeverDestroyed(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "EppRecovery")) {
+            var menu = service(h, p.player); var old = pack(123);
+            var unsupported = new ItemStack(Items.DIAMOND);
+            old.set(com.starboundmc.item.ModDataComponents.EPP_MODULES,
+                    net.minecraft.world.item.component.ItemContainerContents.fromItems(java.util.List.of(unsupported)));
+            menu.getSlot(0).set(old); menu.getSlot(2).set(new ItemStack(ModItems.EPP_MK2_UPGRADE_KIT.get()));
+            h.assertTrue(EppProtection.from(old).coldTier() == 0, "Mk.I granted module protection");
+            h.assertTrue(menu.clickMenuButton(p.player, EppServiceMenu.UPGRADE), "Upgrade rejected retained component data");
+            h.assertTrue(EppProtection.from(menu.getSlot(0).getItem()).coldTier() == 0, "Unsupported module granted protection");
+            h.assertTrue(p.player.getInventory().countItem(Items.DIAMOND) == 1, "Upgrade did not automatically return unsupported contents");
+            h.assertTrue(!menu.canRemove(), "Returned contents still present inside pack");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void severeColdDamagesOnlyWhileUnprotected(GameTestHelper h) {
+        try (var p = player(h.getLevel(), "ColdDamage")) {
+            // Exercise real damage after vanilla's initial login invulnerability expires.
+            for (int i = 0; i < 61; i++) p.player.tick();
+            p.player.setPos(-30002, 64, 0); p.player.invulnerableTime = 0;
+            p.player.setData(ModAttachments.COLD_EXPOSURE, 98);
+            float before = p.player.getHealth(); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getHealth() < before, "Severe unprotected cold did not damage player");
+            p.player.setPos(-30001, 64, 0); p.player.invulnerableTime = 0;
+            before = p.player.getHealth(); EppEvents.tickSecond(p.player);
+            h.assertTrue(p.player.getHealth() == before, "Cold kept damaging in safe cabin");
+        }
+        h.succeed();
     }
     @GameTest(template = "shuttle_test_empty")
     public static void extraEquipmentSourcesNeverStackTanks(GameTestHelper h) {

@@ -29,7 +29,7 @@ public final class OxygenCanisterItem extends Item {
     }
     public static boolean canUse(ServerPlayer player) {
         return !player.isSpectator() && EppEquipmentResolver.getActiveEpp(player)
-                .filter(epp -> OxygenRules.canAcceptCanister(EppItem.oxygen(epp), EppConfig.CAPACITY.get(), EppConfig.CANISTER.get())).isPresent();
+                .filter(epp -> OxygenRules.canAcceptCanister(EppItem.oxygen(epp), EppItem.capacity(epp), EppConfig.CANISTER.get())).isPresent();
     }
     @Override public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity user) {
         if (!(user instanceof ServerPlayer player) || !canUse(player) || !stack.is(ModItems.OXYGEN_CANISTER.get())) return stack;

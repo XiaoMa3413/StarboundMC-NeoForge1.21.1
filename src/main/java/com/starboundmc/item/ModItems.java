@@ -26,6 +26,14 @@ public final class ModItems {
     public static final DeferredItem<Item> BASIC_CIRCUIT_BOARD = ITEMS.registerSimpleItem("basic_circuit_board");
     public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK1 = ITEMS.registerItem(
             "epp_mk1", com.starboundmc.epp.EppItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK2 = ITEMS.registerItem(
+            "epp_mk2", properties -> new com.starboundmc.epp.EppItem(properties, 2), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EPP_MK2_UPGRADE_KIT = ITEMS.registerSimpleItem("epp_mk2_upgrade_kit", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppModuleItem> HEATING_MODULE_1 = ITEMS.registerItem(
+            "heating_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
+                    com.starboundmc.epp.EppModuleItem.Hazard.COLD, 1), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<BlockItem> EPP_SERVICE_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("epp_service_station", ModBlocks.EPP_SERVICE_STATION);
     public static final DeferredItem<com.starboundmc.epp.OxygenCanisterItem> OXYGEN_CANISTER = ITEMS.registerItem(
             "oxygen_canister", com.starboundmc.epp.OxygenCanisterItem::new, new Item.Properties().stacksTo(1));
     public static final DeferredItem<Item> EMPTY_OXYGEN_CANISTER = ITEMS.registerSimpleItem(
@@ -134,6 +142,10 @@ public final class ModItems {
                     .displayItems((parameters, output) -> {
                         output.accept(BASIC_CIRCUIT_BOARD);
                         output.accept(EPP_MK1);
+                        output.accept(EPP_MK2);
+                        output.accept(EPP_MK2_UPGRADE_KIT);
+                        output.accept(HEATING_MODULE_1);
+                        output.accept(EPP_SERVICE_STATION_ITEM);
                         output.accept(OXYGEN_CANISTER);
                         output.accept(EMPTY_OXYGEN_CANISTER);
                         output.accept(LIFE_SUPPORT_STATION_ITEM);

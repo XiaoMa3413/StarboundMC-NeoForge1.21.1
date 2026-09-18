@@ -31,7 +31,7 @@ public final class EppEvents {
         boolean equipped = !epp.isEmpty(), exempt = player.isCreative() || player.isSpectator();
         boolean refill = environment.pressurized() || player.containerMenu instanceof LifeSupportMenu menu && menu.refillsEpp(player);
         boolean breathable = environment.breathable();
-        int capacity = EppConfig.CAPACITY.get();
+        int capacity = EppItem.capacity(epp);
         int oxygen = equipped ? EppItem.oxygen(epp) : 0;
         var step = OxygenRules.step(oxygen, capacity, player.getData(ModAttachments.SUFFOCATION), equipped,
                 breathable || exempt, refill, EppConfig.CONSUMPTION.get(), EppConfig.REFILL.get(), EppConfig.GRACE.get());
@@ -45,11 +45,27 @@ public final class EppEvents {
         // Hysteresis: do not replay the same warning when a single refill unit crosses a threshold.
         if (warning > previous || breathable || (equipped && step.oxygen() > capacity / 2))
             player.setData(ModAttachments.EPP_WARNING, warning);
+        var protection = EppProtection.from(epp);
+        var cold = ExposureRules.step(player.getData(ModAttachments.COLD_EXPOSURE), exempt ? 0 : environment.coldTier(),
+                protection.coldTier(), EppConfig.COLD_ACCUMULATION.get(), exempt ? ExposureRules.MAX : EppConfig.COLD_RECOVERY.get());
+        player.setData(ModAttachments.COLD_EXPOSURE, cold.exposure());
+        if (!exempt && cold.exposure() >= 50)
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,
+                    40, cold.exposure() >= 75 ? 1 : 0, false, false, true));
+        if (!exempt && cold.damage()) player.hurt(player.damageSources().freeze(), 1);
+        int previousCold = player.getData(ModAttachments.COLD_WARNING);
+        if (!exempt && cold.warning() > previousCold) {
+            if (ShipEnvironmentService.isCoreOnline(player.getServer()))
+                ModNetwork.sendToPlayer(player, new NovaBroadcastPacket("message.starboundmc.nova.cold." + cold.warning()));
+            player.setData(ModAttachments.COLD_WARNING, cold.warning());
+        } else if (cold.exposure() <= 10) player.setData(ModAttachments.COLD_WARNING, 0);
+        int generation = EppItem.generation(epp);
         ModNetwork.sendToPlayer(player, new EppSnapshotPacket(step.oxygen(), capacity, step.exposure(), equipped,
-                !breathable && !exempt, refill && equipped && step.oxygen() < capacity));
-        if (player.getData(ModAttachments.EPP_VISUAL) != equipped) {
-            player.setData(ModAttachments.EPP_VISUAL, equipped);
-            PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new EppVisualPacket(player.getId(), equipped));
+                !breathable && !exempt, refill && equipped && step.oxygen() < capacity,
+                generation, cold.exposure(), environment.coldTier(), protection.coldTier()));
+        if (player.getData(ModAttachments.EPP_VISUAL) != generation) {
+            player.setData(ModAttachments.EPP_VISUAL, generation);
+            PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new EppVisualPacket(player.getId(), generation));
         }
     }
     @SubscribeEvent public static void interrupt(LivingIncomingDamageEvent event) {
@@ -65,16 +81,19 @@ public final class EppEvents {
     }
     @SubscribeEvent public static void tracking(PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer watcher && event.getTarget() instanceof ServerPlayer subject)
-            ModNetwork.sendToPlayer(watcher, new EppVisualPacket(subject.getId(), EppEquipmentResolver.getActiveEpp(subject).isPresent()));
+            ModNetwork.sendToPlayer(watcher, new EppVisualPacket(subject.getId(), generation(subject)));
     }
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            ModNetwork.sendToPlayer(player, new EppVisualPacket(player.getId(), EppEquipmentResolver.getActiveEpp(player).isPresent()));
+            ModNetwork.sendToPlayer(player, new EppVisualPacket(player.getId(), generation(player)));
         }
     }
     @SubscribeEvent public static void dimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (event.getEntity() instanceof ServerPlayer player)
             PacketDistributor.sendToPlayersTrackingEntityAndSelf(player,
-                    new EppVisualPacket(player.getId(), EppEquipmentResolver.getActiveEpp(player).isPresent()));
+                    new EppVisualPacket(player.getId(), generation(player)));
+    }
+    private static int generation(ServerPlayer player) {
+        return EppItem.generation(EppEquipmentResolver.getActiveEpp(player).orElse(ItemStack.EMPTY));
     }
 }

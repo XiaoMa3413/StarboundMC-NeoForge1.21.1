@@ -14,6 +14,9 @@ public final class ModMenus {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, StarboundMC.MODID);
 
+    public static final DeferredHolder<MenuType<?>, MenuType<com.starboundmc.epp.EppServiceMenu>> EPP_SERVICE_MENU =
+            MENUS.register("epp_service_menu", () -> IMenuTypeExtension.create(com.starboundmc.epp.EppServiceMenu::new));
+
     public static final DeferredHolder<MenuType<?>, MenuType<com.starboundmc.epp.EppMenu>> EPP_MENU =
             MENUS.register("epp_menu", () -> IMenuTypeExtension.create((id, inv, buf) -> new com.starboundmc.epp.EppMenu(id, inv)));
     public static final DeferredHolder<MenuType<?>, MenuType<com.starboundmc.epp.LifeSupportMenu>> LIFE_SUPPORT_MENU =

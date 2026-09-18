@@ -13,6 +13,9 @@ public final class ModBlocks {
     // Gameplay-heavy blocks are restored in vertical slices; stable IDs and
     // representative properties remain available throughout the migration.
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(StarboundMC.MODID);
+    public static final DeferredBlock<com.starboundmc.epp.EppServiceStationBlock> EPP_SERVICE_STATION = BLOCKS.registerBlock(
+            "epp_service_station", com.starboundmc.epp.EppServiceStationBlock::new,
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.5F).noOcclusion());
     public static final DeferredBlock<com.starboundmc.epp.LifeSupportStationBlock> LIFE_SUPPORT_STATION = BLOCKS.registerBlock(
             "life_support_station", com.starboundmc.epp.LifeSupportStationBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.5F).noOcclusion());

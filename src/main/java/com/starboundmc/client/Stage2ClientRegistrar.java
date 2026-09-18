@@ -24,6 +24,7 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenus.EPP_SERVICE_MENU.get(), com.starboundmc.client.epp.EppServiceScreen::new);
         event.register(ModMenus.EPP_MENU.get(), com.starboundmc.client.epp.EppScreen::new);
         event.register(ModMenus.LIFE_SUPPORT_MENU.get(), com.starboundmc.client.epp.LifeSupportScreen::new);
         event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);

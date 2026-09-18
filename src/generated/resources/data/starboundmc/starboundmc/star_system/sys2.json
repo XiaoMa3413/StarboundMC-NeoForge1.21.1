@@ -51,7 +51,7 @@
       "surface": {
         "dimension": "starboundmc:frozen",
         "environment": {
-          "cold_tier": 3
+          "cold_tier": 1
         }
       },
       "threat_level": 4,

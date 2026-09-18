@@ -90,6 +90,17 @@ class StarmapDetailContentFactoryTest
         assertEquals(List.of("scan", "atmosphere", "navigation"), sectionIds(content));
     }
 
+    @Test
+    void frozenWarnsAboutColdWithoutRemovingNavigation()
+    {
+        var entry = UniverseTestSupport.body("sys2:frozen");
+        var content = StarmapDetailContentFactory.buildEntry(entry, "sys1:lush", false,
+                ShipWarpManager.CROSS_SYSTEM_FUEL_COST);
+        assertEquals(List.of("scan", "atmosphere", "cold", "navigation"), sectionIds(content));
+        assertEquals(StarmapDetailLine.Tone.DANGER, content.sections().get(2).lines().getFirst().tone());
+        assertEquals(1, entry.surface().orElseThrow().environment().coldTier());
+    }
+
     /**
      * A body the ship cannot fly to: no navigation profile, but still described.
      *

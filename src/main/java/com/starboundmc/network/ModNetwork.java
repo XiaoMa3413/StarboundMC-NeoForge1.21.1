@@ -11,7 +11,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 /** NeoForge 1.21.1 play-payload protocol. */
 public final class ModNetwork {
-    public static final String PROTOCOL_VERSION = "9";
+    public static final String PROTOCOL_VERSION = "10";
     private static volatile ServerPayloadActions serverActions = ServerPayloadActions.NONE;
 
     private ModNetwork() {

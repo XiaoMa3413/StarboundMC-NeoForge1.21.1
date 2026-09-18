@@ -13,6 +13,8 @@ import net.minecraft.network.chat.Component;
 /** One instrument panel, one vanilla slot interaction path, retained text updates. */
 public final class EquipmentRoot extends UIElement {
     private final Label status;
+    private final Label chassis;
+    private int lastGeneration = -1;
     private Component lastStatus = Component.empty();
     private final LifeSupportMenu station;
     public EquipmentRoot(int left, int top, Component title, LifeSupportMenu station) {
@@ -24,7 +26,8 @@ public final class EquipmentRoot extends UIElement {
         shell.addChild(label(title, "epp-title", 12, 10, 224, 12));
         shell.addChild(box("epp-line", 12, 29, 224, 1));
         shell.addChild(box("epp-socket", 27, 46, 22, 22));
-        shell.addChild(label(Component.literal(station == null ? "MK.I" : "O₂"), "epp-caption", 20, 77, 42, 12));
+        chassis = label(Component.literal(station == null ? "EPP" : "O₂"), "epp-caption", 20, 77, 42, 12);
+        shell.addChild(chassis);
         status = label(Component.empty(), "epp-status", 68, 42, 164, 24);
         shell.addChild(status);
         shell.addChild(label(Component.translatable(station == null ? "gui.starboundmc.epp.equipment_hint" : "gui.starboundmc.epp.station_hint"),
@@ -37,6 +40,11 @@ public final class EquipmentRoot extends UIElement {
     }
     public void refresh() {
         var snapshot = EppClientState.snapshot;
+        int generation = snapshot == null ? 0 : snapshot.generation();
+        if (station == null && generation != lastGeneration) {
+            chassis.setText(Component.literal(generation == 2 ? "MK.II" : generation == 1 ? "MK.I" : "EPP"));
+            lastGeneration = generation;
+        }
         Component next = station != null ? Component.translatable(!station.supplied() ? "gui.starboundmc.epp.no_air"
                 : station.getSlot(0).getItem().is(com.starboundmc.item.ModItems.OXYGEN_CANISTER.get()) ? "gui.starboundmc.epp.ready"
                 : station.progress() > 0 ? "gui.starboundmc.epp.filling" : "gui.starboundmc.epp.insert", station.progress() * 100 / EppConfig.FILL_TICKS)

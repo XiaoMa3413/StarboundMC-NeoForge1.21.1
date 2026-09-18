@@ -13,7 +13,7 @@ class EnvironmentStateTest {
         for (String body : new String[]{"sys1:molten", "sys2:frozen"}) {
             var state = EnvironmentState.from(catalog.body(body).orElseThrow().surface().orElseThrow().environment());
             assertTrue(state.breathable()); assertFalse(state.pressurized());
-            assertEquals(3, Math.max(state.coldTier(), state.heatTier()));
+            assertEquals(body.equals("sys2:frozen") ? 1 : 3, Math.max(state.coldTier(), state.heatTier()));
         }
         var moon = EnvironmentState.from(catalog.body("sys1:rockymoon").orElseThrow().surface().orElseThrow().environment());
         assertFalse(moon.breathable()); assertEquals(0, moon.coldTier() + moon.heatTier() + moon.radiationTier());

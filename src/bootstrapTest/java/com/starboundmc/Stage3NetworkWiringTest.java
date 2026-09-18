@@ -14,7 +14,7 @@ final class Stage3NetworkWiringTest {
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
         // EPP adds one serverbound request and two authoritative clientbound snapshots.
-        assertTrue(network.contains("PROTOCOL_VERSION = \"9\""));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"10\""));
         assertEquals(13, occurrences(network, "playToServer("));
         // Existing twelve clientbound payloads are retained.
         assertEquals(14, occurrences(network, "playToClient("));

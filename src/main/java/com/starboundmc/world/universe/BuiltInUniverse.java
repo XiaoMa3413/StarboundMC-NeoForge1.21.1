@@ -236,7 +236,7 @@ public final class BuiltInUniverse
                                         32.0F, 125.0F, 0.0F, 0xFF8FD7FF,
                                         0.30F, 0.00225F, 0.14F),
                                 surface("starboundmc:frozen", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
-                                        new PlanetEnvironmentProfile(true, 3, 0, 0, 1.0F)))
+                                        new PlanetEnvironmentProfile(true, 1, 0, 0, 1.0F)))
                 ));
     }
 
