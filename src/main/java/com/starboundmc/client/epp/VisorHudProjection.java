@@ -18,18 +18,29 @@ import java.util.function.Consumer;
 /** Reused transparent render target, projected as one continuous tessellated surface. */
 final class VisorHudProjection implements AutoCloseable {
     private TextureTarget target;
-    private static final VisorSurface.Point[][] POINTS = new VisorSurface.Point[25][65];
-    private static final float[] FADE = new float[65];
-    static {
-        for (int col = 0; col < 65; col++) {
-            FADE[col] = VisorSurface.fade(col * 2);
-            for (int row = 0; row < 25; row++) POINTS[row][col] = VisorSurface.project(col * 2, row * 2);
+    private final int width;
+    private final VisorSurface.Point[][] points;
+    private final float[] fades;
+    VisorHudProjection() { this(128, false); }
+    VisorHudProjection(int width, boolean navigation) {
+        this.width = width;
+        points = new VisorSurface.Point[25][width / 2 + 1];
+        fades = new float[width / 2 + 1];
+        for (int col = 0; col <= width / 2; col++) {
+            fades[col] = navigation ? .85f + .15f * (float)Math.sin(Math.PI * col * 2 / width) : VisorSurface.fade(col * 2);
+            for (int row = 0; row < 25; row++) points[row][col] = navigation
+                    ? VisorSurface.navigation(col * 2, row * 2, width) : VisorSurface.project(col * 2, row * 2);
         }
     }
 
     void draw(GuiGraphics destination, float x, float y, Consumer<GuiGraphics> content) {
+        draw(destination, x, y, 1, content);
+    }
+
+    void draw(GuiGraphics destination, float x, float y, float opacity, Consumer<GuiGraphics> content) {
+        if (opacity <= 0.001f) return;
         var mc = Minecraft.getInstance();
-        int scale = Math.clamp((int) Math.ceil(mc.getWindow().getGuiScale()), 2, 6);
+        int scale = Math.clamp((int) Math.ceil(mc.getWindow().getGuiScale() * 2), 4, 12);
         var projection = new Matrix4f(RenderSystem.getProjectionMatrix());
         var sorting = RenderSystem.getVertexSorting();
         var shader = RenderSystem.getShader();
@@ -60,17 +71,17 @@ final class VisorHudProjection implements AutoCloseable {
                 RenderSystem.colorMask(true, true, true, true);
                 RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
                 if (target == null) {
-                    target = new TextureTarget(VisorSurface.WIDTH * scale, VisorSurface.HEIGHT * scale, false, Minecraft.ON_OSX);
+                    target = new TextureTarget(width * scale, VisorSurface.HEIGHT * scale, false, Minecraft.ON_OSX);
                     target.setClearColor(0, 0, 0, 0);
                     target.setFilterMode(GL11.GL_LINEAR);
-                } else if (target.width != VisorSurface.WIDTH * scale) {
-                    target.resize(VisorSurface.WIDTH * scale, VisorSurface.HEIGHT * scale, Minecraft.ON_OSX);
+                } else if (target.width != width * scale) {
+                    target.resize(width * scale, VisorSurface.HEIGHT * scale, Minecraft.ON_OSX);
                     target.setFilterMode(GL11.GL_LINEAR);
                 }
                 target.clear(Minecraft.ON_OSX);
                 target.bindWrite(true);
                 modelView.identity(); RenderSystem.applyModelViewMatrix();
-                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, VisorSurface.WIDTH,
+                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, width,
                         VisorSurface.HEIGHT, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
                 RenderSystem.setShaderColor(1, 1, 1, 1);
                 var canvas = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
@@ -102,11 +113,11 @@ final class VisorHudProjection implements AutoCloseable {
             var pose = destination.pose().last().pose();
             // Two-pixel cells deform inside individual glyphs and the warning triangle.
             for (int row = 0; row < VisorSurface.HEIGHT; row += 2) {
-                for (int col = 0; col < VisorSurface.WIDTH; col += 2) {
-                    vertex(buffer, pose, x, y, col, row);
-                    vertex(buffer, pose, x, y, col, row + 2);
-                    vertex(buffer, pose, x, y, col + 2, row + 2);
-                    vertex(buffer, pose, x, y, col + 2, row);
+                for (int col = 0; col < width; col += 2) {
+                    vertex(buffer, pose, x, y, col, row, opacity);
+                    vertex(buffer, pose, x, y, col, row + 2, opacity);
+                    vertex(buffer, pose, x, y, col + 2, row + 2, opacity);
+                    vertex(buffer, pose, x, y, col + 2, row, opacity);
                 }
             }
             BufferUploader.drawWithShader(buffer.buildOrThrow());
@@ -123,11 +134,11 @@ final class VisorHudProjection implements AutoCloseable {
         }
     }
 
-    private static void vertex(BufferBuilder buffer, Matrix4f pose, float x, float y, float u, float v) {
-        var point = POINTS[(int) v / 2][(int) u / 2];
-        float fade = FADE[(int) u / 2];
+    private void vertex(BufferBuilder buffer, Matrix4f pose, float x, float y, float u, float v, float opacity) {
+        var point = points[(int) v / 2][(int) u / 2];
+        float fade = fades[(int) u / 2] * Math.clamp(opacity, 0, 1);
         buffer.addVertex(pose, x + point.x(), y + point.y(), 0)
-                .setUv(u / VisorSurface.WIDTH, 1 - v / VisorSurface.HEIGHT)
+                .setUv(u / width, 1 - v / VisorSurface.HEIGHT)
                 .setColor(fade, fade, fade, fade);
     }
 

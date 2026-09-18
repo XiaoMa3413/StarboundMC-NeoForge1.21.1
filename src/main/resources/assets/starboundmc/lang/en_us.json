@@ -572,6 +572,7 @@
   "message.starboundmc.nova.relay.completed": "Data recovered and crew returned. The relay remains available for revisits.",
   "message.starboundmc.nova.relay.departed": "Relay saved. You can revisit it from the starmap.",
   "message.starboundmc.nova.relay.interrupted": "Relay operation interrupted. The site and snapshot were preserved; contact an operator for inspection.",
+  "hud.starboundmc.eva.behind": "BEHIND",
   "item.starboundmc.epp_mk3": "EPP Mk.III",
   "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III Upgrade Kit"
 }

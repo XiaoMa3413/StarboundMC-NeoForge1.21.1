@@ -5,6 +5,19 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class VisorSurfaceTest {
+    @Test void navigationKeepsTextWidthAndHeightWithOnlyGentleSymmetricCurvature() {
+        for (int width : new int[]{128, 360}) {
+            for (int u = 0; u < width; u++) {
+                var p = VisorSurface.navigation(u, 12, width);
+                var right = VisorSurface.navigation(u + 1, 12, width);
+                var down = VisorSurface.navigation(u, 21, width);
+                assertEquals(1f, right.x() - p.x(), .0001);
+                assertEquals(9f, down.y() - p.y(), .0001);
+                assertTrue(Math.abs(right.y() - p.y()) <= .101f);
+                assertEquals(p.y(), VisorSurface.navigation(width - u, 12, width).y(), .0001);
+            }
+        }
+    }
     @Test void curvedBaselineHasExpectedAnchors() {
         var left = VisorSurface.project(6, 24);
         var right = VisorSurface.project(122, 24);

@@ -572,6 +572,7 @@
   "message.starboundmc.nova.relay.completed": "已回收数据核心并完成返航。中继站可再次访问。",
   "message.starboundmc.nova.relay.departed": "中继站已保存，之后可通过星图再次访问。",
   "message.starboundmc.nova.relay.interrupted": "中继站操作异常中断。现场与快照已保留，请联系管理员检查。",
+  "hud.starboundmc.eva.behind": "后方",
   "item.starboundmc.epp_mk3": "环境保护背包 Mk.III",
   "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III 升级套件"
 }

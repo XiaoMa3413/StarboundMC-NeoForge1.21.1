@@ -7,6 +7,11 @@ final class VisorSurface {
     static final float ARC_WIDTH = 116;
     private VisorSurface() { }
     record Point(float x, float y) { }
+    /** Gentle symmetric top visor: preserve glyph aspect ratio and limit slope to 0.1. */
+    static Point navigation(float u, float v, int width) {
+        float t = (u - width / 2f) / (width / 2f);
+        return new Point(u, v - width * .025f * t * t);
+    }
     static Point project(float u, float v) {
         float t = (u - 6) / ARC_WIDTH;
         float offset = v - 24;

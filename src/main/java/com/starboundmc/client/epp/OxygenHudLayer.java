@@ -19,18 +19,20 @@ public final class OxygenHudLayer implements ModularHudLayer {
     public static final OxygenHudLayer INSTANCE = new OxygenHudLayer();
     private ModularUI ui;
     private final VisorHudProjection projection = new VisorHudProjection();
+    private final VisorHudProjection navigation = new VisorHudProjection(272, true);
+    private final VisorHudProjection controls = new VisorHudProjection(360, true);
     @Override public ModularUI getModularUI() {
         var mc = Minecraft.getInstance(); var s = EppClientState.snapshot;
         if (mc.player == null || !mc.player.isAlive() || mc.options.hideGui
                 || !(showBeacon() || s != null && (s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0))) return null;
-        if (ui == null) ui = ModularUI.of(UI.of(new Gauge(projection), ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
+        if (ui == null) ui = ModularUI.of(UI.of(new Gauge(projection, navigation, controls), ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         return ui;
     }
     @Override public void render(GuiGraphics graphics, DeltaTracker dt) {
         var current = getModularUI();
         if (current != null && validModularUI(current)) current.getWidget().render(graphics, Integer.MAX_VALUE, Integer.MAX_VALUE, dt.getGameTimeDeltaPartialTick(false));
     }
-    public void reset() { if (ui != null) ui.onRemoved(); ui = null; projection.close(); }
+    public void reset() { if (ui != null) ui.onRemoved(); ui = null; projection.close(); navigation.close(); controls.close(); ArNavigationHud.reset(); }
     private static boolean showBeacon() {
         var player = Minecraft.getInstance().player;
         return player != null && player.level().dimension().equals(com.starboundmc.world.ShipDimensions.SHIP_LEVEL)
@@ -39,36 +41,39 @@ public final class OxygenHudLayer implements ModularHudLayer {
     private static final class Gauge extends UIElement {
         private long lastFrame;
         private float lastYaw, lastPitch, driftX, driftY;
+        private final OxygenHudFade fade = new OxygenHudFade();
         private final VisorHudProjection projection;
+        private final VisorHudProjection navigation, controls;
 
-        Gauge(VisorHudProjection projection) { this.projection = projection; layout(l -> l.widthPercent(100).heightPercent(100)); setAllowHitTest(false); }
+        Gauge(VisorHudProjection projection, VisorHudProjection navigation, VisorHudProjection controls) {
+            this.projection = projection; this.navigation = navigation; this.controls = controls;
+            layout(l -> l.widthPercent(100).heightPercent(100)); setAllowHitTest(false);
+        }
         @Override public void drawBackgroundAdditional(GUIContext context) {
+            var mc = Minecraft.getInstance();
+            float seconds = lastFrame == 0 ? 0 : Math.min(.1f, (System.nanoTime() - lastFrame) / 1_000_000_000f);
+            updateDrift(mc);
             if (showBeacon()) drawBeacon(context.graphics);
             var s = EppClientState.snapshot; if (s == null) return;
-            var mc = Minecraft.getInstance(); var g = context.graphics;
+            var g = context.graphics;
             int x = g.guiWidth() - 140, y = g.guiHeight() - 82;
-            updateDrift(mc);
-            boolean oxygenVisible = s.equipped() || s.airless() || s.exposure() > 0;
-            if (oxygenVisible) projection.draw(g, x + driftX, y + driftY, canvas -> drawFlat(canvas, context.partialTick));
+            float opacity = fade.update(mc.isPaused() ? 0 : seconds, s.airless() || s.exposure() > 0 || s.refilling());
+            boolean oxygenVisible = opacity > .001f && (s.equipped() || s.airless() || s.exposure() > 0);
+            if (oxygenVisible) projection.draw(g, x + driftX, y + driftY, opacity, canvas -> drawFlat(canvas, context.partialTick));
             if (s.coldTier() > 0 || s.coldExposure() > 0)
                 projection.draw(g, x + driftX, y + driftY + (oxygenVisible ? 40 : 0), this::drawCold);
         }
 
         private void drawBeacon(GuiGraphics g) {
             var mc = Minecraft.getInstance();
-            var bearing = ShipBeaconBearing.from(mc.player.position(),
-                    net.minecraft.world.phys.Vec3.atBottomCenterOf(com.starboundmc.world.ShipStructure.SHIP_TELEPORTER_POS),
-                    mc.player.getYRot());
-            int x = g.guiWidth() / 2, y = 22;
+            int x = g.guiWidth() / 2;
+            ArNavigationHud.targets(g);
+            float navFit = Math.min(1f, (g.guiWidth() - 16f) / 272f);
             g.pose().pushPose();
-            g.pose().translate(x, y, 0);
-            g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees((float) bearing.turnDegrees()));
-            for (int row = 0; row < 5; row++) g.fill(-row, row - 5, row + 1, row - 4, 0xD095E8E2);
-            g.fill(-1, 0, 2, 5, 0xD095E8E2);
+            g.pose().translate(x - 136 * navFit + driftX, 18 + driftY, 0);
+            g.pose().scale(navFit, navFit, 1);
+            navigation.draw(g, 0, 0, ArNavigationHud::compass);
             g.pose().popPose();
-            var height = (bearing.height() >= 0 ? "+" : "") + Math.round(bearing.height());
-            g.drawCenteredString(mc.font, Component.translatable("hud.starboundmc.eva.beacon",
-                    Math.round(bearing.distance()), height), x, y + 12, 0xD095E8E2);
             boolean thrust = com.starboundmc.epp.EvaMovement.mode(mc.player) == com.starboundmc.epp.EvaState.THRUST;
             var hint = thrust ? Component.translatable("hud.starboundmc.eva.controls",
                     mc.options.keyUp.getTranslatedKeyMessage(), mc.options.keyLeft.getTranslatedKeyMessage(),
@@ -76,23 +81,20 @@ public final class OxygenHudLayer implements ModularHudLayer {
                     mc.options.keyJump.getTranslatedKeyMessage(), mc.options.keyShift.getTranslatedKeyMessage())
                     : Component.translatable("hud.starboundmc.eva.no_thrusters",
                             com.starboundmc.client.ModKeyBindings.returnToShip.getTranslatedKeyMessage());
-            float scale = Math.min(1f, (g.guiWidth() - 20f) / Math.max(1, mc.font.width(hint)));
+            // Render text at its native aspect ratio into a genuinely wider target.
+            float width = Math.min(g.guiWidth() - 16f, 360f);
+            float fit = width / 360f;
             g.pose().pushPose();
-            g.pose().translate(x, y + 24, 0);
-            g.pose().scale(scale, scale, 1);
-            g.drawCenteredString(mc.font, hint, 0, 0, thrust ? 0xB095E8E2 : 0xFFFFD17C);
+            g.pose().translate(x - width / 2 + driftX, 63 + driftY, 0);
+            g.pose().scale(fit, fit, 1);
+            controls.draw(g, 0, 0, canvas -> {
+                float textScale = Math.min(1f, 340f / Math.max(1, mc.font.width(hint)));
+                canvas.pose().pushPose();
+                canvas.pose().translate(180, 12, 0); canvas.pose().scale(textScale, textScale, 1);
+                canvas.drawCenteredString(mc.font, hint, 0, 0, thrust ? 0xB895E8E2 : 0xD8FFD17C);
+                canvas.pose().popPose();
+            });
             g.pose().popPose();
-            var relay = com.starboundmc.client.space.RelayClientState.snapshot;
-            if (com.starboundmc.client.space.RelayClientState.local() && relay != null) {
-                var target = ShipBeaconBearing.from(mc.player.position(),
-                        com.starboundmc.encounter.RelayGeometry.center(relay.origin()), mc.player.getYRot());
-                g.pose().pushPose(); g.pose().translate(x, y + 47, 0);
-                g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees((float) target.turnDegrees()));
-                for (int row = 0; row < 4; row++) g.fill(-row, row - 4, row + 1, row - 3, 0xD0FFD17C);
-                g.pose().popPose();
-                g.drawCenteredString(mc.font, Component.translatable("hud.starboundmc.relay.beacon",
-                        Math.round(target.distance()), Math.round(target.height())), x, y + 54, 0xD0FFD17C);
-            }
         }
 
         private void drawCold(GuiGraphics g) {
