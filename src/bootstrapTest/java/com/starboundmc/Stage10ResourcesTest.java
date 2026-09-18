@@ -30,9 +30,10 @@ final class Stage10ResourcesTest {
             "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
             "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit",
             "fuel_crystal_ore", "hull_plating", "reinforced_hull", "hull_window",
-            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter");
+            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station");
 
     private static final List<String> ITEMS = List.of(
+            "basic_circuit_board", "epp_mk1", "oxygen_canister", "empty_oxygen_canister",
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
             "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
             "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
@@ -41,7 +42,7 @@ final class Stage10ResourcesTest {
             "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel",
             "voxel_refinery", "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
             "fuel_crystal_ore", "fuel_crystal", "hull_plating", "reinforced_hull", "hull_window",
-            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter");
+            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {
@@ -73,7 +74,7 @@ final class Stage10ResourcesTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(28, files.size());
+            assertEquals(33, files.size());
             int printingRecipes = 0;
             int decompositionRecipes = 0;
             for (Path path : files) {
@@ -94,7 +95,7 @@ final class Stage10ResourcesTest {
                     assertTrue(result.has("count"), path.toString());
                 }
             }
-            assertEquals(3, printingRecipes, "three printing recipes");
+            assertEquals(8, printingRecipes, "eight printing recipes");
             assertEquals(14, decompositionRecipes, "fourteen decomposition recipes");
         }
     }

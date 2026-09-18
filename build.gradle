@@ -44,6 +44,8 @@ sourceSets {
             include 'com/starboundmc/loot/VoxelDropLootModifier.java'
             include 'com/starboundmc/loot/VoxelLootModifiers.java'
             include 'com/starboundmc/economy/*.java'
+            include 'com/starboundmc/epp/*.java'
+            include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/recipe/*.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
             include 'com/starboundmc/event/SpawnHandler.java'
@@ -183,6 +185,8 @@ sourceSets {
             include 'com/starboundmc/network/*.java'
             include 'com/starboundmc/story/*.java'
             include 'com/starboundmc/economy/*.java'
+            include 'com/starboundmc/epp/*.java'
+            include 'com/starboundmc/client/epp/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath

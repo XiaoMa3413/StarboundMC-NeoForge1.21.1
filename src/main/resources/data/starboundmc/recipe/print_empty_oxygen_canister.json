@@ -1,0 +1,23 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "minecraft:iron_ingot"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:glass"
+      },
+      "count": 1
+    }
+  ],
+  "voxel_cost": 10,
+  "print_seconds": 2,
+  "result": {
+    "id": "starboundmc:empty_oxygen_canister",
+    "count": 1
+  }
+}

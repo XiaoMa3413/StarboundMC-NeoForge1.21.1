@@ -216,9 +216,9 @@ final class NovaCommandLayout extends UIElement {
     }
 
     private NovaTask recommended() {
-        if (progress.trackedTask() >= 0 && progress.trackedTask() <= 3) return NovaTask.fromId(progress.trackedTask());
+        if (progress.trackedTask() >= 0 && progress.trackedTask() < NovaTask.values().length) return NovaTask.fromId(progress.trackedTask());
         for (NovaTask task : NovaTask.values()) if (!progress.completed(task) && task.available(progress.completedMask())) return task;
-        return NovaTask.EXPLORATION;
+        return NovaTask.LUNAR_SORTIE;
     }
     private void filter(boolean complete) {
         completedFilter = complete;

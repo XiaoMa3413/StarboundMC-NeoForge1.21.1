@@ -51,7 +51,6 @@
       "surface": {
         "dimension": "starboundmc:frozen",
         "environment": {
-          "breathable": false,
           "cold_tier": 3
         }
       },

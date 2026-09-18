@@ -17,6 +17,13 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(EppSnapshotPacket payload, IPayloadContext context) {
+        com.starboundmc.client.epp.EppClientState.snapshot = payload;
+    }
+    public static void handle(EppVisualPacket payload, IPayloadContext context) {
+        var entity = context.player().level().getEntity(payload.entityId());
+        if (entity != null) entity.setData(com.starboundmc.story.ModAttachments.EPP_VISUAL, payload.equipped());
+    }
     private ClientPayloadHandler() {
     }
 

@@ -1,0 +1,80 @@
+// SPDX-License-Identifier: MPL-2.0
+package com.starboundmc.epp;
+
+import com.starboundmc.StarboundMC;
+import com.starboundmc.item.ModItems;
+import com.starboundmc.network.*;
+import com.starboundmc.story.ModAttachments;
+import com.starboundmc.story.ShipEnvironmentService;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+@EventBusSubscriber(modid = StarboundMC.MODID)
+public final class EppEvents {
+    private EppEvents() { }
+    @SubscribeEvent public static void tick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !player.isAlive() || player.tickCount % 20 != 0) return;
+        tickSecond(player);
+    }
+    public static void tickSecond(ServerPlayer player) {
+        var environment = PlayerEnvironmentService.at(player);
+        ItemStack epp = EppEquipmentResolver.getActiveEpp(player).orElse(ItemStack.EMPTY);
+        boolean equipped = !epp.isEmpty(), exempt = player.isCreative() || player.isSpectator();
+        boolean refill = environment.pressurized() || player.containerMenu instanceof LifeSupportMenu menu && menu.refillsEpp(player);
+        boolean breathable = environment.breathable();
+        int capacity = EppConfig.CAPACITY.get();
+        int oxygen = equipped ? EppItem.oxygen(epp) : 0;
+        var step = OxygenRules.step(oxygen, capacity, player.getData(ModAttachments.SUFFOCATION), equipped,
+                breathable || exempt, refill, EppConfig.CONSUMPTION.get(), EppConfig.REFILL.get(), EppConfig.GRACE.get());
+        if (equipped && oxygen != step.oxygen()) EppItem.setOxygen(epp, step.oxygen());
+        player.setData(ModAttachments.SUFFOCATION, step.exposure());
+        if (!exempt && step.damage()) player.hurt(player.damageSources().drown(), step.exposure() >= EppConfig.GRACE.get() + 5 ? 2 : 1);
+        int warning = breathable || exempt ? 0 : OxygenRules.warning(step.oxygen(), equipped ? capacity : 0);
+        int previous = player.getData(ModAttachments.EPP_WARNING);
+        if (warning > previous && ShipEnvironmentService.isCoreOnline(player.getServer()))
+            ModNetwork.sendToPlayer(player, new NovaBroadcastPacket("message.starboundmc.nova.oxygen." + warning));
+        // Hysteresis: do not replay the same warning when a single refill unit crosses a threshold.
+        if (warning > previous || breathable || (equipped && step.oxygen() > capacity / 2))
+            player.setData(ModAttachments.EPP_WARNING, warning);
+        ModNetwork.sendToPlayer(player, new EppSnapshotPacket(step.oxygen(), capacity, step.exposure(), equipped,
+                !breathable && !exempt, refill && equipped && step.oxygen() < capacity));
+        if (player.getData(ModAttachments.EPP_VISUAL) != equipped) {
+            player.setData(ModAttachments.EPP_VISUAL, equipped);
+            PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, new EppVisualPacket(player.getId(), equipped));
+        }
+    }
+    @SubscribeEvent public static void interrupt(LivingIncomingDamageEvent event) {
+        if (event.getAmount() > 0 && event.getEntity() instanceof ServerPlayer player
+                && player.isUsingItem() && player.getUseItem().is(ModItems.OXYGEN_CANISTER.get())) player.stopUsingItem();
+    }
+    @SubscribeEvent public static void drops(LivingDropsEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || player.level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) return;
+        ItemStack stack = player.getData(ModAttachments.EPP_EQUIPMENT);
+        if (stack.isEmpty()) return;
+        player.setData(ModAttachments.EPP_EQUIPMENT, ItemStack.EMPTY);
+        event.getDrops().add(new ItemEntity(player.level(), player.getX(), player.getY(), player.getZ(), stack));
+    }
+    @SubscribeEvent public static void tracking(PlayerEvent.StartTracking event) {
+        if (event.getEntity() instanceof ServerPlayer watcher && event.getTarget() instanceof ServerPlayer subject)
+            ModNetwork.sendToPlayer(watcher, new EppVisualPacket(subject.getId(), EppEquipmentResolver.getActiveEpp(subject).isPresent()));
+    }
+    @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ModNetwork.sendToPlayer(player, new EppVisualPacket(player.getId(), EppEquipmentResolver.getActiveEpp(player).isPresent()));
+        }
+    }
+    @SubscribeEvent public static void dimensionChanged(PlayerEvent.PlayerChangedDimensionEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player)
+            PacketDistributor.sendToPlayersTrackingEntityAndSelf(player,
+                    new EppVisualPacket(player.getId(), EppEquipmentResolver.getActiveEpp(player).isPresent()));
+    }
+}

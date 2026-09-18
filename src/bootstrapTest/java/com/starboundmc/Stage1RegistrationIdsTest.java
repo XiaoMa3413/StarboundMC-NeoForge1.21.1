@@ -19,7 +19,7 @@ final class Stage1RegistrationIdsTest {
                 "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
                 "starmap_terminal", "ship_ai_terminal", "voxel_refinery", "voxel_printing_station",
                 "ship_engine_unit", "fuel_crystal_ore", "hull_plating", "reinforced_hull",
-                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter"
+                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station"
         ));
     }
 
@@ -27,13 +27,14 @@ final class Stage1RegistrationIdsTest {
     void keepsPublishedBlockEntityIds() throws IOException {
         assertSourceIds("block/ModBlockEntities.java", "BLOCK_ENTITIES\\.register\\(\\s*\"([^\"]+)\"", Set.of(
                 "ship_crate", "ship_door", "titanium_alloy_furnace", "fuel_controller",
-                "voxel_refinery", "voxel_printing_station", "ship_engine"
+                "voxel_refinery", "voxel_printing_station", "ship_engine", "life_support_station"
         ));
     }
 
     @Test
     void keepsPublishedItemIds() throws IOException {
         assertSourceIds("item/ModItems.java", "ITEMS\\.(?:registerItem|registerSimpleItem|registerSimpleBlockItem)\\(\\s*\"([^\"]+)\"", Set.of(
+                "basic_circuit_board", "epp_mk1", "oxygen_canister", "empty_oxygen_canister",
                 "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
                 "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
                 "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",
@@ -43,7 +44,7 @@ final class Stage1RegistrationIdsTest {
                 "emergency_food_can", "survival_knife", "voxel", "voxel_refinery",
                 "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
                 "fuel_crystal_ore", "fuel_crystal", "hull_plating", "reinforced_hull",
-                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter"
+                "hull_window", "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station"
         ));
         assertSourceIds("item/ModItems.java", "CREATIVE_MODE_TABS\\.register\\(\\s*\"([^\"]+)\"",
                 Set.of("starboundmc"));
@@ -55,7 +56,7 @@ final class Stage1RegistrationIdsTest {
         assertSourceIds("menu/ModMenus.java", "MENUS\\.register\\(\\s*\"([^\"]+)\"", Set.of(
                 "upgrade_menu", "ship_console_menu", "ship_crate_menu", "teleporter_menu",
                 "alloy_furnace_menu", "fuel_controller_menu", "starmap_terminal_menu",
-                "ship_ai_terminal_menu", "voxel_refinery_menu", "voxel_printing_station_menu", "ship_engine_menu"
+                "ship_ai_terminal_menu", "voxel_refinery_menu", "voxel_printing_station_menu", "ship_engine_menu", "epp_menu", "life_support_menu"
         ));
     }
 

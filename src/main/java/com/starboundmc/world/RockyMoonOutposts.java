@@ -456,7 +456,8 @@ public final class RockyMoonOutposts
         blocks.add(new Block(-1, 1, -1, Kind.CRATE_LOOT));
         return new Structure("supply_cache", 2, 2, 6, blocks,
                 List.of(new Loot(0, "starboundmc:titanium_ingot", 2),
-                        new Loot(1, "minecraft:redstone", 5)));
+                        new Loot(1, "minecraft:redstone", 5),
+                        new Loot(2, "starboundmc:oxygen_canister", 1)));
     }
 
     /**

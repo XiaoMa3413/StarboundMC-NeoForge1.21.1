@@ -54,11 +54,11 @@ class StarmapDetailContentFactoryTest
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, entry.entryId(), true, ShipWarpManager.WARP_FUEL_COST);
 
-        assertEquals(List.of("scan", "navigation", "status"), sectionIds(content));
+        assertEquals(List.of("scan", "atmosphere", "navigation", "status"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.FUEL,
-                content.sections().get(1).lines().get(0).tone());
-        assertEquals(StarmapDetailLine.Tone.CURRENT,
                 content.sections().get(2).lines().get(0).tone());
+        assertEquals(StarmapDetailLine.Tone.CURRENT,
+                content.sections().get(3).lines().get(0).tone());
     }
 
     @Test
@@ -87,7 +87,7 @@ class StarmapDetailContentFactoryTest
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, ShipWarpManager.WARP_FUEL_COST);
 
-        assertEquals(List.of("scan", "navigation"), sectionIds(content));
+        assertEquals(List.of("scan", "atmosphere", "navigation"), sectionIds(content));
     }
 
     /**

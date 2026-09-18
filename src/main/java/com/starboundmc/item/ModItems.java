@@ -23,6 +23,15 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(StarboundMC.MODID);
+    public static final DeferredItem<Item> BASIC_CIRCUIT_BOARD = ITEMS.registerSimpleItem("basic_circuit_board");
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK1 = ITEMS.registerItem(
+            "epp_mk1", com.starboundmc.epp.EppItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.OxygenCanisterItem> OXYGEN_CANISTER = ITEMS.registerItem(
+            "oxygen_canister", com.starboundmc.epp.OxygenCanisterItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EMPTY_OXYGEN_CANISTER = ITEMS.registerSimpleItem(
+            "empty_oxygen_canister", new Item.Properties().stacksTo(8));
+    public static final DeferredItem<BlockItem> LIFE_SUPPORT_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("life_support_station", ModBlocks.LIFE_SUPPORT_STATION);
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, StarboundMC.MODID);
 
@@ -123,6 +132,11 @@ public final class ModItems {
                     .title(Component.translatable("itemGroup.starboundmc"))
                     .icon(MATTER_MANIPULATOR::toStack)
                     .displayItems((parameters, output) -> {
+                        output.accept(BASIC_CIRCUIT_BOARD);
+                        output.accept(EPP_MK1);
+                        output.accept(OXYGEN_CANISTER);
+                        output.accept(EMPTY_OXYGEN_CANISTER);
+                        output.accept(LIFE_SUPPORT_STATION_ITEM);
                         output.accept(MATTER_MANIPULATOR);
                         output.accept(MATTER_MANIPULATOR_MODULE);
                         output.accept(SUBLIGHT_IGNITION_CORE);

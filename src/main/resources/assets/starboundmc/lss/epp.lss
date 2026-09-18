@@ -1,0 +1,8 @@
+.epp-shell { background: group(rect(#14262f), border(1, #55717b)); }
+.epp-accent { background: rect(#77d8ce); }
+.epp-line { background: rect(#36525e); }
+.epp-title { font-size: 10; text-color: #dbf0ed; text-shadow: false; }
+.epp-status { font-size: 9; text-color: #89ded3; text-shadow: false; }
+.epp-caption { font-size: 8; text-color: #9fb9c2; text-shadow: false; }
+.epp-slot { background: group(rect(#0c1921), border(-1, #344a53)); }
+.epp-socket { background: group(rect(#08151b), border(-1, #75c6c2)); }

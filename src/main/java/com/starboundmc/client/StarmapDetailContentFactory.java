@@ -107,6 +107,12 @@ public final class StarmapDetailContentFactory
                 Component.translatable("gui.starboundmc.starmap.detail.scan"),
                 StarmapDetailLine.of(threat, StarmapDetailLine.Tone.ATTENTION)));
 
+        entry.surface().ifPresent(surface -> sections.add(StarmapDetailSection.labeled("atmosphere",
+                Component.translatable("gui.starboundmc.starmap.detail.atmosphere"),
+                StarmapDetailLine.of(Component.translatable(surface.environment().breathable()
+                                ? "gui.starboundmc.starmap.detail.breathable" : "gui.starboundmc.starmap.detail.airless"),
+                        surface.environment().breathable() ? StarmapDetailLine.Tone.BODY : StarmapDetailLine.Tone.DANGER))));
+
         if (entry.isNavigable())
         {
             boolean crossSystem = fuelCost >= ShipWarpManager.CROSS_SYSTEM_FUEL_COST;
