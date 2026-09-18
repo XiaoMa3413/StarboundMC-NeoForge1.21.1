@@ -17,6 +17,10 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(RelaySnapshotPacket payload, IPayloadContext context) {
+        com.starboundmc.client.space.RelayClientState.snapshot = payload;
+        com.starboundmc.client.space.RelayClientState.receivedTick = context.player().level().getGameTime();
+    }
     public static void handle(EvaStatePacket payload, IPayloadContext context) {
         var player = context.player();
         if (!player.level().dimension().location().equals(payload.dimension())) return;

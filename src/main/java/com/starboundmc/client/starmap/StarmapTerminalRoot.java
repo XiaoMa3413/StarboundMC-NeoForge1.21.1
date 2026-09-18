@@ -44,6 +44,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapChromeElement chrome;
     private final StarmapInfoPanelElement infoPanel;
     private final ShipSystemLockOverlay environmentLock;
+    private final RelaySignalPanel relaySignal;
     private final int containerId;
     private final List<StarmapNodeElement> nodes = new ArrayList<>();
     /** Accumulated simulation ticks. Rendering adds a partial tick below. */
@@ -108,8 +109,9 @@ public final class StarmapTerminalRoot extends UIElement {
         chrome = new StarmapChromeElement(this);
         infoPanel = new StarmapInfoPanelElement(this);
         environmentLock = new ShipSystemLockOverlay();
+        relaySignal = new RelaySignalPanel(containerId);
         addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel,
-                environmentLock);
+                relaySignal, environmentLock);
         refreshEnvironmentLock();
         addEventListener(UIEvents.TICK, event -> {
             orbitClock += 1.0D;
@@ -119,6 +121,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void refreshComponents() {
+        relaySignal.refresh(isSublightOnline());
         refreshEnvironmentLock();
         nodes.forEach(StarmapNodeElement::refresh);
         selectionOverlay.refresh();

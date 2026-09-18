@@ -199,6 +199,7 @@ public final class ShipWarpManager
             player.displayClientMessage(Component.translatable("message.starboundmc.warp.no_fuel"), true);
             return false;
         }
+        if (!com.starboundmc.encounter.RelayEncounter.beforeWarp(player)) return false;
         state.setFuel(getFuel() - cost);
         flight = new ShipFlightController(currentEntryId(), entryId);
         targetEntryId = entryId;
@@ -251,6 +252,7 @@ public final class ShipWarpManager
 
     public static void syncToPlayer(ServerPlayer player)
     {
+        com.starboundmc.encounter.RelayEncounter.sync(player);
         ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), MAX_FUEL));
         ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
                 new ArrayList<>(state == null ? List.of() : state.getVisited()), state == null ? null : state.getCurrentEntryId()));

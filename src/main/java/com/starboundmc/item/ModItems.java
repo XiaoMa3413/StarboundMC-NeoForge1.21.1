@@ -24,6 +24,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(StarboundMC.MODID);
     public static final DeferredItem<Item> BASIC_CIRCUIT_BOARD = ITEMS.registerSimpleItem("basic_circuit_board");
+    public static final DeferredItem<Item> RELAY_DATA_CORE = ITEMS.registerSimpleItem("relay_data_core", new Item.Properties().stacksTo(1));
     public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK1 = ITEMS.registerItem(
             "epp_mk1", com.starboundmc.epp.EppItem::new, new Item.Properties().stacksTo(1));
     public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK2 = ITEMS.registerItem(
@@ -142,6 +143,7 @@ public final class ModItems {
                     .displayItems((parameters, output) -> {
                         output.accept(BASIC_CIRCUIT_BOARD);
                         output.accept(EPP_MK1);
+                        output.accept(RELAY_DATA_CORE);
                         output.accept(EPP_MK2);
                         output.accept(EPP_MK2_UPGRADE_KIT);
                         output.accept(HEATING_MODULE_1);

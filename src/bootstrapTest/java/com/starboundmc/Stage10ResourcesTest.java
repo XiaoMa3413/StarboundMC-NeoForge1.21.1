@@ -33,7 +33,7 @@ final class Stage10ResourcesTest {
             "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
 
     private static final List<String> ITEMS = List.of(
-            "basic_circuit_board", "epp_mk1", "epp_mk2", "epp_mk2_upgrade_kit", "heating_module_1", "oxygen_canister", "empty_oxygen_canister",
+            "basic_circuit_board", "relay_data_core", "epp_mk1", "epp_mk2", "epp_mk2_upgrade_kit", "heating_module_1", "oxygen_canister", "empty_oxygen_canister",
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
             "teleporter", "ship_console", "captain_chair", "fuel_controller", "ship_crate",
             "ship_door", "ship_engine", "tungsten_ore", "titanium_ore", "durasteel_ore",

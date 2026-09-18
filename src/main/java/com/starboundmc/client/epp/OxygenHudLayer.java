@@ -82,6 +82,17 @@ public final class OxygenHudLayer implements ModularHudLayer {
             g.pose().scale(scale, scale, 1);
             g.drawCenteredString(mc.font, hint, 0, 0, thrust ? 0xB095E8E2 : 0xFFFFD17C);
             g.pose().popPose();
+            var relay = com.starboundmc.client.space.RelayClientState.snapshot;
+            if (com.starboundmc.client.space.RelayClientState.local() && relay != null) {
+                var target = ShipBeaconBearing.from(mc.player.position(),
+                        com.starboundmc.encounter.RelayGeometry.center(relay.origin()), mc.player.getYRot());
+                g.pose().pushPose(); g.pose().translate(x, y + 47, 0);
+                g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees((float) target.turnDegrees()));
+                for (int row = 0; row < 4; row++) g.fill(-row, row - 4, row + 1, row - 3, 0xD0FFD17C);
+                g.pose().popPose();
+                g.drawCenteredString(mc.font, Component.translatable("hud.starboundmc.relay.beacon",
+                        Math.round(target.distance()), Math.round(target.height())), x, y + 54, 0xD0FFD17C);
+            }
         }
 
         private void drawCold(GuiGraphics g) {
