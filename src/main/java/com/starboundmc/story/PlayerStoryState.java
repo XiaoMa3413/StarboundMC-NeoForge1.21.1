@@ -156,6 +156,29 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
         return withFlag(flag);
     }
 
+    /** Marks the personal prologue as seen without granting any later task evidence. */
+    public PlayerStoryState debugCompletePrologue()
+    {
+        if (!isWritable())
+            return this;
+
+        int prologueFlags = PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask()
+                | PlayerStoryFlag.TERMINAL_REMINDER_BROADCAST.mask()
+                | PlayerStoryFlag.TERMINAL_CONTACTED.mask()
+                | PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask()
+                | PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST.mask()
+                | PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST.mask();
+        int nextTutorialMask = tutorialMask | TutorialTopic.MATTER_MANIPULATOR.mask();
+        int nextFlagsMask = flagsMask | prologueFlags;
+        if (identityConfirmed
+                && readSituationMask == SituationTopic.REQUIRED_MASK
+                && tutorialMask == nextTutorialMask
+                && (flagsMask & prologueFlags) == prologueFlags)
+            return this;
+        return changed(true, SituationTopic.REQUIRED_MASK, nextTutorialMask,
+                dismissedHintMask, nextFlagsMask);
+    }
+
     private PlayerStoryState changed(boolean nextIdentityConfirmed, int nextReadMask,
                                      int nextTutorialMask, int nextDismissedHintMask)
     {

@@ -63,6 +63,12 @@ public final class ClientNovaBroadcastState
         deferredBootMessages.clear();
     }
 
+    /** Drops only transmissions held back by the visor bootstrap sequence. */
+    public static void clearDeferredBootMessages()
+    {
+        deferredBootMessages.clear();
+    }
+
     static NovaBroadcastTimeline.Snapshot snapshot()
     {
         return timeline.snapshot();

@@ -37,6 +37,9 @@ final class Stage8PrologueTest
         assertTrue(events.contains("restoreHyperdrive"));
         assertTrue(events.contains("replay_mineral_scan"));
         assertTrue(events.contains("replayMineralScan"));
+        assertTrue(events.contains("skip_prologue"));
+        assertTrue(events.contains("debugCompletePrologue"));
+        assertTrue(events.contains("debugSkipPrologue"));
         assertTrue(events.contains("syncOpenScreens"));
         assertTrue(story.contains("ShipStoryBroadcastService.tick"));
         assertTrue(service.contains("INITIAL_WAKE_DELAY_TICKS"));

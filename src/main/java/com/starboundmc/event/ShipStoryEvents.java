@@ -80,6 +80,9 @@ public final class ShipStoryEvents
                                                 "command.starboundmc.debug.engine.all_restored"))))
                         .then(Commands.literal("replay_mineral_scan")
                                 .executes(context -> replayMineralScan(
+                                        context.getSource())))
+                        .then(Commands.literal("skip_prologue")
+                                .executes(context -> skipPrologue(
                                         context.getSource())))));
     }
 
@@ -124,6 +127,35 @@ public final class ShipStoryEvents
         ShipStoryService.syncOpenScreens(server);
         source.sendSuccess(() -> Component.translatable(
                 "command.starboundmc.debug.mineral_scan.replaying"), true);
+        return 1;
+    }
+
+    private static int skipPrologue(CommandSourceStack source)
+    {
+        if (!(source.getEntity() instanceof ServerPlayer player))
+        {
+            source.sendFailure(Component.translatable(
+                    "command.starboundmc.debug.prologue.requires_player"));
+            return 0;
+        }
+
+        MinecraftServer server = source.getServer();
+        ShipStateData ship = ShipStateData.get(server);
+        if (!ship.getStoryProgress().isWritable()
+                || !player.getData(com.starboundmc.story.ModAttachments.PLAYER_STORY).isWritable())
+        {
+            source.sendFailure(Component.translatable(
+                    "command.starboundmc.debug.prologue.incompatible"));
+            return 0;
+        }
+
+        boolean sharedChanged = ship.debugCompletePrologue();
+        boolean personalChanged = ShipStoryBroadcastService.debugSkipPrologue(player);
+        ShipStoryService.syncOpenScreens(server);
+        source.sendSuccess(() -> Component.translatable(
+                sharedChanged || personalChanged
+                        ? "command.starboundmc.debug.prologue.skipped"
+                        : "command.starboundmc.debug.prologue.already_skipped"), true);
         return 1;
     }
 }

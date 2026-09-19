@@ -97,6 +97,24 @@ public final class ShipStoryBroadcastService
             clearPending(player.getUUID());
     }
 
+    /**
+     * Marks one player's personal prologue as skipped and cancels every cue
+     * that was waiting to be delivered for it.
+     */
+    public static boolean debugSkipPrologue(ServerPlayer player)
+    {
+        if (player == null || player.getServer() == null)
+            return false;
+
+        clearPending(player.getUUID());
+        PlayerStoryState previous = player.getData(ModAttachments.PLAYER_STORY);
+        PlayerStoryState updated = previous.debugCompletePrologue();
+        if (updated != previous)
+            player.setData(ModAttachments.PLAYER_STORY, updated);
+        sendHudBootstrapState(player);
+        return updated != previous;
+    }
+
     /** Schedules the personal surface tutorial without marking it read early. */
     public static boolean scheduleMatterManipulatorTutorial(ServerPlayer player)
     {

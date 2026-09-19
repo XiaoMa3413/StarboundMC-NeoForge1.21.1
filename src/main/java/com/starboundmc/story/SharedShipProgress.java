@@ -398,6 +398,30 @@ public final class SharedShipProgress
         return changed(core, surfaceMission, sublightEngine, EngineState.ONLINE, 0L);
     }
 
+    /**
+     * Completes the shared prologue in one atomic debug transition.
+     *
+     * <p>This deliberately clears any in-progress reboot, survey, or ignition
+     * deadline so a debug run cannot leave a later tick to undo the unlocked
+     * state.</p>
+     */
+    public SharedShipProgress debugCompletePrologue()
+    {
+        if (!isWritable()
+                || core == CoreState.ONLINE
+                && surfaceMission == SurfaceMissionState.COMPLETE
+                && sublightEngine == EngineState.ONLINE
+                && hyperdrive == EngineState.ONLINE
+                && mineralScan == MineralScanState.COMPLETE
+                && rebootCompleteGameTime == 0L
+                && sublightIgnitionCompleteGameTime == 0L
+                && mineralScanNextCueGameTime == 0L)
+            return this;
+        return current(increment(revision), CoreState.ONLINE, SurfaceMissionState.COMPLETE,
+                EngineState.ONLINE, EngineState.ONLINE, 0L,
+                MineralScanState.COMPLETE, 0L, 0L);
+    }
+
     public int schemaVersion()
     {
         return schemaVersion;

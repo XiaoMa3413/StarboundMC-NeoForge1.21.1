@@ -27,6 +27,20 @@ class PlayerStoryStateTest
     }
 
     @Test
+    void debugSkipCompletesOnlyThePersonalPrologue()
+    {
+        PlayerStoryState state = PlayerStoryState.DEFAULT.debugCompletePrologue();
+
+        assertTrue(state.identityConfirmed());
+        assertTrue(state.hasReadAllRequiredTopics());
+        assertTrue(state.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR));
+        assertTrue(state.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        assertTrue(state.hasFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST));
+        assertFalse(state.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED));
+        assertSame(state, state.debugCompletePrologue());
+    }
+
+    @Test
     void personalFlagsRoundTripThroughAttachmentCodec()
     {
         PlayerStoryState expected = PlayerStoryState.DEFAULT
