@@ -27,7 +27,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/** LDLib2 upgrade topology for the Matter Manipulator workbench. */
+/** LDLib2 engineering-console presentation for the Matter Manipulator workbench. */
 public final class UpgradeRoot extends UIElement {
     public static final int PANEL_W = 320;
     public static final int PANEL_H = 250;
@@ -61,7 +61,8 @@ public final class UpgradeRoot extends UIElement {
         var shell = positioned("upgrade-shell", left, top, PANEL_W, PANEL_H);
         shell.setOverflowVisible(false);
         shell.addChildren(
-                positioned("upgrade-blueprint-sheet", 4, 3, 312, 156),
+                // The graphite shell remains visible around a dedicated green engineering viewport.
+                positioned("upgrade-blueprint-sheet", 4, 23, 312, 136),
                 buildHeader(title), new BlueprintCanvas(),
                 buildTrack(UpgradeMenu.TRACK_SPEED, "speed", "gui.starboundmc.upgrade.track_speed",
                         MatterManipulatorItem.MAX_UPGRADES, 14, 35, true),
@@ -113,17 +114,23 @@ public final class UpgradeRoot extends UIElement {
         detail.addChild(positioned("upgrade-detail-top-line", 0, 0, 312, 1));
         detail.addChild(positioned("upgrade-detail-bottom-line", 0, 29, 312, 1));
         detailName.addClass("upgrade-detail-name");
-        configureLabel(detailName, 9, 3, 132, 9);
+        configureLabel(detailName, 9, 3, 112, 9);
         detailLevel.addClass("upgrade-detail-level");
-        configureLabel(detailLevel, 9, 15, 94, 8);
+        configureLabel(detailLevel, 9, 15, 88, 8);
         detailCost.addClass("upgrade-detail-cost");
-        configureLabel(detailCost, 105, 15, 80, 8);
+        configureLabel(detailCost, 102, 15, 82, 8);
+
+        var slotLabel = label(Component.translatable("gui.starboundmc.upgrade.slot_label"),
+                "upgrade-detail-slot-label", 154, 3, 37, 8);
+        slotLabel.textStyle(style -> style.adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
 
         upgradeAction.setText(Component.translatable("gui.starboundmc.upgrade.execute"));
         upgradeAction.addClass("upgrade-main-action");
         upgradeAction.text.setOverflowVisible(false);
         upgradeAction.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                .left(220).top(5).width(84).height(20));
+                .left(226).top(5).width(78).height(20));
         upgradeAction.textStyle(style -> style.adaptiveWidth(true)
                 .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
@@ -134,7 +141,7 @@ public final class UpgradeRoot extends UIElement {
                 event.stopPropagation();
             }
         });
-        detail.addChildren(detailName, detailLevel, detailCost,
+        detail.addChildren(detailName, detailLevel, detailCost, slotLabel,
                 buildManipulatorSocket(), upgradeAction);
         return detail;
     }
@@ -237,6 +244,7 @@ public final class UpgradeRoot extends UIElement {
         private final String labelKey;
         private final int maxLevel;
         private final UIElement root = new UIElement();
+        private final Label branchLabel = new Label();
         private final List<Button> nodes = new ArrayList<>();
 
         private UpgradeTrack(int id, String name, String labelKey, int maxLevel, boolean pointsLeft) {
@@ -245,35 +253,33 @@ public final class UpgradeRoot extends UIElement {
             this.maxLevel = maxLevel;
             root.addClasses("upgrade-branch", "upgrade-branch-" + name);
             root.setAllowHitTest(false);
-            var branchLabel = label(Component.translatable(labelKey), "upgrade-branch-label", 0, 0, 76, 9);
+            branchLabel.setText(Component.translatable(labelKey));
+            branchLabel.addClass("upgrade-branch-label");
+            configureLabel(branchLabel, 0, 0, 76, 9);
             branchLabel.textStyle(style -> style.adaptiveWidth(false)
                     .textAlignHorizontal(pointsLeft ? Horizontal.RIGHT : Horizontal.LEFT)
                     .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
             root.addChild(branchLabel);
-            int firstX = pointsLeft ? 76 - maxLevel * 20 : 0;
+
+            // These are calibration/progress pips, not target-level buttons. Clicking any
+            // pip selects the subsystem; the server still upgrades only the next level.
+            int spacing = 15;
+            int firstX = pointsLeft ? 76 - maxLevel * spacing : 0;
             for (int index = 0; index < maxLevel; index++) {
-                int level = index + 1;
-                // Left-hand branches unlock from the node nearest the tool and
-                // then grow outwards, so their logical order is screen-reversed.
                 int visualIndex = pointsLeft ? maxLevel - 1 - index : index;
-                int nodeLeft = firstX + visualIndex * 20;
+                int nodeLeft = firstX + visualIndex * spacing;
                 var node = new Button();
-                node.setText(Component.literal(Integer.toString(level)));
+                node.setText(Component.empty());
                 node.addClasses("upgrade-node", "upgrade-node-" + name);
                 node.text.setOverflowVisible(false);
-                node.textStyle(style -> style.adaptiveWidth(true)
-                        .textAlignHorizontal(Horizontal.CENTER)
-                        .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
                 node.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                        .left(nodeLeft).top(14).width(15).height(15));
+                        .left(nodeLeft).top(17).width(11).height(6));
                 node.addEventListener(UIEvents.CLICK, event -> {
                     if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         selectTrack(id);
                         event.stopPropagation();
                     }
                 });
-                node.style(style -> style.tooltips(Component.translatable(
-                        "gui.starboundmc.upgrade.node_hint", level, maxLevel)));
                 nodes.add(node);
                 root.addChild(node);
             }
@@ -281,18 +287,22 @@ public final class UpgradeRoot extends UIElement {
 
         private void refresh(ItemStack manipulator, boolean hasManipulator, int modules) {
             int level = hasManipulator ? levelForTrack(manipulator, id) : 0;
+            // The pips already communicate approximate progression; keep the viewport
+            // label semantic and reserve the exact numeric level for the detail strip.
+            branchLabel.setText(Component.translatable(labelKey));
             int nextCost = level < maxLevel
                     ? UpgradeMenu.modulesRequiredForTargetLevel(level + 1) : Integer.MAX_VALUE;
             for (int index = 0; index < nodes.size(); index++) {
                 Button node = nodes.get(index);
                 node.removeClass("upgrade-node-unlocked");
+                node.removeClass("upgrade-node-next");
                 node.removeClass("upgrade-node-ready");
                 node.removeClass("upgrade-node-locked");
                 node.removeClass("upgrade-node-maxed");
                 if (hasManipulator && index < level) {
                     node.addClass(level >= maxLevel ? "upgrade-node-maxed" : "upgrade-node-unlocked");
-                } else if (hasManipulator && index == level && modules >= nextCost) {
-                    node.addClass("upgrade-node-ready");
+                } else if (hasManipulator && index == level) {
+                    node.addClass(modules >= nextCost ? "upgrade-node-ready" : "upgrade-node-next");
                 } else {
                     node.addClass("upgrade-node-locked");
                 }
@@ -316,6 +326,7 @@ public final class UpgradeRoot extends UIElement {
             setOverflowVisible(false);
             layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                     .left(4).top(24).width(BLUEPRINT_W).height(BLUEPRINT_H));
+
             var manipulator = positioned("upgrade-manipulator-blueprint",
                     (BLUEPRINT_W - MANIPULATOR_BLUEPRINT_W) / 2,
                     (BLUEPRINT_H - MANIPULATOR_BLUEPRINT_H) / 2,
@@ -330,17 +341,24 @@ public final class UpgradeRoot extends UIElement {
             float x = getPositionX();
             float y = getPositionY();
             var graphics = context.graphics;
-            for (int gx = 6; gx < BLUEPRINT_W; gx += 6) {
-                int color = gx % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
+
+            // A deliberately low-frequency grid keeps the screen "engineering" without
+            // competing with the tool silhouette.
+            for (int gx = 12; gx < BLUEPRINT_W; gx += 12) {
+                int color = gx % 48 == 0 ? 0x2446A06B : 0x0D4A815E;
                 graphics.fill(Math.round(x + gx), Math.round(y), Math.round(x + gx + 1),
                         Math.round(y + BLUEPRINT_H), color);
             }
-            for (int gy = 6; gy < BLUEPRINT_H; gy += 6) {
-                int color = gy % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
+            for (int gy = 12; gy < BLUEPRINT_H; gy += 12) {
+                int color = gy % 48 == 0 ? 0x2446A06B : 0x0D4A815E;
                 graphics.fill(Math.round(x), Math.round(y + gy), Math.round(x + BLUEPRINT_W),
                         Math.round(y + gy + 1), color);
             }
             drawRegistrationMarks(graphics, x, y);
+            drawFocusBrackets(graphics, x, y);
+
+            // Upgrade branches terminate on the equipment instead of behaving like an
+            // abstract skill tree. The selected branch receives the only bright line.
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_SPEED,
                     72, 32, 102, 32, 102, 43, 118, 43);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_RANGE,
@@ -349,23 +367,28 @@ public final class UpgradeRoot extends UIElement {
                     194, 43, 208, 43, 208, 32, 230, 32);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_FORTUNE,
                     194, 66, 210, 66, 210, 84, 230, 84);
+
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_SPEED, 118, 43);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_RANGE, 120, 66);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_MINING, 194, 43);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_FORTUNE, 194, 66);
             graphics.flush();
         }
 
         private void drawRegistrationMarks(net.minecraft.client.gui.GuiGraphics graphics,
                                            float x, float y) {
-            int edge = 0x8A78E8A8;
-            int center = 0x5965D694;
+            int edge = 0x6678C894;
+            int center = 0x4F62B286;
             int right = Math.round(x + BLUEPRINT_W);
             int bottom = Math.round(y + BLUEPRINT_H);
             int left = Math.round(x);
             int top = Math.round(y);
-            for (int offset = 12; offset < BLUEPRINT_W; offset += 24) {
+            for (int offset = 24; offset < BLUEPRINT_W; offset += 24) {
                 int px = Math.round(x + offset);
                 graphics.fill(px, top, px + 1, top + 3, edge);
                 graphics.fill(px, bottom - 3, px + 1, bottom, edge);
             }
-            for (int offset = 12; offset < BLUEPRINT_H; offset += 24) {
+            for (int offset = 24; offset < BLUEPRINT_H; offset += 24) {
                 int py = Math.round(y + offset);
                 graphics.fill(left, py, left + 3, py + 1, edge);
                 graphics.fill(right - 3, py, right, py + 1, edge);
@@ -378,10 +401,41 @@ public final class UpgradeRoot extends UIElement {
             graphics.fill(centerX, centerY + 3, centerX + 1, centerY + 8, center);
         }
 
+        private void drawFocusBrackets(net.minecraft.client.gui.GuiGraphics graphics,
+                                       float x, float y) {
+            int color = 0x704E9C6F;
+            int left = Math.round(x + 80);
+            int right = Math.round(x + 232);
+            int top = Math.round(y + 10);
+            int bottom = Math.round(y + 92);
+            int arm = 8;
+
+            graphics.fill(left, top, left + arm, top + 1, color);
+            graphics.fill(left, top, left + 1, top + arm, color);
+            graphics.fill(right - arm, top, right, top + 1, color);
+            graphics.fill(right - 1, top, right, top + arm, color);
+            graphics.fill(left, bottom - 1, left + arm, bottom, color);
+            graphics.fill(left, bottom - arm, left + 1, bottom, color);
+            graphics.fill(right - arm, bottom - 1, right, bottom, color);
+            graphics.fill(right - 1, bottom - arm, right, bottom, color);
+        }
+
         private void drawConnector(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
                                    int track, float... points) {
-            int color = selectedTrack == track ? 0xFFB1FFD0 : 0xFF4E9F70;
-            drawPolyline(graphics, x, y, color, selectedTrack == track ? 1.5F : 1.0F, points);
+            boolean selected = selectedTrack == track;
+            // Selection should guide the eye, not become brighter than the Matter Manipulator.
+            int color = selected ? 0xD083E3A2 : 0x7A315F45;
+            drawPolyline(graphics, x, y, color, 1.0F, points);
+        }
+
+        private void drawAnchor(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
+                                int track, float anchorX, float anchorY) {
+            boolean selected = selectedTrack == track;
+            int color = selected ? 0xE083E3A2 : 0x9A4E8061;
+            int px = Math.round(x + anchorX);
+            int py = Math.round(y + anchorY);
+            graphics.fill(px - 2, py, px + 3, py + 1, color);
+            graphics.fill(px, py - 2, px + 1, py + 3, color);
         }
 
         private void drawPolyline(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,

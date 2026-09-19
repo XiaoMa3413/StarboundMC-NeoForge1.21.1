@@ -1,125 +1,126 @@
-// Matter Manipulator workbench: green engineering blueprint above an unchanged inventory.
+// Matter Manipulator workbench: graphite ship console framing a restrained green engineering viewport.
 
 .upgrade-screen { background: rect(#A605080A); }
 
 .upgrade-shell {
-  background: group(rect(#0B1113), border(-1, #56676A));
+  background: group(rect(#081015), border(-1, #304852));
   overflow-clip: true;
 }
 
+// Green belongs to the engineering display, not the entire machine shell.
 .upgrade-blueprint-sheet {
-  background: group(rect(#071A11), border(-1, #477F5D));
+  background: group(rect(#06120D), border(-1, #294D38));
 }
 
 .upgrade-header {
-  background: group(rect(#0A2418), border(-1, #315F45));
+  background: group(rect(#0B151D), border(-1, #304852));
 }
 
 .upgrade-header-rail { background: #83E3A2; }
 
-.upgrade-title { font-size: 6; text-color: #C8FFD8; text-shadow: false; }
-.upgrade-header-hint { font-size: 5; text-color: #70A985; text-shadow: false; }
+.upgrade-title { font-size: 6; text-color: #D8EDF0; text-shadow: false; }
+.upgrade-header-hint { font-size: 5; text-color: #78959B; text-shadow: false; }
 .upgrade-module-count { font-size: 5; text-color: #B8F47A; text-shadow: false; }
 
 .upgrade-blueprint {
-  background: group(rect(#06170F), border(-1, #3D7856));
+  background: group(rect(#050E0A), border(-1, #315F45));
 }
 
 .upgrade-manipulator-socket {
-  background: group(rect(#06150E), border(-1, #7DD49A));
+  background: group(rect(#07110D), border(-1, #6FB487));
 }
 
-.upgrade-branch-label { font-size: 5; text-color: #73AC86; text-shadow: false; }
-.upgrade-branch-selected .upgrade-branch-label { text-color: #C5FFD6; }
+.upgrade-branch-label { font-size: 5; text-color: #668474; text-shadow: false; }
+.upgrade-branch-selected .upgrade-branch-label { text-color: #A8DDB7; }
 
 .upgrade-node:host {
-  base-background: group(rect(#07170F), border(-1, #4A8B63));
-  hover-background: group(rect(#103621), border(-1, #A0E9B7));
-  pressed-background: group(rect(#1A5332), border(-1, #E1FFEA));
+  base-background: group(rect(#18271F), border(-1, #355E45));
+  hover-background: group(rect(#21372A), border(-1, #6FA886));
+  pressed-background: group(rect(#2A4935), border(-1, #A5D7B6));
 }
 
-.upgrade-node .__button_text__ {
-  font-size: 7;
-  text-color: #639976;
-  text-shadow: false;
+// Calibration pips communicate progress. They intentionally carry no numbers: the
+// player selects a subsystem, while APPLY UPGRADE always advances only one level.
+.upgrade-node-locked:host {
+  base-background: group(rect(#0B1510), border(-1, #284234));
+  hover-background: group(rect(#102018), border(-1, #486B56));
 }
-
-.upgrade-node-locked:host { base-background: group(rect(#08150F), border(-1, #355E45)); }
-.upgrade-node-locked .__button_text__ { text-color: #41684F; }
 
 .upgrade-node-unlocked:host {
-  base-background: group(rect(#1F7040), border(-1, #8CE5A8));
-  hover-background: group(rect(#2D8B51), border(-1, #D4FFE0));
+  base-background: group(rect(#1C5635), border(-1, #6CB685));
+  hover-background: group(rect(#246A40), border(-1, #9AD0AA));
 }
-.upgrade-node-unlocked .__button_text__ { text-color: #E4FFEB; }
+
+.upgrade-node-next:host {
+  base-background: group(rect(#302817), border(-1, #9A7742));
+  hover-background: group(rect(#45381E), border(-1, #D4A65D));
+}
 
 .upgrade-node-ready:host {
-  base-background: group(rect(#4E7C27), border(-1, #B8F47A));
-  hover-background: group(rect(#689B36), border(-1, #EAFFC4));
+  base-background: group(rect(#315726), border(-1, #B8F47A));
+  hover-background: group(rect(#426F30), border(-1, #E6FFB8));
 }
-.upgrade-node-ready .__button_text__ { text-color: #F2FFD7; }
 
 .upgrade-node-maxed:host {
-  base-background: group(rect(#3B9960), border(-1, #C7FFDA));
-  hover-background: group(rect(#52B574), border(-1, #FFFFFF));
+  base-background: group(rect(#246A40), border(-1, #8FD1A3));
+  hover-background: group(rect(#2D7C4A), border(-1, #BDE7C9));
 }
-.upgrade-node-maxed .__button_text__ { text-color: #FFFFFF; }
-
-.upgrade-node-selected:host {
-  base-background: group(rect(#174B2D), border(-1, #C8FFD8));
-  hover-background: group(rect(#226A3D), border(-1, #F0FFF4));
-}
-.upgrade-node-selected .__button_text__ { text-color: #F0FFF4; }
 
 .upgrade-node-selected.upgrade-node-locked:host {
-  base-background: group(rect(#10271A), border(-1, #8BC79D));
+  base-background: group(rect(#102018), border(-1, #668474));
 }
 
 .upgrade-node-selected.upgrade-node-unlocked:host {
-  base-background: group(rect(#287F49), border(-1, #D0FFDD));
+  base-background: group(rect(#246A40), border(-1, #91C3A0));
+}
+
+.upgrade-node-selected.upgrade-node-next:host {
+  base-background: group(rect(#40351E), border(-1, #C79856));
 }
 
 .upgrade-node-selected.upgrade-node-ready:host {
-  base-background: group(rect(#557F2B), border(-1, #E9FFC0));
-  hover-background: group(rect(#70A43C), border(-1, #FFFFFF));
+  base-background: group(rect(#3C672D), border(-1, #B8F47A));
+  hover-background: group(rect(#4B7836), border(-1, #D8F6A8));
 }
 
 .upgrade-node-selected.upgrade-node-maxed:host {
-  base-background: group(rect(#46A669), border(-1, #E4FFEC));
+  base-background: group(rect(#2A7145), border(-1, #A8DDB7));
 }
 
+// Status strip returns to the ship-console palette; only the engineering accent remains green.
 .upgrade-detail {
-  background: rect(#0B2619);
+  background: group(rect(#0A1518), border(-1, #29443A));
 }
 
-.upgrade-detail-accent { background: #82E7A2; }
-.upgrade-detail-top-line { background: #4E9368; }
-.upgrade-detail-bottom-line { background: #294D38; }
-.upgrade-detail-name { font-size: 6; text-color: #D7FFE2; text-shadow: false; }
-.upgrade-detail-level { font-size: 5; text-color: #80B792; text-shadow: false; }
-.upgrade-detail-cost { font-size: 5; text-color: #B8F47A; text-shadow: false; }
+.upgrade-detail-accent { background: #83E3A2; }
+.upgrade-detail-top-line { background: #416B55; }
+.upgrade-detail-bottom-line { background: #213A31; }
+.upgrade-detail-name { font-size: 6; text-color: #D8EDF0; text-shadow: false; }
+.upgrade-detail-level { font-size: 5; text-color: #789B86; text-shadow: false; }
+.upgrade-detail-cost { font-size: 5; text-color: #E2B66F; text-shadow: false; }
+.upgrade-detail-slot-label { font-size: 5; text-color: #71898C; text-shadow: false; }
 
 .upgrade-main-action:host {
-  base-background: group(rect(#1D6339), border(-1, #92E8AB));
-  hover-background: group(rect(#2B804A), border(-1, #D0FFDD));
-  pressed-background: group(rect(#104528), border(-1, #F0FFF4));
+  base-background: group(rect(#1B5834), border(-1, #78C891));
+  hover-background: group(rect(#277044), border(-1, #BDE7C9));
+  pressed-background: group(rect(#104126), border(-1, #E5F8EA));
 }
 
 .upgrade-main-action .__button_text__ {
   font-size: 6;
-  text-color: #F2FFF5;
+  text-color: #EAF6ED;
   text-shadow: false;
 }
 
 .upgrade-main-action.__disabled__:host {
-  base-background: group(rect(#102018), border(-1, #355542));
-  hover-background: group(rect(#102018), border(-1, #355542));
-  pressed-background: group(rect(#102018), border(-1, #355542));
+  base-background: group(rect(#10191A), border(-1, #324649));
+  hover-background: group(rect(#10191A), border(-1, #324649));
+  pressed-background: group(rect(#10191A), border(-1, #324649));
 }
 
-.upgrade-main-action.__disabled__ .__button_text__ { text-color: #4A7258; }
+.upgrade-main-action.__disabled__ .__button_text__ { text-color: #52666A; }
 
-// Player inventory intentionally keeps the existing neutral machine styling.
+// Player inventory stays intentionally neutral so it reads as Minecraft inventory, not part of the blueprint.
 .upgrade-inventory-caption { font-size: 5; text-color: #7F9092; text-shadow: false; }
 .upgrade-slot-socket { background: group(rect(#080C0D), border(-1, #3D494B)); }
 .upgrade-player-socket { background: group(rect(#090E0F), border(-1, #3E4B4D)); }
