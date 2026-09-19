@@ -26,6 +26,7 @@ public final class SyncFlightPacket implements CustomPacketPayload {
     private final int elapsedTicks;
     private final int totalTicks;
     private final String targetEntryId;
+    private final boolean crewHold;
 
     public SyncFlightPacket(long revision, long serverTick, FlightPhase phase,
                             double x, double y, double z,
@@ -42,15 +43,23 @@ public final class SyncFlightPacket implements CustomPacketPayload {
                             UniversePosition position, UniverseDelta velocity,
                             double yaw, double pitch, double roll,
                             int elapsedTicks, int totalTicks, String targetEntryId) {
+        this(revision, serverTick, phase, position, velocity, yaw, pitch, roll, elapsedTicks, totalTicks, targetEntryId, false);
+    }
+
+    public SyncFlightPacket(long revision, long serverTick, FlightPhase phase,
+                            UniversePosition position, UniverseDelta velocity,
+                            double yaw, double pitch, double roll,
+                            int elapsedTicks, int totalTicks, String targetEntryId, boolean crewHold) {
         this(revision, serverTick, phase.ordinal(), position, velocity,
                 (float) yaw, (float) pitch, (float) roll,
-                elapsedTicks, totalTicks, targetEntryId);
+                elapsedTicks, totalTicks, targetEntryId, crewHold);
     }
 
     private SyncFlightPacket(long revision, long serverTick, int phaseId,
                              UniversePosition position, UniverseDelta velocity,
                              float yaw, float pitch, float roll,
-                             int elapsedTicks, int totalTicks, String targetEntryId) {
+                             int elapsedTicks, int totalTicks, String targetEntryId, boolean crewHold) {
+        this.crewHold = crewHold;
         if (revision < 0 || serverTick < 0) {
             throw new IllegalArgumentException("Flight revision and server tick must be non-negative");
         }
@@ -87,7 +96,7 @@ public final class SyncFlightPacket implements CustomPacketPayload {
                 new UniverseDelta(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()),
                 buffer.readFloat(), buffer.readFloat(), buffer.readFloat(),
                 buffer.readVarInt(), buffer.readVarInt(),
-                buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
+                buffer.readUtf(PayloadSupport.MAX_ID_LENGTH), buffer.readBoolean());
     }
 
     private void write(FriendlyByteBuf buffer) {
@@ -109,6 +118,7 @@ public final class SyncFlightPacket implements CustomPacketPayload {
         buffer.writeVarInt(elapsedTicks);
         buffer.writeVarInt(totalTicks);
         buffer.writeUtf(targetEntryId, PayloadSupport.MAX_ID_LENGTH);
+        buffer.writeBoolean(crewHold);
     }
 
     @Override
@@ -159,6 +169,8 @@ public final class SyncFlightPacket implements CustomPacketPayload {
     public int totalTicks() {
         return totalTicks;
     }
+
+    public boolean crewHold() { return crewHold; }
 
     public String targetEntryId() {
         return targetEntryId;

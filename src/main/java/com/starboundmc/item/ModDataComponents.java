@@ -11,6 +11,16 @@ public final class ModDataComponents {
     public static final DeferredRegister.DataComponents COMPONENTS =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, StarboundMC.MODID);
 
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<net.minecraft.world.item.component.ItemContainerContents>> EPP_MODULES =
+            COMPONENTS.registerComponentType("epp_modules", builder -> builder
+                    .persistent(net.minecraft.world.item.component.ItemContainerContents.CODEC)
+                    .networkSynchronized(net.minecraft.world.item.component.ItemContainerContents.STREAM_CODEC));
+
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<Integer>> EPP_OXYGEN =
+            COMPONENTS.registerComponentType("epp_oxygen", builder -> builder
+                    .persistent(com.mojang.serialization.Codec.intRange(0, 30000))
+                    .networkSynchronized(net.minecraft.network.codec.ByteBufCodecs.VAR_INT));
+
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<MatterManipulatorUpgrades>>
             MATTER_MANIPULATOR_UPGRADES = COMPONENTS.registerComponentType(
                     "matter_manipulator_upgrades",

@@ -13,11 +13,11 @@ final class Stage3NetworkWiringTest {
     @Test
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
-        // Bumped when SyncPlanetPacket was removed (migration §22).
-        assertTrue(network.contains("PROTOCOL_VERSION = \"8\""));
-        assertEquals(12, occurrences(network, "playToServer("));
-        // 12 after SyncPlanetPacket was removed (migration §22).
-        assertEquals(12, occurrences(network, "playToClient("));
+        // EPP equipment plus EVA input and authoritative state snapshots.
+        assertTrue(network.contains("PROTOCOL_VERSION = \"14\""));
+        assertEquals(17, occurrences(network, "playToServer("));
+        // Existing twelve clientbound payloads are retained.
+        assertEquals(17, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("NovaBroadcastPacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
@@ -216,7 +216,7 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("maxCraftsForRequirements"));
         assertTrue(printingRoot.contains("target = Math.min(target, selectedQuantityCeiling())"));
         assertTrue(printingRoot.contains("PANEL_H = 240"));
-        assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 6, 28, 136, 120"));
+        assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 6, 28, 136, 207"));
         assertTrue(printingRoot.contains("\"voxel-printing-detail-pane\", 146, 28, detailWidth, 120"));
         assertTrue(printingRoot.contains("\"voxel-printing-queue-pane\", 340, 28, 94, 207"));
         assertTrue(printingRoot.contains("\"voxel-inventory-section\", 144, 151, 172, 84"));

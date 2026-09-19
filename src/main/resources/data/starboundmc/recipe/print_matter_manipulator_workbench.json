@@ -18,9 +18,12 @@
         "item": "minecraft:crafting_table"
       },
       "count": 1
+    },
+    {
+      "ingredient": { "item": "starboundmc:voxel" },
+      "count": 50
     }
   ],
-  "voxel_cost": 50,
   "print_seconds": 5,
   "result": {
     "id": "starboundmc:matter_manipulator_workbench",

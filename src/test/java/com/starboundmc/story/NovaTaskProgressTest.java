@@ -32,7 +32,7 @@ class NovaTaskProgressTest {
         assertFalse(p.completed(NovaTask.EXPLORATION));
         p = p.arrive("starboundmc:frozen", true).observe(true, true, false, false, true);
         assertTrue(p.claimable(NovaTask.EXPLORATION));
-        assertEquals(-1, p.trackedTask());
+        assertEquals(NovaTask.LIFE_SUPPORT.id(), p.trackedTask());
     }
     @Test void achievementsAndEvidenceSurviveInventoryLossAndCodecRoundTrip() {
         var p = NovaTaskProgress.DEFAULT.observe(true, true, true, true, true).claim(NovaTask.SURFACE);
@@ -51,7 +51,7 @@ class NovaTaskProgressTest {
         assertSame(p, p.claim(NovaTask.REPAIR));
     }
     @Test void futureSchemaIsPreservedAndReadOnly() {
-        var future = new NovaTaskProgress(2, 42, 63, 63, 255, 5, "future:surface");
+        var future = new NovaTaskProgress(NovaTaskProgress.SCHEMA + 1, 42, 63, 63, 255, 5, "future:surface");
         var restored = NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE,
                 NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, future).getOrThrow()).getOrThrow();
         assertEquals(future, restored);

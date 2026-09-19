@@ -6,8 +6,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 /** Player-owned achievement/claim ledger. Existing ship story data stays authoritative. */
 public record NovaTaskProgress(int schemaVersion, long revision, int completedMask, int claimedMask,
                                int evidenceMask, int trackedTask, String firstSurface) {
-    public static final int SCHEMA = 1;
-    public static final int UPGRADED = 1, CORE_OBTAINED = 2, NEW_SURFACE = 4;
+    public static final int SCHEMA = 2;
+    public static final int UPGRADED = 1, CORE_OBTAINED = 2, NEW_SURFACE = 4, EPP_READY = 8, MOON_VISITED = 16;
     public static final NovaTaskProgress DEFAULT = new NovaTaskProgress(SCHEMA, 0, 0, 0, 0, 0, "");
     public static final Codec<NovaTaskProgress> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.INT.optionalFieldOf("schema", SCHEMA).forGetter(NovaTaskProgress::schemaVersion),
@@ -26,8 +26,8 @@ public record NovaTaskProgress(int schemaVersion, long revision, int completedMa
         if (schemaVersion <= SCHEMA) {
             completedMask = Math.max(0, completedMask) & NovaTask.KNOWN_MASK;
             claimedMask = Math.max(0, claimedMask) & completedMask;
-            evidenceMask = Math.max(0, evidenceMask) & 7;
-            if (trackedTask < -1 || trackedTask > 3) trackedTask = -1;
+            evidenceMask = Math.max(0, evidenceMask) & 31;
+            if (trackedTask < -1 || trackedTask >= NovaTask.values().length) trackedTask = -1;
         }
         firstSurface = firstSurface == null ? "" : firstSurface;
     }
@@ -66,6 +66,21 @@ public record NovaTaskProgress(int schemaVersion, long revision, int completedMa
             for (NovaTask task : NovaTask.values()) if ((completed & task.mask()) == 0 && task.available(completed)) {
                 tracked = task.id(); break;
             }
+        }
+        return change(completed, claimedMask, evidence, tracked, firstSurface);
+    }
+    public NovaTaskProgress observeEpp(boolean ready, boolean onMoon, boolean safelyReturned) {
+        if (!writable()) return this;
+        int evidence = evidenceMask | (ready ? EPP_READY : 0);
+        int completed = completedMask;
+        if (NovaTask.LIFE_SUPPORT.available(completed) && (evidence & EPP_READY) != 0) completed |= NovaTask.LIFE_SUPPORT.mask();
+        if (ready && onMoon && NovaTask.LUNAR_SORTIE.available(completed)) evidence |= MOON_VISITED;
+        if (safelyReturned && (evidence & MOON_VISITED) != 0 && NovaTask.LUNAR_SORTIE.available(completed)) completed |= NovaTask.LUNAR_SORTIE.mask();
+        if (evidence == evidenceMask && completed == completedMask) return this;
+        int tracked = trackedTask;
+        if (tracked >= 0 && (completed & (1 << tracked)) != 0) {
+            tracked = -1;
+            for (NovaTask task : NovaTask.values()) if ((completed & task.mask()) == 0 && task.available(completed)) { tracked = task.id(); break; }
         }
         return change(completed, claimedMask, evidence, tracked, firstSurface);
     }

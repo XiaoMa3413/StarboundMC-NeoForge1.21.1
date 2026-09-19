@@ -23,6 +23,31 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(StarboundMC.MODID);
+    public static final DeferredItem<Item> BASIC_CIRCUIT_BOARD = ITEMS.registerSimpleItem("basic_circuit_board");
+    public static final DeferredItem<Item> JUMP_THRUSTER = ITEMS.registerSimpleItem("jump_thruster", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> RELAY_DATA_CORE = ITEMS.registerSimpleItem("relay_data_core", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK1 = ITEMS.registerItem(
+            "epp_mk1", com.starboundmc.epp.EppItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK2 = ITEMS.registerItem(
+            "epp_mk2", properties -> new com.starboundmc.epp.EppItem(properties, 2), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppItem> EPP_MK3 = ITEMS.registerItem(
+            "epp_mk3", properties -> new com.starboundmc.epp.EppItem(properties, 3), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EPP_MK2_UPGRADE_KIT = ITEMS.registerSimpleItem("epp_mk2_upgrade_kit", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EPP_MK3_UPGRADE_KIT = ITEMS.registerSimpleItem("epp_mk3_upgrade_kit", new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppModuleItem> HEATING_MODULE_1 = ITEMS.registerItem(
+            "heating_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
+                    com.starboundmc.epp.EppModuleItem.Hazard.COLD, 1), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<com.starboundmc.epp.EppModuleItem> COOLING_MODULE_1 = ITEMS.registerItem(
+            "cooling_module_1", properties -> new com.starboundmc.epp.EppModuleItem(properties,
+                    com.starboundmc.epp.EppModuleItem.Hazard.HEAT, 1), new Item.Properties().stacksTo(1));
+    public static final DeferredItem<BlockItem> EPP_SERVICE_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("epp_service_station", ModBlocks.EPP_SERVICE_STATION);
+    public static final DeferredItem<com.starboundmc.epp.OxygenCanisterItem> OXYGEN_CANISTER = ITEMS.registerItem(
+            "oxygen_canister", com.starboundmc.epp.OxygenCanisterItem::new, new Item.Properties().stacksTo(1));
+    public static final DeferredItem<Item> EMPTY_OXYGEN_CANISTER = ITEMS.registerSimpleItem(
+            "empty_oxygen_canister", new Item.Properties().stacksTo(8));
+    public static final DeferredItem<BlockItem> LIFE_SUPPORT_STATION_ITEM =
+            ITEMS.registerSimpleBlockItem("life_support_station", ModBlocks.LIFE_SUPPORT_STATION);
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, StarboundMC.MODID);
 
@@ -123,6 +148,20 @@ public final class ModItems {
                     .title(Component.translatable("itemGroup.starboundmc"))
                     .icon(MATTER_MANIPULATOR::toStack)
                     .displayItems((parameters, output) -> {
+                        output.accept(BASIC_CIRCUIT_BOARD);
+                        output.accept(EPP_MK1);
+                        output.accept(JUMP_THRUSTER);
+                        output.accept(RELAY_DATA_CORE);
+                        output.accept(EPP_MK2);
+                        output.accept(EPP_MK2_UPGRADE_KIT);
+                        output.accept(EPP_MK3);
+                        output.accept(EPP_MK3_UPGRADE_KIT);
+                        output.accept(HEATING_MODULE_1);
+                        output.accept(COOLING_MODULE_1);
+                        output.accept(EPP_SERVICE_STATION_ITEM);
+                        output.accept(OXYGEN_CANISTER);
+                        output.accept(EMPTY_OXYGEN_CANISTER);
+                        output.accept(LIFE_SUPPORT_STATION_ITEM);
                         output.accept(MATTER_MANIPULATOR);
                         output.accept(MATTER_MANIPULATOR_MODULE);
                         output.accept(SUBLIGHT_IGNITION_CORE);

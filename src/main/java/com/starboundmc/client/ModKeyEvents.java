@@ -15,6 +15,10 @@ public class ModKeyEvents
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event)
     {
+        if (ModKeyBindings.equipment != null && ModKeyBindings.equipment.consumeClick()
+                && net.minecraft.client.Minecraft.getInstance().player != null
+                && net.minecraft.client.Minecraft.getInstance().screen == null)
+            ModNetwork.sendToServer(new com.starboundmc.network.OpenEppPacket());
         if (ModKeyBindings.returnToShip != null && ModKeyBindings.returnToShip.consumeClick())
         {
             ModNetwork.sendToServer(new TeleportToShipPacket());

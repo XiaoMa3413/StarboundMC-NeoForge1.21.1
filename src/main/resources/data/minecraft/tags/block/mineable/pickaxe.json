@@ -13,6 +13,8 @@
     "starboundmc:hull_hazard",
     "starboundmc:hull_grate",
     "starboundmc:hull_window",
-    "starboundmc:beacon_emitter"
+    "starboundmc:beacon_emitter",
+    "starboundmc:life_support_station",
+    "starboundmc:epp_service_station"
   ]
 }

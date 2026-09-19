@@ -13,6 +13,7 @@ import org.lwjgl.glfw.GLFW;
 public class ModKeyBindings
 {
     public static KeyMapping returnToShip;
+    public static KeyMapping equipment;
 
     /** Custom category shown in the Controls screen. */
     public static final String CATEGORY = "key.categories.starboundmc";
@@ -23,5 +24,7 @@ public class ModKeyBindings
         returnToShip = new KeyMapping("key.starboundmc.return_to_ship",
                 GLFW.GLFW_KEY_H, CATEGORY);
         event.register(returnToShip);
+        equipment = new KeyMapping("key.starboundmc.equipment", GLFW.GLFW_KEY_G, CATEGORY);
+        event.register(equipment);
     }
 }

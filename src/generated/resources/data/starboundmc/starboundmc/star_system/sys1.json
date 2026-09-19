@@ -157,7 +157,6 @@
       "surface": {
         "dimension": "starboundmc:molten",
         "environment": {
-          "breathable": false,
           "heat_tier": 3
         }
       },

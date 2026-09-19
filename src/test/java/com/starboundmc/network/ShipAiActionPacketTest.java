@@ -18,7 +18,7 @@ class ShipAiActionPacketTest
                 var packet = new ShipAiActionPacket(4, 12, action, 2);
                 ShipAiActionPacket.STREAM_CODEC.encode(buffer, packet);
                 assertEquals(packet, ShipAiActionPacket.STREAM_CODEC.decode(buffer));
-                assertThrows(IllegalArgumentException.class, () -> new ShipAiActionPacket(4, 12, action, 4));
+                assertThrows(IllegalArgumentException.class, () -> new ShipAiActionPacket(4, 12, action, com.starboundmc.story.NovaTask.values().length));
             } finally { buffer.release(); }
         }
         assertEquals(-1, new ShipAiActionPacket(4, 12, ShipAiActionPacket.Action.TRACK_TASK, -1).argument());

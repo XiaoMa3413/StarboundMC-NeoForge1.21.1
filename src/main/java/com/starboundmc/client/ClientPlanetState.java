@@ -34,8 +34,10 @@ public final class ClientPlanetState {
     private static final FlightVisualClock VISUAL_CLOCK = new FlightVisualClock();
     private ClientPlanetState(){}
 
+    private static boolean crewHold;
     /** Start a new network session so a restarted server may begin its snapshot revision at zero. */
     public static synchronized void resetConnectionState(){
+        crewHold=false;
         revision=-1;receivedNanos=System.nanoTime();arrivalCue=false;phase=FlightPhase.DOCKED;
         warpTarget=null;warpEntryId=null;elapsedTicks=0;totalTicks=1;velocity=Vec3.ZERO;
         VISUAL_CLOCK.reset();
@@ -69,16 +71,21 @@ public final class ClientPlanetState {
         applyFlightSnapshot(rev,serverTick,next,UniversePosition.fromLegacy(new Vec3(x,y,z)),new UniverseDelta(vx,vy,vz),yv,pv,rv,elapsed,total,entry);
     }
     public static synchronized void applyFlightSnapshot(long rev,long serverTick,FlightPhase next,UniversePosition nextPosition,UniverseDelta nextVelocity,float yv,float pv,float rv,int elapsed,int total,String entry){
+        applyFlightSnapshot(rev, serverTick, next, nextPosition, nextVelocity, yv, pv, rv, elapsed, total, entry, false);
+    }
+    public static synchronized void applyFlightSnapshot(long rev,long serverTick,FlightPhase next,UniversePosition nextPosition,UniverseDelta nextVelocity,float yv,float pv,float rv,int elapsed,int total,String entry,boolean hold){
         if(rev<revision)return;if(phase!=FlightPhase.DOCKED&&next==FlightPhase.DOCKED)arrivalCue=true;
         // Keep client interpolation monotonic: if we have extrapolated ahead of the new packet, don't snap back one frame (causes the planet to flash to front). Instead bias receivedNanos so sampledTicks continues from where we were.
         double prevSample = isWarping() && warpTarget != null ? sampledTicks() : elapsedTicks;
+        if (crewHold != hold) VISUAL_CLOCK.reset();
+        crewHold = hold;
         revision=rev;phase=next;synchronizedUniversePosition=nextPosition;position=new Vec3(nextPosition.localX(),nextPosition.localY(),nextPosition.localZ());velocity=nextVelocity.toVec3();yaw=yv;pitch=pv;roll=rv;elapsedTicks=Math.max(0,elapsed);totalTicks=Math.max(1,total);warpEntryId=entry;
         // The target entry id arrives on the wire, so the destination identity no
         // longer has to be re-derived from the legacy enum.
         if(entry!=null&&!entry.equals(warpTarget))preloadPlanetSystem(entry);
         warpTarget=entry;
         long now = System.nanoTime();
-        if (isWarping() && warpTarget != null && prevSample > elapsedTicks)
+        if (!crewHold && isWarping() && warpTarget != null && prevSample > elapsedTicks)
         {
             // We had extrapolated to prevSample; keep continuity by pretending the packet arrived earlier.
             double ahead = prevSample - elapsedTicks;
@@ -108,7 +115,7 @@ public final class ClientPlanetState {
     private static boolean canSampleRoute(){
         return isWarping()&&isNavigable(current)&&isNavigable(warpTarget);}
     private static double sampledTicks(){
-        if (!isWarping() || warpTarget == null)
+        if (crewHold || !isWarping() || warpTarget == null)
         {
             VISUAL_CLOCK.reset();
             return elapsedTicks;

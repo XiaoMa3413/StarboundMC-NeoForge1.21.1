@@ -54,11 +54,11 @@ class StarmapDetailContentFactoryTest
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, entry.entryId(), true, ShipWarpManager.WARP_FUEL_COST);
 
-        assertEquals(List.of("scan", "navigation", "status"), sectionIds(content));
+        assertEquals(List.of("scan", "atmosphere", "navigation", "status"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.FUEL,
-                content.sections().get(1).lines().get(0).tone());
-        assertEquals(StarmapDetailLine.Tone.CURRENT,
                 content.sections().get(2).lines().get(0).tone());
+        assertEquals(StarmapDetailLine.Tone.CURRENT,
+                content.sections().get(3).lines().get(0).tone());
     }
 
     @Test
@@ -87,15 +87,32 @@ class StarmapDetailContentFactoryTest
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
                 entry, "sys1:lush", false, ShipWarpManager.WARP_FUEL_COST);
 
-        assertEquals(List.of("scan", "navigation"), sectionIds(content));
+        assertEquals(List.of("scan", "atmosphere", "navigation"), sectionIds(content));
     }
 
-    /**
-     * A body the ship cannot fly to: no navigation profile, but still described.
-     *
-     * <p>Built rather than looked up because every shipped body is navigable, so
-     * there is no longer a real locked entry to assert against.</p>
-     */
+    @Test
+    void frozenWarnsAboutColdWithoutRemovingNavigation()
+    {
+        var entry = UniverseTestSupport.body("sys2:frozen");
+        var content = StarmapDetailContentFactory.buildEntry(entry, "sys1:lush", false,
+                ShipWarpManager.CROSS_SYSTEM_FUEL_COST);
+        assertEquals(List.of("scan", "atmosphere", "cold", "navigation"), sectionIds(content));
+        assertEquals(StarmapDetailLine.Tone.DANGER, content.sections().get(2).lines().getFirst().tone());
+        assertEquals(1, entry.surface().orElseThrow().environment().coldTier());
+    }
+
+    @Test
+    void moltenWarnsAboutHeatWithoutAnEquipmentGate()
+    {
+        var entry = UniverseTestSupport.body("sys1:molten");
+        var content = StarmapDetailContentFactory.buildEntry(entry, "sys1:lush", false,
+                ShipWarpManager.warpFuelCost("sys1:lush", entry.entryId()));
+        assertEquals(List.of("scan", "atmosphere", "heat", "navigation"), sectionIds(content));
+        assertEquals(StarmapDetailLine.Tone.DANGER, content.sections().get(2).lines().getFirst().tone());
+        assertEquals(1, entry.surface().orElseThrow().environment().heatTier());
+    }
+
+    /** A synthetic locked body; every shipped body is navigable. */
     private static CelestialBodyDefinition lockedBody()
     {
         return new CelestialBodyDefinition("synthetic:locked", "starmap.entry.locked.name",

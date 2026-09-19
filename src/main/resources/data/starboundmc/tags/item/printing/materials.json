@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:basic_circuit_board",
+    "starboundmc:matter_manipulator_module",
+    "starboundmc:sublight_ignition_core"
+  ]
+}

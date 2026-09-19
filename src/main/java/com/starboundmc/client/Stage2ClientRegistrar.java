@@ -24,6 +24,9 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenus.EPP_SERVICE_MENU.get(), com.starboundmc.client.epp.EppServiceScreen::new);
+        event.register(ModMenus.EPP_MENU.get(), com.starboundmc.client.epp.EppScreen::new);
+        event.register(ModMenus.LIFE_SUPPORT_MENU.get(), com.starboundmc.client.epp.LifeSupportScreen::new);
         event.register(ModMenus.UPGRADE_MENU.get(), UpgradeScreen::new);
         event.register(ModMenus.SHIP_CONSOLE_MENU.get(), ShipConsoleScreen::new);
         event.register(ModMenus.STARMAP_TERMINAL_MENU.get(), StarmapTerminalScreen::new);
@@ -35,6 +38,14 @@ public final class Stage2ClientRegistrar {
         event.register(ModMenus.SHIP_ENGINE_MENU.get(), ShipEngineScreen::new);
         event.register(ModMenus.VOXEL_REFINERY_MENU.get(), VoxelRefineryScreen::new);
         event.register(ModMenus.VOXEL_PRINTING_STATION_MENU.get(), VoxelPrintingStationScreen::new);
+    }
+
+    @SubscribeEvent
+    public static void addEppLayers(EntityRenderersEvent.AddLayers event) {
+        for (var skin : event.getSkins()) {
+            net.minecraft.client.renderer.entity.player.PlayerRenderer renderer = event.getSkin(skin);
+            if (renderer != null) renderer.addLayer(new com.starboundmc.client.epp.EppRenderLayer(renderer));
+        }
     }
 
     @SubscribeEvent
@@ -56,6 +67,7 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerGuiLayers(RegisterGuiLayersEvent event) {
+        event.registerAbove(VanillaGuiLayers.CHAT, ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "oxygen"), com.starboundmc.client.epp.OxygenHudLayer.INSTANCE);
         event.registerAbove(VanillaGuiLayers.CHAT,
                 ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "nova_remote_broadcast"),
                 NovaBroadcastHudLayer.INSTANCE);

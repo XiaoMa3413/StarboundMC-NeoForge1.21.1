@@ -17,6 +17,30 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(MobilityStatePacket payload, IPayloadContext context) {
+        var state = context.player().getData(com.starboundmc.story.ModAttachments.MOBILITY_STATE);
+        state.equipped = payload.equipped();
+        state.charged = payload.charged();
+    }
+    public static void handle(RelaySnapshotPacket payload, IPayloadContext context) {
+        com.starboundmc.client.space.RelayClientState.snapshot = payload;
+        com.starboundmc.client.space.RelayClientState.receivedTick = context.player().level().getGameTime();
+    }
+    public static void handle(EvaStatePacket payload, IPayloadContext context) {
+        var player = context.player();
+        if (!player.level().dimension().location().equals(payload.dimension())) return;
+        var state = player.getData(com.starboundmc.story.ModAttachments.EVA);
+        if (state.mode != payload.mode() || !payload.dimension().equals(state.dimension)) state.clearInput();
+        state.mode = Math.clamp(payload.mode(), 0, 2);
+        state.dimension = payload.dimension();
+    }
+    public static void handle(EppSnapshotPacket payload, IPayloadContext context) {
+        com.starboundmc.client.epp.EppClientState.snapshot = payload;
+    }
+    public static void handle(EppVisualPacket payload, IPayloadContext context) {
+        var entity = context.player().level().getEntity(payload.entityId());
+        if (entity != null) entity.setData(com.starboundmc.story.ModAttachments.EPP_VISUAL, Math.clamp(payload.generation(), 0, 2));
+    }
     private ClientPayloadHandler() {
     }
 
@@ -58,7 +82,7 @@ public final class ClientPayloadHandler {
                 payload.phase(), payload.position(), payload.velocity(),
                 payload.yaw(), payload.pitch(), payload.roll(),
                 payload.elapsedTicks(), payload.totalTicks(),
-                emptyToNull(payload.targetEntryId()));
+                emptyToNull(payload.targetEntryId()), payload.crewHold());
     }
 
     public static void handle(SyncVoxelWalletPacket payload, IPayloadContext context) {

@@ -44,6 +44,7 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapChromeElement chrome;
     private final StarmapInfoPanelElement infoPanel;
     private final ShipSystemLockOverlay environmentLock;
+    private boolean relaySelected;
     private final int containerId;
     private final List<StarmapNodeElement> nodes = new ArrayList<>();
     /** Accumulated simulation ticks. Rendering adds a partial tick below. */
@@ -108,6 +109,7 @@ public final class StarmapTerminalRoot extends UIElement {
         chrome = new StarmapChromeElement(this);
         infoPanel = new StarmapInfoPanelElement(this);
         environmentLock = new ShipSystemLockOverlay();
+        nodeLayer.addChild(new RelayMapNode(this));
         addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel,
                 environmentLock);
         refreshEnvironmentLock();
@@ -119,6 +121,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void refreshComponents() {
+        if (relaySelected && !relayVisible()) relaySelected = false;
         refreshEnvironmentLock();
         nodes.forEach(StarmapNodeElement::refresh);
         selectionOverlay.refresh();
@@ -211,6 +214,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void clearSelection() {
+        relaySelected = false;
         if (level == StarmapLevel.GALAXY)
             selectedSystem = null;
         selectedEntry = null;
@@ -389,6 +393,7 @@ public final class StarmapTerminalRoot extends UIElement {
         if (isEnvironmentLocked() || !isSystemSelectable(system))
             return;
         selectedSystem = system;
+        relaySelected = false;
         selectedEntry = null;
         centralStarSelected = false;
         refreshComponents();
@@ -411,6 +416,7 @@ public final class StarmapTerminalRoot extends UIElement {
                 || system != selectedSystem)
             return;
         selectedEntry = null;
+        relaySelected = false;
         focusedPlanet = null;
         centralStarSelected = true;
         refreshComponents();
@@ -419,6 +425,7 @@ public final class StarmapTerminalRoot extends UIElement {
     void selectEntry(CelestialBodyDefinition entry) {
         if (isEnvironmentLocked() || entry == null)
             return;
+        relaySelected = false;
         if (level == StarmapLevel.SYSTEM) {
             if (entry.orbit().isMoon())
                 entry = StarmapUniverse.body(entry.parentEntryId().orElse(null));
@@ -444,15 +451,17 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     boolean isActionAvailable() {
+        if (relaySelected) return !isEnvironmentLocked() && relayActionAvailable();
         return !isEnvironmentLocked() && actionAvailability().available();
     }
 
     boolean canEnterSelectedSystem() {
-        return !isEnvironmentLocked()
+        return !relaySelected && !isEnvironmentLocked()
                 && level == StarmapLevel.GALAXY && actionAvailability().available();
     }
 
     boolean isInfoPanelVisible() {
+        if (relaySelected) return relayVisible();
         if (level == StarmapLevel.GALAXY)
             return selectedSystem != null;
         if (level == StarmapLevel.SYSTEM)
@@ -461,6 +470,8 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     Component actionLabel() {
+        if (relaySelected) return Component.translatable(relayActive()
+                ? "gui.starboundmc.relay.leave" : "gui.starboundmc.relay.approach");
         if (level == StarmapLevel.GALAXY)
             return Component.translatable("gui.starboundmc.starmap.enter");
         if (level == StarmapLevel.SYSTEM)
@@ -473,6 +484,7 @@ public final class StarmapTerminalRoot extends UIElement {
      * selected destination is currently valid.
      */
     Component actionStatus() {
+        if (relaySelected) return relayStatus();
         StarmapActionAvailability.Result availability = actionAvailability();
         return switch (availability.reason()) {
             case SYSTEM_LOCKED -> Component.translatable(
@@ -583,10 +595,14 @@ public final class StarmapTerminalRoot extends UIElement {
         int preferredWidth = Math.min(230, Math.max(156, frameWidth / 4));
         int panelWidth = Math.min(preferredWidth, Math.max(1, frameWidth - 32));
         int panelHeight;
-        if (selectedEntry != null) {
+        if (relaySelected) {
+            panelHeight = 142;
+        } else if (selectedEntry != null) {
             int moonCount = selectedSystem == null ? 0
                     : selectedSystem.moonCount(selectedEntry.entryId());
             panelHeight = 122 + (moonCount > 0 ? 11 : 0);
+            if (selectedEntry.surface().map(s -> s.environment().coldTier() > 0 || s.environment().heatTier() > 0).orElse(false))
+                panelHeight += 28;
         } else if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             panelHeight = 122;
         } else if (centralStarSelected) {
@@ -615,6 +631,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     SelectedVisual selectedVisual(int width, int height, double phaseClock) {
+        if (relaySelected) return relayVisual(width, height, phaseClock);
         if (level == StarmapLevel.GALAXY && selectedSystem != null) {
             float[] point = galaxyPointF(selectedSystem, 0, 0, width, height);
             return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(22.0F),
@@ -660,6 +677,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     String selectionTargetKey() {
+        if (relaySelected) return "poi:abandoned_relay";
         if (level == StarmapLevel.GALAXY && selectedSystem != null)
             return "galaxy:" + selectedSystem.systemId();
         if (level == StarmapLevel.SYSTEM && selectedSystem != null) {
@@ -675,6 +693,10 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void performAction() {
+        if (relaySelected) {
+            if (isActionAvailable()) ModNetwork.sendToServer(new com.starboundmc.network.RelayActionPacket(containerId, relayActive()));
+            return;
+        }
         if (canEnterSelectedSystem()) {
             enterSystem(selectedSystem);
             return;
@@ -710,6 +732,7 @@ public final class StarmapTerminalRoot extends UIElement {
     }
 
     private void applyNavigationState(StarmapNavigationState state) {
+        relaySelected = false;
         level = state.level();
         selectedSystem = state.selectedSystem();
         selectedEntry = state.selectedEntry();
@@ -747,6 +770,89 @@ public final class StarmapTerminalRoot extends UIElement {
                 StarmapUniverse.isCurrent(selectedEntry.entryId()),
                 sameSystem, isSublightOnline(), isHyperdriveOnline(),
                 fuel, cost);
+    }
+
+    boolean isRelaySelected() { return relaySelected; }
+
+    private CelestialBodyDefinition relayHome() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        return state == null ? null : StarmapUniverse.body(state.homeBody());
+    }
+
+    boolean relayVisible() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        var home = relayHome();
+        if (state == null || home == null || isEnvironmentLocked()
+                || state.phase() == com.starboundmc.encounter.RelayData.Phase.UNDISCOVERED.ordinal()) return false;
+        var system = StarmapUniverse.systemOf(home.entryId());
+        if (!isSystemRevealed(system)) return false;
+        return RelayMapPresentation.visibleAt(level, system.systemId(),
+                selectedSystem == null ? null : selectedSystem.systemId(), home.entryId(),
+                home.parentEntryId().orElse(null), focusedPlanet == null ? null : focusedPlanet.entryId());
+    }
+
+    SelectedVisual relayVisual(int width, int height, double clock) {
+        if (!relayVisible()) return null;
+        var home = relayHome();
+        var system = StarmapUniverse.systemOf(home.entryId());
+        var node = nodePlacement(system, home, false, width, height, clock);
+        float[] host = new float[]{node.x(), node.y()};
+        float separation = level == StarmapLevel.PLANET && home == focusedPlanet ? 49 : 36;
+        var point = RelayMapPresentation.offset(host[0], host[1], Math.max(34, viewTransform.scaleLength(separation)));
+        return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(12), "poi:abandoned_relay");
+    }
+
+    void selectRelay() {
+        if (!relayVisible()) return;
+        relaySelected = true;
+        selectedEntry = null;
+        centralStarSelected = false;
+        refreshComponents();
+    }
+
+    boolean relayActive() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        return state != null && state.phase() == com.starboundmc.encounter.RelayData.Phase.ACTIVE.ordinal();
+    }
+
+    int relayFuelCost() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        return state == null || relayActive() || java.util.Objects.equals(ClientPlanetState.getCurrentEntryId(), state.homeBody())
+                ? 0 : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(), state.homeBody());
+    }
+
+    boolean relayActionAvailable() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        return state != null && relayVisible() && RelayMapPresentation.canAct(state.phase(), state.outsideCrew(),
+                ClientPlanetState.isWarping(), isSublightOnline(), isHyperdriveOnline(),
+                java.util.Objects.equals(currentSystemId(), StarmapUniverse.systemIdOfEntry(state.homeBody())),
+                ClientPlanetState.getFuel(), relayFuelCost());
+    }
+
+    Component relayStatus() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        if (state == null) return Component.empty();
+        if (state.outsideCrew() > 0) return Component.translatable("gui.starboundmc.relay.waiting", state.outsideCrew());
+        if (ClientPlanetState.isWarping()) return Component.translatable("gui.starboundmc.warping");
+        if (!relayActive()) {
+            if (!isSublightOnline()) return Component.translatable("gui.starboundmc.starmap.sublight_offline");
+            if (!java.util.Objects.equals(currentSystemId(), StarmapUniverse.systemIdOfEntry(state.homeBody())) && !isHyperdriveOnline())
+                return Component.translatable("gui.starboundmc.starmap.hyperdrive_offline");
+            if (ClientPlanetState.getFuel() < relayFuelCost())
+                return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail", relayFuelCost(), ClientPlanetState.getFuel());
+        }
+        return Component.translatable("gui.starboundmc.relay." + RelayMapPresentation.phaseKey(state.phase()));
+    }
+
+    Component relayMission() {
+        var state = com.starboundmc.client.space.RelayClientState.snapshot;
+        return Component.translatable("gui.starboundmc.relay." + (state != null && state.completed() ? "complete"
+                : state != null && state.recovered() ? "return" : "retrieve"));
+    }
+
+    Component relayLocation() {
+        var home = relayHome();
+        return Component.translatable("gui.starboundmc.relay.location", home == null ? Component.empty() : Component.translatable(home.nameKey()));
     }
 
     float[] galaxyPointF(StarSystemDefinition system, float x, float y, float width, float height) {

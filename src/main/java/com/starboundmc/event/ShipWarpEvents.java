@@ -37,6 +37,7 @@ public class ShipWarpEvents
     public static void onServerTick(ServerTickEvent.Post event)
     {
         ShipWarpManager.tick(event.getServer());
+        com.starboundmc.encounter.RelayEncounter.tick(event.getServer());
     }
 
     @SubscribeEvent

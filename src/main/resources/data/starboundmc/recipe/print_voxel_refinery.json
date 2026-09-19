@@ -1,0 +1,11 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {"ingredient": {"item": "minecraft:iron_ingot"}, "count": 8},
+    {"ingredient": {"item": "minecraft:copper_ingot"}, "count": 8},
+    {"ingredient": {"item": "minecraft:cobblestone"}, "count": 16},
+    {"ingredient": {"item": "minecraft:coal"}, "count": 4}
+  ],
+  "print_seconds": 5,
+  "result": {"id": "starboundmc:voxel_refinery", "count": 1}
+}

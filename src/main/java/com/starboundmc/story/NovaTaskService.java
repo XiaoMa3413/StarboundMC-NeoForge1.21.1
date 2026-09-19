@@ -28,6 +28,10 @@ public final class NovaTaskService {
         boolean core = player.getInventory().contains(new ItemStack(ModItems.SUBLIGHT_IGNITION_CORE.get()));
         NovaTaskProgress next = previous.observe(contacted, visited, ShipStoryService.hasUpgradedManipulator(player),
                 core, ship.sublightEngine() == EngineState.ONLINE);
+        boolean eppReady = com.starboundmc.epp.EppEquipmentResolver.getActiveEpp(player)
+                .filter(stack -> com.starboundmc.epp.EppItem.oxygen(stack) > 0).isPresent();
+        next = next.observeEpp(eppReady, player.level().dimension().equals(com.starboundmc.world.RockyMoonPlanet.ROCKY_MOON_LEVEL),
+                player.isAlive() && eppReady && com.starboundmc.epp.PlayerEnvironmentService.at(player).pressurized());
         if (next != previous) {
             player.setData(ModAttachments.NOVA_TASKS, next);
             for (NovaTask task : NovaTask.values()) if (next.completed(task) && !previous.completed(task)

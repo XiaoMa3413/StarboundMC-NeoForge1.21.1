@@ -17,6 +17,9 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, StarboundMC.MODID);
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<com.starboundmc.epp.LifeSupportStationEntity>> LIFE_SUPPORT_STATION =
+            BLOCK_ENTITIES.register("life_support_station", () -> BlockEntityType.Builder.of(
+                    com.starboundmc.epp.LifeSupportStationEntity::new, ModBlocks.LIFE_SUPPORT_STATION.get()).build(null));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ShipCrateBlockEntity>> SHIP_CRATE =
             BLOCK_ENTITIES.register("ship_crate", () -> BlockEntityType.Builder.of(

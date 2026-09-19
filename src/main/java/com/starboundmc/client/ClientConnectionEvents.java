@@ -46,6 +46,8 @@ public final class ClientConnectionEvents {
 
     private static void resetConnectionState() {
         ClientNetworkState.resetConnectionState();
+        com.starboundmc.client.space.RelayClientState.reset();
+        com.starboundmc.client.epp.EppClientState.reset();
         ClientShipAiTerminalState.resetConnectionState();
         ClientShipStoryState.resetConnectionState();
         ClientNovaBroadcastState.resetConnectionState();

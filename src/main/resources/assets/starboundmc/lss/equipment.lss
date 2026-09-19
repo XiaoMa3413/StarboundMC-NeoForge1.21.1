@@ -1,0 +1,13 @@
+.equipment-config { background: rect(#88000000); }
+.equipment-shell { background: group(rect(#262626), border(-1, #9c9c9c)); }
+.equipment-divider { background: rect(#505050); }
+.equipment-title { font-size: 10; text-color: #eeeeee; text-shadow: false; }
+.equipment-name { font-size: 8; text-color: #f0f0f0; text-shadow: false; }
+.equipment-caption { font-size: 7; text-color: #bdbdbd; text-shadow: false; }
+.equipment-detail { font-size: 7; text-color: #d0d0d0; text-shadow: false; }
+.equipment-muted { font-size: 7; text-color: #aaaaaa; text-shadow: false; }
+.equipment-socket { background: group(rect(#101010), border(-1, #d0d0d0)); }
+.equipment-inventory-slot { background: group(rect(#171717), border(-1, #525252)); }
+.equipment-hotbar-slot { background: group(rect(#202020), border(-1, #808080)); }
+.equipment-tank .__progress-bar_bar-container__ { background: rect(#151515); }
+.equipment-tank .__progress-bar_bar__ { background: rect(#bbbbbb); }
