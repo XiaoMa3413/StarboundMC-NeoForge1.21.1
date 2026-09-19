@@ -1,0 +1,7 @@
+interface:
+  display_name: "StarboundMC UI Design"
+  short_description: "Design and review StarboundMC UI before implementation."
+  brand_color: "#63E2DF"
+  default_prompt: "Design or review this StarboundMC UI. Establish the interaction fantasy, primary visual hierarchy, and a Design Contract before choosing implementation details."
+policy:
+  allow_implicit_invocation: true
