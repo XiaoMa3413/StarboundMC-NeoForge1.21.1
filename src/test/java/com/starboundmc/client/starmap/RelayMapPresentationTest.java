@@ -7,7 +7,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RelayMapPresentationTest {
     @Test void stationBelongsToItsHomeSystemAndPlanetFamily() {
-        assertTrue(RelayMapPresentation.visibleAt(StarmapLevel.GALAXY, "sys1", null, "moon", "planet", null));
+        assertFalse(RelayMapPresentation.visibleAt(StarmapLevel.GALAXY, "sys1", null, "moon", "planet", null));
+        assertFalse(RelayMapPresentation.visibleAt(StarmapLevel.GALAXY, "sys1", "sys1", "moon", "planet", "planet"));
         assertTrue(RelayMapPresentation.visibleAt(StarmapLevel.SYSTEM, "sys1", "sys1", "moon", "planet", null));
         assertFalse(RelayMapPresentation.visibleAt(StarmapLevel.SYSTEM, "sys1", "sys2", "moon", "planet", null));
         assertTrue(RelayMapPresentation.visibleAt(StarmapLevel.PLANET, "sys1", "sys1", "moon", "planet", "planet"));

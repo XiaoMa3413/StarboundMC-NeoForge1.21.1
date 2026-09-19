@@ -17,6 +17,12 @@ public final class ModAttachments
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.starboundmc.epp.EvaState>> EVA =
             ATTACHMENTS.register("eva", () -> AttachmentType.builder(com.starboundmc.epp.EvaState::new).build());
 
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<com.starboundmc.mobility.MobilityState>> MOBILITY_STATE =
+            ATTACHMENTS.register("mobility_state", () -> AttachmentType.builder(com.starboundmc.mobility.MobilityState::new).build());
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<net.minecraft.world.item.ItemStack>> MOBILITY_EQUIPMENT =
+            ATTACHMENTS.register("mobility_equipment", () -> AttachmentType.builder(() -> net.minecraft.world.item.ItemStack.EMPTY)
+                    .serialize(net.minecraft.world.item.ItemStack.OPTIONAL_CODEC).copyOnDeath().build());
+
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<net.minecraft.world.item.ItemStack>> EPP_EQUIPMENT =
             ATTACHMENTS.register("epp_equipment", () -> AttachmentType.builder(() -> net.minecraft.world.item.ItemStack.EMPTY)
                     .serialize(net.minecraft.world.item.ItemStack.OPTIONAL_CODEC).copyOnDeath().build());

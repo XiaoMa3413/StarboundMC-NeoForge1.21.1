@@ -49,16 +49,10 @@ final class RelayMapNode extends UIElement {
         graphics.pose().pushPose();
         graphics.pose().translate(x, y, 0);
         graphics.pose().scale(size / 20, size / 20, 1);
-        graphics.fill(-8, -1, 8, 1, color);
-        graphics.fill(-3, -4, 3, 5, color);
-        graphics.fill(-2, -3, 2, 4, 0xFF25343B);
-        for (int side : new int[]{-9, 5}) {
-            graphics.fill(side, -5, side + 4, 5, color);
-            graphics.fill(side + 1, -4, side + 3, -1, 0xFF25343B);
-            graphics.fill(side + 1, 1, side + 3, 4, 0xFF25343B);
-        }
-        graphics.fill(-1, -7, 1, -3, color);
-        graphics.fill(-4, -8, 4, -7, color);
+        graphics.fill(-7, -1, 7, 1, color);
+        graphics.fill(-2, -4, 2, 4, color);
+        graphics.fill(-9, -5, -5, 5, color);
+        graphics.fill(5, -5, 9, 5, color);
         graphics.pose().popPose();
     }
 }

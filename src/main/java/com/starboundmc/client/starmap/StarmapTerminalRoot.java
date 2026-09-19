@@ -44,7 +44,6 @@ public final class StarmapTerminalRoot extends UIElement {
     private final StarmapChromeElement chrome;
     private final StarmapInfoPanelElement infoPanel;
     private final ShipSystemLockOverlay environmentLock;
-    private final RelaySignalPanel relaySignal;
     private boolean relaySelected;
     private final int containerId;
     private final List<StarmapNodeElement> nodes = new ArrayList<>();
@@ -111,9 +110,8 @@ public final class StarmapTerminalRoot extends UIElement {
         infoPanel = new StarmapInfoPanelElement(this);
         environmentLock = new ShipSystemLockOverlay();
         nodeLayer.addChild(new RelayMapNode(this));
-        relaySignal = new RelaySignalPanel(this);
         addChildren(sceneLayer, nodeLayer, selectionOverlay, transitionOverlay, chrome, infoPanel,
-                relaySignal, environmentLock);
+                environmentLock);
         refreshEnvironmentLock();
         addEventListener(UIEvents.TICK, event -> {
             orbitClock += 1.0D;
@@ -124,7 +122,6 @@ public final class StarmapTerminalRoot extends UIElement {
 
     private void refreshComponents() {
         if (relaySelected && !relayVisible()) relaySelected = false;
-        relaySignal.refresh();
         refreshEnvironmentLock();
         nodes.forEach(StarmapNodeElement::refresh);
         selectionOverlay.refresh();
@@ -798,37 +795,19 @@ public final class StarmapTerminalRoot extends UIElement {
         if (!relayVisible()) return null;
         var home = relayHome();
         var system = StarmapUniverse.systemOf(home.entryId());
-        float[] host;
-        float separation;
-        if (level == StarmapLevel.GALAXY) {
-            host = galaxyPointF(system, 0, 0, width, height);
-            separation = 36;
-        } else {
-            var node = nodePlacement(system, home, false, width, height, clock);
-            host = new float[]{node.x(), node.y()};
-            separation = level == StarmapLevel.PLANET && home == focusedPlanet ? 49 : 36;
-        }
+        var node = nodePlacement(system, home, false, width, height, clock);
+        float[] host = new float[]{node.x(), node.y()};
+        float separation = level == StarmapLevel.PLANET && home == focusedPlanet ? 49 : 36;
         var point = RelayMapPresentation.offset(host[0], host[1], Math.max(34, viewTransform.scaleLength(separation)));
-        return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(16), "poi:abandoned_relay");
+        return new SelectedVisual(point[0], point[1], viewTransform.scaleLength(12), "poi:abandoned_relay");
     }
 
     void selectRelay() {
         if (!relayVisible()) return;
         relaySelected = true;
-        if (level == StarmapLevel.GALAXY) selectedSystem = null;
         selectedEntry = null;
         centralStarSelected = false;
         refreshComponents();
-    }
-
-    void locateRelay() {
-        var home = relayHome();
-        if (home == null || isEnvironmentLocked()) return;
-        var system = StarmapUniverse.systemOf(home.entryId());
-        if (!isSystemSelectable(system)) return;
-        enterSystem(system);
-        selectRelay();
-        focusSelectedView();
     }
 
     boolean relayActive() {

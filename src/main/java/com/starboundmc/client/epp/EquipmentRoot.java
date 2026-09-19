@@ -26,12 +26,16 @@ public final class EquipmentRoot extends UIElement {
         shell.addChild(label(title, "epp-title", 12, 10, 224, 12));
         shell.addChild(box("epp-line", 12, 29, 224, 1));
         shell.addChild(box("epp-socket", 27, 46, 22, 22));
-        chassis = label(Component.literal(station == null ? "EPP" : "O₂"), "epp-caption", 20, 77, 42, 12);
+        chassis = label(Component.literal(station == null ? "EPP" : "O₂"), "epp-caption", 20, station == null ? 70 : 77, 42, 12);
         shell.addChild(chassis);
         status = label(Component.empty(), "epp-status", 68, 42, 164, 24);
         shell.addChild(status);
         shell.addChild(label(Component.translatable(station == null ? "gui.starboundmc.epp.equipment_hint" : "gui.starboundmc.epp.station_hint"),
-                "epp-caption", 68, 74, 164, 34));
+                "epp-caption", 68, 74, 164, station == null ? 12 : 34));
+        if (station == null) {
+            shell.addChild(box("epp-socket", 27, 87, 22, 22));
+            shell.addChild(label(Component.translatable("gui.starboundmc.mobility.slot"), "epp-caption", 60, 92, 172, 12));
+        }
         shell.addChild(box("epp-line", 12, 111, 224, 1));
         shell.addChild(label(Component.translatable("container.inventory"), "epp-caption", 12, 116, 210, 10));
         for (int row = 0; row < 3; row++) for (int col = 0; col < 9; col++) shell.addChild(box("epp-slot", 43 + col * 18, 127 + row * 18, 18, 18));

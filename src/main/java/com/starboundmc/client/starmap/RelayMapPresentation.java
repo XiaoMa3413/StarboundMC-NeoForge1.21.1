@@ -11,7 +11,7 @@ final class RelayMapPresentation {
 
     static boolean visibleAt(StarmapLevel level, String homeSystem, String selectedSystem,
                              String homeBody, String parentBody, String focusedPlanet) {
-        if (level == StarmapLevel.GALAXY) return true;
+        if (level == StarmapLevel.GALAXY) return false;
         if (!Objects.equals(homeSystem, selectedSystem)) return false;
         return level == StarmapLevel.SYSTEM || Objects.equals(parentBody == null ? homeBody : parentBody, focusedPlanet);
     }

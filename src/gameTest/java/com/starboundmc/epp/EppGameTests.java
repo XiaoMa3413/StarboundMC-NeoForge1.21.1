@@ -57,7 +57,7 @@ public final class EppGameTests {
                 net.neoforged.neoforge.network.registration.NetworkChannel>();
         for (var type : java.util.List.of(com.starboundmc.network.EppSnapshotPacket.TYPE,
                 com.starboundmc.network.EppVisualPacket.TYPE, com.starboundmc.network.NovaBroadcastPacket.TYPE,
-                com.starboundmc.network.EvaStatePacket.TYPE)) {
+                com.starboundmc.network.EvaStatePacket.TYPE, com.starboundmc.network.MobilityStatePacket.TYPE)) {
             channels.put(type.id(), new net.neoforged.neoforge.network.registration.NetworkChannel(
                     type.id(), com.starboundmc.network.ModNetwork.PROTOCOL_VERSION));
         }
@@ -70,6 +70,115 @@ public final class EppGameTests {
     }
     private static ItemStack pack(int oxygen) {
         var stack = new ItemStack(ModItems.EPP_MK1.get()); EppItem.setOxygen(stack, oxygen); return stack;
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void popoverTransfersModulesAndRejectsStaleClicks(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "ModulePopover")) {
+            var p = fixture.player;
+            p.openMenu(new net.minecraft.world.SimpleMenuProvider((id, inventory, owner) -> new EppMenu(id, inventory),
+                    net.minecraft.network.chat.Component.literal("Equipment")));
+            var menu = p.containerMenu;
+            var pack = new ItemStack(ModItems.EPP_MK3.get());
+            EppItem.setOxygen(pack, 321);
+            menu.getSlot(0).set(pack);
+            menu.setCarried(new ItemStack(ModItems.HEATING_MODULE_1.get()));
+            menu.broadcastChanges();
+            int revision = menu.getStateId();
+            h.assertTrue(EppModuleTransfer.exchange(p, menu.containerId, revision, 0, 1), "Install into second socket failed");
+            h.assertTrue(menu.getCarried().isEmpty() && EppProtection.from(menu.getSlot(0).getItem()).coldTier() == 1,
+                    "Module install lost protection or duplicated cursor");
+            h.assertTrue(!EppModuleTransfer.exchange(p, menu.containerId, revision, 0, 1), "Stale click was accepted");
+            h.assertTrue(EppItem.oxygen(menu.getSlot(0).getItem()) == 321, "Module edit reset oxygen");
+            menu.setCarried(new ItemStack(ModItems.COOLING_MODULE_1.get())); menu.broadcastChanges();
+            h.assertTrue(EppModuleTransfer.exchange(p, menu.containerId, menu.getStateId(), 0, 1), "Swap failed");
+            h.assertTrue(menu.getCarried().is(ModItems.HEATING_MODULE_1.get()), "Swap did not return old module");
+            menu.setCarried(ItemStack.EMPTY); menu.broadcastChanges();
+            h.assertTrue(EppModuleTransfer.exchange(p, menu.containerId, menu.getStateId(), 0, 1), "Removal failed");
+            h.assertTrue(menu.getCarried().is(ModItems.COOLING_MODULE_1.get())
+                    && EppProtection.from(menu.getSlot(0).getItem()).heatTier() == 0, "Removal lost module");
+            h.assertTrue(!EppModuleTransfer.exchange(p, menu.containerId, menu.getStateId(), 0, 2), "Out-of-range socket accepted");
+            menu.setCarried(new ItemStack(Items.DIAMOND)); menu.broadcastChanges();
+            h.assertTrue(!EppModuleTransfer.exchange(p, menu.containerId, menu.getStateId(), 0, 0), "Non-module accepted");
+            menu.getSlot(0).set(pack(100)); menu.setCarried(new ItemStack(ModItems.HEATING_MODULE_1.get())); menu.broadcastChanges();
+            h.assertTrue(!EppModuleTransfer.exchange(p, menu.containerId, menu.getStateId(), 0, 0), "Mk.I accepted module");
+            h.assertTrue(!EppModuleTransfer.exchange(p, menu.containerId + 1, menu.getStateId(), 0, 0), "Wrong menu accepted");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void mobilityChargeRequiresLandingAndRejectsRepeatOrEva(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "JumpPrototype")) {
+            var p = fixture.player;
+            p.setData(ModAttachments.MOBILITY_EQUIPMENT, new ItemStack(ModItems.JUMP_THRUSTER.get()));
+            p.setOnGround(false);
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Air equip created a charge");
+            p.setOnGround(true);
+            for (int i = 0; i < 3; i++) com.starboundmc.mobility.MobilityEvents.recharge(p);
+            p.setOnGround(false); p.fallDistance = 7;
+            h.assertTrue(com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Charged boost failed");
+            h.assertTrue(p.getDeltaMovement().y == .6 && p.fallDistance == 7, "Boost must not reset the fall-distance tracker");
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Repeated boost succeeded");
+            p.setData(ModAttachments.MOBILITY_EQUIPMENT, ItemStack.EMPTY);
+            p.setData(ModAttachments.MOBILITY_EQUIPMENT, new ItemStack(ModItems.JUMP_THRUSTER.get()));
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Reequip reset charge");
+            p.setOnGround(true);
+            com.starboundmc.mobility.MobilityEvents.recharge(p);
+            p.setOnGround(false); com.starboundmc.mobility.MobilityEvents.recharge(p);
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Brief contact recharged");
+            p.setOnGround(true);
+            for (int i = 0; i < 3; i++) com.starboundmc.mobility.MobilityEvents.recharge(p);
+            p.setOnGround(false);
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, Integer.MIN_VALUE, 0), "Invalid input accepted");
+            p.setPos(-30000, 100, 0);
+            h.assertTrue(!com.starboundmc.mobility.MobilityEvents.boost(p, 1, 0), "Ground thruster operated in EVA");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void mobilitySlotPersistsWithoutDuplicationAndDropsNormally(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "MobilitySlot"); var restored = player(h.getLevel(), "MobilityRestore")) {
+            var p = fixture.player;
+            var menu = new EppMenu(1, p.getInventory()); p.containerMenu = menu;
+            p.getInventory().setItem(9, new ItemStack(ModItems.JUMP_THRUSTER.get()));
+            h.assertTrue(!menu.quickMoveStack(p, 1).isEmpty(), "Shift equip failed");
+            h.assertTrue(p.getInventory().getItem(9).isEmpty()
+                    && p.getData(ModAttachments.MOBILITY_EQUIPMENT).is(ModItems.JUMP_THRUSTER.get()), "Equip duplicated rig");
+            h.assertTrue(p.getData(ModAttachments.EPP_EQUIPMENT).isEmpty(), "Mobility replaced EPP");
+            restored.player.load(p.saveWithoutId(new CompoundTag()));
+            h.assertTrue(restored.player.getData(ModAttachments.MOBILITY_EQUIPMENT).is(ModItems.JUMP_THRUSTER.get()),
+                    "Rig lost on reload");
+            var drops = new ArrayList<net.minecraft.world.entity.item.ItemEntity>();
+            boolean keep = h.getLevel().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY);
+            try {
+                h.getLevel().getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(false, h.getLevel().getServer());
+                com.starboundmc.mobility.MobilityEvents.drops(new LivingDropsEvent(p, p.damageSources().generic(), drops, false));
+                h.assertTrue(drops.size() == 1 && p.getData(ModAttachments.MOBILITY_EQUIPMENT).isEmpty(), "Death duplicated rig");
+            } finally {
+                h.getLevel().getGameRules().getRule(GameRules.RULE_KEEPINVENTORY).set(keep, h.getLevel().getServer());
+            }
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void mobilityProtectsOnlyEquippedPlayersFromFallDamage(GameTestHelper h) {
+        try (var fixture = player(h.getLevel(), "FallProtection")) {
+            var p = fixture.player;
+            for (int i = 0; i < 61; i++) p.tick();
+            p.invulnerableTime = 0;
+            p.setData(ModAttachments.MOBILITY_EQUIPMENT, new ItemStack(ModItems.JUMP_THRUSTER.get()));
+            float health = p.getHealth();
+            p.hurt(p.damageSources().fall(), 8);
+            h.assertTrue(p.getHealth() == health, "Equipped rig failed to prevent fall damage");
+            p.invulnerableTime = 0;
+            p.hurt(p.damageSources().generic(), 2);
+            h.assertTrue(p.getHealth() < health, "Rig incorrectly blocked unrelated damage");
+            p.setData(ModAttachments.MOBILITY_EQUIPMENT, ItemStack.EMPTY);
+            p.invulnerableTime = 0;
+            health = p.getHealth();
+            p.hurt(p.damageSources().fall(), 4);
+            h.assertTrue(p.getHealth() < health, "Unequipped rig retained fall protection");
+        }
+        h.succeed();
     }
     @GameTest(template = "shuttle_test_empty")
     public static void emergencyRecallClearsDriftWithoutRefillingOrLosingEquipment(GameTestHelper h) {
@@ -487,7 +596,7 @@ public final class EppGameTests {
             menu.quickMoveStack(p.player, 0);
             h.assertTrue(p.player.getData(ModAttachments.EPP_EQUIPMENT).isEmpty(), "Unequip left a second pack");
             h.assertTrue(p.player.getInventory().countItem(ModItems.EPP_MK1.get()) == 1, "Unequip duplicated/lost pack");
-            h.assertTrue(menu.slots.size() == 37, "Unexpected slot count");
+            h.assertTrue(menu.slots.size() == 38, "Unexpected slot count");
         }
         h.succeed();
     }

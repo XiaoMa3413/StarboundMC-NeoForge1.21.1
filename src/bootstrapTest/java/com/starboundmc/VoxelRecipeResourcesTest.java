@@ -16,6 +16,17 @@ final class VoxelRecipeResourcesTest {
     private static final Path RECIPES = Path.of("src/main/resources/data/starboundmc/recipe");
 
     @Test
+    void jumpThrusterPrototypeHasNoRecipe() throws IOException {
+        try (var paths = Files.list(RECIPES)) {
+            for (var path : paths.filter(p -> p.toString().endsWith(".json")).toList()) {
+                var recipe = JsonParser.parseString(Files.readString(path)).getAsJsonObject();
+                if (recipe.has("result")) assertFalse(recipe.get("result").toString().contains("starboundmc:jump_thruster"),
+                        "The debug prototype must not enter survival crafting");
+            }
+        }
+    }
+
+    @Test
     void shippedPrintingRecipesHaveEffectiveVoxelCostsAndCategories() throws IOException {
         var categorized = new java.util.HashSet<String>();
         for (String category : java.util.List.of("survival", "materials", "machines", "building")) {
