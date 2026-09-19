@@ -26,6 +26,11 @@
 - [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：传送器、货箱、燃料控制器和物质枪升级
   工作台已有 LDLib2 实现；合金炉、旧控制台和最终清理仍未完成。
 
+## UI 与美术规范
+
+- [UI / 美术风格规范](ui-art-direction.md)：项目级舰载科幻视觉语言、颜色、层级、像素资产、星图、N.O.V.A.、物质枪、打印站、HUD 与动画规则。
+- [UI 重构工作流](ui-refactor-workflow.md)：定义 Design Contract、设计与 LDLib2 实现分工、Anti-AI UI 检查和后续 UI Kit / Playground 路线。
+
 ## 架构参考
 
 - [宇宙系统总设计](StarboundMC%20宇宙系统总设计.md)：当前数据驱动宇宙架构的说明，不是施工清单。
