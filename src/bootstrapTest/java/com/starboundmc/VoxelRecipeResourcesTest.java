@@ -18,7 +18,7 @@ final class VoxelRecipeResourcesTest {
     @Test
     void shippedPrintingRecipesHaveEffectiveVoxelCostsAndCategories() throws IOException {
         var categorized = new java.util.HashSet<String>();
-        for (String category : java.util.List.of("equipment", "components", "machines", "building")) {
+        for (String category : java.util.List.of("survival", "materials", "machines", "building")) {
             var tag = JsonParser.parseString(Files.readString(RECIPES.resolve(
                     "../tags/item/printing/" + category + ".json"))).getAsJsonObject();
             for (var item : tag.getAsJsonArray("values")) {
@@ -35,7 +35,20 @@ final class VoxelRecipeResourcesTest {
                         .filter(m -> m.getAsJsonObject("ingredient").has("item")
                                 && m.getAsJsonObject("ingredient").get("item").getAsString().equals("starboundmc:voxel"))
                         .mapToLong(m -> m.get("count").getAsLong()).sum();
-                assertTrue(voxels > 0, "Missing effective voxel cost: " + path);
+                if (path.getFileName().toString().equals("print_voxel_refinery.json")) {
+                    assertEquals(0, voxels, "First refinery must not require its own output");
+                    var expected = java.util.Map.of("minecraft:iron_ingot", 8, "minecraft:copper_ingot", 8,
+                            "minecraft:cobblestone", 16, "minecraft:coal", 4);
+                    assertEquals(expected.size(), materials.size());
+                    for (var entry : materials) {
+                        var material = entry.getAsJsonObject();
+                        assertEquals(expected.get(material.getAsJsonObject("ingredient").get("item").getAsString()),
+                                Integer.valueOf(material.get("count").getAsInt()));
+                    }
+                    assertFalse(Files.exists(RECIPES.resolve("voxel_refinery.json")));
+                } else {
+                    assertTrue(voxels > 0, "Missing effective voxel cost: " + path);
+                }
                 assertTrue(categorized.remove(recipe.getAsJsonObject("result").get("id").getAsString()),
                         "Missing category: " + path);
             }

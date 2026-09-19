@@ -1,10 +1,8 @@
 {
-  "gui.starboundmc.voxel_printing.category.all": "全部",
-  "gui.starboundmc.voxel_printing.category.equipment": "装备",
-  "gui.starboundmc.voxel_printing.category.components": "零部件",
+  "gui.starboundmc.voxel_printing.category.survival": "生存",
+  "gui.starboundmc.voxel_printing.category.materials": "基础材料",
   "gui.starboundmc.voxel_printing.category.machines": "机器",
   "gui.starboundmc.voxel_printing.category.building": "建材",
-  "gui.starboundmc.voxel_printing.category.other": "其他",
   "gui.starboundmc.tasks.ask_question": "这个任务我该怎么做？",
   "gui.starboundmc.command.empty_tasks": "暂无任务。",
   "gui.starboundmc.command.overview": "总览",

@@ -4,6 +4,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class OxygenHudFadeTest {
+    @Test void safeStateDoesNotFlashBeforeFirstHazard() {
+        var fade = new OxygenHudFade();
+        for (int i = 0; i < 30; i++) assertEquals(0, fade.update(.1f, false));
+        assertTrue(fade.update(.1f, true) > 0);
+    }
     @Test void safeAirHoldsThenFadesAndDangerRestoresQuickly() {
         var fade = new OxygenHudFade();
         for (int i = 0; i < 10; i++) fade.update(.1f, true);

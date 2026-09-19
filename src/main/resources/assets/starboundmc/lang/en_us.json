@@ -1,10 +1,8 @@
 {
-  "gui.starboundmc.voxel_printing.category.all": "All",
-  "gui.starboundmc.voxel_printing.category.equipment": "Equipment",
-  "gui.starboundmc.voxel_printing.category.components": "Components",
+  "gui.starboundmc.voxel_printing.category.survival": "Survival",
+  "gui.starboundmc.voxel_printing.category.materials": "Basic Materials",
   "gui.starboundmc.voxel_printing.category.machines": "Machines",
   "gui.starboundmc.voxel_printing.category.building": "Building",
-  "gui.starboundmc.voxel_printing.category.other": "Other",
   "gui.starboundmc.tasks.ask_question": "How should I approach this mission?",
   "gui.starboundmc.command.empty_tasks": "No missions here.",
   "gui.starboundmc.command.overview": "Overview",

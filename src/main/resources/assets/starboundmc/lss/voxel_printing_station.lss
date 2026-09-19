@@ -1,102 +1,104 @@
 // Shipboard fabrication console. This sheet is loaded only by the printer screen.
-.machine-inventory-screen { background: rect(#9906090c); }
+.machine-inventory-screen { background: rect(#99080808); }
 .voxel-printing-shell {
-  background: group(rect(#17242d), border(-2, #82989e), border(-1, #c0ccca));
+  background: built-in(ui-mc:RECT) color(#545454);
   overflow-clip: true;
 }
-.machine-inventory-header { background: rect(#293d48); }
-.voxel-printing-rail { background: rect(#5dd4d3); }
-.voxel-printing-category { background: group(rect(#243d47), border(-1, #607e88)); }
-.voxel-printing-category label { font-size: 7; text-color: #e0e8e6; text-shadow: false; }
-.machine-inventory-title { font-size: 9; text-color: #e5edeb; text-shadow: false; }
-.machine-status { font-size: 7; text-color: #91c6cb; text-shadow: false; }
-.voxel-printing-wallet { font-size: 8; text-color: #e5bc66; text-shadow: false; }
+.machine-inventory-header { background: group(rect(#2a2a2a), border(-1, #525252)); }
+.voxel-printing-rail { background: rect(#b0b0b0); }
+.voxel-printing-category { background: built-in(ui-mc:RECT_THIN) color(#707070); }
+.voxel-category-dialog { background: group(rect(#292929), border(-1, #a9a9a9)); }
+.voxel-category-label { font-size: 7; text-color: #eeeeee; text-shadow: false; }
+.machine-inventory-title { font-size: 9; text-color: #eaeaea; text-shadow: false; }
+.machine-status { font-size: 7; text-color: #b7b7b7; text-shadow: false; }
+.voxel-printing-wallet { font-size: 8; text-color: #bebebe; text-shadow: false; }
 .voxel-printing-recipe-pane,
 .voxel-printing-detail-pane,
 .voxel-printing-queue-pane,
-.collection-pane { background: rect(#101c24); }
+.collection-pane { background: rect(#232323); }
 .voxel-pane-title,
-.machine-inventory-caption { font-size: 7; text-color: #b3c6cc; text-shadow: false; }
+.machine-inventory-caption { font-size: 7; text-color: #c1c1c1; text-shadow: false; }
 .voxel-recipe-list .__scroller_view_vertical-scroller__,
 .voxel-print-queue-list .__scroller_view_vertical-scroller__ { width: 4; margin-left: 2; }
 .voxel-recipe-list .__scroller_scroll_container__,
-.voxel-print-queue-list .__scroller_scroll_container__ { background: rect(#111e26); padding-all: 0; }
+.voxel-print-queue-list .__scroller_scroll_container__ { background: rect(#1c1c1c); padding-all: 0; }
 .voxel-recipe-list .__scroller_scroll_bar__,
 .voxel-print-queue-list .__scroller_scroll_bar__ {
-  base-background: rect(#52757e);
-  hover-background: rect(#81c8cc);
-  pressed-background: rect(#bce8e4);
+  base-background: built-in(ui-mc:SCROLLER_V) color(#909090);
+  hover-background: built-in(ui-mc:SCROLLER_V) color(#cacaca);
+  pressed-background: built-in(ui-mc:SCROLLER_V) color(#eaeaea);
 }
 .voxel-recipe-row:host {
-  base-background: rect(#1c303a);
-  hover-background: group(rect(#2b454f), border(-1, #658f98));
-  pressed-background: group(rect(#152a33), border(-1, #a0d7d7));
+  base-background: rect(#343434);
+  hover-background: group(rect(#494949), border(-1, #9e9e9e));
+  pressed-background: group(rect(#2b2b2b), border(-1, #d4d4d4));
 }
 .voxel-recipe-row.voxel-recipe-unavailable:host {
-  base-background: rect(#1a242c);
-  hover-background: group(rect(#2a353d), border(-1, #708088));
-  pressed-background: rect(#131e26);
+  base-background: rect(#2c2c2c);
+  hover-background: group(rect(#3e3e3e), border(-1, #8e8e8e));
+  pressed-background: rect(#252525);
 }
 // Selected wins even when this recipe is unavailable. Never hide the current selection.
 .voxel-recipe-row.voxel-recipe-selected:host,
 .voxel-recipe-row.voxel-recipe-selected.voxel-recipe-unavailable:host {
-  base-background: group(rect(#244650), border(-1, #66d1cf));
-  hover-background: group(rect(#305861), border(-1, #a9e5df));
-  pressed-background: group(rect(#1a3943), border(-1, #def5ee));
+  base-background: group(rect(#494949), border(-1, #b7b7b7));
+  hover-background: group(rect(#5b5b5b), border(-1, #d7d7d7));
+  pressed-background: group(rect(#3c3c3c), border(-1, #efefef));
 }
-.voxel-recipe-name { font-size: 7; text-color: #e0e8e6; text-shadow: false; }
-.voxel-recipe-amount { font-size: 6; text-color: #99b6bf; text-shadow: false; }
-.voxel-recipe-unavailable .voxel-recipe-name { text-color: #a0aaad; }
-.voxel-recipe-selected .voxel-recipe-name { text-color: #f0f7f2; }
+.voxel-recipe-name { font-size: 7; text-color: #e5e5e5; text-shadow: false; }
+.voxel-recipe-amount { font-size: 6; text-color: #aeaeae; text-shadow: false; }
+.voxel-recipe-unavailable .voxel-recipe-name { text-color: #a7a7a7; }
+.voxel-recipe-selected .voxel-recipe-name { text-color: #f4f4f4; }
 .voxel-recipe-empty,
-.voxel-queue-empty { font-size: 7; text-color: #91a6b0; text-shadow: false; }
-.voxel-printing-detail-name { font-size: 8; text-color: #eef3ed; text-shadow: false; }
+.voxel-queue-empty { font-size: 7; text-color: #a1a1a1; text-shadow: false; }
+.voxel-printing-detail-name { font-size: 8; text-color: #f1f1f1; text-shadow: false; }
 .voxel-printing-detail-output,
-.voxel-printing-detail-meta { font-size: 7; text-color: #a4bec6; text-shadow: false; }
-.voxel-printing-detail-description { font-size: 6; text-color: #8fa8af; text-shadow: false; }
-.voxel-requirement-card { background: rect(#20343e); }
-.voxel-requirement-name { font-size: 6; text-color: #b0c3c9; text-shadow: false; }
-.voxel-requirement-count { font-size: 6; text-color: #d7e6e3; text-shadow: false; }
-.voxel-requirement-count.voxel-requirement-missing { text-color: #f49882; }
-.voxel-printing-detail-status { font-size: 7; text-color: #9ed5ce; text-shadow: false; }
-.voxel-printing-detail-status.status-warning { text-color: #e4b36f; }
-.voxel-printing-detail-status.status-success { text-color: #96d7c9; }
+.voxel-printing-detail-meta { font-size: 7; text-color: #b7b7b7; text-shadow: false; }
+.voxel-printing-detail-description { font-size: 6; text-color: #a1a1a1; text-shadow: false; }
+.voxel-requirement-card { background: rect(#353535); }
+.voxel-requirement-name { font-size: 6; text-color: #bebebe; text-shadow: false; }
+.voxel-requirement-count { font-size: 6; text-color: #e1e1e1; text-shadow: false; }
+.voxel-requirement-count.voxel-requirement-missing { text-color: #b1b1b1; }
+.voxel-printing-detail-status { font-size: 7; text-color: #c4c4c4; text-shadow: false; }
+.voxel-printing-detail-status.status-warning { text-color: #bababa; }
+.voxel-printing-detail-status.status-success { text-color: #c2c2c2; }
 .voxel-printing-quantity {
-  font-size: 7; text-color: #e0ece7; text-shadow: false;
-  background: group(rect(#0c1820), border(-1, #506d78));
+  font-size: 7; text-color: #e8e8e8; text-shadow: false;
+  background: built-in(ui-mc:RECT_BLACK);
 }
 .voxel-printing-detail-pane .voxel-quantity-button .__button_text__ { font-size: 6; }
 .voxel-quantity-button:host,
 .voxel-queue-cancel:host {
-  base-background: group(rect(#314853), border(-1, #607e88));
-  hover-background: group(rect(#45616a), border(-1, #97c6c9));
-  pressed-background: group(rect(#1c343f), border(-1, #c3e4df));
+  base-background: built-in(ui-mc:RECT_THIN) color(#818181);
+  hover-background: built-in(ui-mc:RECT_THIN) color(#b2b2b2);
+  pressed-background: built-in(ui-mc:RECT_INVERSE) color(#929292);
 }
 .voxel-quantity-button .__button_text__,
-.voxel-queue-cancel .__button_text__ { font-size: 7; text-color: #e6efea; text-shadow: false; }
+.voxel-queue-cancel .__button_text__ { font-size: 7; text-color: #ececec; text-shadow: false; }
 .voxel-printing-action:host {
-  base-background: group(rect(#2f626a), border(-1, #85d6d2));
-  hover-background: group(rect(#417e82), border(-1, #c0eee5));
-  pressed-background: group(rect(#234951), border(-1, #dbf8ec));
+  base-background: built-in(ui-mc:RECT_THIN) color(#818181);
+  hover-background: built-in(ui-mc:RECT_THIN) color(#ababab);
+  pressed-background: built-in(ui-mc:RECT_INVERSE) color(#7d7d7d);
 }
-.voxel-printing-action .__button_text__ { font-size: 8; text-color: #ecfaf2; text-shadow: false; }
+.voxel-printing-action .__button_text__ { font-size: 8; text-color: #f5f5f5; text-shadow: false; }
 .voxel-printing-action.__disabled__:host,
 .voxel-quantity-button.__disabled__:host,
 .voxel-queue-cancel.__disabled__:host {
-  base-background: group(rect(#202f38), border(-1, #3c525e));
-  hover-background: group(rect(#202f38), border(-1, #3c525e));
-  pressed-background: group(rect(#202f38), border(-1, #3c525e));
+  base-background: group(rect(#343434), border(-1, #515151));
+  hover-background: group(rect(#343434), border(-1, #515151));
+  pressed-background: group(rect(#343434), border(-1, #515151));
 }
-.__disabled__ .__button_text__ { text-color: #82959c; }
-.voxel-queue-row { background: rect(#1b2b35); overflow-clip: true; }
-.voxel-queue-row.voxel-queue-row-active { background: group(rect(#203f49), border(-1, #549da8)); }
-.voxel-queue-row.queue-recent { background: group(rect(#28494b), border(-1, #94d9bf)); }
-.voxel-queue-name { font-size: 7; text-color: #e0eae7; text-shadow: false; }
-.voxel-queue-state { font-size: 6; text-color: #d8bb79; text-shadow: false; }
-.voxel-queue-row-active .voxel-queue-state { text-color: #a3ded8; }
-.voxel-queue-requester { font-size: 6; text-color: #94acb7; text-shadow: false; }
-.queue-progress-track { background: rect(#10242d); }
-.queue-progress-fill { background: rect(#5ecbc9); }
-.machine-slot-socket { background: group(rect(#0c171e), border(-1, #526b76)); }
-.hotbar-slot-socket { background: group(rect(#192c36), border(-1, #81979e)); }
-.voxel-printing-output-socket { background: group(rect(#173c43), border(-1, #82d7d1)); }
+.__disabled__ .__button_text__ { text-color: #909090; }
+.voxel-queue-row { background: rect(#343434); overflow-clip: true; }
+.voxel-queue-row.voxel-queue-row-active { background: group(rect(#434343), border(-1, #9b9b9b)); }
+.voxel-queue-row.queue-recent { background: group(rect(#464646), border(-1, #c4c4c4)); }
+.voxel-queue-name { font-size: 7; text-color: #e7e7e7; text-shadow: false; }
+.voxel-queue-state { font-size: 6; text-color: #bcbcbc; text-shadow: false; }
+.voxel-queue-row-active .voxel-queue-state { text-color: #cccccc; }
+.voxel-queue-requester { font-size: 6; text-color: #a6a6a6; text-shadow: false; }
+.voxel-queue-progress .__progress-bar_bar-container__ { background: rect(#1b1b1b); }
+.voxel-queue-progress .__progress-bar_bar__ { background: rect(#b8b8b8); }
+.voxel-queue-cancel.__disabled__ .voxel-cancel-icon { opacity: 0.3; }
+.machine-slot-socket { background: group(rect(#171717), border(-1, #555555)); }
+.hotbar-slot-socket { background: group(rect(#242424), border(-1, #777777)); }
+.voxel-printing-output-socket { background: group(rect(#111111), border(-1, #cccccc)); }

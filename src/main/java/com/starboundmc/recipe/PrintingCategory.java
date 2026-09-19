@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 
 /** Output tags let data packs classify their own printing recipes. */
 public enum PrintingCategory {
-    ALL, EQUIPMENT, COMPONENTS, MACHINES, BUILDING, OTHER;
+    SURVIVAL, MATERIALS, MACHINES, BUILDING;
 
     private final TagKey<Item> tag = TagKey.create(Registries.ITEM,
             ResourceLocation.fromNamespaceAndPath("starboundmc", "printing/" + name().toLowerCase(Locale.ROOT)));
@@ -19,9 +19,8 @@ public enum PrintingCategory {
     }
 
     public boolean matches(ItemStack output) {
-        if (this == ALL) return true;
-        if (this != OTHER) return output.is(tag);
-        return !EQUIPMENT.matches(output) && !COMPONENTS.matches(output)
+        if (this != MATERIALS) return output.is(tag);
+        return output.is(tag) || !SURVIVAL.matches(output)
                 && !MACHINES.matches(output) && !BUILDING.matches(output);
     }
 }

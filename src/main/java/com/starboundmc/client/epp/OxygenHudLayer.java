@@ -22,10 +22,9 @@ public final class OxygenHudLayer implements ModularHudLayer {
     private final VisorHudProjection navigation = new VisorHudProjection(272, true);
     private final VisorHudProjection controls = new VisorHudProjection(360, true);
     @Override public ModularUI getModularUI() {
-        var mc = Minecraft.getInstance(); var s = EppClientState.snapshot;
-        if (mc.player == null || !mc.player.isAlive() || mc.options.hideGui
-                || !(showBeacon() || s != null && (s.equipped() || s.airless() || s.exposure() > 0 || s.coldTier() > 0 || s.coldExposure() > 0
-                || s.heatTier() > 0 || s.heatExposure() > 0))) return null;
+        var mc = Minecraft.getInstance();
+        if (mc.player == null || !mc.player.isAlive()) { reset(); return null; }
+        if (mc.options.hideGui) return null;
         if (ui == null) ui = ModularUI.of(UI.of(new Gauge(projection, navigation, controls), ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         return ui;
     }
@@ -45,6 +44,8 @@ public final class OxygenHudLayer implements ModularHudLayer {
         private final OxygenHudFade fade = new OxygenHudFade();
         private final OxygenHudFade coldFade = new OxygenHudFade();
         private final OxygenHudFade heatFade = new OxygenHudFade();
+        private final HudVisibilityFade beaconFade = new HudVisibilityFade();
+        private boolean lastThrust;
         private final VisorHudProjection projection;
         private final VisorHudProjection navigation, controls;
 
@@ -56,18 +57,23 @@ public final class OxygenHudLayer implements ModularHudLayer {
             var mc = Minecraft.getInstance();
             float seconds = lastFrame == 0 ? 0 : Math.min(.1f, (System.nanoTime() - lastFrame) / 1_000_000_000f);
             updateDrift(mc);
-            if (showBeacon()) drawBeacon(context.graphics);
+            boolean beacon = showBeacon();
+            if (beacon) lastThrust = com.starboundmc.epp.EvaMovement.mode(mc.player)
+                    == com.starboundmc.epp.EvaState.THRUST;
+            float beaconOpacity = beaconFade.update(mc.isPaused() ? 0 : seconds, beacon);
+            if (beaconOpacity > .001f && mc.player.level().dimension().equals(com.starboundmc.world.ShipDimensions.SHIP_LEVEL))
+                drawBeacon(context.graphics, beaconOpacity);
             var s = EppClientState.snapshot; if (s == null) return;
             var g = context.graphics;
             int x = g.guiWidth() - 140;
             float opacity = fade.update(mc.isPaused() ? 0 : seconds, s.airless() || s.exposure() > 0 || s.refilling());
-            boolean oxygenVisible = opacity > .001f && (s.equipped() || s.airless() || s.exposure() > 0);
+            boolean oxygenVisible = opacity > .001f;
             boolean coldVisible = s.coldTier() > 0 || s.coldExposure() > 0;
             boolean heatVisible = s.heatTier() > 0 || s.heatExposure() > 0;
             float coldOpacity = coldFade.update(mc.isPaused() ? 0 : seconds, coldVisible && s.coldProtection() <= 0);
             float heatOpacity = heatFade.update(mc.isPaused() ? 0 : seconds, heatVisible && s.heatProtection() <= 0);
-            coldVisible &= coldOpacity > .001f;
-            heatVisible &= heatOpacity > .001f;
+            coldVisible = coldOpacity > .001f;
+            heatVisible = heatOpacity > .001f;
             int rows = (oxygenVisible ? 1 : 0) + (coldVisible ? 1 : 0) + (heatVisible ? 1 : 0);
             int y = g.guiHeight() - 82 - Math.max(0, rows - 2) * 40;
             if (oxygenVisible) projection.draw(g, x + driftX, y + driftY, opacity, canvas -> drawFlat(canvas, context.partialTick));
@@ -79,17 +85,17 @@ public final class OxygenHudLayer implements ModularHudLayer {
             if (heatVisible) projection.draw(g, x + driftX, y + driftY + row, heatOpacity, canvas -> drawThermal(canvas, true));
         }
 
-        private void drawBeacon(GuiGraphics g) {
+        private void drawBeacon(GuiGraphics g, float opacity) {
             var mc = Minecraft.getInstance();
             int x = g.guiWidth() / 2;
-            ArNavigationHud.targets(g);
+            ArNavigationHud.targets(g, opacity);
             float navFit = Math.min(1f, (g.guiWidth() - 16f) / 272f);
             g.pose().pushPose();
             g.pose().translate(x - 136 * navFit + driftX, 18 + driftY, 0);
             g.pose().scale(navFit, navFit, 1);
-            navigation.draw(g, 0, 0, ArNavigationHud::compass);
+            navigation.draw(g, 0, 0, opacity, ArNavigationHud::compass);
             g.pose().popPose();
-            boolean thrust = com.starboundmc.epp.EvaMovement.mode(mc.player) == com.starboundmc.epp.EvaState.THRUST;
+            boolean thrust = lastThrust;
             var hint = thrust ? Component.translatable("hud.starboundmc.eva.controls",
                     mc.options.keyUp.getTranslatedKeyMessage(), mc.options.keyLeft.getTranslatedKeyMessage(),
                     mc.options.keyDown.getTranslatedKeyMessage(), mc.options.keyRight.getTranslatedKeyMessage(),
@@ -102,7 +108,7 @@ public final class OxygenHudLayer implements ModularHudLayer {
             g.pose().pushPose();
             g.pose().translate(x - width / 2 + driftX, 63 + driftY, 0);
             g.pose().scale(fit, fit, 1);
-            controls.draw(g, 0, 0, canvas -> {
+            controls.draw(g, 0, 0, opacity, canvas -> {
                 float textScale = Math.min(1f, 340f / Math.max(1, mc.font.width(hint)));
                 canvas.pose().pushPose();
                 canvas.pose().translate(180, 12, 0); canvas.pose().scale(textScale, textScale, 1);

@@ -49,16 +49,17 @@ public final class ArNavigationHud {
         g.fill(135, 26, 138, 30, 0xEE95E8E2);
         g.drawCenteredString(mc.font, Math.round(heading) % 360 + "°", 136, 34, 0xCC95E8E2);
     }
-    static void targets(GuiGraphics g) {
+    static void targets(GuiGraphics g, float opacity) {
         var mc = Minecraft.getInstance();
         if (!ready || mc.level != capturedLevel || mc.player == null) return;
         var ship = Vec3.atBottomCenterOf(ShipStructure.SHIP_TELEPORTER_POS).add(0, 1, 0);
-        var first = marker(g, ship, "hud.starboundmc.eva.beacon", 0x95E8E2, null);
+        var first = marker(g, ship, "hud.starboundmc.eva.beacon", 0x95E8E2, null, opacity);
         var relay = RelayClientState.snapshot;
         if (RelayClientState.local() && relay != null)
-            marker(g, RelayGeometry.center(relay.origin()), "hud.starboundmc.relay.beacon", 0xFFD17C, first);
+            marker(g, RelayGeometry.center(relay.origin()), "hud.starboundmc.relay.beacon", 0xFFD17C, first, opacity);
     }
-    private static ArTargetProjection.Point marker(GuiGraphics g, Vec3 target, String key, int rgb, ArTargetProjection.Point previous) {
+    private static ArTargetProjection.Point marker(GuiGraphics g, Vec3 target, String key, int rgb, ArTargetProjection.Point previous, float opacity) {
+        int color = Math.round(221 * opacity) << 24 | rgb;
         var mc = Minecraft.getInstance();
         Vec3 delta = target.subtract(eye);
         var v = clip.transform(new Vector4f((float)delta.x, (float)delta.y, (float)delta.z, 1));
@@ -66,12 +67,12 @@ public final class ArNavigationHud {
         float x = p.x(), y = p.y();
         if (p.edge()) {
             double angle = Math.atan2(y - g.guiHeight() / 2f, x - g.guiWidth() / 2f);
-            line(g, x, y, x - (float)Math.cos(angle - .55) * 7.5f, y - (float)Math.sin(angle - .55) * 7.5f, rgb);
-            line(g, x, y, x - (float)Math.cos(angle + .55) * 7.5f, y - (float)Math.sin(angle + .55) * 7.5f, rgb);
+            line(g, x, y, x - (float)Math.cos(angle - .55) * 7.5f, y - (float)Math.sin(angle - .55) * 7.5f, color);
+            line(g, x, y, x - (float)Math.cos(angle + .55) * 7.5f, y - (float)Math.sin(angle + .55) * 7.5f, color);
         } else {
             // Open diamond keeps the target itself visible through the marker.
-            line(g, x, y - 6, x + 6, y, rgb); line(g, x + 6, y, x, y + 6, rgb);
-            line(g, x, y + 6, x - 6, y, rgb); line(g, x - 6, y, x, y - 6, rgb);
+            line(g, x, y - 6, x + 6, y, color); line(g, x + 6, y, x, y + 6, color);
+            line(g, x, y + 6, x - 6, y, color); line(g, x - 6, y, x, y - 6, color);
         }
         var bearing = ShipBeaconBearing.from(mc.player.position(), target, 0);
         var text = Component.translatable(key, Math.round(bearing.distance()),
@@ -84,16 +85,19 @@ public final class ArNavigationHud {
         if (previous != null && Math.abs(previous.x() - x) < 140 && Math.abs(previous.y() - y) < 26) labelY += 14;
         labelY = Math.min(labelY, g.guiHeight() - 14);
         g.pose().pushPose(); g.pose().translate(labelX, labelY, 0); g.pose().scale(scale, scale, 1);
-        g.drawCenteredString(mc.font, text, 0, 0, 0xD0000000 | rgb); g.pose().popPose();
+        // Minecraft treats tiny text alpha as opaque; skip the nearly transparent tail.
+        if (Math.round(208 * opacity) >= 4)
+            g.drawCenteredString(mc.font, text, 0, 0, Math.round(208 * opacity) << 24 | rgb);
+        g.pose().popPose();
         return p;
     }
-    private static void line(GuiGraphics g, float x, float y, float tx, float ty, int rgb) {
+    private static void line(GuiGraphics g, float x, float y, float tx, float ty, int color) {
         float dx = tx - x, dy = ty - y;
         float length = (float)Math.sqrt(dx * dx + dy * dy);
         if (length < .001) return;
         float nx = -dy / length * .55f, ny = dx / length * .55f;
         var b = g.bufferSource().getBuffer(net.minecraft.client.renderer.RenderType.gui());
-        var pose = g.pose().last().pose(); int color = 0xDD000000 | rgb;
+        var pose = g.pose().last().pose();
         b.addVertex(pose, x + nx, y + ny, 0).setColor(color);
         b.addVertex(pose, tx + nx, ty + ny, 0).setColor(color);
         b.addVertex(pose, tx - nx, ty - ny, 0).setColor(color);

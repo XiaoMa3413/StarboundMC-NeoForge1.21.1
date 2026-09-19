@@ -2,6 +2,7 @@ package com.starboundmc.client.voxel;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.Icons;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
@@ -12,6 +13,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Selector;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
 import com.starboundmc.client.ClientPrintQueueState;
@@ -147,8 +149,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
         shell.addChildren(buildHeader(title), recipesPane, detailPane, queuePane,
                 buildInventory(inventoryTitle));
         addChild(shell);
-        updateSelectedVisual();
-        refresh();
+        filterRecipes(PrintingCategory.SURVIVAL);
     }
 
     private UIElement buildHeader(Component title) {
@@ -178,14 +179,13 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 "voxel-pane-title", 5, 3, 95, 8));
 
         var category = new Selector<PrintingCategory>();
-        category.setCandidateUIProvider(value -> new Label()
-                .setText(Component.translatable((value == null ? PrintingCategory.ALL : value).translationKey()))
-                .textStyle(style -> style.fontSize(7).adaptiveWidth(false).textWrap(TextWrap.HIDE))
-                .layout(layout -> layout.widthPercent(100).height(14)));
+        category.setCandidateUIProvider(VoxelPrintingStationRoot::categoryOption);
         category.setCandidates(List.of(PrintingCategory.values()));
-        category.setSelected(PrintingCategory.ALL, false);
+        category.setSelected(PrintingCategory.SURVIVAL, false);
         category.setOnValueChanged(this::filterRecipes);
         category.addClass("voxel-printing-category");
+        category.dialog.addClass("voxel-category-dialog");
+        category.selectorStyle(style -> style.maxItemCount(4));
         category.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                 .left(4).top(14).width(128).height(18));
         pane.addChild(category);
@@ -227,6 +227,29 @@ public final class VoxelPrintingStationRoot extends UIElement {
         }
         pane.addChild(recipeList);
         return pane;
+    }
+
+    private static UIElement categoryOption(PrintingCategory value) {
+        var category = value == null ? PrintingCategory.SURVIVAL : value;
+        var option = new UIElement().addClass("voxel-category-option");
+        option.layout(layout -> layout.widthPercent(100).height(14));
+        var icon = VoxelUiSupport.positioned("voxel-category-icon", 1, 1, 12, 12);
+        var texture = switch (category) {
+            case SURVIVAL -> Icons.WIDGET_SETTING;
+            case MATERIALS -> Icons.RESOURCE;
+            case MACHINES -> Icons.PROJECT;
+            case BUILDING -> Icons.WIDGET_GROUP;
+        };
+        icon.style(style -> style.backgroundTexture(texture));
+        var text = new Label().setText(Component.translatable(category.translationKey()));
+        text.addClass("voxel-category-label");
+        text.setAllowHitTest(false);
+        text.setOverflowVisible(false);
+        text.layout(layout -> layout.marginLeft(17).height(14));
+        text.textStyle(style -> style.fontSize(7).adaptiveWidth(false)
+                .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
+        option.addChildren(icon, text);
+        return option;
     }
 
     private void filterRecipes(PrintingCategory category) {
@@ -278,9 +301,9 @@ public final class VoxelPrintingStationRoot extends UIElement {
         icon.style(style -> style.backgroundTexture(new ItemStackTexture(result)));
 
         var name = VoxelUiSupport.label(result.getHoverName(),
-                "voxel-recipe-name", 23, 3, 66, 10);
+                "voxel-recipe-name", 23, 3, 92, 10);
         var amount = VoxelUiSupport.label(Component.literal("×" + result.getCount()),
-                "voxel-recipe-amount", 23, 14, 66, 8);
+                "voxel-recipe-amount", 23, 14, 92, 8);
 
         button.addChildren(icon, name, amount);
         button.style(style -> style.tooltips(result.getHoverName()));
@@ -299,7 +322,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(5)
                 .top(3)
-                .width(94)
+                .width(84)
                 .height(10));
         queueTitle.textStyle(style -> style
                 .adaptiveWidth(false)
@@ -404,17 +427,25 @@ public final class VoxelPrintingStationRoot extends UIElement {
         ItemStack result = new ItemStack(BuiltInRegistries.ITEM.get(entry.resultItemId()), entry.resultCount());
         var icon = VoxelUiSupport.positioned("voxel-queue-icon", 3, 4, 16, 16);
         icon.style(style -> style.backgroundTexture(new ItemStackTexture(result)));
-        int contentWidth = compact ? 258 : 84;
+        int contentWidth = compact ? 258 : 76;
         var name = VoxelUiSupport.label(result.getHoverName(), "voxel-queue-name", 23, 3, contentWidth - 19, 10);
         var state = VoxelUiSupport.label(Component.empty(), "voxel-queue-state", 23, 15, contentWidth - 19, 9);
         var requester = VoxelUiSupport.label(Component.literal(entry.requesterName()),
                 "voxel-queue-requester", 4, 32, contentWidth - 22, 12);
-        var track = VoxelUiSupport.positioned("queue-progress-track", 4, 26, contentWidth, 2);
-        var fill = VoxelUiSupport.positioned("queue-progress-fill", 0, 0, 0, 2);
-        track.addChild(fill);
+        var track = new ProgressBar().setRange(0, 100);
+        track.addClass("voxel-queue-progress");
+        track.setAllowHitTest(false);
+        track.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                .left(4).top(26).width(contentWidth).height(4));
+        track.barContainer.layout(layout -> layout.paddingAll(1));
+        track.label.setDisplay(false);
         track.setDisplay(entry.active());
         var cancel = new Button();
         configureButton(cancel, Component.literal("×"), contentWidth - 14, 31, 18, 18);
+        cancel.noText();
+        var cancelIcon = VoxelUiSupport.positioned("voxel-cancel-icon", 4, 4, 10, 10);
+        cancelIcon.style(style -> style.backgroundTexture(Icons.CLOSE));
+        cancel.addChild(cancelIcon);
         cancel.addClass("voxel-queue-cancel");
         var player = Minecraft.getInstance().player;
         boolean canCancel = !entry.active() && player != null && player.getUUID().equals(entry.requesterId());
@@ -432,11 +463,11 @@ public final class VoxelPrintingStationRoot extends UIElement {
         row.style(style -> style.tooltips(Component.translatable("gui.starboundmc.voxel_printing.queue.tooltip",
                 result.getHoverName(), entry.requesterName(), entry.crafts())));
         row.addChildren(icon, name, state, requester, track, cancel);
-        return new QueueRow(entry, row, state, fill, contentWidth);
+        return new QueueRow(entry, row, state, track);
     }
 
     private static void updateQueueRowState(QueueRow row, int activeProgress) {
-        row.fill.layout(layout -> layout.width(row.progressWidth * activeProgress / 100.0F));
+        row.progress.setProgress(activeProgress);
         row.state.setText(row.entry.active()
                 ? Component.translatable("gui.starboundmc.voxel_printing.queue.active_progress",
                 activeProgress + "%")
@@ -937,7 +968,6 @@ public final class VoxelPrintingStationRoot extends UIElement {
                                PrintSubmissionState.Status submissionStatus, boolean delayed) {
     }
 
-    private record QueueRow(SyncPrintQueuePacket.Entry entry, UIElement root, Label state, UIElement fill,
-                            int progressWidth) {
+    private record QueueRow(SyncPrintQueuePacket.Entry entry, UIElement root, Label state, ProgressBar progress) {
     }
 }

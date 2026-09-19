@@ -14,21 +14,24 @@ public final class PrintingRecipeGameTests {
     public static void loadedRecipesChargeVoxelsAndResolveOutputCategories(GameTestHelper helper) {
         var level = helper.getLevel();
         var recipes = level.getRecipeManager().getAllRecipesFor(VoxelPrintingRecipe.TYPE);
-        helper.assertTrue(recipes.size() == 13, "All 13 printing recipes must decode, including costs above 64");
+        helper.assertTrue(recipes.size() == 14, "All 14 printing recipes must decode, including costs above 64");
         for (var holder : recipes) {
             var recipe = holder.value();
             var output = recipe.getResultItem(level.registryAccess());
-            helper.assertTrue(recipe.voxelMaterialCount() > 0, "Missing wallet cost: " + holder.id());
-            helper.assertTrue(PrintingCategory.ALL.matches(output), "All category must include " + holder.id());
-            helper.assertTrue(!PrintingCategory.OTHER.matches(output), "Missing output category: " + holder.id());
+            boolean refinery = holder.id().getPath().equals("print_voxel_refinery");
+            helper.assertTrue(refinery ? recipe.voxelMaterialCount() == 0 : recipe.voxelMaterialCount() > 0,
+                    "Wrong wallet cost: " + holder.id());
+            long categories = java.util.Arrays.stream(PrintingCategory.values()).filter(c -> c.matches(output)).count();
+            helper.assertTrue(categories == 1, "Output must match exactly one category: " + holder.id());
+            if (refinery) helper.assertTrue(PrintingCategory.MACHINES.matches(output), "Refinery is a machine");
             if (holder.id().getPath().equals("print_epp_mk3_upgrade_kit")) {
                 helper.assertTrue(recipe.voxelMaterialCount() == 120, "Mk.III must reserve 120 voxels");
-                helper.assertTrue(PrintingCategory.COMPONENTS.matches(output), "Upgrade kit must be a component");
-                helper.assertTrue(!PrintingCategory.EQUIPMENT.matches(output), "Upgrade kit must not match equipment");
+                helper.assertTrue(PrintingCategory.SURVIVAL.matches(output), "EPP upgrade kit must be survival equipment");
+                helper.assertTrue(!PrintingCategory.MATERIALS.matches(output), "EPP upgrade kit must not match materials");
             }
         }
-        helper.assertTrue(PrintingCategory.OTHER.matches(new ItemStack(Items.DIAMOND)),
-                "Untagged data pack outputs must remain accessible in Other");
+        helper.assertTrue(PrintingCategory.MATERIALS.matches(new ItemStack(Items.DIAMOND)),
+                "Untagged data pack outputs must remain accessible in basic materials");
         helper.succeed();
     }
 }

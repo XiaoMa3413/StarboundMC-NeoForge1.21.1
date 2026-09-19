@@ -95,7 +95,7 @@ final class Stage10ResourcesTest {
                     assertTrue(result.has("count"), path.toString());
                 }
             }
-            assertEquals(13, printingRecipes, "thirteen printing recipes");
+            assertEquals(14, printingRecipes, "fourteen printing recipes");
             assertEquals(14, decompositionRecipes, "fourteen decomposition recipes");
         }
     }
