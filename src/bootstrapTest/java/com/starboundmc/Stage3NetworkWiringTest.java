@@ -14,12 +14,13 @@ final class Stage3NetworkWiringTest {
     void registersAllPayloadsWithExplicitDirectionsAndNewVersion() throws IOException {
         String network = source("network/ModNetwork.java");
         // EPP equipment plus EVA input and authoritative state snapshots.
-        assertTrue(network.contains("PROTOCOL_VERSION = \"14\""));
+        assertTrue(network.contains("PROTOCOL_VERSION = \"15\""));
         assertEquals(17, occurrences(network, "playToServer("));
-        // Existing twelve clientbound payloads are retained.
-        assertEquals(17, occurrences(network, "playToClient("));
+        // Existing clientbound payloads are retained and HUD bootstrap state is explicit.
+        assertEquals(18, occurrences(network, "playToClient("));
         assertTrue(network.contains("ShipEnvironmentSnapshotPacket.TYPE"));
         assertTrue(network.contains("NovaBroadcastPacket.TYPE"));
+        assertTrue(network.contains("HudBootstrapStatePacket.TYPE"));
         assertTrue(network.contains("PacketDistributor.sendToServer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayer"));
         assertTrue(network.contains("PacketDistributor.sendToPlayersInDimension"));

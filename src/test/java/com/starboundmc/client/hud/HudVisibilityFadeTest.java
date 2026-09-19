@@ -1,4 +1,4 @@
-package com.starboundmc.client.epp;
+package com.starboundmc.client.hud;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

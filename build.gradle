@@ -49,6 +49,10 @@ sourceSets {
             include 'com/starboundmc/encounter/*.java'
             include 'com/starboundmc/mixin/*.java'
             include 'com/starboundmc/client/epp/*.java'
+            include 'com/starboundmc/client/hud/*.java'
+            include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/provider/*.java'
+            include 'com/starboundmc/client/hud/visor/*.java'
             include 'com/starboundmc/recipe/*.java'
             include 'com/starboundmc/event/MatterManipulatorEvents.java'
             include 'com/starboundmc/event/SpawnHandler.java'
@@ -191,6 +195,10 @@ sourceSets {
             include 'com/starboundmc/epp/*.java'
             include 'com/starboundmc/encounter/*.java'
             include 'com/starboundmc/client/epp/*.java'
+            include 'com/starboundmc/client/hud/*.java'
+            include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/provider/*.java'
+            include 'com/starboundmc/client/hud/visor/*.java'
         }
         resources.setSrcDirs(['src/bootstrapTest/resources'])
         compileClasspath += main.compileClasspath
@@ -245,6 +253,9 @@ neoForge {
 
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
+            if (project.hasProperty('hudCalibrationGrid')) {
+                systemProperty 'starboundmc.debug.hudVisorGrid', 'true'
+            }
             logLevel = org.slf4j.event.Level.DEBUG
         }
     }

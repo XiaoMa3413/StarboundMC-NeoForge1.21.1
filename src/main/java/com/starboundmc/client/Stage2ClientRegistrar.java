@@ -5,6 +5,7 @@ import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
+import com.starboundmc.client.hud.StarboundHudLayer;
 import com.starboundmc.client.starmap.StarmapTerminalScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -67,7 +68,9 @@ public final class Stage2ClientRegistrar {
 
     @SubscribeEvent
     public static void registerGuiLayers(RegisterGuiLayersEvent event) {
-        event.registerAbove(VanillaGuiLayers.CHAT, ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "oxygen"), com.starboundmc.client.epp.OxygenHudLayer.INSTANCE);
+        event.registerAbove(VanillaGuiLayers.CHAT,
+                ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "starbound_hud"),
+                StarboundHudLayer.INSTANCE);
         event.registerAbove(VanillaGuiLayers.CHAT,
                 ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "nova_remote_broadcast"),
                 NovaBroadcastHudLayer.INSTANCE);

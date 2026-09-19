@@ -1,8 +1,11 @@
 package com.starboundmc.client.shipai;
 
+import com.starboundmc.client.hud.HudBootController;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayDeque;
 
 /** Client-side presentation state for queued N.O.V.A. remote transmissions. */
 public final class ClientNovaBroadcastState
@@ -10,6 +13,7 @@ public final class ClientNovaBroadcastState
     private static final NovaBroadcastTimeline timeline = new NovaBroadcastTimeline();
     private static NovaDialogueSounds dialogueSounds = new NovaDialogueSounds();
     private static int textPulseSequence;
+    private static final ArrayDeque<String> deferredBootMessages = new ArrayDeque<>();
 
     private ClientNovaBroadcastState()
     {
@@ -20,13 +24,23 @@ public final class ClientNovaBroadcastState
     {
         if (translationKey == null || translationKey.isBlank())
             return;
-        timeline.enqueue(translationKey, Component.translatable(translationKey).getString());
+        if (HudBootController.INSTANCE.state() == HudBootController.State.STARTING) {
+            if (deferredBootMessages.size() < NovaBroadcastTimeline.MAX_QUEUED_MESSAGES)
+                deferredBootMessages.addLast(translationKey);
+            return;
+        }
+        enqueueNow(translationKey);
     }
 
     /** Advances the HUD typewriter once per client tick. */
     public static void tick()
     {
         Minecraft minecraft = Minecraft.getInstance();
+        if (HudBootController.INSTANCE.state() != HudBootController.State.STARTING) {
+            while (!deferredBootMessages.isEmpty()
+                    && enqueueNow(deferredBootMessages.getFirst()))
+                deferredBootMessages.removeFirst();
+        }
         NovaBroadcastTimeline.Step step = timeline.tick(isPresentationPaused(minecraft));
         for (int index = 0; index < step.revealedCount(); index++)
         {
@@ -46,6 +60,7 @@ public final class ClientNovaBroadcastState
         timeline.reset();
         dialogueSounds = new NovaDialogueSounds();
         textPulseSequence = 0;
+        deferredBootMessages.clear();
     }
 
     static NovaBroadcastTimeline.Snapshot snapshot()
@@ -66,7 +81,7 @@ public final class ClientNovaBroadcastState
 
     static int queuedMessageCount()
     {
-        return timeline.queuedMessageCount();
+        return timeline.queuedMessageCount() + deferredBootMessages.size();
     }
 
     private static boolean isPresentationPaused(Minecraft minecraft)
@@ -82,5 +97,11 @@ public final class ClientNovaBroadcastState
         return Component.literal("[N.O.V.A.] ")
                 .withStyle(ChatFormatting.AQUA)
                 .append(Component.literal(body).withStyle(ChatFormatting.WHITE));
+    }
+
+    private static boolean enqueueNow(String translationKey)
+    {
+        return timeline.enqueue(translationKey,
+                Component.translatable(translationKey).getString());
     }
 }

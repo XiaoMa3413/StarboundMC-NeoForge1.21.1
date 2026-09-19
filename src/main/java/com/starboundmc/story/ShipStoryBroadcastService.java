@@ -2,6 +2,7 @@ package com.starboundmc.story;
 
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.NovaBroadcastPacket;
+import com.starboundmc.network.HudBootstrapStatePacket;
 import com.starboundmc.warp.ShipStateData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -23,8 +24,8 @@ import java.util.UUID;
  */
 public final class ShipStoryBroadcastService
 {
-    /** A short grace period lets the player finish spawning before chat opens. */
-    public static final long INITIAL_WAKE_DELAY_TICKS = 20L;
+    /** A three-second grace period lets the player arrive and notice the quiet ship. */
+    public static final long INITIAL_WAKE_DELAY_TICKS = 60L;
     /** The locating hint is sent once, after roughly six seconds without contact. */
     public static final long TERMINAL_REMINDER_DELAY_TICKS = 120L;
     /** Give the player time to arrive and orient before the surface tutorial appears. */
@@ -86,6 +87,7 @@ public final class ShipStoryBroadcastService
 
         if (shared.core() == CoreState.ONLINE)
             sendVoxelIntroductionOnce(player);
+        sendHudBootstrapState(player);
     }
 
     /** Stops pending timers when a player leaves the server. */
@@ -175,10 +177,10 @@ public final class ShipStoryBroadcastService
         reminderDueAt.remove(id);
 
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
-            return;
-        player.setData(ModAttachments.PLAYER_STORY,
-                personal.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        if (personal.isWritable() && !personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
+            player.setData(ModAttachments.PLAYER_STORY,
+                    personal.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        sendHudBootstrapState(player);
     }
 
     /** Emits due cues on the server thread. */
@@ -343,6 +345,18 @@ public final class ShipStoryBroadcastService
     private static void sendNova(ServerPlayer player, String translationKey)
     {
         ModNetwork.sendToPlayer(player, new NovaBroadcastPacket(translationKey));
+    }
+
+    private static void sendHudBootstrapState(ServerPlayer player)
+    {
+        if (player == null || player.getServer() == null)
+            return;
+        SharedShipProgress shared = ShipStateData.get(player.getServer()).getStoryProgress();
+        PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
+        ModNetwork.sendToPlayer(player, new HudBootstrapStatePacket(
+                shared.core(),
+                personal.hasFlag(PlayerStoryFlag.INITIAL_WAKE_BROADCAST),
+                personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED)));
     }
 
     private static void clearPending(UUID id)

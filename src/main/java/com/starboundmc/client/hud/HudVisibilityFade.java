@@ -1,4 +1,4 @@
-package com.starboundmc.client.epp;
+package com.starboundmc.client.hud;
 
 /** No safety hold: navigation follows entering and leaving EVA immediately. */
 final class HudVisibilityFade {

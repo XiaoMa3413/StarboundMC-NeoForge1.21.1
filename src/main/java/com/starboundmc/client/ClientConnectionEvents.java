@@ -5,6 +5,7 @@ import com.starboundmc.client.shipai.ClientShipAiTerminalState;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
+import com.starboundmc.client.hud.StarboundHudLayer;
 import com.starboundmc.network.ClientNetworkState;
 import com.starboundmc.world.universe.ClientUniverseCatalog;
 import net.minecraft.client.Minecraft;
@@ -48,6 +49,7 @@ public final class ClientConnectionEvents {
         ClientNetworkState.resetConnectionState();
         com.starboundmc.client.space.RelayClientState.reset();
         com.starboundmc.client.epp.EppClientState.reset();
+        StarboundHudLayer.INSTANCE.resetConnectionState();
         ClientShipAiTerminalState.resetConnectionState();
         ClientShipStoryState.resetConnectionState();
         ClientNovaBroadcastState.resetConnectionState();

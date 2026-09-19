@@ -6,6 +6,7 @@ import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.WarpSounds;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
+import com.starboundmc.client.hud.HudBootController;
 import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.menu.StarmapTerminalMenu;
 import com.starboundmc.menu.TeleporterMenu;
@@ -122,7 +123,13 @@ public final class ClientPayloadHandler {
     }
 
     public static void handle(NovaBroadcastPacket payload, IPayloadContext context) {
+        HudBootController.INSTANCE.onNovaBroadcast(payload.translationKey());
         ClientNovaBroadcastState.enqueue(payload.translationKey());
+    }
+
+    public static void handle(HudBootstrapStatePacket payload, IPayloadContext context) {
+        HudBootController.INSTANCE.applyServerState(
+                payload.core(), payload.wakePresented(), payload.terminalContacted());
     }
 
     private static String emptyToNull(String value) {
