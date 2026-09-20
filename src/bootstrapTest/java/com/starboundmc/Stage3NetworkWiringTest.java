@@ -84,8 +84,10 @@ final class Stage3NetworkWiringTest {
         assertTrue(refineryScreen.contains("startButton.setActive(canStart)"));
         assertTrue(refineryScreen.contains("StopRefinementPacket"));
         assertTrue(refineryScreen.contains("startButton.style(style -> style.tooltips(startHint))"));
-        assertTrue(printingScreen.contains("printButton.setActive(canPrint)"));
-        assertTrue(printingScreen.contains("printButton.style(style -> style.tooltips(reasonTooltip))"));
+        // The craft action now lives inside the selected-item panel, so the page reaches it
+        // through the composition root rather than owning the button itself.
+        assertTrue(printingScreen.contains("craftButton().setActive(canPrint)"));
+        assertTrue(printingScreen.contains("craftButton().style(style -> style.tooltips(reasonTooltip))"));
         assertTrue(actions.contains("message.starboundmc.voxel_refinery.unsupported"));
         assertTrue(actions.contains("message.starboundmc.voxel_printing.materials"));
     }
@@ -135,15 +137,30 @@ final class Stage3NetworkWiringTest {
         assertTrue(printingRoot.contains("new ScrollerView()"));
         assertTrue(printingRoot.contains("gui.starboundmc.voxel_printing.device.printing"));
         assertTrue(printingRoot.contains("machine-status"));
-        assertTrue(printingRoot.contains("voxel-recipe-unavailable"));
-        assertTrue(printingRoot.contains("updateRequirementCounts"));
-        assertTrue(printingRoot.contains("printButton.setActive(canPrint)"));
-        assertTrue(printingRoot.contains("detailTooltip"));
+        // The catalogue surface is a component: the browser builds the rows, the page supplies the
+        // entries and applies its own relevance rule.
+        assertTrue(printingRoot.contains("recipeBrowser.setEntries(entries)"));
+        String recipeBrowser = source("client/ui/components/RecipeBrowser.java");
+        assertTrue(recipeBrowser.contains("new RecipeListRow("));
+        assertTrue(printingRoot.contains("entry.view.setCraftable(ready)"));
+        assertTrue(printingRoot.contains("updateRequirements(recipe)"));
+        // Material lines are a component concern: the view takes the data, and the requirement
+        // list inside it is what builds and pools RequirementRow instances.
+        assertTrue(printingRoot.contains("selectedItemView.setRequirements(lines)"));
+        String materialView = source("client/ui/components/MaterialRequirementView.java");
+        assertTrue(materialView.contains("new RequirementRow("));
+        assertTrue(printingRoot.contains("craftButton().setActive(canPrint)"));
+        assertTrue(printingRoot.contains("itemDescription(result)"));
         assertTrue(printingRoot.contains("getTooltipLines"));
-        assertTrue(printingRoot.contains("ghostResultTexture"));
-        assertTrue(printingRoot.contains("voxel-printing-output-socket"));
+        // The output frame is the one place the item appears: it previews the selection, reveals
+        // colour as progress advances, and steps aside for the real item. It sits on the vanilla
+        // output slot's coordinate, which is where the menu draws that item.
+        assertTrue(printingRoot.contains("selectedItemView.setOutput("));
+        String outputSlot = source("client/ui/components/OutputPreviewSlot.java");
+        assertTrue(outputSlot.contains("voxel-printing-output-socket"));
+        assertTrue(outputSlot.contains("SOCKET_SIZE") || outputSlot.contains("SIZE = 18"));
         assertTrue(printingMenuSource().contains("OUTPUT_SLOT, 151, 31"));
-        assertTrue(printingRoot.contains("outputPreview.setVisible"));
+        assertTrue(outputSlot.contains("setDisplay(true)"));
         assertFalse(printingRoot.contains("resultIcon"));
         assertFalse(printingRoot.contains("voxel-printing-material-socket"));
         assertTrue(renderer.contains("snapshot.resultItemId()"));
@@ -210,15 +227,23 @@ final class Stage3NetworkWiringTest {
         assertTrue(network.contains("StopRefinementPacket.TYPE"));
         assertTrue(network.contains("CancelPrintQueuePacket.TYPE"));
         assertTrue(network.contains("SyncPrintQueuePacket.TYPE"));
-        assertTrue(printingRoot.contains("quantityMinus"));
-        assertTrue(printingRoot.contains("quantityMinusTen"));
-        assertTrue(printingRoot.contains("quantityPlusTen"));
+        assertTrue(printingRoot.contains("selectedItemView.quantityStepper()"));
+        assertTrue(printingRoot.contains(
+                "selectedItemView.quantityStepper().setValueAndMaximum(quantity, selectionLimit)"));
         assertTrue(printingRoot.contains("maxCraftsForRequirements"));
-        assertTrue(printingRoot.contains("target = Math.min(target, selectedQuantityCeiling())"));
         assertTrue(printingRoot.contains("PANEL_H = 240"));
         assertTrue(printingRoot.contains("\"voxel-printing-recipe-pane\", 6, 28, 136, 207"));
-        assertTrue(printingRoot.contains("\"voxel-printing-detail-pane\", 146, 28, detailWidth, 120"));
-        assertTrue(printingRoot.contains("\"voxel-printing-queue-pane\", 340, 28, 94, 207"));
+        assertTrue(printingRoot.contains("WORKSPACE_H = 120"));
+        // The region is still anchored where the menu's slot layout requires; only its interior
+        // is delegated to the panel.
+        assertTrue(printingRoot.contains("\"voxel-printing-detail-pane\""));
+        assertTrue(printingRoot.contains("left(146).top(28)"));
+        assertTrue(printingRoot.contains("\"voxel-printing-queue-pane\", 6, 28"));
+        assertTrue(printingRoot.contains("queuePane.setDisplay(false)"),
+                "Queue must start hidden: it is a secondary mode, not a dominant third column");
+        assertTrue(printingRoot.contains("recipesPane.setDisplay(!showingQueue)"));
+        assertTrue(printingRoot.contains("workspacePane.setDisplay(!showingQueue)"));
+        assertTrue(printingRoot.contains("queuePane.setDisplay(showingQueue)"));
         assertTrue(printingRoot.contains("\"voxel-inventory-section\", 144, 151, 172, 84"));
         assertTrue(printingScreen.contains("PANEL_H = 240"));
         assertTrue(printingMenu.contains("addPlayerInventory(inventory, 148, 161)"));

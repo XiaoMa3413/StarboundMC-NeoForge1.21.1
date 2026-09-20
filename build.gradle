@@ -132,6 +132,7 @@ sourceSets {
             include 'com/starboundmc/client/ClientWarpSoundEvents.java'
             include 'com/starboundmc/client/*.java'
             include 'com/starboundmc/client/ui/*.java'
+            include 'com/starboundmc/client/ui/components/*.java'
             include 'com/starboundmc/client/teleporter/*.java'
             include 'com/starboundmc/client/fuel/*.java'
             include 'com/starboundmc/client/voxel/*.java'

@@ -1,53 +1,248 @@
-// Voxel printer: shipboard matter fabrication, not a desktop management panel.
+// Voxel printer sample: reusable semantic components + restrained shipboard skin.
 .machine-inventory-screen { background: rect(#A0050910); }
-.voxel-printing-shell { background: group(rect(#091219), border(-1, #3B5963)); overflow-clip: true; }
-.machine-inventory-header { background: group(rect(#0D1A22), border(-1, #29434E)); }
+
+.voxel-printing-shell {
+  background: group(rect(#091219), border(-1, #3B5963));
+  overflow-clip: true;
+}
+
+.machine-inventory-header { background: rect(#0D1A22); }
 .voxel-printing-rail { background: #63E2DF; }
-.machine-inventory-title { font-size: 9; text-color: #D8EDF0; text-shadow: false; }
-.machine-status { font-size: 6; text-color: #7596A0; text-shadow: false; }
-.voxel-printing-wallet { font-size: 7; text-color: #80DAD7; text-shadow: false; }
-.voxel-printing-recipe-pane { background: rect(#0B151C); }
-.voxel-printing-detail-pane { background: group(rect(#08141A), border(-1, #24444E)); }
-.voxel-printing-queue-pane { background: rect(#0A141A); }
-.voxel-pane-title, .machine-inventory-caption { font-size: 7; text-color: #88A6AF; text-shadow: false; }
-.voxel-printing-category { background: group(rect(#0D1D24), border(-1, #35525C)); }
-.voxel-category-dialog { background: group(rect(#09161D), border(-1, #476973)); }
-.voxel-category-label { font-size: 7; text-color: #C9E0E4; text-shadow: false; }
-.voxel-recipe-list .__scroller_view_vertical-scroller__, .voxel-print-queue-list .__scroller_view_vertical-scroller__ { width: 3; margin-left: 2; }
-.voxel-recipe-list .__scroller_scroll_container__, .voxel-print-queue-list .__scroller_scroll_container__ { background: rect(#081116); padding-all: 0; }
-.voxel-recipe-list .__scroller_scroll_bar__, .voxel-print-queue-list .__scroller_scroll_bar__ { base-background: built-in(ui-mc:SCROLLER_V) color(#42616A); hover-background: built-in(ui-mc:SCROLLER_V) color(#5E8A94); pressed-background: built-in(ui-mc:SCROLLER_V) color(#80C6C9); }
-.voxel-recipe-row:host { base-background: rect(#0D1A20); hover-background: rect(#12272F); pressed-background: rect(#09151A); }
-.voxel-recipe-rail { background: #24434C; }
-.voxel-recipe-row.voxel-recipe-ready .voxel-recipe-rail { background: #397B7C; }
-.voxel-recipe-row.voxel-recipe-unavailable:host { base-background: rect(#0A151A); hover-background: rect(#102127); }
-.voxel-recipe-row.voxel-recipe-selected:host, .voxel-recipe-row.voxel-recipe-selected.voxel-recipe-unavailable:host { base-background: rect(#10252D); }
-.voxel-recipe-selected .voxel-recipe-rail { background: #63E2DF; }
-.voxel-recipe-name { font-size: 7; text-color: #CFE5E8; text-shadow: false; }
-.voxel-recipe-amount { font-size: 6; text-color: #6F929C; text-shadow: false; }
-.voxel-recipe-unavailable .voxel-recipe-name { text-color: #637C84; }
-.voxel-recipe-selected .voxel-recipe-name { text-color: #E7FAFB; }
-.voxel-recipe-empty, .voxel-queue-empty { font-size: 7; text-color: #607B84; text-shadow: false; }
-.voxel-printing-detail-name { font-size: 8; text-color: #E6F5F6; text-shadow: false; }
-.voxel-printing-detail-output, .voxel-printing-detail-meta { font-size: 6; text-color: #7899A3; text-shadow: false; }
-.voxel-printing-detail-description { font-size: 6; text-color: #7899A3; text-shadow: false; }
-.voxel-printing-output-socket { background: group(rect(#061014), border(-1, #4A8B91)); }
-.voxel-fabrication-chamber { background: group(rect(#061419), border(-1, #2F6971)); }
-.voxel-fabrication-preview { opacity: 0.92; }
-.voxel-requirement-card { background: rect(#0C2026); }
-.voxel-requirement-name { font-size: 5; text-color: #7898A1; text-shadow: false; }
-.voxel-requirement-count { font-size: 6; text-color: #CDE7E9; text-shadow: false; }
-.voxel-requirement-count.voxel-requirement-missing { text-color: #E2B66F; }
-.voxel-printing-detail-status { font-size: 6; text-color: #86A4AD; text-shadow: false; }
-.voxel-printing-detail-status.status-warning { text-color: #E2B66F; }
-.voxel-printing-detail-status.status-success { text-color: #83E3A2; }
-.voxel-printing-quantity { font-size: 6; text-color: #D9EEEF; text-shadow: false; background: rect(#071318); }
-.voxel-printing-detail-pane .voxel-quantity-button .__button_text__ { font-size: 5; }
-.voxel-quantity-button:host, .voxel-queue-cancel:host { base-background: group(rect(#14252B), border(-1, #3F5F68)); hover-background: group(rect(#1A343B), border(-1, #65949C)); pressed-background: group(rect(#0B1D22), border(-1, #9AD0D1)); }
-.voxel-quantity-button .__button_text__, .voxel-queue-cancel .__button_text__ { font-size: 6; text-color: #CFE4E6; text-shadow: false; }
-.voxel-printing-action:host { base-background: group(rect(#12373B), border(-1, #4DA3A4)); hover-background: group(rect(#195056), border(-1, #77D4D1)); pressed-background: group(rect(#0A292D), border(-1, #B4F0EC)); }
-.voxel-printing-action .__button_text__ { font-size: 7; text-color: #E5FBFA; text-shadow: false; }
-.voxel-printing-action.__disabled__:host, .voxel-quantity-button.__disabled__:host, .voxel-queue-cancel.__disabled__:host { base-background: group(rect(#101A1E), border(-1, #293A40)); hover-background: group(rect(#101A1E), border(-1, #293A40)); pressed-background: group(rect(#101A1E), border(-1, #293A40)); }
-.__disabled__ .__button_text__ { text-color: #4E666E; }
+
+.machine-inventory-title {
+  font-size: 9;
+  text-color: #D8EDF0;
+  text-shadow: false;
+}
+
+.machine-status {
+  font-size: 6;
+  text-color: #7596A0;
+  text-shadow: false;
+}
+
+.voxel-printing-wallet {
+  font-size: 7;
+  text-color: #80DAD7;
+  text-shadow: false;
+}
+
+.voxel-printing-recipe-pane,
+.voxel-printing-detail-pane,
+.voxel-printing-queue-pane {
+  background: rect(#0A151B);
+}
+
+.voxel-pane-title,
+.machine-inventory-caption {
+  font-size: 7;
+  text-color: #88A6AF;
+  text-shadow: false;
+}
+
+.voxel-printing-category {
+  background: group(rect(#0D1D24), border(-1, #35525C));
+}
+
+.voxel-category-dialog {
+  background: group(rect(#09161D), border(-1, #476973));
+}
+
+.voxel-category-label {
+  font-size: 7;
+  text-color: #C9E0E4;
+  text-shadow: false;
+}
+
+.voxel-recipe-list .__scroller_view_vertical-scroller__,
+.voxel-print-queue-list .__scroller_view_vertical-scroller__,
+.sb-material-requirements .__scroller_view_vertical-scroller__ {
+  width: 3;
+  margin-left: 2;
+}
+
+.voxel-recipe-list .__scroller_scroll_container__,
+.voxel-print-queue-list .__scroller_scroll_container__,
+.sb-material-requirements .__scroller_scroll_container__ {
+  background: rect(#081116);
+  padding-all: 0;
+}
+
+.voxel-recipe-list .__scroller_scroll_bar__,
+.voxel-print-queue-list .__scroller_scroll_bar__,
+.sb-material-requirements .__scroller_scroll_bar__ {
+  base-background: built-in(ui-mc:SCROLLER_V) color(#42616A);
+  hover-background: built-in(ui-mc:SCROLLER_V) color(#5E8A94);
+  pressed-background: built-in(ui-mc:SCROLLER_V) color(#80C6C9);
+}
+
+/* Catalogue row: a browser entry, not a button. No border and no panel of its own — selection is a
+   subtle fill plus the accent rail, so a chosen row stays legible once the pointer moves away
+   without lighting up like a card. Availability is a separate, quieter rail tone. */
+.sb-recipe-browser {
+  background: rect(#00000000);
+}
+.sb-recipe-row:host {
+  base-background: rect(#00000000);
+  hover-background: rect(#121E2730);
+  pressed-background: rect(#201C2C3A);
+}
+.sb-recipe-row.sb-selected:host {
+  base-background: rect(#121E3A44);
+  hover-background: rect(#181F424E);
+  pressed-background: rect(#221F4854);
+}
+.sb-recipe-row.sb-selected .sb-recipe-name { text-color: #FFFFFF; }
+.sb-recipe-rail { background: #253F4850; }
+.sb-recipe-row.sb-craftable .sb-recipe-rail { background: #4B4B8F8E; }
+.sb-recipe-row.sb-selected .sb-recipe-rail { background: #63E2DF; }
+.sb-recipe-row.sb-unavailable .sb-recipe-name { text-color: #607981; }
+.sb-recipe-row.sb-unavailable .sb-recipe-amount { text-color: #4A5F66; }
+.sb-recipe-name { font-size: 7; text-color: #CFE5E8; text-shadow: false; }
+.sb-recipe-amount { font-size: 6; text-color: #6F929C; text-shadow: false; }
+
+.voxel-recipe-empty,
+.voxel-queue-empty {
+  font-size: 7;
+  text-color: #607B84;
+  text-shadow: false;
+}
+
+.voxel-printing-output-socket {
+  background: group(rect(#061014), border(-1, #4A8B91));
+}
+
+/* Shared components intentionally avoid card backgrounds. A section heading gets its
+   weight from typography and a rule; the label text itself is authored uppercase. */
+.sb-section-title {
+  font-size: 6;
+  text-color: #6F9099;
+  text-shadow: false;
+}
+
+/* Material requirement rows: a flat data line, never a card. The 1px rule below each row is
+   drawn by RequirementRow itself, since LDLib2 has no border-only rendering for a child. */
+.sb-requirement-row {
+  background: rect(#00000000);
+}
+
+.sb-requirement-name {
+  font-size: 6;
+  text-color: #8EADB5;
+  text-shadow: false;
+}
+
+/* The item detail view. Hierarchy is carried by the large item sprite and the type scale around
+   it; the region keeps its own background and nothing inside it gets a panel, a card or a frame. */
+.sb-item-header {
+  background: rect(#00000000);
+}
+.sb-item-header-text,
+.sb-socket-cell {
+  background: rect(#00000000);
+}
+.sb-item-name {
+  font-size: 8;
+  text-color: #E6F5F6;
+  text-shadow: false;
+}
+.sb-item-count {
+  font-size: 6;
+  text-color: #7899A3;
+  text-shadow: false;
+}
+/* Pure spacing elements: the band reserving room for the real output socket, the identity column
+   beside the preview, and the two stack containers. None of them is visible. */
+.sb-item-view-content,
+.sb-craft-action-bar {
+  background: rect(#00000000);
+}
+
+/* Materials: a flat table of rows. Only the empty-state hint needs a rule; each row draws its
+   own separator. */
+.sb-material-empty {
+  font-size: 6;
+  text-color: #607B84;
+  text-shadow: false;
+}
+
+.sb-requirement-amount {
+  font-size: 6;
+  text-color: #CDE7E9;
+  text-shadow: false;
+}
+
+.sb-requirement-row.sb-requirement-missing .sb-requirement-amount {
+  text-color: #E2B66F;
+}
+
+.sb-requirement-row.sb-requirement-ok .sb-requirement-amount {
+  text-color: #83E3A2;
+}
+
+.sb-quantity-stepper {
+  background: rect(#00000000);
+}
+
+.sb-quantity-value {
+  font-size: 6;
+  text-color: #D9EEEF;
+  text-shadow: false;
+  background: rect(#08151A);
+}
+
+.sb-stepper-button:host {
+  base-background: rect(#00000000);
+  hover-background: group(rect(#152C343A), border(-1, #446871));
+  pressed-background: rect(#25375158);
+}
+
+.sb-stepper-button .__button_text__ {
+  font-size: 5;
+  text-color: #AFC8CD;
+  text-shadow: false;
+}
+
+.sb-stepper-button.__disabled__:host {
+  base-background: rect(#00000000);
+  hover-background: rect(#00000000);
+  pressed-background: rect(#00000000);
+}
+.sb-stepper-button.__disabled__ .__button_text__ { text-color: #455B62; }
+
+.sb-craft-button:host {
+  base-background: group(rect(#12373B), border(-1, #4DA3A4));
+  hover-background: group(rect(#195056), border(-1, #77D4D1));
+  pressed-background: group(rect(#0A292D), border(-1, #B4F0EC));
+}
+.sb-craft-button .__button_text__ {
+  font-size: 7;
+  text-color: #E5FBFA;
+  text-shadow: false;
+}
+.sb-craft-button.__disabled__:host {
+  base-background: group(rect(#101A1E), border(-1, #293A40));
+  hover-background: group(rect(#101A1E), border(-1, #293A40));
+  pressed-background: group(rect(#101A1E), border(-1, #293A40));
+}
+.sb-craft-button.__disabled__ .__button_text__ { text-color: #4E666E; }
+
+/* The output frame: the one place the machine's item is shown. The preview layers are drawn by
+   the component itself (it has to clip one over the other), so this only carries the frame. */
+.sb-output-slot {
+  background: group(rect(#061014), border(-1, #4A8B91));
+}
+
+/* The print-count line: the quantity control before a craft, the remaining count during one. */
+.sb-print-count-bar {
+  background: rect(#00000000);
+}
+.sb-print-count-remaining {
+  font-size: 6;
+  text-color: #83E3A2;
+  text-shadow: false;
+}
+
 .voxel-queue-row { background: rect(#0C1A20); overflow-clip: true; }
 .voxel-queue-row.voxel-queue-row-active { background: group(rect(#10252C), border(-1, #3F8587)); }
 .voxel-queue-row.queue-recent { background: group(rect(#10251F), border(-1, #5D9B79)); }
@@ -57,7 +252,27 @@
 .voxel-queue-requester { font-size: 5; text-color: #617E87; text-shadow: false; }
 .voxel-queue-progress .__progress-bar_bar-container__ { background: rect(#061015); }
 .voxel-queue-progress .__progress-bar_bar__ { background: rect(#63C9C9); }
+
+.voxel-queue-cancel:host,
+.voxel-queue-toggle:host {
+  base-background: rect(#00000000);
+  hover-background: group(rect(#152A3339), border(-1, #446871));
+  pressed-background: rect(#223A4A50);
+}
+.voxel-queue-cancel .__button_text__,
+.voxel-queue-toggle .__button_text__ {
+  font-size: 6;
+  text-color: #9FBBC1;
+  text-shadow: false;
+}
 .voxel-queue-cancel.__disabled__ .voxel-cancel-icon { opacity: 0.25; }
-.machine-slot-socket { background: group(rect(#071015), border(-1, #344B54)); }
-.player-slot-socket { background: group(rect(#081217), border(-1, #30434B)); }
-.hotbar-slot-socket { background: group(rect(#0B171C), border(-1, #48616A)); }
+
+.machine-slot-socket {
+  background: group(rect(#071015), border(-1, #344B54));
+}
+.player-slot-socket {
+  background: group(rect(#081217), border(-1, #30434B));
+}
+.hotbar-slot-socket {
+  background: group(rect(#0B171C), border(-1, #48616A));
+}

@@ -12,8 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 /** LDLib2 printing screen with a recipe list and selected-item details. */
 public final class VoxelPrintingStationScreen
         extends StarboundModularScreen<VoxelPrintingStationMenu, VoxelPrintingStationRoot> {
-    private static final int PANEL_W = 440;
-    private static final int COMPACT_W = 320;
+    private static final int PANEL_W = 320;
     private static final int PANEL_H = 240;
     private final PrintSubmissionState submission = new PrintSubmissionState();
 
@@ -26,14 +25,16 @@ public final class VoxelPrintingStationScreen
 
     @Override
     protected void init() {
-        imageWidth = width < PANEL_W ? COMPACT_W : PANEL_W;
+        // One panel size: the inventory the menu fixes needs 320px, and a wider panel would only add
+        // room the detail view cannot use.
+        imageWidth = PANEL_W;
         super.init();
     }
 
     @Override
     protected VoxelPrintingStationRoot createRoot() {
         return new VoxelPrintingStationRoot(menu, leftPos, topPos, title, playerInventoryTitle,
-                submission, imageWidth < PANEL_W);
+                submission);
     }
 
     public void acceptSubmission(boolean accepted) {

@@ -15,12 +15,16 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Selector;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
 import com.starboundmc.client.ClientPrintQueueState;
 import com.starboundmc.client.PrintSubmissionState;
 import com.starboundmc.client.ClientVoxelMachineState;
 import com.starboundmc.client.ClientVoxelWalletState;
+import com.starboundmc.client.ui.components.MaterialRequirementView;
+import com.starboundmc.client.ui.components.QuantityStepper;
+import com.starboundmc.client.ui.components.RecipeBrowser;
+import com.starboundmc.client.ui.components.RecipeListRow;
+import com.starboundmc.client.ui.components.SelectedItemView;
 import com.starboundmc.menu.VoxelPrintingStationMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartPrintPacket;
@@ -46,78 +50,55 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import org.lwjgl.glfw.GLFW;
 
-/** Stable LDLib2 tree for list-driven voxel printing. */
+/**
+ * Stable LDLib2 tree for list-driven voxel printing.
+ *
+ * <p>Fabrication spectacle (probes, beams, layer formation) lives in the world-space
+ * {@link com.starboundmc.client.VoxelPrintingStationRenderer}. The GUI keeps the real vanilla
+ * output socket plus recipe navigation, material requirements, quantity and queue controls.
+ * Repeated interaction behaviour is delegated to semantic components under
+ * {@code com.starboundmc.client.ui.components}.
+ */
 public final class VoxelPrintingStationRoot extends UIElement {
-    private static final int PANEL_W = 440;
-    private static final int COMPACT_W = 320;
+    // One panel size. The player inventory the menu fixes at x=148 needs 320px to fit, and a wider
+    // panel would only add empty room the detail view cannot use — so there is no second layout.
+    private static final int PANEL_W = 320;
     private static final int PANEL_H = 240;
-    private static final int QUANTITY_ROW_Y = 91;
-    private static final int QUANTITY_CONTROL_H = 11;
-    private static final int WIDE_REQUIREMENT_CARD_W = 50;
-    private static final int COMPACT_REQUIREMENT_CARD_W = 48;
-    private static final int REQUIREMENT_CARD_H = 15;
+    // 146 + 170 = 316, so the region stops short of the shell's own 1px border instead of painting
+    // over it. Every other element keeps a gutter too; this one used to run to the panel edge.
+    private static final int WORKSPACE_W = 170;
+    private static final int WORKSPACE_H = 120;
+    private static final int QUEUE_W = 306;
 
     private final VoxelPrintingStationMenu menu;
     private final List<RecipeHolder<VoxelPrintingRecipe>> recipes;
-    private final List<RecipeRow> rows = new ArrayList<>();
-    private final ScrollerView recipeList = new ScrollerView();
+    private final List<RecipeEntry> rows = new ArrayList<>();
+    private final RecipeBrowser recipeBrowser;
     private final ScrollerView queueList = new ScrollerView();
     private final Map<UUID, QueueRow> queueRows = new LinkedHashMap<>();
     private final Label wallet = new Label();
     private final Label queueTitle = new Label();
     private final Label queueEmpty = new Label();
-    private final Label detailName = new Label();
-    private final Label detailOutput = new Label();
-    private final Label detailDescription = new Label();
     private final Label machineStatus = new Label();
-    // Six visible requirement slots. Voxel entries use the same cards as every
-    // other material entry; their available count comes from the wallet.
-    private final Label[] requirementNames = {
-            new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
-    };
-    private final Button quantityMax = new Button();
-    private final PrintSubmissionState submission;
-    private final boolean compact;
+    private final SelectedItemView selectedItemView;
     private final Button queueToggle = new Button();
+    private final PrintSubmissionState submission;
     private boolean showingQueue;
-    private final Label detailMeta = new Label();
-    private final Label detailStatus = new Label();
-    private final Label emptyState = new Label();
-    private final Label[] requirementCounts = {
-            new Label(), new Label(), new Label(), new Label(), new Label(), new Label()
-    };
-    private final UIElement[] requirementCards = new UIElement[6];
-    private final UIElement[] requirementIcons = {
-            new UIElement(), new UIElement(), new UIElement(), new UIElement(), new UIElement(), new UIElement()
-    };
-    private final ItemStackTexture[] requirementTextures = {
-            new ItemStackTexture(), new ItemStackTexture(), new ItemStackTexture(),
-            new ItemStackTexture(), new ItemStackTexture(), new ItemStackTexture()
-    };
-    private final ItemStackTexture ghostResultTexture = new ItemStackTexture().setColor(0x66FFFFFF);
-    private final ItemStackTexture fabricationTexture = new ItemStackTexture().setColor(0xDDFFFFFF);
-    private final UIElement outputPreview = new UIElement();
-    private final UIElement fabricationPreview = new UIElement();
-    private final Button printButton = new Button();
-    private final Button quantityMinusTen = new Button();
-    private final Button quantityMinus = new Button();
-    private final Button quantityPlus = new Button();
-    private final Button quantityPlusTen = new Button();
-    private final Label quantityLabel = new Label();
     private int selected = -1;
     private int quantity = 1;
-    private int lastDetailedSelection = Integer.MIN_VALUE;
-    private int lastDetailedQuantity = Integer.MIN_VALUE;
-    private int fabricationProgress;
-    private boolean fabricationActive;
+    private int outstandingCrafts;
     private DetailState lastDetailState;
 
     public VoxelPrintingStationRoot(VoxelPrintingStationMenu menu, int left, int top,
-                                    Component title, Component inventoryTitle, PrintSubmissionState submission,
-                                    boolean compact) {
+                                    Component title, Component inventoryTitle,
+                                    PrintSubmissionState submission) {
         this.menu = menu;
         this.submission = submission;
-        this.compact = compact;
+        selectedItemView = new SelectedItemView(
+                WORKSPACE_W, WORKSPACE_H, QuantityStepper.Mode.COMPACT);
+        recipeBrowser = new RecipeBrowser(128, 151);
+        recipeBrowser.setEmptyHint(
+                Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
         var level = Minecraft.getInstance().level;
         recipes = level == null ? List.of()
                 : List.copyOf(level.getRecipeManager().getAllRecipesFor(VoxelPrintingRecipe.TYPE));
@@ -134,46 +115,50 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(left)
                 .top(top)
-                .width(compact ? COMPACT_W : PANEL_W)
+                .width(PANEL_W)
                 .height(PANEL_H));
         var recipesPane = buildRecipePane();
-        var detailPane = buildDetailPane();
+        var workspacePane = buildWorkspacePane();
         var queuePane = buildQueuePane();
-        queuePane.setDisplay(!compact);
+        // Queue is a secondary mode: opening it swaps the body (recipe browser + workspace)
+        // for queue management and restores them on exit. It never holds items of its own.
+        queuePane.setDisplay(false);
         queueToggle.addEventListener(UIEvents.CLICK, event -> {
             if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                 showingQueue = !showingQueue;
                 recipesPane.setDisplay(!showingQueue);
-                detailPane.setDisplay(!showingQueue);
+                workspacePane.setDisplay(!showingQueue);
                 queuePane.setDisplay(showingQueue);
-                queueToggle.setText(Component.translatable(showingQueue
-                        ? "gui.starboundmc.voxel_printing.tab.recipes" : "gui.starboundmc.voxel_printing.tab.queue"));
+                updateQueueToggleText();
                 event.stopPropagation();
             }
         });
-        shell.addChildren(buildHeader(title), recipesPane, detailPane, queuePane,
+        // No machine readout and no standing queue panel: the output frame carries the printing
+        // state, the count line carries the queue amount, and the world renderer carries the machine.
+        shell.addChildren(buildHeader(title), recipesPane, workspacePane, queuePane,
                 buildInventory(inventoryTitle));
         addChild(shell);
         filterRecipes(PrintingCategory.SURVIVAL);
     }
 
     private UIElement buildHeader(Component title) {
-        var header = VoxelUiSupport.positioned("machine-inventory-header", 4, 4, compact ? 280 : 432, 22);
+        var header = VoxelUiSupport.positioned("machine-inventory-header", 4, 4, 280, 22);
         header.addChildren(VoxelUiSupport.positioned("voxel-printing-rail", 0, 0, 2, 22),
                 VoxelUiSupport.label(title, "machine-inventory-title", 8, 1, 205, 11));
         configureLabel(machineStatus, "machine-status", 8, 13, 215, 8);
-        configureLabel(wallet, "voxel-printing-wallet", 270, 5, 154, 12);
+        // Narrower than the pre-toggle layout so the right-aligned wallet text cannot
+        // run underneath the queue mode button sitting at the header's right edge. The header is
+        // 280px wide, so the wallet ends where the button begins.
+        configureLabel(wallet, "voxel-printing-wallet", 106, 5, 108, 12);
         wallet.textStyle(style -> style.textAlignHorizontal(Horizontal.RIGHT));
-        if (compact) {
-            machineStatus.setDisplay(false);
-            wallet.layout(l -> l.left(8).top(13).width(205).height(9));
-            wallet.textStyle(style -> style.textAlignHorizontal(Horizontal.LEFT));
-            configureButton(queueToggle, Component.translatable("gui.starboundmc.voxel_printing.tab.queue"),
-                    218, 2, 58, 18);
-            queueToggle.addClass("voxel-quantity-button");
-            header.addChild(queueToggle);
-        }
-        header.addChildren(machineStatus, wallet);
+        configureButton(queueToggle, Component.translatable("gui.starboundmc.voxel_printing.tab.queue"),
+                218, 2, 58, 18);
+        // Its own class: this is a page-mode switch, not one of the retired quantity buttons.
+        queueToggle.addClass("voxel-queue-toggle");
+        // No room for a second status line beside the wallet, and the output frame already reports
+        // whether the machine is working.
+        machineStatus.setDisplay(false);
+        header.addChildren(machineStatus, wallet, queueToggle);
         return header;
     }
 
@@ -195,42 +180,24 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .left(4).top(14).width(128).height(18));
         pane.addChild(category);
 
-        recipeList.addClass("voxel-recipe-list");
-        recipeList.layout(layout -> layout
+        // The browser owns the list, its scrolling and its empty state; the page only feeds it the
+        // catalogue and says which entries are relevant.
+        recipeBrowser.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
-                .left(4)
-                .top(36)
-                .width(128)
-                .height(167));
-        recipeList.scrollerStyle(style -> style
-                .mode(ScrollerMode.VERTICAL)
-                .verticalScrollDisplay(ScrollDisplay.AUTO)
-                .horizontalScrollDisplay(ScrollDisplay.NEVER)
-                .minScrollPixel(8)
-                .maxScrollPixel(20));
-        recipeList.viewPort(view -> view
-                .layout(layout -> layout.paddingAll(0))
-                .style(style -> style.backgroundTexture(IGuiTexture.EMPTY)));
-        recipeList.viewContainer(view -> view.layout(layout -> layout
-                .widthPercent(100)
-                .gapAll(2)
-                .flexDirection(FlexDirection.COLUMN)));
-
-        emptyState.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
-        emptyState.addClass("voxel-recipe-empty");
-        emptyState.setAllowHitTest(false);
-        emptyState.layout(layout -> layout.widthPercent(100).height(32));
-        emptyState.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.WRAP));
-        recipeList.addScrollViewChild(emptyState);
-        emptyState.setDisplay(recipes.isEmpty());
+                .left(4).top(36).width(128).height(151));
+        // The browser builds one row per entry; the page keeps the row beside the recipe it stands
+        // for, so availability and selection can be written back to it later.
+        List<RecipeBrowser.Entry> entries = new ArrayList<>(recipes.size());
         for (int index = 0; index < recipes.size(); index++) {
-            addRecipeRow(index, recipes.get(index));
+            int slot = index;
+            entries.add(new RecipeBrowser.Entry(resultStack(recipes.get(index)),
+                    resultStack(recipes.get(index)).getCount(), () -> selectRecipe(slot)));
         }
-        pane.addChild(recipeList);
+        recipeBrowser.setEntries(entries);
+        for (int index = 0; index < recipes.size(); index++) {
+            rows.add(new RecipeEntry(recipes.get(index), recipeBrowser.row(index)));
+        }
+        pane.addChild(recipeBrowser);
         return pane;
     }
 
@@ -258,68 +225,33 @@ public final class VoxelPrintingStationRoot extends UIElement {
     }
 
     private void filterRecipes(PrintingCategory category) {
-        int first = -1;
-        boolean selectionVisible = false;
-        for (int index = 0; index < rows.size(); index++) {
-            boolean visible = category.matches(resultStack(recipes.get(index)));
-            rows.get(index).button.setDisplay(visible);
-            if (visible && first < 0) first = index;
-            if (visible && index == selected) selectionVisible = true;
-        }
+        // The page owns the rule for what matches; the browser owns applying it and rewinding.
+        int first = recipeBrowser.setVisible(
+                index -> category.matches(resultStack(recipes.get(index))));
+        boolean selectionVisible = selected >= 0 && selected < rows.size()
+                && rows.get(selected).view.isDisplayed();
         if (!selectionVisible) {
             selected = first;
             quantity = 1;
         }
-        emptyState.setDisplay(first < 0);
-        recipeList.verticalScroller.setNormalizedValue(0);
         updateSelectedVisual();
         lastDetailState = null;
         refresh();
     }
 
-    private void addRecipeRow(int index, RecipeHolder<VoxelPrintingRecipe> holder) {
-        VoxelPrintingRecipe recipe = holder.value();
-        ItemStack result = resultStack(holder);
-        var button = new Button();
-        button.noText();
-        button.addClass("voxel-recipe-row");
-        button.setOverflowVisible(false);
-        button.layout(layout -> layout.widthPercent(100).height(24));
-        button.addEventListener(UIEvents.CLICK, event -> {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-                selected = index;
-                updateSelectedVisual();
-                lastDetailState = null;
-                refresh();
-                event.stopPropagation();
-            }
-        });
-
-        var icon = new UIElement().addClass("voxel-recipe-icon");
-        icon.setAllowHitTest(false);
-        icon.layout(layout -> layout
-                .positionType(TaffyPosition.ABSOLUTE)
-                .left(3)
-                .top(4)
-                .width(16)
-                .height(16));
-        icon.style(style -> style.backgroundTexture(new ItemStackTexture(result)));
-
-        var name = VoxelUiSupport.label(result.getHoverName(),
-                "voxel-recipe-name", 23, 3, 92, 10);
-        var amount = VoxelUiSupport.label(Component.literal("×" + result.getCount()),
-                "voxel-recipe-amount", 23, 14, 92, 8);
-
-        var selectionRail = VoxelUiSupport.positioned("voxel-recipe-rail", 0, 0, 2, 24);
-        button.addChildren(selectionRail, icon, name, amount);
-        button.style(style -> style.tooltips(result.getHoverName()));
-        recipeList.addScrollViewChild(button);
-        rows.add(new RecipeRow(holder, button));
+    /** One catalogue click: select the recipe by its index in the catalogue. */
+    private void selectRecipe(int index) {
+        selected = index;
+        updateSelectedVisual();
+        lastDetailState = null;
+        refresh();
     }
 
     private UIElement buildQueuePane() {
-        var pane = VoxelUiSupport.positioned("voxel-printing-queue-pane", 340, 28, 94, 207);
-        if (compact) pane.layout(l -> l.left(6).width(278).height(120));
+        // The queue page uses the whole body width: it replaces the recipe browser and the
+        // fabrication workspace while it is open.
+        int qw = QUEUE_W;
+        var pane = VoxelUiSupport.positioned("voxel-printing-queue-pane", 6, 28, qw, WORKSPACE_H);
 
         queueTitle.addClasses("voxel-pane-title", "voxel-queue-title");
         queueTitle.setAllowHitTest(false);
@@ -328,7 +260,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(5)
                 .top(3)
-                .width(84)
+                .width(qw - 10)
                 .height(10));
         queueTitle.textStyle(style -> style
                 .adaptiveWidth(false)
@@ -340,15 +272,14 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(4)
                 .top(14)
-                .width(86)
-                .height(187));
+                .width(qw - 8)
+                .height(WORKSPACE_H - 16));
         queueList.scrollerStyle(style -> style
                 .mode(ScrollerMode.VERTICAL)
                 .verticalScrollDisplay(ScrollDisplay.AUTO)
                 .horizontalScrollDisplay(ScrollDisplay.NEVER)
                 .minScrollPixel(8)
                 .maxScrollPixel(20));
-        if (compact) queueList.layout(l -> l.width(270).height(102));
         queueList.viewPort(view -> view
                 .layout(layout -> layout.paddingAll(0))
                 .style(style -> style.backgroundTexture(IGuiTexture.EMPTY)));
@@ -378,6 +309,8 @@ public final class VoxelPrintingStationRoot extends UIElement {
         queueTitle.setText(Component.translatable(
                 "gui.starboundmc.voxel_printing.queue.title", outstanding,
                 VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS));
+        outstandingCrafts = outstanding;
+        updateQueueToggleText();
 
         Map<UUID, SyncPrintQueuePacket.Entry> incoming = new LinkedHashMap<>();
         for (SyncPrintQueuePacket.Entry entry : entries) {
@@ -431,9 +364,10 @@ public final class VoxelPrintingStationRoot extends UIElement {
         row.layout(layout -> layout.widthPercent(100).height(52));
         if (entry.active()) row.addClass("voxel-queue-row-active");
         ItemStack result = new ItemStack(BuiltInRegistries.ITEM.get(entry.resultItemId()), entry.resultCount());
+        // The queue pane spans the whole body, so rows can use nearly its full inner width.
+        int contentWidth = QUEUE_W - 26;
         var icon = VoxelUiSupport.positioned("voxel-queue-icon", 3, 4, 16, 16);
         icon.style(style -> style.backgroundTexture(new ItemStackTexture(result)));
-        int contentWidth = compact ? 258 : 76;
         var name = VoxelUiSupport.label(result.getHoverName(), "voxel-queue-name", 23, 3, contentWidth - 19, 10);
         var state = VoxelUiSupport.label(Component.empty(), "voxel-queue-state", 23, 15, contentWidth - 19, 9);
         var requester = VoxelUiSupport.label(Component.literal(entry.requesterName()),
@@ -472,6 +406,14 @@ public final class VoxelPrintingStationRoot extends UIElement {
         return new QueueRow(entry, row, state, track);
     }
 
+    /** Queue entry action carries the live queue count so the secondary mode stays discoverable. */
+    private void updateQueueToggleText() {
+        queueToggle.setText(showingQueue
+                ? Component.translatable("gui.starboundmc.voxel_printing.tab.recipes")
+                : Component.translatable("gui.starboundmc.voxel_printing.tab.queue.count",
+                outstandingCrafts, VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS));
+    }
+
     private static void updateQueueRowState(QueueRow row, int activeProgress) {
         row.progress.setProgress(activeProgress);
         row.state.setText(row.entry.active()
@@ -481,91 +423,30 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 row.entry.crafts()));
     }
 
-    private UIElement buildDetailPane() {
-        int detailWidth = compact ? 174 : 188;
-        var pane = VoxelUiSupport.positioned("voxel-printing-detail-pane", 146, 28, detailWidth, 120);
+    /**
+     * The detail region: one composition root owned by {@link SelectedItemView}. The page decides
+     * where the region sits — it has to line up with the menu's slot layout — and wires the two
+     * interactive children, and that is all it does here.
+     */
+    private UIElement buildWorkspacePane() {
+        int dw = WORKSPACE_W;
+        selectedItemView.addClass("voxel-printing-detail-pane");
+        selectedItemView.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                .left(146).top(28).width(dw).height(WORKSPACE_H));
 
-        outputPreview.addClass("voxel-printing-output-preview");
-        outputPreview.setAllowHitTest(false);
-        outputPreview.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
-                .left(1).top(1).width(16).height(16));
-        outputPreview.style(style -> style.backgroundTexture(ghostResultTexture));
-
-        configureLabel(detailName, "voxel-printing-detail-name", 30, 2, detailWidth - 35, 10);
-        configureLabel(detailOutput, "voxel-printing-detail-output", 30, 12, detailWidth - 35, 9);
-
-        // Keep the real vanilla output slot in its historical position. The
-        // large chamber below is visual-only and never owns items.
-        var outputSocket = VoxelUiSupport.slotSocket("voxel-printing-output-socket", 4, 2);
-        outputSocket.addChild(outputPreview);
-
-        int chamberWidth = compact ? 62 : 68;
-        var chamber = new FabricationCanvas(5, 24, chamberWidth, 49);
-
-        int cardWidth = compact ? COMPACT_REQUIREMENT_CARD_W : WIDE_REQUIREMENT_CARD_W;
-        int cardGap = 2;
-        int cardTextWidth = cardWidth - 17;
-        int requirementsLeft = compact ? 72 : 80;
-        for (int i = 0; i < requirementCards.length; i++) {
-            int x = requirementsLeft + (i % 2) * (cardWidth + cardGap);
-            int y = 24 + (i / 2) * 17;
-            var card = VoxelUiSupport.positioned("voxel-requirement-card", x, y,
-                    cardWidth, REQUIREMENT_CARD_H);
-            requirementCards[i] = card;
-            card.setAllowHitTest(true);
-            card.setDisplay(false);
-
-            var icon = requirementIcons[i];
-            icon.setAllowHitTest(false);
-            icon.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
-                    .left(2).top(2).width(11).height(11));
-            var texture = requirementTextures[i];
-            icon.style(style -> style.backgroundTexture(texture));
-
-            configureLabel(requirementNames[i], "voxel-requirement-name", 15, 0, cardTextWidth, 7);
-            requirementNames[i].setAllowHitTest(false);
-            configureLabel(requirementCounts[i], "voxel-requirement-count", 15, 7, cardTextWidth, 7);
-            requirementCounts[i].setAllowHitTest(false);
-
-            card.addChildren(icon, requirementNames[i], requirementCounts[i]);
-            pane.addChild(card);
-        }
-
-        configureLabel(detailMeta, "voxel-printing-detail-meta", 5, 75, detailWidth - 10, 7);
-        configureLabel(detailStatus, "voxel-printing-detail-status", 5, 82, detailWidth - 10, 8);
-
-        int quantityLeft = 8;
-        int quantityLabelWidth = compact ? 32 : 38;
-        int quantityMaxWidth = compact ? 28 : 30;
-        configureQuantityButton(quantityMinusTen, "−10", quantityLeft, 20, -10);
-        configureQuantityButton(quantityMinus, "−", quantityLeft + 22, 14, -1);
-        configureLabel(quantityLabel, "voxel-printing-quantity", quantityLeft + 38, QUANTITY_ROW_Y,
-                quantityLabelWidth, QUANTITY_CONTROL_H);
-        quantityLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
-        configureQuantityButton(quantityPlus, "+", quantityLeft + 40 + quantityLabelWidth, 14, 1);
-        configureQuantityButton(quantityPlusTen, "+10", quantityLeft + 56 + quantityLabelWidth, 20, 10);
-        configureButton(quantityMax, Component.translatable("gui.starboundmc.voxel_printing.quantity.max"),
-                quantityLeft + 78 + quantityLabelWidth, QUANTITY_ROW_Y, quantityMaxWidth,
-                QUANTITY_CONTROL_H);
-        quantityMax.addClass("voxel-quantity-button");
-        quantityMax.addEventListener(UIEvents.CLICK, event -> {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && quantityMax.isActive()) {
-                quantity = selectedQuantityCeiling();
-                lastDetailState = null;
-                refresh();
-                event.stopPropagation();
-            }
+        selectedItemView.quantityStepper().onChanged(target -> {
+            quantity = target;
+            lastDetailState = null;
+            refresh();
         });
 
-        configureButton(printButton, Component.translatable("gui.starboundmc.voxel_printing.enqueue"),
-                5, 104, detailWidth - 10, 13);
-        printButton.addClass("voxel-printing-action");
-        printButton.addEventListener(UIEvents.CLICK, event -> {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && printButton.isActive()
+        var craftButton = selectedItemView.craftButton();
+        craftButton.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && craftButton.isActive()
                     && selected >= 0 && selected < recipes.size()
                     && submission.begin(net.minecraft.Util.getMillis())) {
                 submission.rememberQueueIds(queueRows.keySet());
-                printButton.setActive(false);
+                craftButton.setActive(false);
                 ModNetwork.sendToServer(new StartPrintPacket(
                         menu.blockPos(), recipes.get(selected).id(), quantity));
                 lastDetailState = null;
@@ -573,81 +454,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 event.stopPropagation();
             }
         });
-
-        pane.addChildren(detailName, detailOutput, detailMeta, detailStatus, outputSocket, chamber,
-                quantityMinusTen, quantityMinus, quantityLabel, quantityPlus, quantityPlusTen,
-                quantityMax, printButton);
-        return pane;
-    }
-
-    /** Visual-only fabrication preview; real inventory ownership stays vanilla/menu-side. */
-    private final class FabricationCanvas extends UIElement {
-        private final int width;
-        private final int height;
-
-        private FabricationCanvas(int left, int top, int width, int height) {
-            this.width = width;
-            this.height = height;
-            addClass("voxel-fabrication-chamber");
-            setAllowHitTest(false);
-            setOverflowVisible(false);
-            layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                    .left(left).top(top).width(width).height(height));
-
-            int previewSize = 32;
-            fabricationPreview.addClass("voxel-fabrication-preview");
-            fabricationPreview.setAllowHitTest(false);
-            fabricationPreview.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                    .left((width - previewSize) / 2).top(6)
-                    .width(previewSize).height(previewSize));
-            fabricationPreview.style(style -> style.backgroundTexture(fabricationTexture));
-            addChild(fabricationPreview);
-        }
-
-        @Override
-        public void drawBackgroundAdditional(GUIContext context) {
-            float x = getPositionX();
-            float y = getPositionY();
-            var graphics = context.graphics;
-
-            for (int gx = 6; gx < width; gx += 6) {
-                int color = gx % 24 == 0 ? 0x243D777E : 0x142C5C63;
-                graphics.fill(Math.round(x + gx), Math.round(y + 2),
-                        Math.round(x + gx + 1), Math.round(y + height - 2), color);
-            }
-            for (int gy = 6; gy < height; gy += 6) {
-                int color = gy % 24 == 0 ? 0x243D777E : 0x142C5C63;
-                graphics.fill(Math.round(x + 2), Math.round(y + gy),
-                        Math.round(x + width - 2), Math.round(y + gy + 1), color);
-            }
-
-            int bracket = 0x8A63E2DF;
-            int left = Math.round(x + 3);
-            int right = Math.round(x + width - 3);
-            int top = Math.round(y + 3);
-            int bottom = Math.round(y + height - 3);
-            graphics.fill(left, top, left + 7, top + 1, bracket);
-            graphics.fill(left, top, left + 1, top + 7, bracket);
-            graphics.fill(right - 7, top, right, top + 1, bracket);
-            graphics.fill(right - 1, top, right, top + 7, bracket);
-            graphics.fill(left, bottom - 1, left + 7, bottom, bracket);
-            graphics.fill(left, bottom - 7, left + 1, bottom, bracket);
-            graphics.fill(right - 7, bottom - 1, right, bottom, bracket);
-            graphics.fill(right - 1, bottom - 7, right, bottom, bracket);
-
-            if (fabricationActive) {
-                int usableHeight = Math.max(1, height - 14);
-                int scanY = Math.round(y + height - 7
-                        - usableHeight * (fabricationProgress / 100.0F));
-                graphics.fill(Math.round(x + 4), scanY,
-                        Math.round(x + width - 4), scanY + 1, 0xE063E2DF);
-                graphics.fill(Math.round(x + 2), scanY - 1,
-                        Math.round(x + 7), scanY + 2, 0x7063E2DF);
-                graphics.fill(Math.round(x + width - 7), scanY - 1,
-                        Math.round(x + width - 2), scanY + 2, 0x7063E2DF);
-            }
-            graphics.flush();
-        }
+        return selectedItemView;
     }
 
     private static void configureLabel(Label label, String styleClass, int x, int y, int width, int height) {
@@ -667,35 +474,6 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 .width(width).height(height).paddingAll(1));
         button.textStyle(style -> style.adaptiveWidth(false).textAlignHorizontal(Horizontal.CENTER)
                 .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
-    }
-
-    private void configureQuantityButton(Button button, String text, int left, int width, int delta) {
-        button.setText(Component.literal(text));
-        button.addClass("voxel-quantity-button");
-        button.text.setAllowHitTest(false);
-        button.text.setOverflowVisible(false);
-        button.text.layout(layout -> layout
-                .widthPercent(100).heightPercent(100).marginHorizontal(0));
-        button.layout(layout -> layout
-                .positionType(TaffyPosition.ABSOLUTE)
-                .left(left).top(QUANTITY_ROW_Y).width(width).height(QUANTITY_CONTROL_H).paddingAll(1));
-        button.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-        button.addEventListener(UIEvents.CLICK, event -> {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && button.isActive()) {
-                int target = quantity + delta;
-                if (delta > 0) {
-                    target = Math.min(target, selectedQuantityCeiling());
-                }
-                quantity = Math.max(1, Math.min(64, target));
-                lastDetailState = null;
-                refresh();
-                event.stopPropagation();
-            }
-        });
     }
 
     private UIElement buildInventory(Component inventoryTitle) {
@@ -737,15 +515,22 @@ public final class VoxelPrintingStationRoot extends UIElement {
                     && submission.isNewQueueEntry(row.entry.id())) row.root.addClass("queue-recent");
         }
         boolean activeMachine = machineSnapshot != null && machineSnapshot.progress() > 0;
-        fabricationActive = activeMachine;
-        fabricationProgress = activeMachine ? progress : 0;
-        machineStatus.setText(Component.translatable(activeMachine
-                ? "gui.starboundmc.voxel_printing.device.printing" : "gui.starboundmc.voxel_printing.device.ready"));
-        boolean hasOutput = !menu.getSlot(VoxelPrintingStationBlockEntity.OUTPUT_SLOT).getItem().isEmpty();
         int outstanding = queueSnapshot == null ? 0 : queueSnapshot.outstandingCrafts();
         int balance = ClientVoxelWalletState.balance();
+        Component stateText = Component.translatable(activeMachine
+                ? "gui.starboundmc.voxel_printing.device.printing" : "gui.starboundmc.voxel_printing.device.ready");
+        machineStatus.setText(stateText);
         wallet.setText(Component.translatable("gui.starboundmc.voxel_wallet",
                 String.format(Locale.ROOT, "%,d", balance)));
+        // The item on the bed, which the output frame previews while it is being made.
+        ItemStack printItem = ItemStack.EMPTY;
+        if (activeMachine && queueSnapshot != null && !queueSnapshot.entries().isEmpty()) {
+            SyncPrintQueuePacket.Entry activeEntry = queueSnapshot.entries().getFirst();
+            printItem = new ItemStack(BuiltInRegistries.ITEM.get(activeEntry.resultItemId()),
+                    activeEntry.resultCount());
+        }
+
+
         if (selected < 0 || selected >= recipes.size()) {
             showNoSelection();
             return;
@@ -762,24 +547,18 @@ public final class VoxelPrintingStationRoot extends UIElement {
             quantity = quantityCeiling;
             lastDetailState = null;
         }
+        selectedItemView.quantityStepper().setValueAndMaximum(quantity, selectionLimit);
 
-        for (RecipeRow row : rows) {
-            boolean ready = maxCraftsForRequirements(row.holder.value()) >= quantity
+        for (RecipeEntry entry : rows) {
+            boolean ready = maxCraftsForRequirements(entry.holder.value()) >= quantity
                     && outstanding + quantity <= VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS;
-            row.setReady(ready);
+            if (entry.craftable == null || entry.craftable != ready) {
+                entry.craftable = ready;
+                entry.view.setCraftable(ready);
+            }
         }
 
-        ItemStack result = resultStack(holder);
-        ItemStack chamberResult = result;
-        if (activeMachine && queueSnapshot != null && !queueSnapshot.entries().isEmpty()) {
-            SyncPrintQueuePacket.Entry activeEntry = queueSnapshot.entries().getFirst();
-            chamberResult = new ItemStack(
-                    BuiltInRegistries.ITEM.get(activeEntry.resultItemId()), activeEntry.resultCount());
-        }
-        fabricationTexture.setItems(chamberResult.isEmpty()
-                ? ItemStack.EMPTY : chamberResult.copyWithCount(1));
-        fabricationPreview.setVisible(!chamberResult.isEmpty());
-
+        boolean hasOutput = !menu.getSlot(VoxelPrintingStationBlockEntity.OUTPUT_SLOT).getItem().isEmpty();
         boolean materials = materialLimit >= quantity;
         boolean capacity = outstanding + quantity
                 <= VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS;
@@ -795,115 +574,86 @@ public final class VoxelPrintingStationRoot extends UIElement {
             return;
         }
         lastDetailState = state;
-        updateStaticDetail(holder);
-        updateRequirementCounts(recipe);
-        outputPreview.setVisible(!hasOutput);
+        updateRequirements(recipe);
+        updateItemIdentity(holder);
+        // The output frame is the single place the item is shown: it previews the selected item while
+        // idle, reveals colour as the craft progresses, and steps aside for the real item once there
+        // is one — so the frame tracks the slot as well as the selection and is refreshed on every
+        // state change, not only when the selection moves.
+        selectedItemView.setOutput(resultStack(holder), progress, running, hasOutput,
+                resultStack(holder).getHoverName().copy()
+                        .append("\n").append(itemDescription(resultStack(holder))));
+        // The count line doubles as the queue amount: the quantity being asked for before the craft,
+        // how many are still to come while it runs.
+        selectedItemView.setPrinting(running, outstanding);
 
-        Component reason;
+        // Why the action is available or blocked. This travels as the action button's tooltip: the
+        // button is the control the player is reaching for, so the explanation belongs with it.
         Component reasonTooltip;
         if (submissionStatus == PrintSubmissionState.Status.WAITING) {
-            reason = Component.translatable(submission.delayed(now)
+            reasonTooltip = Component.translatable(submission.delayed(now)
                     ? "gui.starboundmc.voxel_printing.submit.delayed" : "gui.starboundmc.voxel_printing.submit.waiting");
-            reasonTooltip = reason;
         } else if (submissionStatus == PrintSubmissionState.Status.ACCEPTED) {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.submit.accepted");
-            reasonTooltip = reason;
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.submit.accepted");
         } else if (submissionStatus == PrintSubmissionState.Status.REJECTED) {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.submit.rejected");
-            reasonTooltip = reason;
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.submit.rejected");
         } else if (!materials) {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.hint.materials");
-            reasonTooltip = reason;
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.hint.materials");
         } else if (!capacity) {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.hint.queue_full");
-            reasonTooltip = reason;
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.hint.queue_full");
         } else if (outputBlocked) {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.hint.output_wait");
-            reasonTooltip = reason;
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.hint.output_wait");
         } else if (running) {
-            reason = Component.translatable(
-                    "gui.starboundmc.voxel_printing.hint.enqueue_while_printing", progress + "%");
             reasonTooltip = Component.translatable(
                     "gui.starboundmc.voxel_printing.hint.enqueue_auto", progress + "%");
         } else {
-            reason = Component.translatable("gui.starboundmc.voxel_printing.hint.enqueue_ready");
-            reasonTooltip = Component.translatable(
-                    "gui.starboundmc.voxel_printing.hint.auto_materials");
+            reasonTooltip = Component.translatable("gui.starboundmc.voxel_printing.hint.auto_materials");
         }
-        detailStatus.setText(reason);
-        detailStatus.style(style -> style.tooltips(reasonTooltip));
         boolean canPrint = materials && capacity && !submission.waiting();
-        printButton.setActive(canPrint);
-        printButton.setText(Component.translatable(submission.waiting()
+        craftButton().setActive(canPrint);
+        craftButton().setText(Component.translatable(submission.waiting()
                 ? "gui.starboundmc.voxel_printing.submit.waiting" : "gui.starboundmc.voxel_printing.enqueue"));
-        detailStatus.removeClasses("status-warning", "status-success");
-        detailStatus.addClass((!materials || !capacity || submissionStatus == PrintSubmissionState.Status.REJECTED)
-                && submissionStatus != PrintSubmissionState.Status.ACCEPTED ? "status-warning" : "status-success");
-        printButton.style(style -> style.tooltips(reasonTooltip));
-        quantityLabel.setText(Component.literal("×" + quantity));
-        quantityMinus.setActive(quantity > 1);
-        quantityMinusTen.setActive(quantity > 1);
-        boolean canIncrease = quantity < selectionLimit;
-        quantityPlus.setActive(canIncrease);
-        quantityPlusTen.setActive(canIncrease);
-        quantityMax.setActive(canIncrease);
-        quantityMax.style(style -> style.tooltips(Component.translatable(
-                "gui.starboundmc.voxel_printing.quantity.maximum", selectionLimit)));
-        quantityMinus.style(style -> style.tooltips(Component.translatable(
-                "gui.starboundmc.voxel_printing.quantity.decrease")));
-        quantityMinusTen.style(style -> style.tooltips(Component.translatable(
-                "gui.starboundmc.voxel_printing.quantity.decrease_ten")));
-        Component increaseHint = canIncrease
-                ? Component.translatable("gui.starboundmc.voxel_printing.quantity.increase")
-                : Component.translatable("gui.starboundmc.voxel_printing.quantity.limit", selectionLimit);
-        Component increaseTenHint = canIncrease
-                ? Component.translatable("gui.starboundmc.voxel_printing.quantity.increase_ten")
-                : Component.translatable("gui.starboundmc.voxel_printing.quantity.limit", selectionLimit);
-        quantityPlus.style(style -> style.tooltips(increaseHint));
-        quantityPlusTen.style(style -> style.tooltips(increaseTenHint));
+        // The action button is where a blocked craft explains itself: it is the control the player
+        // is reaching for, so the reason travels with it rather than in a separate readout.
+        craftButton().style(style -> style.tooltips(reasonTooltip));
     }
 
-    private void updateStaticDetail(RecipeHolder<VoxelPrintingRecipe> holder) {
-        if (selected == lastDetailedSelection && quantity == lastDetailedQuantity) {
-            return;
-        }
-        lastDetailedSelection = selected;
-        lastDetailedQuantity = quantity;
+    private Button craftButton() {
+        return selectedItemView.craftButton();
+    }
+
+    /**
+     * The item header states what is being made and how much this craft yields. Yield is shown for
+     * the current quantity, so the number matches what the action will actually deliver, and the
+     * item's own description plus the craft time travel in its tooltip.
+     */
+    private void updateItemIdentity(RecipeHolder<VoxelPrintingRecipe> holder) {
         VoxelPrintingRecipe recipe = holder.value();
         ItemStack result = resultStack(holder);
-        ghostResultTexture.setItems(result.copyWithCount(1));
-        detailName.setText(result.getHoverName());
-
-        detailOutput.setText(Component.translatable(
-                "gui.starboundmc.voxel_printing.output_count", result.getCount() * quantity));
-        Component description = itemDescription(result);
-        Component detailTooltip = result.getHoverName().copy().append("\n").append(description);
-        detailName.style(style -> style.tooltips(detailTooltip));
-        detailDescription.setText(description);
-        detailDescription.style(style -> style.tooltips(detailTooltip));
-        outputPreview.style(style -> style.tooltips(detailTooltip));
-        detailMeta.setText(Component.translatable("gui.starboundmc.voxel_printing.detail_meta",
-                (long) recipe.printSeconds() * quantity, quantity));
-
-        for (int i = 0; i < requirementTextures.length; i++) {
-            ItemStack representative = i < recipe.materials().size()
-                    ? representative(recipe.materials().get(i)) : ItemStack.EMPTY;
-            requirementTextures[i].setItems(representative);
-            requirementCards[i].setDisplay(i < recipe.materials().size());
-        }
+        Component tooltip = result.getHoverName().copy()
+                .append("\n").append(itemDescription(result))
+                .append("\n").append(Component.translatable(
+                        "gui.starboundmc.voxel_printing.info.time",
+                        (long) recipe.printSeconds() * quantity));
+        selectedItemView.setItem(result.getHoverName(), result.getCount() * quantity, tooltip);
     }
 
-    private void updateRequirementCounts(VoxelPrintingRecipe recipe) {
+    /** Crafts affordable right now, given materials, voxel balance and remaining queue room. */
+    private int selectionLimit(VoxelPrintingRecipe recipe) {
+        int outstanding = 0;
+        var queueSnapshot = ClientPrintQueueState.snapshotAt(menu.blockPos());
+        if (queueSnapshot != null) {
+            outstanding = queueSnapshot.outstandingCrafts();
+        }
+        int queueLimit = Math.max(0,
+                VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS - outstanding);
+        return Math.min(64, Math.min(maxCraftsForRequirements(recipe), queueLimit));
+    }
+
+    private void updateRequirements(VoxelPrintingRecipe recipe) {
         List<ItemStack> available = availableMaterialStacks();
-        int cardTextWidth = (compact ? COMPACT_REQUIREMENT_CARD_W : WIDE_REQUIREMENT_CARD_W) - 17;
-        for (int i = 0; i < requirementCounts.length; i++) {
-            requirementCounts[i].removeClass("voxel-requirement-missing");
-            if (i >= recipe.materials().size()) {
-                requirementNames[i].setText(Component.empty());
-                requirementCounts[i].setText(Component.empty());
-                continue;
-            }
-            VoxelPrintingRecipe.MaterialEntry entry = recipe.materials().get(i);
+        List<MaterialRequirementView.Line> lines = new ArrayList<>(recipe.materials().size());
+        for (VoxelPrintingRecipe.MaterialEntry entry : recipe.materials()) {
             long current;
             if (entry.isVoxel()) {
                 current = ClientVoxelWalletState.balance();
@@ -916,35 +666,13 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 }
             }
             long required = (long) entry.count() * quantity;
-            Component name = representative(entry).getHoverName();
-            String count = Long.toString(required);
-            String prefix = current < required ? "! " : "× ";
-            // Exact values remain available in the tooltip for very large custom recipes.
-            if (Minecraft.getInstance().font.width(prefix + count) * (6.0F / 9.0F) > cardTextWidth) {
-                count = "…";
-            }
-            requirementNames[i].setText(name);
-            requirementCounts[i].setText(Component.literal(prefix + count));
+            ItemStack representative = representative(entry);
+            Component name = representative.getHoverName();
             Component tooltip = Component.translatable("gui.starboundmc.voxel_printing.requirement",
                     name, required, current);
-            requirementCards[i].style(style -> style.tooltips(tooltip));
-            if (current < required) {
-                requirementCounts[i].addClass("voxel-requirement-missing");
-            }
+            lines.add(new MaterialRequirementView.Line(representative, name, current, required, tooltip));
         }
-    }
-
-    private int selectedQuantityCeiling() {
-        var minecraft = Minecraft.getInstance();
-        if (minecraft.level == null || selected < 0 || selected >= recipes.size()) {
-            return 1;
-        }
-        var snapshot = ClientPrintQueueState.snapshotAt(menu.blockPos());
-        int outstanding = snapshot == null ? 0 : snapshot.outstandingCrafts();
-        int queueLimit = Math.max(0,
-                VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS - outstanding);
-        int materialLimit = maxCraftsForRequirements(recipes.get(selected).value());
-        return Math.max(1, Math.min(64, Math.min(materialLimit, queueLimit)));
+        selectedItemView.setRequirements(lines);
     }
 
     private int maxCraftsForRequirements(VoxelPrintingRecipe recipe) {
@@ -974,35 +702,16 @@ public final class VoxelPrintingStationRoot extends UIElement {
     }
 
     private void showNoSelection() {
-        for (UIElement card : requirementCards) {
-            card.setDisplay(false);
-        }
-        detailName.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
-        detailOutput.setText(Component.empty());
-        detailDescription.setText(Component.empty());
-
-        detailMeta.setText(Component.empty());
-        detailStatus.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
-        ghostResultTexture.setItems(ItemStack.EMPTY);
-        fabricationTexture.setItems(ItemStack.EMPTY);
-        outputPreview.setVisible(false);
-        fabricationPreview.setVisible(false);
-        fabricationActive = false;
-        fabricationProgress = 0;
-        printButton.setActive(false);
-        quantityMinusTen.setActive(false);
-        quantityMinus.setActive(false);
-        quantityPlus.setActive(false);
-        quantityPlusTen.setActive(false);
-        quantityMax.setActive(false);
+        selectedItemView.clearRequirements();
+        selectedItemView.clearItem(
+                Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
+        craftButton().setActive(false);
+        selectedItemView.quantityStepper().setValueAndMaximum(1, 1);
     }
 
     private void updateSelectedVisual() {
         for (int i = 0; i < rows.size(); i++) {
-            rows.get(i).button.removeClass("voxel-recipe-selected");
-            if (i == selected) {
-                rows.get(i).button.addClass("voxel-recipe-selected");
-            }
+            rows.get(i).view.setSelectedState(i == selected);
         }
     }
 
@@ -1050,23 +759,16 @@ public final class VoxelPrintingStationRoot extends UIElement {
         return items.length == 0 ? ItemStack.EMPTY : items[0].copyWithCount(1);
     }
 
-    private static final class RecipeRow {
+    private static final class RecipeEntry {
         private final RecipeHolder<VoxelPrintingRecipe> holder;
-        private final Button button;
-        private Boolean ready;
+        private final RecipeListRow view;
+        // Guard so the craftable rail state is only written when it actually changes,
+        // mirroring the previous RecipeRow optimization on a hot per-tick path.
+        private Boolean craftable;
 
-        private RecipeRow(RecipeHolder<VoxelPrintingRecipe> holder, Button button) {
+        private RecipeEntry(RecipeHolder<VoxelPrintingRecipe> holder, RecipeListRow view) {
             this.holder = holder;
-            this.button = button;
-        }
-
-        private void setReady(boolean next) {
-            if (ready != null && ready == next) {
-                return;
-            }
-            ready = next;
-            button.removeClasses("voxel-recipe-ready", "voxel-recipe-unavailable");
-            button.addClass(next ? "voxel-recipe-ready" : "voxel-recipe-unavailable");
+            this.view = view;
         }
     }
 
