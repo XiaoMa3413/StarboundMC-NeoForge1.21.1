@@ -26,65 +26,72 @@
   background: group(rect(#050E0A), border(-1, #315F45));
 }
 
+// The central equipment viewport gives the Matter Manipulator silhouette priority over its branches.
+.upgrade-blueprint-focus {
+  background: group(rect(#06110C), border(-1, #234B35));
+}
+
 .upgrade-manipulator-socket {
   background: group(rect(#07110D), border(-1, #6FB487));
 }
 
 .upgrade-branch-label { font-size: 5; text-color: #668474; text-shadow: false; }
-.upgrade-branch-selected .upgrade-branch-label { text-color: #A8DDB7; }
+.upgrade-branch-selected .upgrade-branch-label { text-color: #D0F2DA; }
 
 .upgrade-node:host {
-  base-background: group(rect(#18271F), border(-1, #355E45));
-  hover-background: group(rect(#21372A), border(-1, #6FA886));
-  pressed-background: group(rect(#2A4935), border(-1, #A5D7B6));
+  base-background: group(rect(#07120D), border(-1, #355E45));
+  hover-background: group(rect(#0D2B1C), border(-1, #74C58F));
+  pressed-background: group(rect(#153E28), border(-1, #BDEBCB));
 }
 
-// Calibration pips communicate progress. They intentionally carry no numbers: the
-// player selects a subsystem, while APPLY UPGRADE always advances only one level.
-.upgrade-node-locked:host {
-  base-background: group(rect(#0B1510), border(-1, #284234));
-  hover-background: group(rect(#102018), border(-1, #486B56));
+.upgrade-node .__button_text__ {
+  font-size: 7;
+  text-color: #5E7868;
+  text-shadow: false;
 }
+
+.upgrade-node-locked:host { base-background: group(rect(#07100C), border(-1, #294636)); }
+.upgrade-node-locked .__button_text__ { text-color: #405A4A; }
 
 .upgrade-node-unlocked:host {
-  base-background: group(rect(#1C5635), border(-1, #6CB685));
-  hover-background: group(rect(#246A40), border(-1, #9AD0AA));
+  base-background: group(rect(#123A24), border(-1, #58A771));
+  hover-background: group(rect(#194D30), border(-1, #8FD1A3));
 }
-
-.upgrade-node-next:host {
-  base-background: group(rect(#302817), border(-1, #9A7742));
-  hover-background: group(rect(#45381E), border(-1, #D4A65D));
-}
+.upgrade-node-unlocked .__button_text__ { text-color: #B7DCC2; }
 
 .upgrade-node-ready:host {
-  base-background: group(rect(#315726), border(-1, #B8F47A));
-  hover-background: group(rect(#426F30), border(-1, #E6FFB8));
+  base-background: group(rect(#29491C), border(-1, #B8F47A));
+  hover-background: group(rect(#3A6227), border(-1, #E6FFB8));
 }
+.upgrade-node-ready .__button_text__ { text-color: #EAFACF; }
 
 .upgrade-node-maxed:host {
-  base-background: group(rect(#246A40), border(-1, #8FD1A3));
-  hover-background: group(rect(#2D7C4A), border(-1, #BDE7C9));
+  base-background: group(rect(#17502F), border(-1, #78C891));
+  hover-background: group(rect(#21653C), border(-1, #BDE7C9));
 }
+.upgrade-node-maxed .__button_text__ { text-color: #D9F3E1; }
+
+.upgrade-node-selected:host {
+  base-background: group(rect(#112A1C), border(-1, #C8FFD8));
+  hover-background: group(rect(#173C27), border(-1, #F0FFF4));
+}
+.upgrade-node-selected .__button_text__ { text-color: #F0FFF4; }
 
 .upgrade-node-selected.upgrade-node-locked:host {
-  base-background: group(rect(#102018), border(-1, #668474));
+  base-background: group(rect(#0E2016), border(-1, #82B692));
 }
 
 .upgrade-node-selected.upgrade-node-unlocked:host {
-  base-background: group(rect(#246A40), border(-1, #91C3A0));
-}
-
-.upgrade-node-selected.upgrade-node-next:host {
-  base-background: group(rect(#40351E), border(-1, #C79856));
+  base-background: group(rect(#1B5433), border(-1, #B8E8C6));
 }
 
 .upgrade-node-selected.upgrade-node-ready:host {
-  base-background: group(rect(#3C672D), border(-1, #B8F47A));
-  hover-background: group(rect(#4B7836), border(-1, #D8F6A8));
+  base-background: group(rect(#385B24), border(-1, #E8FFB9));
+  hover-background: group(rect(#4C772E), border(-1, #FFFFFF));
 }
 
 .upgrade-node-selected.upgrade-node-maxed:host {
-  base-background: group(rect(#2A7145), border(-1, #A8DDB7));
+  base-background: group(rect(#246740), border(-1, #D7F8E0));
 }
 
 // Status strip returns to the ship-console palette; only the engineering accent remains green.

@@ -114,14 +114,14 @@ public final class UpgradeRoot extends UIElement {
         detail.addChild(positioned("upgrade-detail-top-line", 0, 0, 312, 1));
         detail.addChild(positioned("upgrade-detail-bottom-line", 0, 29, 312, 1));
         detailName.addClass("upgrade-detail-name");
-        configureLabel(detailName, 9, 3, 112, 9);
+        configureLabel(detailName, 9, 3, 124, 9);
         detailLevel.addClass("upgrade-detail-level");
         configureLabel(detailLevel, 9, 15, 88, 8);
         detailCost.addClass("upgrade-detail-cost");
-        configureLabel(detailCost, 102, 15, 82, 8);
+        configureLabel(detailCost, 99, 15, 76, 8);
 
         var slotLabel = label(Component.translatable("gui.starboundmc.upgrade.slot_label"),
-                "upgrade-detail-slot-label", 154, 3, 37, 8);
+                "upgrade-detail-slot-label", 145, 3, 46, 8);
         slotLabel.textStyle(style -> style.adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
@@ -130,7 +130,7 @@ public final class UpgradeRoot extends UIElement {
         upgradeAction.addClass("upgrade-main-action");
         upgradeAction.text.setOverflowVisible(false);
         upgradeAction.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                .left(226).top(5).width(78).height(20));
+                .left(220).top(5).width(84).height(20));
         upgradeAction.textStyle(style -> style.adaptiveWidth(true)
                 .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
@@ -244,7 +244,6 @@ public final class UpgradeRoot extends UIElement {
         private final String labelKey;
         private final int maxLevel;
         private final UIElement root = new UIElement();
-        private final Label branchLabel = new Label();
         private final List<Button> nodes = new ArrayList<>();
 
         private UpgradeTrack(int id, String name, String labelKey, int maxLevel, boolean pointsLeft) {
@@ -253,33 +252,35 @@ public final class UpgradeRoot extends UIElement {
             this.maxLevel = maxLevel;
             root.addClasses("upgrade-branch", "upgrade-branch-" + name);
             root.setAllowHitTest(false);
-            branchLabel.setText(Component.translatable(labelKey));
-            branchLabel.addClass("upgrade-branch-label");
-            configureLabel(branchLabel, 0, 0, 76, 9);
+            var branchLabel = label(Component.translatable(labelKey), "upgrade-branch-label", 0, 0, 76, 9);
             branchLabel.textStyle(style -> style.adaptiveWidth(false)
                     .textAlignHorizontal(pointsLeft ? Horizontal.RIGHT : Horizontal.LEFT)
                     .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
             root.addChild(branchLabel);
-
-            // These are calibration/progress pips, not target-level buttons. Clicking any
-            // pip selects the subsystem; the server still upgrades only the next level.
-            int spacing = 15;
-            int firstX = pointsLeft ? 76 - maxLevel * spacing : 0;
+            int firstX = pointsLeft ? 76 - maxLevel * 20 : 0;
             for (int index = 0; index < maxLevel; index++) {
+                int level = index + 1;
+                // Left-hand branches unlock from the node nearest the tool and
+                // then grow outwards, so their logical order is screen-reversed.
                 int visualIndex = pointsLeft ? maxLevel - 1 - index : index;
-                int nodeLeft = firstX + visualIndex * spacing;
+                int nodeLeft = firstX + visualIndex * 20;
                 var node = new Button();
-                node.setText(Component.empty());
+                node.setText(Component.literal(Integer.toString(level)));
                 node.addClasses("upgrade-node", "upgrade-node-" + name);
                 node.text.setOverflowVisible(false);
+                node.textStyle(style -> style.adaptiveWidth(true)
+                        .textAlignHorizontal(Horizontal.CENTER)
+                        .textAlignVertical(Vertical.CENTER).textWrap(TextWrap.HIDE));
                 node.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                        .left(nodeLeft).top(17).width(11).height(6));
+                        .left(nodeLeft).top(14).width(15).height(15));
                 node.addEventListener(UIEvents.CLICK, event -> {
                     if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
                         selectTrack(id);
                         event.stopPropagation();
                     }
                 });
+                node.style(style -> style.tooltips(Component.translatable(
+                        "gui.starboundmc.upgrade.node_hint", level, maxLevel)));
                 nodes.add(node);
                 root.addChild(node);
             }
@@ -287,22 +288,18 @@ public final class UpgradeRoot extends UIElement {
 
         private void refresh(ItemStack manipulator, boolean hasManipulator, int modules) {
             int level = hasManipulator ? levelForTrack(manipulator, id) : 0;
-            // The pips already communicate approximate progression; keep the viewport
-            // label semantic and reserve the exact numeric level for the detail strip.
-            branchLabel.setText(Component.translatable(labelKey));
             int nextCost = level < maxLevel
                     ? UpgradeMenu.modulesRequiredForTargetLevel(level + 1) : Integer.MAX_VALUE;
             for (int index = 0; index < nodes.size(); index++) {
                 Button node = nodes.get(index);
                 node.removeClass("upgrade-node-unlocked");
-                node.removeClass("upgrade-node-next");
                 node.removeClass("upgrade-node-ready");
                 node.removeClass("upgrade-node-locked");
                 node.removeClass("upgrade-node-maxed");
                 if (hasManipulator && index < level) {
                     node.addClass(level >= maxLevel ? "upgrade-node-maxed" : "upgrade-node-unlocked");
-                } else if (hasManipulator && index == level) {
-                    node.addClass(modules >= nextCost ? "upgrade-node-ready" : "upgrade-node-next");
+                } else if (hasManipulator && index == level && modules >= nextCost) {
+                    node.addClass("upgrade-node-ready");
                 } else {
                     node.addClass("upgrade-node-locked");
                 }
@@ -327,6 +324,9 @@ public final class UpgradeRoot extends UIElement {
             layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                     .left(4).top(24).width(BLUEPRINT_W).height(BLUEPRINT_H));
 
+            // Give the tool a dedicated engineering viewport so the blueprint, not the
+            // surrounding upgrade nodes, becomes the first visual read.
+            addChild(positioned("upgrade-blueprint-focus", 74, 8, 164, 86));
             var manipulator = positioned("upgrade-manipulator-blueprint",
                     (BLUEPRINT_W - MANIPULATOR_BLUEPRINT_W) / 2,
                     (BLUEPRINT_H - MANIPULATOR_BLUEPRINT_H) / 2,
@@ -355,7 +355,6 @@ public final class UpgradeRoot extends UIElement {
                         Math.round(y + gy + 1), color);
             }
             drawRegistrationMarks(graphics, x, y);
-            drawFocusBrackets(graphics, x, y);
 
             // Upgrade branches terminate on the equipment instead of behaving like an
             // abstract skill tree. The selected branch receives the only bright line.
@@ -401,37 +400,17 @@ public final class UpgradeRoot extends UIElement {
             graphics.fill(centerX, centerY + 3, centerX + 1, centerY + 8, center);
         }
 
-        private void drawFocusBrackets(net.minecraft.client.gui.GuiGraphics graphics,
-                                       float x, float y) {
-            int color = 0x704E9C6F;
-            int left = Math.round(x + 80);
-            int right = Math.round(x + 232);
-            int top = Math.round(y + 10);
-            int bottom = Math.round(y + 92);
-            int arm = 8;
-
-            graphics.fill(left, top, left + arm, top + 1, color);
-            graphics.fill(left, top, left + 1, top + arm, color);
-            graphics.fill(right - arm, top, right, top + 1, color);
-            graphics.fill(right - 1, top, right, top + arm, color);
-            graphics.fill(left, bottom - 1, left + arm, bottom, color);
-            graphics.fill(left, bottom - arm, left + 1, bottom, color);
-            graphics.fill(right - arm, bottom - 1, right, bottom, color);
-            graphics.fill(right - 1, bottom - arm, right, bottom, color);
-        }
-
         private void drawConnector(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
                                    int track, float... points) {
             boolean selected = selectedTrack == track;
-            // Selection should guide the eye, not become brighter than the Matter Manipulator.
-            int color = selected ? 0xD083E3A2 : 0x7A315F45;
-            drawPolyline(graphics, x, y, color, 1.0F, points);
+            int color = selected ? 0xFFC8FFD8 : 0xB73E7655;
+            drawPolyline(graphics, x, y, color, selected ? 1.5F : 1.0F, points);
         }
 
         private void drawAnchor(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
                                 int track, float anchorX, float anchorY) {
             boolean selected = selectedTrack == track;
-            int color = selected ? 0xE083E3A2 : 0x9A4E8061;
+            int color = selected ? 0xFFC8FFD8 : 0xD05A9B70;
             int px = Math.round(x + anchorX);
             int py = Math.round(y + anchorY);
             graphics.fill(px - 2, py, px + 3, py + 1, color);
