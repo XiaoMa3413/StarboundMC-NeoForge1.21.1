@@ -26,7 +26,7 @@ class TutorialTargetProviderTest {
 
     @Test
     void safeModeLocksMarkerToTheRealShipTerminal() {
-        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, false);
+        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, false, false);
         var targets = new ArrayList<ArTarget>();
         provider.collect(new ArContext(ShipDimensions.SHIP_LEVEL, Vec3.ZERO), targets::add);
 
@@ -37,12 +37,12 @@ class TutorialTargetProviderTest {
 
     @Test
     void markerRequiresShipDimensionAndUncontactedTerminal() {
-        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, false);
+        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, false, false);
         var targets = new ArrayList<ArTarget>();
         provider.collect(new ArContext(Level.OVERWORLD, Vec3.ZERO), targets::add);
         assertTrue(targets.isEmpty());
 
-        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, true);
+        HudBootController.INSTANCE.applyServerState(CoreState.OFFLINE, true, true, false);
         provider.collect(new ArContext(ShipDimensions.SHIP_LEVEL, Vec3.ZERO), targets::add);
         assertTrue(targets.isEmpty());
     }

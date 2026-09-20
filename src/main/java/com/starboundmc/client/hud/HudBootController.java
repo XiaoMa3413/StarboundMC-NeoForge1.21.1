@@ -23,21 +23,47 @@ public final class HudBootController {
     static final int STATUS_STEP_COUNT = 6;
     static final int SAFE_MODE_HOLD_TICKS = 30;
     static final int SAFE_MODE_FADE_TICKS = 30;
+    static final int CORE_LINK_TICKS = 50;
+    static final int PERSONAL_LINK_TICKS = 40;
+    static final int ONLINE_HOLD_TICKS = 25;
+    static final int ONLINE_FADE_TICKS = 20;
+    static final int ONLINE_STATUS_TICKS = ONLINE_HOLD_TICKS + ONLINE_FADE_TICKS;
 
     private State state = State.DORMANT;
+    private CoreState serverCore = CoreState.OFFLINE;
     private int stateTicks;
     private int safeModeTicks;
+    private int onlineTicks = ONLINE_STATUS_TICKS;
     private boolean terminalGuidance;
+    private boolean terminalContacted;
+    private boolean personalLink;
+    private boolean linkReceiptPending;
+    private boolean linkReceiptSent;
+    private boolean paused;
 
-    private HudBootController() { }
+    HudBootController() { }
 
-    /** Applies the persisted server truth without replaying an already-presented animation. */
+    /** Updates core truth even while presentation is paused; never infers ONLINE from a timer. */
     public void applyServerState(CoreState core, boolean wakePresented,
-                                 boolean terminalContacted) {
+                                 boolean terminalContacted, boolean coreLinkPresented) {
+        serverCore = core;
+        this.terminalContacted = terminalContacted;
         terminalGuidance = core == CoreState.OFFLINE && wakePresented && !terminalContacted;
         if (core == CoreState.ONLINE) {
-            enter(State.ONLINE);
-        } else if (!wakePresented) {
+            if (coreLinkPresented) {
+                enter(State.ONLINE);
+                onlineTicks = ONLINE_STATUS_TICKS;
+                linkReceiptSent = true;
+                linkReceiptPending = false;
+            } else if (state == State.LINKING && !personalLink) {
+                finishLink();
+            } else if (state != State.ONLINE && state != State.LINKING) {
+                beginLink(true);
+            }
+        } else if (core == CoreState.REBOOTING) {
+            if (state != State.LINKING)
+                beginLink(false);
+        } else if (!wakePresented && !terminalContacted && state != State.STARTING) {
             enter(State.DORMANT);
         } else if (state != State.STARTING || terminalContacted) {
             enter(State.SAFE_MODE);
@@ -47,6 +73,8 @@ public final class HudBootController {
 
     /** Uses the existing one-shot prologue broadcasts as presentation triggers. */
     public void onNovaBroadcast(String translationKey) {
+        if (serverCore != CoreState.OFFLINE || terminalContacted)
+            return;
         if (INITIAL_WAKE_KEY.equals(translationKey)) {
             terminalGuidance = true;
             if (state == State.DORMANT)
@@ -60,6 +88,7 @@ public final class HudBootController {
 
     /** Advances only while gameplay presentation is active. */
     public void tick(boolean paused) {
+        this.paused = paused;
         if (paused)
             return;
         if (state == State.STARTING) {
@@ -71,7 +100,39 @@ public final class HudBootController {
         } else if (state == State.SAFE_MODE
                 && safeModeTicks < SAFE_MODE_HOLD_TICKS + SAFE_MODE_FADE_TICKS) {
             safeModeTicks++;
+        } else if (state == State.LINKING) {
+            stateTicks = Math.min(stateTicks + 1, CORE_LINK_TICKS);
+            if (personalLink && serverCore == CoreState.ONLINE && stateTicks >= PERSONAL_LINK_TICKS)
+                finishLink();
+        } else if (state == State.ONLINE && onlineTicks < ONLINE_STATUS_TICKS) {
+            onlineTicks++;
+            if (onlineTicks == ONLINE_STATUS_TICKS && !linkReceiptSent)
+                linkReceiptPending = true;
         }
+    }
+
+    /** Consumed once by the client network adapter after the entire presentation is visible. */
+    public boolean consumeCoreLinkReceipt() {
+        if (!linkReceiptPending)
+            return false;
+        linkReceiptPending = false;
+        linkReceiptSent = true;
+        return true;
+    }
+
+    public boolean defersCommunication() {
+        return state == State.STARTING || state == State.LINKING
+                || state == State.ONLINE && onlineTicks < ONLINE_STATUS_TICKS;
+    }
+
+    private void beginLink(boolean personal) {
+        personalLink = personal;
+        enter(State.LINKING);
+    }
+
+    private void finishLink() {
+        enter(State.ONLINE);
+        onlineTicks = 0;
     }
 
     public State state() {
@@ -87,7 +148,22 @@ public final class HudBootController {
     }
 
     public Presentation presentation(float partialTick) {
+        if (paused)
+            partialTick = 0F;
         float tick = Math.max(0F, stateTicks + Math.clamp(partialTick, 0F, 1F));
+        if (state == State.LINKING || state == State.ONLINE) {
+            boolean linking = state == State.LINKING;
+            int lineCount = personalLink || !linking ? 4 : 3;
+            int lines = linking ? Math.min(lineCount, (int) (tick / 8F) + 1) : lineCount;
+            float opacity = linking ? smoothStep(Math.clamp(tick / 8F, 0F, 1F))
+                    : 1F - smoothStep(Math.clamp(
+                            (onlineTicks - ONLINE_HOLD_TICKS + Math.clamp(partialTick, 0F, 1F))
+                                    / ONLINE_FADE_TICKS, 0F, 1F));
+            float progress = linking ? Math.clamp(tick
+                    / (personalLink ? PERSONAL_LINK_TICKS : CORE_LINK_TICKS), 0F, .95F) : 1F;
+            return new Presentation(state, visorOpacity(), 0F, opacity, lines, 0F,
+                    progress, false, personalLink);
+        }
         float statusTick = tick - STATUS_START_TICK;
         int lines = state == State.STARTING && statusTick >= 0F
                 ? Math.min(STATUS_STEP_COUNT,
@@ -109,11 +185,12 @@ public final class HudBootController {
         float scan = state == State.STARTING
                 ? Math.clamp(statusTick / (STARTING_TICKS - STATUS_START_TICK), 0F, 1F) : 1F;
         return new Presentation(state, visorOpacity(), promptOpacity, opacity, lines,
-                scrollRows, scan, terminalGuidanceActive());
+                scrollRows, scan, terminalGuidanceActive(), false);
     }
 
     public boolean terminalGuidanceActive() {
-        return terminalGuidance && state != State.DORMANT && state != State.ONLINE;
+        return terminalGuidance && serverCore == CoreState.OFFLINE
+                && state != State.DORMANT && state != State.ONLINE;
     }
 
     public boolean localNavigationActive() {
@@ -122,9 +199,16 @@ public final class HudBootController {
 
     public void reset() {
         state = State.DORMANT;
+        serverCore = CoreState.OFFLINE;
         stateTicks = 0;
         safeModeTicks = 0;
+        onlineTicks = ONLINE_STATUS_TICKS;
         terminalGuidance = false;
+        terminalContacted = false;
+        personalLink = false;
+        linkReceiptPending = false;
+        linkReceiptSent = false;
+        paused = false;
     }
 
     private void enter(State next) {
@@ -170,5 +254,5 @@ public final class HudBootController {
     public record Presentation(State state, float visorOpacity, float promptOpacity,
                                float statusOpacity, int revealedLines, float scrollRows,
                                float scanProgress,
-                               boolean terminalGuidance) { }
+                               boolean terminalGuidance, boolean personalLink) { }
 }

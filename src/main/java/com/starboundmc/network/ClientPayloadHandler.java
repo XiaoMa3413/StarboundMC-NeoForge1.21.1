@@ -128,10 +128,11 @@ public final class ClientPayloadHandler {
     }
 
     public static void handle(HudBootstrapStatePacket payload, IPayloadContext context) {
-        if (payload.core() == com.starboundmc.story.CoreState.ONLINE)
-            ClientNovaBroadcastState.clearDeferredBootMessages();
+        if (payload.core() != com.starboundmc.story.CoreState.OFFLINE)
+            ClientNovaBroadcastState.discardObsoleteBootMessages();
         HudBootController.INSTANCE.applyServerState(
-                payload.core(), payload.wakePresented(), payload.terminalContacted());
+                payload.core(), payload.wakePresented(), payload.terminalContacted(),
+                payload.coreLinkPresented());
     }
 
     private static String emptyToNull(String value) {

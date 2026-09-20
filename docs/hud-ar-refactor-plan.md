@@ -2,7 +2,7 @@
 
 > 建议文件名：`docs/hud-ar-refactor-plan.md`
 >
-> 状态：视觉策略已修订 / 分阶段实施中
+> 状态：H5 Core Link 已完成，用户已确认视觉；下一步调整 Visor 视效，暂不进入 H6
 >
 > 目标：将当前以 EPP / EVA 为中心的 HUD 原型重构为 StarboundMC 全游戏通用的信息呈现系统，并为后续任务、探索、Space POI、Scanner 与环境系统提供统一基础。
 
@@ -1266,7 +1266,7 @@ N.O.V.A. Broadcast 仍作为独立平面 Communication Layer。
 - `StarboundHudLayer` 统一编排 Visor、World AR、EVA 导航和 Survival telemetry；
 - `EppClientState` 只保存 EPP telemetry，不再反向拥有或重置整套 HUD；
 - 连接生命周期由 `ClientConnectionEvents` 显式重置通用 HUD；
-- `HudBootController` 由 H4 接管个人 HUD Boot 状态；H5 的 Core Link 仍未接入。
+- `HudBootController` 由 H4 接管个人 HUD Boot 状态，并由 H5 接入核心连接和个人初始化。
 
 ---
 
@@ -1303,11 +1303,13 @@ DORMANT
 - STARTING 完成后进入 SAFE_MODE，系统状态短暂停留并淡出；
 - `TutorialTargetProvider` 将 Marker 锁定 `SHIP_AI_TERMINAL_POS`，终端接触后由服务端状态关闭；
 - World AR 继续使用真实 View / Projection Matrix，不经过 Visor drift；
-- H4 不监听 `CORE_REBOOTING` / `CORE_ONLINE` 的动态转换，留给 H5。
+- H4 原本只负责苏醒；`CORE_REBOOTING` / `CORE_ONLINE` 的动态转换已在 H5 接入。
 
 ---
 
 ## H5 — Core Link
+
+状态：已完成，用户已确认视觉（2026-09-20）。
 
 监听：
 
@@ -1325,6 +1327,36 @@ SAFE_MODE
 ```
 
 N.O.V.A. Core Online 后恢复完整 HUD 功能。
+
+当前实现边界：
+
+- `HudStateService` 在核心开始重启、上线和调试状态变更时，向全部在线玩家发送独立于菜单的 `HudBootstrapStatePacket`；登录和终端接触也同步个人状态。
+- `HudBootController` 在真实 `REBOOTING` 状态下进入 LINKING，使用右上角现有状态区域逐行显示连接信息；客户端计时不会自行宣布核心上线。
+- 收到真实 ONLINE 后立即进入 ONLINE，显示链路、导航、环境监测恢复与“完整系统连接已建立”，停留 25 tick、淡出 20 tick。
+- 核心已经在线、但尚未完成个人初始化的玩家，先播放 40 tick 的简短 LINKING 序列；内容显示已连接状态，不播放“核心离线”的紧急启动。
+- 暂停、打开菜单、隐藏 HUD 或死亡期间不推进呈现时钟；服务端核心状态仍正常更新。若核心在菜单打开期间恢复，关闭菜单后显示真实的连接完成信息。
+- `HUD_CORE_LINK_PRESENTED` 是独立个人记录。客户端在完整呈现结束后发送 `HudCoreLinkPresentedPacket`，服务端只在核心真实 ONLINE 时写入该玩家的记录，不改变任务、身份或共享进度。
+- 玩家故事数据升级至 schema 2：schema 1 中已收到核心上线广播或已确认身份的玩家迁移为已连接，避免升级后重复介绍；其他旧玩家仍可完成首次连接。死亡沿用附件的 `copyOnDeath()`，中断且尚未确认的呈现在重登后恢复为简短个人初始化。
+- 首次苏醒广播前接触终端也会进入 SAFE_MODE，不再卡在 DORMANT；核心重启后关闭终端教学 AR。
+- 连接呈现期间 N.O.V.A. 通讯排队并暂停当前播放；结束后继续。核心恢复只移除已过时的紧急离线/寻找终端提示，保留其他通讯。
+- 网络协议升至 16，客户端和服务端需要使用相同版本。
+- 本阶段沿用原 Visor 光学、布局和 World AR；不接入任务 Provider，不推进 H6。
+
+验证：
+
+- `gradlew.bat compileJava` 通过。
+- HUD、通讯、故事与网络相关的 177 项定向 JUnit 测试通过，覆盖真实核心状态驱动、重复快照、暂停、重登、晚加入、提前接触终端、个人回执与旧数据迁移。
+- `gradlew.bat -PshipGameTests runGameTestServer` 的 44 项 GameTest 全部通过；新增 `HudStateGameTests` 覆盖玩家实际保存/加载、死亡继承、多人个人状态隔离，以及无终端菜单时的 HUD 快照发送。
+- 用户已确认本轮视觉效果；下列场景保留为后续 Visor 调整的回归检查清单。
+
+实机检查清单：
+
+1. 新存档按正常流程苏醒、找到终端、开始重启；关闭终端观察 LINKING → ONLINE 与随后 N.O.V.A. 通讯。
+2. 保持终端打开直到核心恢复，再关闭；应看到连接完成，不能出现陈旧的核心离线状态。
+3. 首次广播前直接打开终端；关闭后生存 HUD 可用，且不再提示寻找已接触终端。
+4. 连接中打开菜单或 F1，恢复后继续；完成后重登或死亡，不重复初始化。
+5. 第二位玩家加入已上线飞船；只播放个人初始化，不宣称 N.O.V.A. 核心离线。
+6. 中英文、GUI Scale 1–4 检查右上角文字与 Compass 的间距和清晰度。后续 Visor 视效调整以此为起点。
 
 ---
 

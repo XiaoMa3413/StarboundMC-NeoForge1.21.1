@@ -158,7 +158,7 @@ final class Stage3PayloadCodecTest {
                 "message.starboundmc.nova.prologue.mineral_scan_started"),
                 NovaBroadcastPacket.STREAM_CODEC);
         assertRoundTrip(new HudBootstrapStatePacket(
-                CoreState.OFFLINE, true, false),
+                CoreState.OFFLINE, true, false, false),
                 HudBootstrapStatePacket.STREAM_CODEC);
     }
 

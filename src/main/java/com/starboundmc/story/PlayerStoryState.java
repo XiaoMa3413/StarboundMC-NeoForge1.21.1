@@ -15,12 +15,12 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
                                int readSituationMask, int tutorialMask, int dismissedHintMask,
                                int flagsMask)
 {
-    public static final int CURRENT_SCHEMA_VERSION = 1;
+    public static final int CURRENT_SCHEMA_VERSION = 2;
     public static final PlayerStoryState DEFAULT =
             new PlayerStoryState(CURRENT_SCHEMA_VERSION, 0L, false, 0, 0, 0, 0);
 
     public static final Codec<PlayerStoryState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.INT.optionalFieldOf("schema_version", CURRENT_SCHEMA_VERSION)
+            Codec.INT.optionalFieldOf("schema_version", 1)
                     .forGetter(PlayerStoryState::schemaVersion),
             Codec.LONG.optionalFieldOf("revision", 0L)
                     .forGetter(PlayerStoryState::revision),
@@ -59,6 +59,13 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
                 ? 0 : tutorialMask & TutorialTopic.knownMask();
         dismissedHintMask = Math.max(0, dismissedHintMask);
         flagsMask = flagsMask < 0 ? 0 : flagsMask & PlayerStoryFlag.knownMask();
+        if (schemaVersion < CURRENT_SCHEMA_VERSION) {
+            // Existing players who already knew the online core should not receive a new
+            // introduction on upgrade. New schema-2 broadcasts are not presentation receipts.
+            if (identityConfirmed || (flagsMask & PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask()) != 0)
+                flagsMask |= PlayerStoryFlag.HUD_CORE_LINK_PRESENTED.mask();
+            schemaVersion = CURRENT_SCHEMA_VERSION;
+        }
     }
 
     public boolean hasRead(SituationTopic topic)
@@ -166,6 +173,7 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
                 | PlayerStoryFlag.TERMINAL_REMINDER_BROADCAST.mask()
                 | PlayerStoryFlag.TERMINAL_CONTACTED.mask()
                 | PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask()
+                | PlayerStoryFlag.HUD_CORE_LINK_PRESENTED.mask()
                 | PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST.mask()
                 | PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST.mask();
         int nextTutorialMask = tutorialMask | TutorialTopic.MATTER_MANIPULATOR.mask();

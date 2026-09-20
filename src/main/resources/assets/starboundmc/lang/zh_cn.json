@@ -624,6 +624,17 @@
   "hud.starboundmc.boot.local_nav": "本地导航 ...... 降级运行",
   "hud.starboundmc.boot.ship_network": "飞船网络 ...... 错误",
   "hud.starboundmc.boot.nova_core": "N.O.V.A. 核心 .... 离线",
+  "hud.starboundmc.link.linking": "核心连接中",
+  "hud.starboundmc.link.initializing": "视觉界面初始化",
+  "hud.starboundmc.link.online": "视觉界面已上线",
+  "hud.starboundmc.link.ship_connecting": "飞船网络 ...... 正在连接",
+  "hud.starboundmc.link.nova_syncing": "N.O.V.A. 链路 .... 正在同步",
+  "hud.starboundmc.link.nav_initializing": "导航系统 ...... 正在初始化",
+  "hud.starboundmc.link.ship_connected": "飞船网络 ...... 已连接",
+  "hud.starboundmc.link.nova_connected": "N.O.V.A. 链路 .... 已连接",
+  "hud.starboundmc.link.nav_online": "导航系统 ...... 在线",
+  "hud.starboundmc.link.environment_online": "环境监测 ...... 在线",
+  "hud.starboundmc.link.established": "完整系统连接已建立",
   "item.starboundmc.epp_mk3": "环境保护背包 Mk.III",
   "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III 升级套件"
 }

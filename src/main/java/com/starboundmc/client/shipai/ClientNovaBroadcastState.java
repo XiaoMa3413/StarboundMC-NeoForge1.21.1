@@ -24,7 +24,7 @@ public final class ClientNovaBroadcastState
     {
         if (translationKey == null || translationKey.isBlank())
             return;
-        if (HudBootController.INSTANCE.state() == HudBootController.State.STARTING) {
+        if (HudBootController.INSTANCE.defersCommunication()) {
             if (deferredBootMessages.size() < NovaBroadcastTimeline.MAX_QUEUED_MESSAGES)
                 deferredBootMessages.addLast(translationKey);
             return;
@@ -36,12 +36,13 @@ public final class ClientNovaBroadcastState
     public static void tick()
     {
         Minecraft minecraft = Minecraft.getInstance();
-        if (HudBootController.INSTANCE.state() != HudBootController.State.STARTING) {
+        if (!HudBootController.INSTANCE.defersCommunication()) {
             while (!deferredBootMessages.isEmpty()
                     && enqueueNow(deferredBootMessages.getFirst()))
                 deferredBootMessages.removeFirst();
         }
-        NovaBroadcastTimeline.Step step = timeline.tick(isPresentationPaused(minecraft));
+        NovaBroadcastTimeline.Step step = timeline.tick(isPresentationPaused(minecraft)
+                || HudBootController.INSTANCE.defersCommunication());
         for (int index = 0; index < step.revealedCount(); index++)
         {
             int codePoint = step.revealedCodePoint(index);
@@ -63,10 +64,16 @@ public final class ClientNovaBroadcastState
         deferredBootMessages.clear();
     }
 
-    /** Drops only transmissions held back by the visor bootstrap sequence. */
-    public static void clearDeferredBootMessages()
+    /** Core recovery invalidates offline cues, but must not discard queued online/task messages. */
+    public static void discardObsoleteBootMessages()
     {
-        deferredBootMessages.clear();
+        deferredBootMessages.removeIf(ClientNovaBroadcastState::isOfflineBootMessage);
+        timeline.discardMessages(ClientNovaBroadcastState::isOfflineBootMessage);
+    }
+
+    private static boolean isOfflineBootMessage(String key) {
+        return HudBootController.INITIAL_WAKE_KEY.equals(key)
+                || HudBootController.TERMINAL_REMINDER_KEY.equals(key);
     }
 
     static NovaBroadcastTimeline.Snapshot snapshot()
@@ -82,7 +89,8 @@ public final class ClientNovaBroadcastState
     static boolean shouldRender()
     {
         Minecraft minecraft = Minecraft.getInstance();
-        return timeline.snapshot().visible() && !isPresentationPaused(minecraft);
+        return timeline.snapshot().visible() && !isPresentationPaused(minecraft)
+                && !HudBootController.INSTANCE.defersCommunication();
     }
 
     static int queuedMessageCount()
@@ -94,6 +102,8 @@ public final class ClientNovaBroadcastState
     {
         return minecraft.player == null
                 || minecraft.level == null
+                || !minecraft.player.isAlive()
+                || minecraft.isPaused()
                 || minecraft.options.hideGui
                 || minecraft.screen != null;
     }

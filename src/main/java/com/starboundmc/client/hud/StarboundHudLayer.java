@@ -105,7 +105,8 @@ public final class StarboundHudLayer implements ModularHudLayer {
             HudVisorCalibrationGrid.render(context.graphics);
             context.graphics.pose().popPose();
             var boot = HudBootController.INSTANCE.presentation(context.partialTick);
-            drawBootPresentation(context.graphics, boot);
+            if (mc.screen == null)
+                drawBootPresentation(context.graphics, boot);
             boolean eva = showEvaNavigation();
             if (eva) lastThrust = com.starboundmc.epp.EvaMovement.mode(mc.player)
                     == com.starboundmc.epp.EvaState.THRUST;

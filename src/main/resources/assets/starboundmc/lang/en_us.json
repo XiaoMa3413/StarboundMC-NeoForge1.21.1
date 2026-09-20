@@ -624,6 +624,17 @@
   "hud.starboundmc.boot.local_nav": "LOCAL NAV ........ DEGRADED",
   "hud.starboundmc.boot.ship_network": "SHIP NETWORK ..... ERROR",
   "hud.starboundmc.boot.nova_core": "N.O.V.A. CORE .... OFFLINE",
+  "hud.starboundmc.link.linking": "CORE LINKING",
+  "hud.starboundmc.link.initializing": "VISUAL INTERFACE STARTING",
+  "hud.starboundmc.link.online": "VISUAL INTERFACE ONLINE",
+  "hud.starboundmc.link.ship_connecting": "SHIP NETWORK ..... CONNECTING",
+  "hud.starboundmc.link.nova_syncing": "N.O.V.A. LINK ..... SYNCING",
+  "hud.starboundmc.link.nav_initializing": "NAVIGATION ........ INITIALIZING",
+  "hud.starboundmc.link.ship_connected": "SHIP NETWORK ..... CONNECTED",
+  "hud.starboundmc.link.nova_connected": "N.O.V.A. LINK ..... CONNECTED",
+  "hud.starboundmc.link.nav_online": "NAVIGATION ........ ONLINE",
+  "hud.starboundmc.link.environment_online": "ENVIRONMENT ....... ONLINE",
+  "hud.starboundmc.link.established": "FULL LINK ESTABLISHED",
   "item.starboundmc.epp_mk3": "EPP Mk.III",
   "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III Upgrade Kit"
 }

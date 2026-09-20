@@ -2,7 +2,6 @@ package com.starboundmc.story;
 
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.NovaBroadcastPacket;
-import com.starboundmc.network.HudBootstrapStatePacket;
 import com.starboundmc.warp.ShipStateData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -85,9 +84,9 @@ public final class ShipStoryBroadcastService
                 && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             scheduleMatterManipulatorTutorial(player);
 
+        sendHudBootstrapState(player);
         if (shared.core() == CoreState.ONLINE)
             sendVoxelIntroductionOnce(player);
-        sendHudBootstrapState(player);
     }
 
     /** Stops pending timers when a player leaves the server. */
@@ -257,6 +256,7 @@ public final class ShipStoryBroadcastService
     {
         if (server == null)
             return;
+        HudStateService.syncAll(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers())
         {
             sendOnce(player, PlayerStoryFlag.CORE_ONLINE_BROADCAST,
@@ -367,14 +367,7 @@ public final class ShipStoryBroadcastService
 
     private static void sendHudBootstrapState(ServerPlayer player)
     {
-        if (player == null || player.getServer() == null)
-            return;
-        SharedShipProgress shared = ShipStateData.get(player.getServer()).getStoryProgress();
-        PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        ModNetwork.sendToPlayer(player, new HudBootstrapStatePacket(
-                shared.core(),
-                personal.hasFlag(PlayerStoryFlag.INITIAL_WAKE_BROADCAST),
-                personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED)));
+        HudStateService.syncPlayer(player);
     }
 
     private static void clearPending(UUID id)

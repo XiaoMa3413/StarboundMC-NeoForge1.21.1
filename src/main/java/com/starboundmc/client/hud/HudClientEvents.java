@@ -2,6 +2,8 @@
 package com.starboundmc.client.hud;
 
 import com.starboundmc.StarboundMC;
+import com.starboundmc.network.HudCoreLinkPresentedPacket;
+import com.starboundmc.network.ModNetwork;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -17,6 +19,10 @@ public final class HudClientEvents {
     public static void onClientTick(ClientTickEvent.Post event) {
         var minecraft = Minecraft.getInstance();
         HudBootController.INSTANCE.tick(minecraft.player == null || minecraft.level == null
+                || !minecraft.player.isAlive()
                 || minecraft.options.hideGui || minecraft.isPaused() || minecraft.screen != null);
+        if (minecraft.player != null && minecraft.getConnection() != null
+                && HudBootController.INSTANCE.consumeCoreLinkReceipt())
+            ModNetwork.sendToServer(new HudCoreLinkPresentedPacket());
     }
 }

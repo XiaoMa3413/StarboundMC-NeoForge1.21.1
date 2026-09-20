@@ -87,7 +87,7 @@ final class Stage8PrologueTest
         String handler = source("network/ClientPayloadHandler.java");
         String controller = source("client/hud/HudBootController.java");
         String provider = source("client/hud/provider/TutorialTargetProvider.java");
-        assertTrue(broadcast.contains("new HudBootstrapStatePacket"));
+        assertTrue(broadcast.contains("HudStateService.syncPlayer"));
         assertTrue(broadcast.contains("INITIAL_WAKE_BROADCAST"));
         assertTrue(handler.contains("HudBootController.INSTANCE.onNovaBroadcast"));
         assertTrue(handler.contains("HudBootController.INSTANCE.applyServerState"));
@@ -203,7 +203,7 @@ final class Stage8PrologueTest
         assertTrue(timeline.contains("isProgressDot(active.body(), revealed)"));
         assertFalse(broadcastState.contains("rescaleChat"));
         assertTrue(broadcastState.contains("deferredBootMessages"));
-        assertTrue(broadcastState.contains("HudBootController.State.STARTING"));
+        assertTrue(broadcastState.contains("HudBootController.INSTANCE.defersCommunication()"));
         assertTrue(broadcastState.contains("addMessage(historyMessage"));
         assertTrue(hud.contains("implements ModularHudLayer"));
         assertTrue(root.contains("new NovaPortraitElement()"));

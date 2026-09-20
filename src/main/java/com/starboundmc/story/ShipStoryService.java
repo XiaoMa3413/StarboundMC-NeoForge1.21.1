@@ -145,6 +145,8 @@ public final class ShipStoryService
 
         if (sharedChanged)
         {
+            if (action == ShipAiActionPacket.Action.BEGIN_CORE_REBOOT)
+                HudStateService.syncAll(server);
             syncOpenTerminalOwners(server, player, requestId);
             ShipEnvironmentService.syncOpenMenus(server);
         }
@@ -216,6 +218,7 @@ public final class ShipStoryService
     {
         if (server == null)
             return;
+        HudStateService.syncAll(server);
         syncOpenTerminalOwners(server, null, 0L);
         ShipEnvironmentService.syncOpenMenus(server);
     }

@@ -23,24 +23,54 @@ final class HudBootStatusRenderer {
             "hud.starboundmc.boot.nova_core"
     };
     private static final int[] STEP_COLORS = {CYAN, CYAN, CYAN, AMBER, RED, RED};
+    private static final String[] LINK_KEYS = {
+            "hud.starboundmc.link.ship_connecting",
+            "hud.starboundmc.link.nova_syncing",
+            "hud.starboundmc.link.nav_initializing"
+    };
+    private static final String[] PERSONAL_LINK_KEYS = {
+            "hud.starboundmc.boot.visual_link",
+            "hud.starboundmc.link.ship_connected",
+            "hud.starboundmc.link.nova_connected",
+            "hud.starboundmc.link.nav_online"
+    };
+    private static final String[] ONLINE_KEYS = {
+            "hud.starboundmc.link.nova_connected",
+            "hud.starboundmc.link.nav_online",
+            "hud.starboundmc.link.environment_online",
+            "hud.starboundmc.link.established"
+    };
 
     private HudBootStatusRenderer() { }
 
     static void draw(GuiGraphics graphics, HudBootController.Presentation presentation) {
         var font = Minecraft.getInstance().font;
         boolean starting = presentation.state() == HudBootController.State.STARTING;
-        Component header = Component.translatable(starting
-                ? "hud.starboundmc.boot.starting" : "hud.starboundmc.boot.safe_mode");
+        boolean safeMode = presentation.state() == HudBootController.State.SAFE_MODE;
+        String headerKey = switch (presentation.state()) {
+            case LINKING -> presentation.personalLink()
+                    ? "hud.starboundmc.link.initializing" : "hud.starboundmc.link.linking";
+            case ONLINE -> "hud.starboundmc.link.online";
+            default -> starting ? "hud.starboundmc.boot.starting" : "hud.starboundmc.boot.safe_mode";
+        };
+        String[] keys = switch (presentation.state()) {
+            case LINKING -> presentation.personalLink() ? PERSONAL_LINK_KEYS : LINK_KEYS;
+            case ONLINE -> ONLINE_KEYS;
+            default -> STEP_KEYS;
+        };
+        int accent = safeMode ? AMBER : CYAN;
+        Component header = Component.translatable(headerKey);
         graphics.fill(3, 3, WIDTH - 3, HEIGHT - 3, 0x24050D12);
-        graphics.fill(5, 5, 7, 15, 0xB0000000 | (starting ? CYAN : AMBER));
-        graphics.drawString(font, header, 11, 6, 0xD8000000 | (starting ? CYAN : AMBER), false);
+        graphics.fill(5, 5, 7, 15, 0xB0000000 | accent);
+        graphics.drawString(font, header, 11, 6, 0xD8000000 | accent, false);
         graphics.fill(5, 17, WIDTH - 6, 18, 0x30000000 | CYAN);
 
         int lines = presentation.revealedLines();
-        for (int index = 0; index < Math.min(lines, STEP_KEYS.length); index++) {
+        for (int index = 0; index < Math.min(lines, keys.length); index++) {
             float y = 23F + (index - presentation.scrollRows()) * 11F;
             if (y >= 19F && y < HEIGHT - 2F)
-                line(graphics, Component.translatable(STEP_KEYS[index]), y, STEP_COLORS[index]);
+                line(graphics, Component.translatable(keys[index]), y,
+                        keys == STEP_KEYS ? STEP_COLORS[index] : CYAN);
         }
 
         int scanY = 19 + Math.round(46F * presentation.scanProgress());

@@ -8,9 +8,9 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 import java.util.Objects;
 
-/** Server truth needed to resume the personal HUD bootstrap after reconnecting. */
+/** Connection-wide core truth and personal HUD presentation receipts, independent of menus. */
 public record HudBootstrapStatePacket(CoreState core, boolean wakePresented,
-                                      boolean terminalContacted)
+                                      boolean terminalContacted, boolean coreLinkPresented)
         implements CustomPacketPayload {
     public static final Type<HudBootstrapStatePacket> TYPE =
             PayloadSupport.type("hud_bootstrap_state");
@@ -23,13 +23,14 @@ public record HudBootstrapStatePacket(CoreState core, boolean wakePresented,
 
     private HudBootstrapStatePacket(FriendlyByteBuf buffer) {
         this(CoreState.fromNetworkId(buffer.readVarInt()),
-                buffer.readBoolean(), buffer.readBoolean());
+                buffer.readBoolean(), buffer.readBoolean(), buffer.readBoolean());
     }
 
     private void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(core.networkId());
         buffer.writeBoolean(wakePresented);
         buffer.writeBoolean(terminalContacted);
+        buffer.writeBoolean(coreLinkPresented);
     }
 
     @Override
