@@ -132,19 +132,19 @@ class VoxelPrintingStationVisualRegressionTest {
                 "src/main/resources/assets/starboundmc/lss/voxel_printing_station.lss"));
 
         assertTrue(root.contains("private final Label detailDescription = new Label();"));
-        assertTrue(root.contains("voxel-printing-detail-description\", 5, 21"));
+        assertTrue(root.contains("new FabricationCanvas(5, 24, chamberWidth, 49)"));
         assertTrue(root.contains("private final UIElement[] requirementCards = new UIElement[6];"));
-        assertTrue(root.contains("(i % 3) * (cardWidth + cardGap)"));
-        assertTrue(root.contains("int y = 30 + (i / 3) * 19"));
+        assertTrue(root.contains("(i % 2) * (cardWidth + cardGap)"));
+        assertTrue(root.contains("int y = 24 + (i / 2) * 17"));
         assertTrue(root.contains("cardWidth, REQUIREMENT_CARD_H"));
-        assertTrue(root.contains("width(12).height(12)"));
-        assertTrue(root.contains("detailName, detailOutput, detailDescription, detailMeta"));
+        assertTrue(root.contains("width(11).height(11)"));
+        assertTrue(root.contains("detailName, detailOutput, detailMeta, detailStatus"));
         assertTrue(root.contains("detailDescription.setText(description)"));
         assertTrue(root.contains("detailDescription.style(style -> style.tooltips(detailTooltip))"));
-        assertTrue(root.contains("QUANTITY_ROW_Y = 85"));
-        assertTrue(root.contains("QUANTITY_CONTROL_H = 13"));
+        assertTrue(root.contains("QUANTITY_ROW_Y = 91"));
+        assertTrue(root.contains("QUANTITY_CONTROL_H = 11"));
         assertTrue(root.contains(".left(left).top(QUANTITY_ROW_Y).width(width).height(QUANTITY_CONTROL_H)"));
-        assertTrue(stylesheet.contains(".voxel-printing-detail-description"));
+        assertTrue(stylesheet.contains(".voxel-fabrication-chamber"));
         assertTrue(stylesheet.contains(".voxel-requirement-count { font-size: 6;"));
         assertTrue(stylesheet.contains(".voxel-printing-detail-pane .voxel-quantity-button"));
     }

@@ -15,6 +15,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Selector;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
 import com.starboundmc.client.ClientPrintQueueState;
 import com.starboundmc.client.PrintSubmissionState;
@@ -50,11 +51,11 @@ public final class VoxelPrintingStationRoot extends UIElement {
     private static final int PANEL_W = 440;
     private static final int COMPACT_W = 320;
     private static final int PANEL_H = 240;
-    private static final int QUANTITY_ROW_Y = 85;
-    private static final int QUANTITY_CONTROL_H = 13;
-    private static final int WIDE_REQUIREMENT_CARD_W = 58;
-    private static final int COMPACT_REQUIREMENT_CARD_W = 52;
-    private static final int REQUIREMENT_CARD_H = 16;
+    private static final int QUANTITY_ROW_Y = 91;
+    private static final int QUANTITY_CONTROL_H = 11;
+    private static final int WIDE_REQUIREMENT_CARD_W = 50;
+    private static final int COMPACT_REQUIREMENT_CARD_W = 48;
+    private static final int REQUIREMENT_CARD_H = 15;
 
     private final VoxelPrintingStationMenu menu;
     private final List<RecipeHolder<VoxelPrintingRecipe>> recipes;
@@ -94,7 +95,9 @@ public final class VoxelPrintingStationRoot extends UIElement {
             new ItemStackTexture(), new ItemStackTexture(), new ItemStackTexture()
     };
     private final ItemStackTexture ghostResultTexture = new ItemStackTexture().setColor(0x66FFFFFF);
+    private final ItemStackTexture fabricationTexture = new ItemStackTexture().setColor(0xDDFFFFFF);
     private final UIElement outputPreview = new UIElement();
+    private final UIElement fabricationPreview = new UIElement();
     private final Button printButton = new Button();
     private final Button quantityMinusTen = new Button();
     private final Button quantityMinus = new Button();
@@ -105,6 +108,8 @@ public final class VoxelPrintingStationRoot extends UIElement {
     private int quantity = 1;
     private int lastDetailedSelection = Integer.MIN_VALUE;
     private int lastDetailedQuantity = Integer.MIN_VALUE;
+    private int fabricationProgress;
+    private boolean fabricationActive;
     private DetailState lastDetailState;
 
     public VoxelPrintingStationRoot(VoxelPrintingStationMenu menu, int left, int top,
@@ -305,7 +310,8 @@ public final class VoxelPrintingStationRoot extends UIElement {
         var amount = VoxelUiSupport.label(Component.literal("×" + result.getCount()),
                 "voxel-recipe-amount", 23, 14, 92, 8);
 
-        button.addChildren(icon, name, amount);
+        var selectionRail = VoxelUiSupport.positioned("voxel-recipe-rail", 0, 0, 2, 24);
+        button.addChildren(selectionRail, icon, name, amount);
         button.style(style -> style.tooltips(result.getHoverName()));
         recipeList.addScrollViewChild(button);
         rows.add(new RecipeRow(holder, button));
@@ -478,55 +484,68 @@ public final class VoxelPrintingStationRoot extends UIElement {
     private UIElement buildDetailPane() {
         int detailWidth = compact ? 174 : 188;
         var pane = VoxelUiSupport.positioned("voxel-printing-detail-pane", 146, 28, detailWidth, 120);
+
         outputPreview.addClass("voxel-printing-output-preview");
         outputPreview.setAllowHitTest(false);
-        outputPreview.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(1).top(1).width(16).height(16));
+        outputPreview.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
+                .left(1).top(1).width(16).height(16));
         outputPreview.style(style -> style.backgroundTexture(ghostResultTexture));
+
         configureLabel(detailName, "voxel-printing-detail-name", 30, 2, detailWidth - 35, 10);
         configureLabel(detailOutput, "voxel-printing-detail-output", 30, 12, detailWidth - 35, 9);
-        configureLabel(detailDescription, "voxel-printing-detail-description", 5, 21,
-                detailWidth - 10, 8);
-        // Keep the output slot beside the selected result. The quantity controls occupy the
-        // bottom action row, so placing the socket there would put the -10 button over it.
+
+        // Keep the real vanilla output slot in its historical position. The
+        // large chamber below is visual-only and never owns items.
         var outputSocket = VoxelUiSupport.slotSocket("voxel-printing-output-socket", 4, 2);
         outputSocket.addChild(outputPreview);
+
+        int chamberWidth = compact ? 62 : 68;
+        var chamber = new FabricationCanvas(5, 24, chamberWidth, 49);
+
         int cardWidth = compact ? COMPACT_REQUIREMENT_CARD_W : WIDE_REQUIREMENT_CARD_W;
-        int cardGap = compact ? 4 : 2;
+        int cardGap = 2;
         int cardTextWidth = cardWidth - 17;
+        int requirementsLeft = compact ? 72 : 80;
         for (int i = 0; i < requirementCards.length; i++) {
-            int x = 5 + (i % 3) * (cardWidth + cardGap);
-            int y = 30 + (i / 3) * 19;
+            int x = requirementsLeft + (i % 2) * (cardWidth + cardGap);
+            int y = 24 + (i / 2) * 17;
             var card = VoxelUiSupport.positioned("voxel-requirement-card", x, y,
                     cardWidth, REQUIREMENT_CARD_H);
             requirementCards[i] = card;
             card.setAllowHitTest(true);
             card.setDisplay(false);
+
             var icon = requirementIcons[i];
             icon.setAllowHitTest(false);
-            icon.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(1).top(2).width(12).height(12));
+            icon.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
+                    .left(2).top(2).width(11).height(11));
             var texture = requirementTextures[i];
             icon.style(style -> style.backgroundTexture(texture));
+
             configureLabel(requirementNames[i], "voxel-requirement-name", 15, 0, cardTextWidth, 7);
             requirementNames[i].setAllowHitTest(false);
-            configureLabel(requirementCounts[i], "voxel-requirement-count", 15, 7, cardTextWidth, 8);
+            configureLabel(requirementCounts[i], "voxel-requirement-count", 15, 7, cardTextWidth, 7);
             requirementCounts[i].setAllowHitTest(false);
+
             card.addChildren(icon, requirementNames[i], requirementCounts[i]);
             pane.addChild(card);
         }
-        configureLabel(detailMeta, "voxel-printing-detail-meta", 5, 67, detailWidth - 10, 8);
-        configureLabel(detailStatus, "voxel-printing-detail-status", 5, 76, detailWidth - 10, 9);
-        int quantityLeft = compact ? 14 : 16;
-        int quantityLabelWidth = compact ? 34 : 42;
-        int quantityMaxWidth = compact ? 30 : 32;
+
+        configureLabel(detailMeta, "voxel-printing-detail-meta", 5, 75, detailWidth - 10, 7);
+        configureLabel(detailStatus, "voxel-printing-detail-status", 5, 82, detailWidth - 10, 8);
+
+        int quantityLeft = 8;
+        int quantityLabelWidth = compact ? 32 : 38;
+        int quantityMaxWidth = compact ? 28 : 30;
         configureQuantityButton(quantityMinusTen, "−10", quantityLeft, 20, -10);
-        configureQuantityButton(quantityMinus, "−", quantityLeft + 22, 15, -1);
-        configureLabel(quantityLabel, "voxel-printing-quantity", quantityLeft + 39, QUANTITY_ROW_Y,
+        configureQuantityButton(quantityMinus, "−", quantityLeft + 22, 14, -1);
+        configureLabel(quantityLabel, "voxel-printing-quantity", quantityLeft + 38, QUANTITY_ROW_Y,
                 quantityLabelWidth, QUANTITY_CONTROL_H);
         quantityLabel.textStyle(style -> style.textAlignHorizontal(Horizontal.CENTER));
-        configureQuantityButton(quantityPlus, "+", quantityLeft + 41 + quantityLabelWidth, 15, 1);
-        configureQuantityButton(quantityPlusTen, "+10", quantityLeft + 58 + quantityLabelWidth, 21, 10);
+        configureQuantityButton(quantityPlus, "+", quantityLeft + 40 + quantityLabelWidth, 14, 1);
+        configureQuantityButton(quantityPlusTen, "+10", quantityLeft + 56 + quantityLabelWidth, 20, 10);
         configureButton(quantityMax, Component.translatable("gui.starboundmc.voxel_printing.quantity.max"),
-                quantityLeft + 81 + quantityLabelWidth, QUANTITY_ROW_Y, quantityMaxWidth,
+                quantityLeft + 78 + quantityLabelWidth, QUANTITY_ROW_Y, quantityMaxWidth,
                 QUANTITY_CONTROL_H);
         quantityMax.addClass("voxel-quantity-button");
         quantityMax.addEventListener(UIEvents.CLICK, event -> {
@@ -537,8 +556,9 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 event.stopPropagation();
             }
         });
+
         configureButton(printButton, Component.translatable("gui.starboundmc.voxel_printing.enqueue"),
-                5, 101, detailWidth - 10, 16);
+                5, 104, detailWidth - 10, 13);
         printButton.addClass("voxel-printing-action");
         printButton.addEventListener(UIEvents.CLICK, event -> {
             if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && printButton.isActive()
@@ -546,15 +566,88 @@ public final class VoxelPrintingStationRoot extends UIElement {
                     && submission.begin(net.minecraft.Util.getMillis())) {
                 submission.rememberQueueIds(queueRows.keySet());
                 printButton.setActive(false);
-                ModNetwork.sendToServer(new StartPrintPacket(menu.blockPos(), recipes.get(selected).id(), quantity));
+                ModNetwork.sendToServer(new StartPrintPacket(
+                        menu.blockPos(), recipes.get(selected).id(), quantity));
                 lastDetailState = null;
                 refresh();
                 event.stopPropagation();
             }
         });
-        pane.addChildren(detailName, detailOutput, detailDescription, detailMeta, detailStatus, outputSocket,
-                quantityMinusTen, quantityMinus, quantityLabel, quantityPlus, quantityPlusTen, quantityMax, printButton);
+
+        pane.addChildren(detailName, detailOutput, detailMeta, detailStatus, outputSocket, chamber,
+                quantityMinusTen, quantityMinus, quantityLabel, quantityPlus, quantityPlusTen,
+                quantityMax, printButton);
         return pane;
+    }
+
+    /** Visual-only fabrication preview; real inventory ownership stays vanilla/menu-side. */
+    private final class FabricationCanvas extends UIElement {
+        private final int width;
+        private final int height;
+
+        private FabricationCanvas(int left, int top, int width, int height) {
+            this.width = width;
+            this.height = height;
+            addClass("voxel-fabrication-chamber");
+            setAllowHitTest(false);
+            setOverflowVisible(false);
+            layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                    .left(left).top(top).width(width).height(height));
+
+            int previewSize = 32;
+            fabricationPreview.addClass("voxel-fabrication-preview");
+            fabricationPreview.setAllowHitTest(false);
+            fabricationPreview.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                    .left((width - previewSize) / 2).top(6)
+                    .width(previewSize).height(previewSize));
+            fabricationPreview.style(style -> style.backgroundTexture(fabricationTexture));
+            addChild(fabricationPreview);
+        }
+
+        @Override
+        public void drawBackgroundAdditional(GUIContext context) {
+            float x = getPositionX();
+            float y = getPositionY();
+            var graphics = context.graphics;
+
+            for (int gx = 6; gx < width; gx += 6) {
+                int color = gx % 24 == 0 ? 0x243D777E : 0x142C5C63;
+                graphics.fill(Math.round(x + gx), Math.round(y + 2),
+                        Math.round(x + gx + 1), Math.round(y + height - 2), color);
+            }
+            for (int gy = 6; gy < height; gy += 6) {
+                int color = gy % 24 == 0 ? 0x243D777E : 0x142C5C63;
+                graphics.fill(Math.round(x + 2), Math.round(y + gy),
+                        Math.round(x + width - 2), Math.round(y + gy + 1), color);
+            }
+
+            int bracket = 0x8A63E2DF;
+            int left = Math.round(x + 3);
+            int right = Math.round(x + width - 3);
+            int top = Math.round(y + 3);
+            int bottom = Math.round(y + height - 3);
+            graphics.fill(left, top, left + 7, top + 1, bracket);
+            graphics.fill(left, top, left + 1, top + 7, bracket);
+            graphics.fill(right - 7, top, right, top + 1, bracket);
+            graphics.fill(right - 1, top, right, top + 7, bracket);
+            graphics.fill(left, bottom - 1, left + 7, bottom, bracket);
+            graphics.fill(left, bottom - 7, left + 1, bottom, bracket);
+            graphics.fill(right - 7, bottom - 1, right, bottom, bracket);
+            graphics.fill(right - 1, bottom - 7, right, bottom, bracket);
+
+            if (fabricationActive) {
+                int usableHeight = Math.max(1, height - 14);
+                int scanY = Math.round(y + height - 7
+                        - usableHeight * (fabricationProgress / 100.0F));
+                graphics.fill(Math.round(x + 4), scanY,
+                        Math.round(x + width - 4), scanY + 1, 0xE063E2DF);
+                graphics.fill(Math.round(x + 2), scanY - 1,
+                        Math.round(x + 7), scanY + 2, 0x7063E2DF);
+                graphics.fill(Math.round(x + width - 7), scanY - 1,
+                        Math.round(x + width - 2), scanY + 2, 0x7063E2DF);
+            }
+            graphics.flush();
+        }
     }
 
     private static void configureLabel(Label label, String styleClass, int x, int y, int width, int height) {
@@ -644,6 +737,8 @@ public final class VoxelPrintingStationRoot extends UIElement {
                     && submission.isNewQueueEntry(row.entry.id())) row.root.addClass("queue-recent");
         }
         boolean activeMachine = machineSnapshot != null && machineSnapshot.progress() > 0;
+        fabricationActive = activeMachine;
+        fabricationProgress = activeMachine ? progress : 0;
         machineStatus.setText(Component.translatable(activeMachine
                 ? "gui.starboundmc.voxel_printing.device.printing" : "gui.starboundmc.voxel_printing.device.ready"));
         boolean hasOutput = !menu.getSlot(VoxelPrintingStationBlockEntity.OUTPUT_SLOT).getItem().isEmpty();
@@ -675,6 +770,16 @@ public final class VoxelPrintingStationRoot extends UIElement {
         }
 
         ItemStack result = resultStack(holder);
+        ItemStack chamberResult = result;
+        if (activeMachine && queueSnapshot != null && !queueSnapshot.entries().isEmpty()) {
+            SyncPrintQueuePacket.Entry activeEntry = queueSnapshot.entries().getFirst();
+            chamberResult = new ItemStack(
+                    BuiltInRegistries.ITEM.get(activeEntry.resultItemId()), activeEntry.resultCount());
+        }
+        fabricationTexture.setItems(chamberResult.isEmpty()
+                ? ItemStack.EMPTY : chamberResult.copyWithCount(1));
+        fabricationPreview.setVisible(!chamberResult.isEmpty());
+
         boolean materials = materialLimit >= quantity;
         boolean capacity = outstanding + quantity
                 <= VoxelPrintingStationBlockEntity.MAX_OUTSTANDING_CRAFTS;
@@ -879,7 +984,11 @@ public final class VoxelPrintingStationRoot extends UIElement {
         detailMeta.setText(Component.empty());
         detailStatus.setText(Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
         ghostResultTexture.setItems(ItemStack.EMPTY);
+        fabricationTexture.setItems(ItemStack.EMPTY);
         outputPreview.setVisible(false);
+        fabricationPreview.setVisible(false);
+        fabricationActive = false;
+        fabricationProgress = 0;
         printButton.setActive(false);
         quantityMinusTen.setActive(false);
         quantityMinus.setActive(false);
