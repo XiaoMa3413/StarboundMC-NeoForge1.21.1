@@ -27,6 +27,23 @@ class SharedShipProgressTest
     }
 
     @Test
+    void debugSkipCompletesEverySharedPrologueGateAtomically()
+    {
+        SharedShipProgress skipped = SharedShipProgress.newWorld().debugCompletePrologue();
+
+        assertEquals(CoreState.ONLINE, skipped.core());
+        assertEquals(SurfaceMissionState.COMPLETE, skipped.surfaceMission());
+        assertEquals(EngineState.ONLINE, skipped.sublightEngine());
+        assertEquals(EngineState.ONLINE, skipped.hyperdrive());
+        assertEquals(MineralScanState.COMPLETE, skipped.mineralScan());
+        assertEquals(0L, skipped.rebootCompleteGameTime());
+        assertEquals(0L, skipped.mineralScanNextCueGameTime());
+        assertEquals(0L, skipped.sublightIgnitionCompleteGameTime());
+        assertTrue(skipped.canTravelBetweenSystems());
+        assertSame(skipped, skipped.debugCompletePrologue());
+    }
+
+    @Test
     void repeatedCoreRebootRequestIsIdempotent()
     {
         SharedShipProgress offline = SharedShipProgress.newWorld();

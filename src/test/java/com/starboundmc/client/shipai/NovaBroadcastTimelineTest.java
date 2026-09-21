@@ -88,6 +88,24 @@ class NovaBroadcastTimelineTest
         return timeline;
     }
 
+    @Test
+    void coreRecoveryDiscardsObsoleteCuesButPreservesOtherTransmissions() {
+        NovaBroadcastTimeline timeline = new NovaBroadcastTimeline();
+        timeline.enqueue("offline.emergency", "Offline");
+        timeline.tick(false);
+        timeline.enqueue("offline.reminder", "Find terminal");
+        timeline.enqueue("online", "Core recovered");
+        timeline.enqueue("task", "Task report");
+        timeline.discardMessages(key -> key.startsWith("offline."));
+        assertFalse(timeline.snapshot().visible());
+        assertEquals(2, timeline.queuedMessageCount());
+        timeline.tick(false);
+        assertEquals("online", timeline.snapshot().translationKey());
+        timeline.discardMessages(key -> key.startsWith("offline."));
+        assertEquals("online", timeline.snapshot().translationKey());
+        assertEquals(2, timeline.queuedMessageCount());
+    }
+
     private static void advance(NovaBroadcastTimeline timeline, int ticks)
     {
         advance(timeline, ticks, false);

@@ -1,4 +1,4 @@
-package com.starboundmc.client.epp;
+package com.starboundmc.client.hud;
 
 /** Animation clock is supplied by the HUD so pauses do not consume the safety hold. */
 final class OxygenHudFade {

@@ -389,6 +389,12 @@ public class ShipStateData extends SavedData
         return applyStoryProgress(storyProgress.restoreHyperdrive());
     }
 
+    /** Completes the shared prologue for an in-game debug run. */
+    public boolean debugCompletePrologue()
+    {
+        return applyStoryProgress(storyProgress.debugCompletePrologue());
+    }
+
     public boolean isFlightActive()
     {
         return flightActive;

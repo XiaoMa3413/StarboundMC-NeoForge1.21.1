@@ -2,6 +2,7 @@ package com.starboundmc;
 
 import com.starboundmc.network.AddFuelPacket;
 import com.starboundmc.network.NovaBroadcastPacket;
+import com.starboundmc.network.HudBootstrapStatePacket;
 import com.starboundmc.network.ShipAiActionPacket;
 import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
 import com.starboundmc.network.ShipStorySnapshotPacket;
@@ -46,9 +47,10 @@ final class Stage3PayloadCodecTest {
                 TeleporterRenamePacket.TYPE, TeleportToShipPacket.TYPE,
                 AddFuelPacket.TYPE, SyncFlightPacket.TYPE,
                 ShipAiActionPacket.TYPE, ShipStorySnapshotPacket.TYPE,
-                ShipEnvironmentSnapshotPacket.TYPE, NovaBroadcastPacket.TYPE);
-        // 15 after SyncPlanetPacket was removed (migration §22).
-        assertEquals(15, Set.copyOf(types).size());
+                ShipEnvironmentSnapshotPacket.TYPE, NovaBroadcastPacket.TYPE,
+                HudBootstrapStatePacket.TYPE);
+        // 16 after adding the reconnect-safe HUD bootstrap snapshot.
+        assertEquals(16, Set.copyOf(types).size());
         assertTrue(types.stream().allMatch(type -> type.id().getNamespace().equals("starboundmc")));
     }
 
@@ -153,8 +155,11 @@ final class Stage3PayloadCodecTest {
     @Test
     void roundTripsNovaBroadcast() {
         assertRoundTrip(new NovaBroadcastPacket(
-                        "message.starboundmc.nova.prologue.mineral_scan_started"),
+                "message.starboundmc.nova.prologue.mineral_scan_started"),
                 NovaBroadcastPacket.STREAM_CODEC);
+        assertRoundTrip(new HudBootstrapStatePacket(
+                CoreState.OFFLINE, true, false, false),
+                HudBootstrapStatePacket.STREAM_CODEC);
     }
 
     private static <T extends CustomPacketPayload> void assertRoundTrip(

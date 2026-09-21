@@ -27,6 +27,20 @@ class PlayerStoryStateTest
     }
 
     @Test
+    void debugSkipCompletesOnlyThePersonalPrologue()
+    {
+        PlayerStoryState state = PlayerStoryState.DEFAULT.debugCompletePrologue();
+
+        assertTrue(state.identityConfirmed());
+        assertTrue(state.hasReadAllRequiredTopics());
+        assertTrue(state.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR));
+        assertTrue(state.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        assertTrue(state.hasFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST));
+        assertFalse(state.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED));
+        assertSame(state, state.debugCompletePrologue());
+    }
+
+    @Test
     void personalFlagsRoundTripThroughAttachmentCodec()
     {
         PlayerStoryState expected = PlayerStoryState.DEFAULT
@@ -55,7 +69,7 @@ class PlayerStoryStateTest
         assertTrue(restored.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED));
         assertTrue(restored.hasFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST));
         assertEquals(10L, restored.revision());
-        assertEquals(0xFF, PlayerStoryFlag.knownMask());
+        assertEquals(0x1FF, PlayerStoryFlag.knownMask());
     }
 
     @Test
@@ -81,5 +95,31 @@ class PlayerStoryStateTest
 
         assertSame(future, future.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
         assertSame(future, future.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
+    }
+
+    @Test
+    void legacyOnlineKnowledgeMigratesWithoutReplayingPersonalInitialization() {
+        var old = new net.minecraft.nbt.CompoundTag();
+        old.putInt("schema_version", 1);
+        old.putInt("flags_mask", PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask());
+        var migrated = PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow();
+        assertEquals(PlayerStoryState.CURRENT_SCHEMA_VERSION, migrated.schemaVersion());
+        assertTrue(migrated.hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
+
+        old.remove("schema_version");
+        assertTrue(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow()
+                .hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
+        old.putInt("flags_mask", PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask());
+        assertFalse(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow()
+                .hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
+    }
+
+    @Test
+    void currentOnlineBroadcastIsNotAPresentationReceipt() {
+        var personal = PlayerStoryState.DEFAULT.withFlag(PlayerStoryFlag.CORE_ONLINE_BROADCAST);
+        var restored = PlayerStoryState.CODEC.parse(NbtOps.INSTANCE,
+                PlayerStoryState.CODEC.encodeStart(NbtOps.INSTANCE, personal).getOrThrow()).getOrThrow();
+        assertFalse(restored.hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
+        assertTrue(restored.debugCompletePrologue().hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
     }
 }

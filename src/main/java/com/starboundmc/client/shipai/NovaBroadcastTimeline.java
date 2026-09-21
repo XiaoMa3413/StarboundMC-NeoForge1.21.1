@@ -126,6 +126,18 @@ final class NovaBroadcastTimeline
         return pending.size() + (active == null ? 0 : 1);
     }
 
+    void discardMessages(java.util.function.Predicate<String> obsolete) {
+        pending.removeIf(message -> obsolete.test(message.translationKey()));
+        if (active != null && obsolete.test(active.translationKey())) {
+            active = null;
+            phase = Phase.IDLE;
+            phaseTicks = 0;
+            pauseTicks = 0;
+            betweenMessageTicks = 0;
+            snapshot = Snapshot.IDLE;
+        }
+    }
+
     void reset()
     {
         pending.clear();

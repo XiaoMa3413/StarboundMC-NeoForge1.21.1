@@ -23,8 +23,8 @@ import java.util.UUID;
  */
 public final class ShipStoryBroadcastService
 {
-    /** A short grace period lets the player finish spawning before chat opens. */
-    public static final long INITIAL_WAKE_DELAY_TICKS = 20L;
+    /** A three-second grace period lets the player arrive and notice the quiet ship. */
+    public static final long INITIAL_WAKE_DELAY_TICKS = 60L;
     /** The locating hint is sent once, after roughly six seconds without contact. */
     public static final long TERMINAL_REMINDER_DELAY_TICKS = 120L;
     /** Give the player time to arrive and orient before the surface tutorial appears. */
@@ -84,6 +84,7 @@ public final class ShipStoryBroadcastService
                 && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             scheduleMatterManipulatorTutorial(player);
 
+        sendHudBootstrapState(player);
         if (shared.core() == CoreState.ONLINE)
             sendVoxelIntroductionOnce(player);
     }
@@ -93,6 +94,24 @@ public final class ShipStoryBroadcastService
     {
         if (player != null)
             clearPending(player.getUUID());
+    }
+
+    /**
+     * Marks one player's personal prologue as skipped and cancels every cue
+     * that was waiting to be delivered for it.
+     */
+    public static boolean debugSkipPrologue(ServerPlayer player)
+    {
+        if (player == null || player.getServer() == null)
+            return false;
+
+        clearPending(player.getUUID());
+        PlayerStoryState previous = player.getData(ModAttachments.PLAYER_STORY);
+        PlayerStoryState updated = previous.debugCompletePrologue();
+        if (updated != previous)
+            player.setData(ModAttachments.PLAYER_STORY, updated);
+        sendHudBootstrapState(player);
+        return updated != previous;
     }
 
     /** Schedules the personal surface tutorial without marking it read early. */
@@ -175,10 +194,10 @@ public final class ShipStoryBroadcastService
         reminderDueAt.remove(id);
 
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
-            return;
-        player.setData(ModAttachments.PLAYER_STORY,
-                personal.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        if (personal.isWritable() && !personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
+            player.setData(ModAttachments.PLAYER_STORY,
+                    personal.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
+        sendHudBootstrapState(player);
     }
 
     /** Emits due cues on the server thread. */
@@ -237,6 +256,7 @@ public final class ShipStoryBroadcastService
     {
         if (server == null)
             return;
+        HudStateService.syncAll(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers())
         {
             sendOnce(player, PlayerStoryFlag.CORE_ONLINE_BROADCAST,
@@ -343,6 +363,11 @@ public final class ShipStoryBroadcastService
     private static void sendNova(ServerPlayer player, String translationKey)
     {
         ModNetwork.sendToPlayer(player, new NovaBroadcastPacket(translationKey));
+    }
+
+    private static void sendHudBootstrapState(ServerPlayer player)
+    {
+        HudStateService.syncPlayer(player);
     }
 
     private static void clearPending(UUID id)

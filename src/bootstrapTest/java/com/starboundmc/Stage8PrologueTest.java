@@ -37,9 +37,13 @@ final class Stage8PrologueTest
         assertTrue(events.contains("restoreHyperdrive"));
         assertTrue(events.contains("replay_mineral_scan"));
         assertTrue(events.contains("replayMineralScan"));
+        assertTrue(events.contains("skip_prologue"));
+        assertTrue(events.contains("debugCompletePrologue"));
+        assertTrue(events.contains("debugSkipPrologue"));
         assertTrue(events.contains("syncOpenScreens"));
         assertTrue(story.contains("ShipStoryBroadcastService.tick"));
         assertTrue(service.contains("INITIAL_WAKE_DELAY_TICKS"));
+        assertTrue(service.contains("INITIAL_WAKE_DELAY_TICKS = 60L"));
         assertTrue(service.contains("TERMINAL_REMINDER_DELAY_TICKS"));
         assertTrue(service.contains("SURFACE_TUTORIAL_DELAY_TICKS = 120L"));
         assertTrue(service.contains("MINERAL_SCAN_START_DELAY_TICKS = 300L"));
@@ -73,6 +77,46 @@ final class Stage8PrologueTest
         assertTrue(story.contains("sendSurfaceArrivalOnce"));
         assertTrue(travel.contains("ShipStoryService.onPlanetSurfaceArrival(player)"));
         assertTrue(teleporter.contains("ShipStoryService.onPlanetSurfaceArrival(player)"));
+    }
+
+    @Test
+    void wakeBroadcastDrivesAReconnectSafeHudBootstrapAndWorldLockedTerminalGuide()
+            throws IOException
+    {
+        String broadcast = source("story/ShipStoryBroadcastService.java");
+        String handler = source("network/ClientPayloadHandler.java");
+        String controller = source("client/hud/HudBootController.java");
+        String provider = source("client/hud/provider/TutorialTargetProvider.java");
+        assertTrue(broadcast.contains("HudStateService.syncPlayer"));
+        assertTrue(broadcast.contains("INITIAL_WAKE_BROADCAST"));
+        assertTrue(handler.contains("HudBootController.INSTANCE.onNovaBroadcast"));
+        assertTrue(handler.contains("HudBootController.INSTANCE.applyServerState"));
+        assertTrue(controller.contains("STARTING_TICKS = 130"));
+        assertTrue(controller.contains("PROMPT_END_TICK = 70"));
+        assertTrue(controller.contains("STATUS_STEP_COUNT = 6"));
+        assertTrue(controller.contains("State.SAFE_MODE"));
+        assertTrue(provider.contains("ShipStructure.SHIP_AI_TERMINAL_POS"));
+        assertFalse(provider.contains("HudVisor"));
+
+        String english = Files.readString(Path.of(
+                "src/main/resources/assets/starboundmc/lang/en_us.json"));
+        String chinese = Files.readString(Path.of(
+                "src/main/resources/assets/starboundmc/lang/zh_cn.json"));
+        for (String key : new String[]{
+                "hud.starboundmc.ar.ai_terminal",
+                "hud.starboundmc.boot.starting",
+                "hud.starboundmc.boot.safe_mode",
+                "hud.starboundmc.boot.restarting",
+                "hud.starboundmc.boot.visor_bus",
+                "hud.starboundmc.boot.visual_link",
+                "hud.starboundmc.boot.optical_array",
+                "hud.starboundmc.boot.local_nav",
+                "hud.starboundmc.boot.ship_network",
+                "hud.starboundmc.boot.nova_core"})
+        {
+            assertTrue(english.contains("\"" + key + "\""), key + " en_us");
+            assertTrue(chinese.contains("\"" + key + "\""), key + " zh_cn");
+        }
     }
 
     @Test
@@ -128,7 +172,10 @@ final class Stage8PrologueTest
                 + "Restarting core systems…\""));
         assertTrue(chinese.contains("少量钻石"));
         assertTrue(chinese.contains("幸运的是，我们目前位于一颗宜居星球的轨道上"));
-        assertTrue(chinese.contains("核▒心状▓态：#%/无法读取"));
+        assertTrue(chinese.contains("检测到你已经苏醒"));
+        assertTrue(chinese.contains("我将协助你恢复飞船系统"));
+        assertTrue(english.contains("I have detected that you are awake"));
+        assertTrue(english.contains("I will assist you in restoring the ship's systems"));
         assertFalse(chinese.contains("确认你仍然存活"));
         assertFalse(chinese.contains("恭喜你获得了木材"));
     }
@@ -155,6 +202,8 @@ final class Stage8PrologueTest
         assertTrue(timeline.contains("MIN_PROGRESS_DOTS = 6"));
         assertTrue(timeline.contains("isProgressDot(active.body(), revealed)"));
         assertFalse(broadcastState.contains("rescaleChat"));
+        assertTrue(broadcastState.contains("deferredBootMessages"));
+        assertTrue(broadcastState.contains("HudBootController.INSTANCE.defersCommunication()"));
         assertTrue(broadcastState.contains("addMessage(historyMessage"));
         assertTrue(hud.contains("implements ModularHudLayer"));
         assertTrue(root.contains("new NovaPortraitElement()"));
