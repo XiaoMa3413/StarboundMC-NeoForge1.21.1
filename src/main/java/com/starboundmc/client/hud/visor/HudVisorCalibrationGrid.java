@@ -3,10 +3,11 @@ package com.starboundmc.client.hud.visor;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
+import com.starboundmc.client.hud.visor.HudVisorGeometry.Profile;
 
 /**
  * Development-only overlay enabled with {@code -Dstarboundmc.debug.hudVisorGrid=true}.
- * It draws direct low-opacity lines, so enabling it never allocates a full-screen framebuffer.
+ * Component grids follow the actual projection; two full-width guides reveal the shared reference curves.
  */
 public final class HudVisorCalibrationGrid {
     private static final boolean ENABLED = Boolean.getBoolean("starboundmc.debug.hudVisorGrid");
@@ -16,44 +17,38 @@ public final class HudVisorCalibrationGrid {
 
     public static boolean enabled() { return ENABLED; }
 
-    public static void render(GuiGraphics graphics) {
-        if (!ENABLED)
-            return;
-        for (int line = -8; line <= 8; line += 2) {
-            float coordinate = line / 10F;
-            segment(graphics, coordinate, -.82F, coordinate, .82F);
-            segment(graphics, -.92F, coordinate, .92F, coordinate);
-        }
-        segment(graphics, -1F, 0F, 1F, 0F);
-        segment(graphics, 0F, -1F, 0F, 1F);
+    public static void renderGuides(GuiGraphics graphics, float upperY, float lowerY,
+                                    Profile upper, Profile lower) {
+        if (!ENABLED) return;
+        guide(graphics, upperY, upper);
+        guide(graphics, lowerY, lower);
     }
 
-    private static void segment(GuiGraphics graphics, float fromX, float fromY,
-                                float toX, float toY) {
-        float width = graphics.guiWidth();
-        float height = graphics.guiHeight();
-        float rawFromX = (fromX + 1F) * width * .5F;
-        float rawFromY = (fromY + 1F) * height * .5F;
-        float rawToX = (toX + 1F) * width * .5F;
-        float rawToY = (toY + 1F) * height * .5F;
-        var from = HudVisorSurface.projectGui(rawFromX, rawFromY, width, height);
-        var to = HudVisorSurface.projectGui(rawToX, rawToY, width, height);
-        float dx = to.x() - from.x();
-        float dy = to.y() - from.y();
-        float length = (float) Math.sqrt(dx * dx + dy * dy);
-        if (length < .001F)
-            return;
-        float nx = -dy / length * .3F;
-        float ny = dx / length * .3F;
-        float fade = Math.min(HudVisorSurface.edgeFade(fromX, fromY),
-                HudVisorSurface.edgeFade(toX, toY));
-        int alpha = Math.round(38 * fade);
-        int color = alpha << 24 | RGB;
+    private static void guide(GuiGraphics graphics, float baseline, Profile profile) {
         var buffer = graphics.bufferSource().getBuffer(RenderType.gui());
         var pose = graphics.pose().last().pose();
-        buffer.addVertex(pose, from.x() + nx, from.y() + ny, 0).setColor(color);
-        buffer.addVertex(pose, to.x() + nx, to.y() + ny, 0).setColor(color);
-        buffer.addVertex(pose, to.x() - nx, to.y() - ny, 0).setColor(color);
-        buffer.addVertex(pose, from.x() - nx, from.y() - ny, 0).setColor(color);
+        for (int x = 0; x < graphics.guiWidth(); x += 4) {
+            float nextX = Math.min(x + 4, graphics.guiWidth());
+            float y = baseline + HudVisorGeometry.curveOffset(profile, x, graphics.guiWidth(), graphics.guiHeight());
+            float nextY = baseline + HudVisorGeometry.curveOffset(profile, nextX, graphics.guiWidth(), graphics.guiHeight());
+            buffer.addVertex(pose, x, y - .25F, 0).setColor(0x4095E8E2);
+            buffer.addVertex(pose, x, y + .25F, 0).setColor(0x4095E8E2);
+            buffer.addVertex(pose, nextX, nextY + .25F, 0).setColor(0x4095E8E2);
+            buffer.addVertex(pose, nextX, nextY - .25F, 0).setColor(0x4095E8E2);
+        }
+    }
+
+    public static void render(GuiGraphics graphics, int width, int height) {
+        if (!ENABLED)
+            return;
+        int color = 38 << 24 | RGB;
+        for (int x = 0; x < width; x += 16)
+            graphics.fill(x, 0, x + 1, height, color);
+        for (int y = 0; y < height; y += 8)
+            graphics.fill(0, y, width, y + 1, color);
+        graphics.fill(width - 1, 0, width, height, color);
+        graphics.fill(0, height - 1, width, height, color);
+        graphics.fill(width / 2 - 3, height / 2, width / 2 + 4, height / 2 + 1, 0x8095E8E2);
+        graphics.fill(width / 2, height / 2 - 3, width / 2 + 1, height / 2 + 4, 0x8095E8E2);
     }
 }

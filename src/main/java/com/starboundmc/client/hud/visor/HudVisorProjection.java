@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -22,27 +23,42 @@ import org.lwjgl.opengl.GL30;
 import java.util.function.Consumer;
 
 /**
- * Renders one compact HUD component into its own texture, then applies shared low-intensity edge
- * optics at component level. A single quad preserves glyph geometry instead of bending every
- * two-pixel cell inside the text.
+ * Supersampled artwork projected onto its cached section of the screen-wide reference curve.
+ * A lower-resolution halo is prepared with nine flat samples, then uses the same mesh as the core.
  */
 public final class HudVisorProjection implements AutoCloseable {
-    private static final float GLOW_SPREAD = .45F;
-    private static final float GLOW_ALPHA = .10F;
+    private static final float GLOW_RADIUS = .7F;
+    private static final float GLOW_ALPHA = .08F;
+    private static final int PADDING = 2;
+    private static final int MESH_STEP = 2;
+    private static final boolean GLOW_ENABLED = !Boolean.getBoolean("starboundmc.debug.hudVisorNoGlow");
 
     private final int contentWidth;
     private final int contentHeight;
+    private final HudVisorGeometry.Profile profile;
+    private final boolean centerAnchor;
     private TextureTarget target;
+    private TextureTarget haloTarget;
+    private VertexBuffer mesh;
+    private HudVisorGeometry.Placement meshPlacement;
 
     public HudVisorProjection(int contentWidth, int contentHeight) {
+        this(contentWidth, contentHeight, HudVisorGeometry.Profile.FLAT);
+    }
+
+    public HudVisorProjection(int contentWidth, int contentHeight, HudVisorGeometry.Profile profile) {
         if (contentWidth <= 0 || contentHeight <= 0)
             throw new IllegalArgumentException("Visor targets must have positive dimensions");
         this.contentWidth = contentWidth;
         this.contentHeight = contentHeight;
+        this.centerAnchor = profile == HudVisorGeometry.Profile.SURVIVAL;
+        this.profile = HudVisorGeometry.comparison(profile,
+                System.getProperty("starboundmc.debug.hudVisorProfile", "screen"));
     }
 
     public int contentWidth() { return contentWidth; }
     public int contentHeight() { return contentHeight; }
+    public HudVisorGeometry.Profile profile() { return profile; }
 
     public void draw(GuiGraphics destination, float x, float y, float displayWidth,
                      float displayHeight, Consumer<GuiGraphics> content) {
@@ -51,8 +67,9 @@ public final class HudVisorProjection implements AutoCloseable {
 
     public void draw(GuiGraphics destination, float x, float y, float displayWidth,
                      float displayHeight, float opacity, Consumer<GuiGraphics> content) {
-        if (opacity <= .001F || displayWidth <= 0 || displayHeight <= 0)
+        if (!Float.isFinite(opacity) || opacity <= .001F || displayWidth <= 0 || displayHeight <= 0)
             return;
+        opacity = Math.clamp(opacity, 0F, 1F);
 
         var mc = Minecraft.getInstance();
         int scale = Math.clamp((int) Math.ceil(mc.getWindow().getGuiScale() * 2), 4, 12);
@@ -88,17 +105,20 @@ public final class HudVisorProjection implements AutoCloseable {
                 RenderSystem.disableScissor();
                 RenderSystem.colorMask(true, true, true, true);
                 RenderSystem.blendEquation(GL14.GL_FUNC_ADD);
-                ensureTarget(scale);
+                ensureTargets(scale);
                 target.clear(Minecraft.ON_OSX);
                 target.bindWrite(true);
                 modelView.identity();
                 RenderSystem.applyModelViewMatrix();
-                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, contentWidth,
-                        contentHeight, 0, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
+                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(-PADDING, contentWidth + PADDING,
+                        contentHeight + PADDING, -PADDING, -1000, 1000), VertexSorting.ORTHOGRAPHIC_Z);
                 RenderSystem.setShaderColor(1, 1, 1, 1);
                 var canvas = new GuiGraphics(mc, mc.renderBuffers().bufferSource());
                 content.accept(canvas);
+                HudVisorCalibrationGrid.render(canvas, contentWidth, contentHeight);
                 canvas.flush();
+                if (GLOW_ENABLED)
+                    prepareHalo(displayWidth / contentWidth, displayHeight / contentHeight);
             } finally {
                 modelView.popMatrix();
                 RenderSystem.applyModelViewMatrix();
@@ -117,19 +137,26 @@ public final class HudVisorProjection implements AutoCloseable {
             RenderSystem.depthMask(false);
             RenderSystem.disableCull();
             RenderSystem.enableBlend();
+            RenderSystem.setShader(LDLibShaders::getGuiTexture);
+            float centerX = centerAnchor ? x : x + displayWidth / 2;
+            float referenceY = centerAnchor ? y : y + displayHeight / 2;
+            ensureMesh(new HudVisorGeometry.Placement(destination.guiWidth(), destination.guiHeight(),
+                    centerX, displayWidth / contentWidth, displayHeight / contentHeight));
+            var model = new Matrix4f(RenderSystem.getModelViewMatrix())
+                    .mul(destination.pose().last().pose()).translate(centerX, referenceY, 0);
+            if (GLOW_ENABLED) {
+                float glow = opacity * GLOW_ALPHA;
+                RenderSystem.setShaderColor(glow, glow, glow, glow);
+                RenderSystem.blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE,
+                        GL11.GL_ZERO, GL11.GL_ONE);
+                drawMesh(model, haloTarget);
+            }
+            // Premultiplied RGB and alpha must both follow the component's fade.
+            // Uniform opacity preserves small fades that would quantize away in vertex colors.
+            RenderSystem.setShaderColor(opacity, opacity, opacity, opacity);
             RenderSystem.blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA,
                     GL11.GL_ONE, GL11.GL_ONE_MINUS_SRC_ALPHA);
-            RenderSystem.setShader(LDLibShaders::getGuiTexture);
-            RenderSystem.setShaderTexture(0, target.getColorTextureId());
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,
-                    DefaultVertexFormat.POSITION_TEX_COLOR);
-            var pose = destination.pose().last().pose();
-            quad(buffer, pose, destination, x - GLOW_SPREAD, y - GLOW_SPREAD,
-                    displayWidth + GLOW_SPREAD * 2, displayHeight + GLOW_SPREAD * 2,
-                    opacity * GLOW_ALPHA);
-            quad(buffer, pose, destination, x, y, displayWidth, displayHeight, opacity);
-            BufferUploader.drawWithShader(buffer.buildOrThrow());
+            drawMesh(model, target);
         } finally {
             RenderSystem.setShader(() -> shader);
             RenderSystem.setShaderTexture(0, sampler);
@@ -143,20 +170,96 @@ public final class HudVisorProjection implements AutoCloseable {
         }
     }
 
-    private void quad(BufferBuilder buffer, Matrix4f pose, GuiGraphics destination,
-                      float x, float y, float displayWidth, float displayHeight, float opacity) {
-        vertex(buffer, pose, destination, x, y, displayWidth, displayHeight, 0, 0, opacity);
-        vertex(buffer, pose, destination, x, y, displayWidth, displayHeight,
-                0, contentHeight, opacity);
-        vertex(buffer, pose, destination, x, y, displayWidth, displayHeight,
-                contentWidth, contentHeight, opacity);
-        vertex(buffer, pose, destination, x, y, displayWidth, displayHeight,
-                contentWidth, 0, opacity);
+    private void prepareHalo(float scaleX, float scaleY) {
+        haloTarget.clear(Minecraft.ON_OSX);
+        haloTarget.bindWrite(true);
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.disableCull();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE, GL11.GL_ONE, GL11.GL_ONE);
+        RenderSystem.setShader(LDLibShaders::getGuiTexture);
+        RenderSystem.setShaderTexture(0, target.getColorTextureId());
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,
+                DefaultVertexFormat.POSITION_TEX_COLOR);
+        for (int row = -1; row <= 1; row++) {
+            for (int column = -1; column <= 1; column++) {
+                // Approximate [1,2,1] x [1,2,1]; normalized exactly after 8-bit quantization.
+                int weight = row == 0 && column == 0 ? 63 : row == 0 || column == 0 ? 32 : 16;
+                float dx = column * GLOW_RADIUS / scaleX;
+                float dy = row * GLOW_RADIUS / scaleY;
+                sourceVertex(buffer, -PADDING, -PADDING, dx, dy, weight);
+                sourceVertex(buffer, -PADDING, contentHeight + PADDING, dx, dy, weight);
+                sourceVertex(buffer, contentWidth + PADDING, contentHeight + PADDING, dx, dy, weight);
+                sourceVertex(buffer, contentWidth + PADDING, -PADDING, dx, dy, weight);
+            }
+        }
+        BufferUploader.drawWithShader(buffer.buildOrThrow());
     }
 
-    private void ensureTarget(int scale) {
-        int width = contentWidth * scale;
-        int height = contentHeight * scale;
+    private void sourceVertex(BufferBuilder buffer, float u, float v, float dx, float dy, int weight) {
+        buffer.addVertex(u + dx, v + dy, 0)
+                .setUv((u + PADDING) / (contentWidth + 2F * PADDING),
+                        1 - (v + PADDING) / (contentHeight + 2F * PADDING))
+                .setColor(weight, weight, weight, weight);
+    }
+
+    private void drawMesh(Matrix4f model, TextureTarget texture) {
+        RenderSystem.setShaderTexture(0, texture.getColorTextureId());
+        mesh.bind();
+        try {
+            mesh.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+        } finally {
+            VertexBuffer.unbind();
+        }
+    }
+
+    private void ensureMesh(HudVisorGeometry.Placement placement) {
+        if (mesh != null && !mesh.isInvalid() && placement.equals(meshPlacement)) return;
+        var buffer = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,
+                DefaultVertexFormat.POSITION_TEX_COLOR);
+        boolean flat = profile == HudVisorGeometry.Profile.FLAT;
+        int stepX = flat ? contentWidth + 2 * PADDING : MESH_STEP;
+        int stepY = flat ? contentHeight + 2 * PADDING : MESH_STEP;
+        for (int u = -PADDING; u < contentWidth + PADDING; u += stepX) {
+            int right = Math.min(u + stepX, contentWidth + PADDING);
+            for (int v = -PADDING; v < contentHeight + PADDING; v += stepY) {
+                int bottom = Math.min(v + stepY, contentHeight + PADDING);
+                meshVertex(buffer, u, v, placement);
+                meshVertex(buffer, u, bottom, placement);
+                meshVertex(buffer, right, bottom, placement);
+                meshVertex(buffer, right, v, placement);
+            }
+        }
+        if (mesh == null || mesh.isInvalid()) mesh = new VertexBuffer(VertexBuffer.Usage.STATIC);
+        mesh.bind();
+        try {
+            mesh.upload(buffer.buildOrThrow());
+            meshPlacement = placement;
+        } finally {
+            VertexBuffer.unbind();
+        }
+    }
+
+    private void meshVertex(BufferBuilder buffer, float u, float v, HudVisorGeometry.Placement placement) {
+        var point = HudVisorGeometry.project(profile, u, v, contentWidth, contentHeight, placement);
+        float fade = HudVisorGeometry.opacity(profile, u);
+        buffer.addVertex(point.x(), point.y(), 0)
+                .setUv((u + PADDING) / (contentWidth + 2F * PADDING),
+                        1 - (v + PADDING) / (contentHeight + 2F * PADDING))
+                .setColor(fade, fade, fade, fade);
+    }
+
+    private void ensureTargets(int scale) {
+        target = ensureTarget(target, scale);
+        if (GLOW_ENABLED)
+            haloTarget = ensureTarget(haloTarget, Math.max(2, scale / 2));
+    }
+
+    private TextureTarget ensureTarget(TextureTarget target, int scale) {
+        int width = (contentWidth + 2 * PADDING) * scale;
+        int height = (contentHeight + 2 * PADDING) * scale;
         if (target == null) {
             target = new TextureTarget(width, height, false, Minecraft.ON_OSX);
             target.setClearColor(0, 0, 0, 0);
@@ -165,31 +268,24 @@ public final class HudVisorProjection implements AutoCloseable {
             target.resize(width, height, Minecraft.ON_OSX);
             target.setFilterMode(GL11.GL_LINEAR);
         }
-    }
-
-    private void vertex(BufferBuilder buffer, Matrix4f pose, GuiGraphics destination,
-                        float x, float y, float displayWidth, float displayHeight,
-                        float u, float v, float opacity) {
-        float guiX = x + u * displayWidth / contentWidth;
-        float guiY = y + v * displayHeight / contentHeight;
-        var point = HudVisorSurface.projectGui(guiX, guiY,
-                destination.guiWidth(), destination.guiHeight());
-        float fade = HudVisorSurface.edgeFadeGui(guiX, guiY,
-                destination.guiWidth(), destination.guiHeight()) * Math.clamp(opacity, 0F, 1F);
-        buffer.addVertex(pose, point.x(), point.y(), 0)
-                .setUv(u / contentWidth, 1F - v / contentHeight)
-                .setColor(fade, fade, fade, fade);
+        return target;
     }
 
     @Override
     public void close() {
-        if (target == null)
-            return;
+        if (mesh != null) {
+            mesh.close();
+            mesh = null;
+        }
+        meshPlacement = null;
+        if (target == null && haloTarget == null) return;
         int drawFbo = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         int readFbo = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
         try {
-            target.destroyBuffers();
+            if (target != null) target.destroyBuffers();
             target = null;
+            if (haloTarget != null) haloTarget.destroyBuffers();
+            haloTarget = null;
         } finally {
             GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, drawFbo);
             GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readFbo);

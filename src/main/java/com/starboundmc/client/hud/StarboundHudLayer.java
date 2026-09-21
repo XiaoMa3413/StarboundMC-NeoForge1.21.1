@@ -7,7 +7,10 @@ import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.client.hud.ar.ArWorldRenderer;
+import com.starboundmc.client.hud.visor.HudVisorGeometry;
 import com.starboundmc.client.hud.visor.HudVisorCalibrationGrid;
+import com.starboundmc.client.hud.visor.HudVisorGeometry.Profile;
+import com.starboundmc.client.hud.visor.HudVisorMotion;
 import com.starboundmc.client.hud.visor.HudVisorProjection;
 import com.starboundmc.client.hud.visor.VisorCompassRenderer;
 import com.starboundmc.client.epp.EppClientState;
@@ -16,7 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
-import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -30,9 +32,10 @@ public final class StarboundHudLayer implements ModularHudLayer {
     private static final int COMPONENT_HEIGHT = 48;
     public static final StarboundHudLayer INSTANCE = new StarboundHudLayer();
     private ModularUI ui;
-    private final HudVisorProjection survivalProjection = new HudVisorProjection(SURVIVAL_WIDTH, COMPONENT_HEIGHT);
-    private final HudVisorProjection compassProjection = new HudVisorProjection(272, COMPONENT_HEIGHT);
-    private final HudVisorProjection controlsProjection = new HudVisorProjection(360, COMPONENT_HEIGHT);
+    private final HudVisorMotion visorMotion = new HudVisorMotion();
+    private final HudVisorProjection survivalProjection = new HudVisorProjection(SURVIVAL_WIDTH, COMPONENT_HEIGHT, Profile.SURVIVAL);
+    private final HudVisorProjection compassProjection = new HudVisorProjection(272, COMPONENT_HEIGHT, Profile.COMPASS);
+    private final HudVisorProjection controlsProjection = new HudVisorProjection(360, COMPONENT_HEIGHT, Profile.EVA_CONTROLS);
     private final HudVisorProjection bootStatusProjection = new HudVisorProjection(
             HudBootStatusRenderer.WIDTH, HudBootStatusRenderer.HEIGHT);
     private final HudVisorProjection bootPromptProjection = new HudVisorProjection(
@@ -40,10 +43,10 @@ public final class StarboundHudLayer implements ModularHudLayer {
     @Override public ModularUI getModularUI() {
         var mc = Minecraft.getInstance();
         if (mc.player == null || !mc.player.isAlive()) { releaseUi(); return null; }
-        if (mc.options.hideGui) return null;
+        if (mc.options.hideGui) { resetVisorMotion(); return null; }
         if (ui == null) ui = ModularUI.of(UI.of(
                 new HudRoot(survivalProjection, compassProjection, controlsProjection,
-                        bootStatusProjection, bootPromptProjection),
+                        bootStatusProjection, bootPromptProjection, visorMotion),
                 ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         return ui;
     }
@@ -56,7 +59,10 @@ public final class StarboundHudLayer implements ModularHudLayer {
         HudBootController.INSTANCE.reset();
     }
 
+    public void resetVisorMotion() { visorMotion.reset(); }
+
     private void releaseUi() {
+        resetVisorMotion();
         if (ui != null) ui.onRemoved();
         ui = null;
         survivalProjection.close();
@@ -73,7 +79,9 @@ public final class StarboundHudLayer implements ModularHudLayer {
     }
     private static final class HudRoot extends UIElement {
         private long lastFrame;
-        private float lastYaw, lastPitch, driftX, driftY;
+        private final HudVisorMotion motion;
+        private net.minecraft.world.entity.Entity lastCameraEntity;
+        private net.minecraft.client.multiplayer.ClientLevel lastCameraLevel;
         private final OxygenHudFade oxygenFade = new OxygenHudFade();
         private final OxygenHudFade coldFade = new OxygenHudFade();
         private final OxygenHudFade heatFade = new OxygenHudFade();
@@ -88,23 +96,33 @@ public final class StarboundHudLayer implements ModularHudLayer {
 
         HudRoot(HudVisorProjection survivalProjection, HudVisorProjection compassProjection,
                 HudVisorProjection controlsProjection, HudVisorProjection bootStatusProjection,
-                HudVisorProjection bootPromptProjection) {
+                HudVisorProjection bootPromptProjection, HudVisorMotion motion) {
             this.survivalProjection = survivalProjection;
             this.compassProjection = compassProjection;
             this.controlsProjection = controlsProjection;
             this.bootStatusProjection = bootStatusProjection;
             this.bootPromptProjection = bootPromptProjection;
+            this.motion = motion;
             layout(l -> l.widthPercent(100).heightPercent(100)); setAllowHitTest(false);
         }
         @Override public void drawBackgroundAdditional(GUIContext context) {
             var mc = Minecraft.getInstance();
-            float seconds = lastFrame == 0 ? 0 : Math.min(.1f, (System.nanoTime() - lastFrame) / 1_000_000_000f);
-            updateDrift(mc);
-            context.graphics.pose().pushPose();
-            context.graphics.pose().translate(driftX, driftY, 0);
-            HudVisorCalibrationGrid.render(context.graphics);
-            context.graphics.pose().popPose();
+            long now = System.nanoTime();
+            double elapsed = lastFrame == 0 ? 0 : (now - lastFrame) / 1_000_000_000D;
+            lastFrame = now;
+            float seconds = (float) Math.min(.1, elapsed);
+            updateDrift(mc, elapsed);
             var boot = HudBootController.INSTANCE.presentation(context.partialTick);
+            if (HudVisorCalibrationGrid.enabled()) {
+                var g = context.graphics;
+                float bottom = HudVisorGeometry.survivalAnchor(g.guiWidth(), g.guiHeight(), 2, 1,
+                        survivalProjection.profile()).y();
+                g.pose().pushPose();
+                g.pose().translate(motion.x(), motion.y(), 0);
+                HudVisorCalibrationGrid.renderGuides(g, 42 + 56 * boot.statusOpacity(), bottom,
+                        compassProjection.profile(), survivalProjection.profile());
+                g.pose().popPose();
+            }
             if (mc.screen == null)
                 drawBootPresentation(context.graphics, boot);
             boolean eva = showEvaNavigation();
@@ -120,7 +138,6 @@ public final class StarboundHudLayer implements ModularHudLayer {
                         boot.statusOpacity());
             var s = EppClientState.snapshot; if (s == null) return;
             var g = context.graphics;
-            int x = g.guiWidth() - 140;
             float opacity = oxygenFade.update(
                     mc.isPaused() ? 0 : seconds, s.airless() || s.exposure() > 0 || s.refilling());
             boolean oxygenVisible = opacity > .001f;
@@ -131,10 +148,14 @@ public final class StarboundHudLayer implements ModularHudLayer {
             coldVisible = coldOpacity > .001f;
             heatVisible = heatOpacity > .001f;
             int rows = (oxygenVisible ? 1 : 0) + (coldVisible ? 1 : 0) + (heatVisible ? 1 : 0);
-            int y = g.guiHeight() - 82 - Math.max(0, rows - 2) * 40;
+            if (rows == 0) return;
+            var anchor = HudVisorGeometry.survivalAnchor(g.guiWidth(), g.guiHeight(), rows, 0,
+                    survivalProjection.profile());
+            float x = anchor.x();
+            float y = anchor.y();
             float visorOpacity = HudBootController.INSTANCE.visorOpacity();
             g.pose().pushPose();
-            g.pose().translate(driftX, driftY, 0);
+            g.pose().translate(motion.x(), motion.y(), 0);
             if (oxygenVisible) survivalProjection.draw(g, x, y,
                     SURVIVAL_WIDTH, COMPONENT_HEIGHT, opacity * visorOpacity,
                     canvas -> drawFlat(canvas, context.partialTick));
@@ -158,7 +179,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
                 float width = HudBootStatusRenderer.PROMPT_WIDTH * fit;
                 float height = HudBootStatusRenderer.PROMPT_HEIGHT * fit;
                 g.pose().pushPose();
-                g.pose().translate(driftX, driftY, 0);
+                g.pose().translate(motion.x(), motion.y(), 0);
                 bootPromptProjection.draw(g, (g.guiWidth() - width) / 2F,
                         (g.guiHeight() - height) / 2F, width, height, boot.promptOpacity(),
                         canvas -> HudBootStatusRenderer.drawPrompt(canvas, boot));
@@ -170,7 +191,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
                 float width = HudBootStatusRenderer.WIDTH * fit;
                 float height = HudBootStatusRenderer.HEIGHT * fit;
                 g.pose().pushPose();
-                g.pose().translate(driftX, driftY, 0);
+                g.pose().translate(motion.x(), motion.y(), 0);
                 bootStatusProjection.draw(g, g.guiWidth() - width - 10F, 10F,
                         width, height, boot.statusOpacity(),
                         canvas -> HudBootStatusRenderer.draw(canvas, boot));
@@ -187,7 +208,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             float visorOpacity = HudBootController.INSTANCE.visorOpacity();
             float bootOffset = 56F * bootStatusOpacity;
             g.pose().pushPose();
-            g.pose().translate(driftX, driftY, 0);
+            g.pose().translate(motion.x(), motion.y(), 0);
             compassProjection.draw(g, x - 136 * navFit, 18 + bootOffset,
                     272 * navFit, COMPONENT_HEIGHT * navFit, opacity * visorOpacity,
                     VisorCompassRenderer::draw);
@@ -225,7 +246,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             g.fill(6, 24, 122, 25, 0x28000000 | rgb);
             int filled = Math.round(116f * exposure / 100);
             if (filled > 0) g.fill(6, 24, 6 + filled, 25, 0xBA000000 | rgb);
-            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." + hazard, exposure), 9, 216, rgb);
+            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." + hazard, exposure), 9, 236, rgb);
             boolean protectedFromHazard = (heat ? s.heatProtection() : s.coldProtection()) > 0;
             boolean hazardous = (heat ? s.heatTier() : s.coldTier()) > 0;
             drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." +
@@ -241,7 +262,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             boolean danger = s.airless() && (!s.equipped() || warning >= 2);
             int rgb = danger ? 0xFF9477 : 0x95E8E2;
             float fraction = s.equipped() ? Math.clamp((float) s.oxygen() / Math.max(1, s.capacity()), 0f, 1f) : 0f;
-            // All content is flat here; only the final texture mesh bends it.
+            // Text, warning artwork and bars share one texture and the same local curve.
             int alpha = s.refilling()
                     ? 150 + (int) (35 * Math.sin((mc.player.tickCount + partialTick) * 0.16)) : 170;
             int filled = Math.round(116 * fraction);
@@ -252,7 +273,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             }
 
             String value = "O₂  " + (s.equipped() ? Math.round(100f * fraction) + "%" : "—");
-            drawFlatText(g, mc.font, Component.literal(value), 9, 216, rgb);
+            drawFlatText(g, mc.font, Component.literal(value), 9, 236, rgb);
             if (!s.equipped() || warning >= 1) {
                 // Amber stays steady; urgent warnings pulse once per second.
                 boolean urgent = !s.equipped() || warning >= 2;
@@ -295,29 +316,20 @@ public final class StarboundHudLayer implements ModularHudLayer {
             g.pose().pushPose();
             g.pose().translate((SURVIVAL_WIDTH - font.width(ordered) * scale) / 2, y, 0);
             g.pose().scale(scale, scale, 1);
-            g.drawString(font, ordered, 0, 0, (alpha << 24) | rgb, false);
+            g.drawString(font, ordered, 0, 0, (alpha << 24) | rgb, true);
             g.pose().popPose();
         }
 
         /** Tiny, bounded optical lag; reset after hiding, menus, pauses or camera cuts. */
-        private void updateDrift(Minecraft mc) {
-            long now = System.nanoTime();
-            float seconds = (now - lastFrame) / 1_000_000_000f;
-            float yaw = mc.gameRenderer.getMainCamera().getYRot();
-            float pitch = mc.gameRenderer.getMainCamera().getXRot();
-            float turn = Mth.wrapDegrees(yaw - lastYaw);
-            float tilt = pitch - lastPitch;
-            if (lastFrame == 0 || seconds > 0.25f || mc.isPaused() || mc.screen != null
-                    || !mc.options.getCameraType().isFirstPerson() || Math.abs(turn) > 45 || Math.abs(tilt) > 45) {
-                driftX = driftY = 0;
-            } else {
-                float decay = (float) Math.exp(-9 * seconds);
-                driftX = Math.clamp(driftX * decay - turn * 0.065f, -1.8f, 1.8f);
-                driftY = Math.clamp(driftY * decay + tilt * 0.045f, -1.2f, 1.2f);
-            }
-            lastFrame = now;
-            lastYaw = yaw;
-            lastPitch = pitch;
+        private void updateDrift(Minecraft mc, double seconds) {
+            var camera = mc.gameRenderer.getMainCamera();
+            if (camera.getEntity() != lastCameraEntity || mc.level != lastCameraLevel)
+                motion.reset();
+            lastCameraEntity = camera.getEntity();
+            lastCameraLevel = mc.level;
+            motion.update(seconds, camera.getYRot(), camera.getXRot(),
+                    !mc.isPaused() && mc.screen == null && !mc.options.hideGui
+                            && mc.options.getCameraType().isFirstPerson());
         }
     }
 }

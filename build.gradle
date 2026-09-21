@@ -212,6 +212,9 @@ if (project.hasProperty('shipGameTests')) {
     sourceSets.main.java.srcDir('src/gameTest/java')
     sourceSets.main.resources.srcDir('src/gameTest/resources')
 }
+if (project.hasProperty('hudVisorSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -227,6 +230,12 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('hudVisorSmoke')) {
+                gameDirectory = file('run-hud-visor-smoke')
+                systemProperty 'starboundmc.debug.hudVisorSmoke', 'true'
+                programArguments.addAll '--width', (project.findProperty('hudVisorSmokeWidth') ?: '1920').toString(),
+                        '--height', (project.findProperty('hudVisorSmokeHeight') ?: '1080').toString()
+            }
             if (project.hasProperty('quickPlayWorld')) {
                 programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
             }
@@ -255,6 +264,12 @@ neoForge {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             if (project.hasProperty('hudCalibrationGrid')) {
                 systemProperty 'starboundmc.debug.hudVisorGrid', 'true'
+            }
+            if (project.hasProperty('hudVisorProfile')) {
+                systemProperty 'starboundmc.debug.hudVisorProfile', project.property('hudVisorProfile').toString()
+            }
+            if (project.hasProperty('hudVisorNoGlow')) {
+                systemProperty 'starboundmc.debug.hudVisorNoGlow', 'true'
             }
             logLevel = org.slf4j.event.Level.DEBUG
         }
