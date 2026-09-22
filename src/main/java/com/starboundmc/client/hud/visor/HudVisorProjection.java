@@ -67,6 +67,11 @@ public final class HudVisorProjection implements AutoCloseable {
 
     public void draw(GuiGraphics destination, float x, float y, float displayWidth,
                      float displayHeight, float opacity, Consumer<GuiGraphics> content) {
+        draw(destination, x, y, displayWidth, displayHeight, opacity, GLOW_ALPHA, content);
+    }
+
+    public void draw(GuiGraphics destination, float x, float y, float displayWidth,
+                     float displayHeight, float opacity, float glowStrength, Consumer<GuiGraphics> content) {
         if (!Float.isFinite(opacity) || opacity <= .001F || displayWidth <= 0 || displayHeight <= 0)
             return;
         opacity = Math.clamp(opacity, 0F, 1F);
@@ -145,7 +150,8 @@ public final class HudVisorProjection implements AutoCloseable {
             var model = new Matrix4f(RenderSystem.getModelViewMatrix())
                     .mul(destination.pose().last().pose()).translate(centerX, referenceY, 0);
             if (GLOW_ENABLED) {
-                float glow = opacity * GLOW_ALPHA;
+                float glow = opacity * (Float.isFinite(glowStrength)
+                        ? Math.clamp(glowStrength, 0F, .16F) : GLOW_ALPHA);
                 RenderSystem.setShaderColor(glow, glow, glow, glow);
                 RenderSystem.blendFuncSeparate(GL11.GL_ONE, GL11.GL_ONE,
                         GL11.GL_ZERO, GL11.GL_ONE);

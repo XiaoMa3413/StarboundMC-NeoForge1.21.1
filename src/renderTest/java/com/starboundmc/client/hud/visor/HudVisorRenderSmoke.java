@@ -4,6 +4,7 @@ package com.starboundmc.client.hud.visor;
 import com.lowdragmc.lowdraglib2.client.shader.LDLibShaders;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.hud.animation.HudComponentPresentation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.neoforged.api.distmarker.Dist;
@@ -24,6 +25,8 @@ public final class HudVisorRenderSmoke {
     private static final HudVisorProjection CONTROLS = new HudVisorProjection(360, 48, HudVisorGeometry.Profile.EVA_CONTROLS);
     private static final HudVisorProjection FLAT = new HudVisorProjection(200, 48);
     private static int scenario;
+    private static final HudComponentPresentation NAVIGATION =
+            new HudComponentPresentation(HudComponentPresentation.Kind.NAVIGATION);
     private static int frames;
     private static boolean finished;
 
@@ -55,8 +58,9 @@ public final class HudVisorRenderSmoke {
             canvas.drawString(mc.font, "系统连接完成", 8, 20, 0xEC95E8E2, true);
         });
         float navFit = Math.min(1, (width - 16F) / 272);
-        COMPASS.draw(g, width / 2F - 136 * navFit, 64, 272 * navFit, 48 * navFit,
-                VisorCompassRenderer::draw);
+        NAVIGATION.update(1D / 60, true);
+        COMPASS.draw(g, width / 2F - 136 * navFit, 64 + NAVIGATION.offsetY(), 272 * navFit, 48 * navFit,
+                1, NAVIGATION.glow(), canvas -> VisorCompassRenderer.draw(canvas, NAVIGATION.progress()));
         float hintFit = Math.min(1, (width - 16F) / 360);
         CONTROLS.draw(g, width / 2F - 180 * hintFit, 113, 360 * hintFit, 48 * hintFit, canvas ->
                 canvas.drawCenteredString(mc.font, "WASD 移动  SPACE 上升  SHIFT 下降", 180, 12, 0xEC95E8E2));
@@ -82,14 +86,18 @@ public final class HudVisorRenderSmoke {
         g.drawString(mc.font, "HUD GPU SMOKE / GUI " + scale + (bright ? " / BRIGHT" : " / DARK"),
                 8, height - 10, 0xFFFFFFFF, true);
         g.flush();
-        if (++frames < 8) return;
+        ++frames;
+        if (frames != 4 && frames != 12 && frames != 42) return;
         var folder = mc.gameDirectory.toPath().resolve("screenshots");
         Files.createDirectories(folder);
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(folder.resolve("hud-visor-" + mc.getWindow().getWidth() + "x"
-                    + mc.getWindow().getHeight() + "-" + scale + (bright ? "-bright.png" : "-dark.png")));
+                    + mc.getWindow().getHeight() + "-" + scale
+                    + (frames < 42 ? "-entry-" + frames : "") + (bright ? "-bright.png" : "-dark.png")));
         }
+        if (frames < 42) return;
         frames = 0;
+        NAVIGATION.update(0, false);
         // Exercise both viewport changes with existing meshes and explicit release/recreation.
         if (scenario == 2 || scenario == 5) {
             COMPASS.close(); SURVIVAL.close(); CONTROLS.close(); FLAT.close();
@@ -97,7 +105,7 @@ public final class HudVisorRenderSmoke {
         if (++scenario == 6) {
             finished = true;
             Files.writeString(folder.resolve("hud-visor-smoke-passed.txt"),
-                    "PASS: GUI scales 2/3/4, dark/bright, GL state, buffer release/recreation.\n");
+                    "PASS: GUI scales 2/3/4, dark/bright, Compass establishment/steady, GL state, buffer release/recreation.\n");
             mc.stop();
         }
     }

@@ -51,6 +51,7 @@ sourceSets {
             include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/client/hud/*.java'
             include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/animation/*.java'
             include 'com/starboundmc/client/hud/provider/*.java'
             include 'com/starboundmc/client/hud/visor/*.java'
             include 'com/starboundmc/recipe/*.java'
@@ -197,6 +198,7 @@ sourceSets {
             include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/client/hud/*.java'
             include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/animation/*.java'
             include 'com/starboundmc/client/hud/provider/*.java'
             include 'com/starboundmc/client/hud/visor/*.java'
         }
@@ -270,6 +272,12 @@ neoForge {
             }
             if (project.hasProperty('hudVisorNoGlow')) {
                 systemProperty 'starboundmc.debug.hudVisorNoGlow', 'true'
+            }
+            if (project.hasProperty('hudNoTransitions')) {
+                systemProperty 'starboundmc.debug.hudNoTransitions', 'true'
+            }
+            if (project.hasProperty('hudAnimationSpeed')) {
+                systemProperty 'starboundmc.debug.hudAnimationSpeed', project.property('hudAnimationSpeed').toString()
             }
             logLevel = org.slf4j.event.Level.DEBUG
         }
