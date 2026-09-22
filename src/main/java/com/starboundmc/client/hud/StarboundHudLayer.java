@@ -9,6 +9,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.starboundmc.client.hud.ar.ArWorldRenderer;
 import com.starboundmc.client.hud.animation.HudAnimationClock;
 import com.starboundmc.client.hud.animation.HudComponentPresentation;
+import com.starboundmc.client.hud.animation.SurvivalFeedback;
 import com.starboundmc.client.hud.visor.HudVisorGeometry;
 import com.starboundmc.client.hud.visor.HudVisorCalibrationGrid;
 import com.starboundmc.client.hud.visor.HudVisorGeometry.Profile;
@@ -16,11 +17,9 @@ import com.starboundmc.client.hud.visor.HudVisorMotion;
 import com.starboundmc.client.hud.visor.HudVisorProjection;
 import com.starboundmc.client.hud.visor.VisorCompassRenderer;
 import com.starboundmc.client.epp.EppClientState;
-import com.starboundmc.epp.OxygenRules;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
@@ -102,6 +101,9 @@ public final class StarboundHudLayer implements ModularHudLayer {
         private final HudComponentPresentation oxygen = new HudComponentPresentation(HudComponentPresentation.Kind.TELEMETRY);
         private final HudComponentPresentation cold = new HudComponentPresentation(HudComponentPresentation.Kind.TELEMETRY);
         private final HudComponentPresentation heat = new HudComponentPresentation(HudComponentPresentation.Kind.TELEMETRY);
+        private final SurvivalFeedback oxygenFeedback = new SurvivalFeedback(SurvivalFeedback.Kind.OXYGEN);
+        private final SurvivalFeedback coldFeedback = new SurvivalFeedback(SurvivalFeedback.Kind.COLD);
+        private final SurvivalFeedback heatFeedback = new SurvivalFeedback(SurvivalFeedback.Kind.HEAT);
         private boolean lastThrust;
         private final HudVisorProjection survivalProjection;
         private final HudVisorProjection compassProjection;
@@ -156,6 +158,9 @@ public final class StarboundHudLayer implements ModularHudLayer {
                 drawNavigation(context.graphics, navigationOpacity, controlsOpacity,
                         boot.statusOpacity());
             var s = EppClientState.snapshot; if (s == null) return;
+            oxygenFeedback.update(delta, HudSurvivalRenderer.fraction(s, oxygenFeedback.kind()), HudSurvivalRenderer.severity(s, oxygenFeedback.kind()));
+            coldFeedback.update(delta, HudSurvivalRenderer.fraction(s, coldFeedback.kind()), HudSurvivalRenderer.severity(s, coldFeedback.kind()));
+            heatFeedback.update(delta, HudSurvivalRenderer.fraction(s, heatFeedback.kind()), HudSurvivalRenderer.severity(s, heatFeedback.kind()));
             var g = context.graphics;
             float opacity = oxygenFade.update(
                     mc.isPaused() ? 0 : seconds, s.airless() || s.exposure() > 0 || s.refilling());
@@ -179,18 +184,18 @@ public final class StarboundHudLayer implements ModularHudLayer {
             g.pose().pushPose();
             g.pose().translate(motion.x(), motion.y(), 0);
             if (oxygenVisible) survivalProjection.draw(g, x, y + oxygen.offsetY(),
-                    SURVIVAL_WIDTH, COMPONENT_HEIGHT, opacity * visorOpacity, oxygen.glow(),
-                    canvas -> drawFlat(canvas, context.partialTick));
+                    SURVIVAL_WIDTH, COMPONENT_HEIGHT, opacity * visorOpacity, Math.max(oxygen.glow(), oxygenFeedback.glow()),
+                    canvas -> HudSurvivalRenderer.draw(canvas, s, oxygenFeedback));
             int row = oxygenVisible ? 40 : 0;
             if (coldVisible) {
                 survivalProjection.draw(g, x, y + row + cold.offsetY(),
-                        SURVIVAL_WIDTH, COMPONENT_HEIGHT, coldOpacity * visorOpacity, cold.glow(),
-                        canvas -> drawThermal(canvas, false));
+                        SURVIVAL_WIDTH, COMPONENT_HEIGHT, coldOpacity * visorOpacity, Math.max(cold.glow(), coldFeedback.glow()),
+                        canvas -> HudSurvivalRenderer.draw(canvas, s, coldFeedback));
                 row += 40;
             }
             if (heatVisible) survivalProjection.draw(g, x, y + row + heat.offsetY(),
-                    SURVIVAL_WIDTH, COMPONENT_HEIGHT, heatOpacity * visorOpacity, heat.glow(),
-                    canvas -> drawThermal(canvas, true));
+                    SURVIVAL_WIDTH, COMPONENT_HEIGHT, heatOpacity * visorOpacity, Math.max(heat.glow(), heatFeedback.glow()),
+                    canvas -> HudSurvivalRenderer.draw(canvas, s, heatFeedback));
             g.pose().popPose();
         }
 
@@ -258,89 +263,6 @@ public final class StarboundHudLayer implements ModularHudLayer {
             g.pose().popPose();
         }
 
-        private void drawThermal(GuiGraphics g, boolean heat) {
-            var s = EppClientState.snapshot;
-            var font = Minecraft.getInstance().font;
-            int exposure = heat ? s.heatExposure() : s.coldExposure();
-            String hazard = heat ? "heat" : "cold";
-            int rgb = exposure >= 75 ? 0xFF9477 : exposure >= 25 ? 0xFFD17C : heat ? 0xF3BE96 : 0xA7DFFF;
-            g.fill(6, 24, 122, 25, 0x28000000 | rgb);
-            int filled = Math.round(116f * exposure / 100);
-            if (filled > 0) g.fill(6, 24, 6 + filled, 25, 0xBA000000 | rgb);
-            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." + hazard, exposure), 9, 236, rgb);
-            boolean protectedFromHazard = (heat ? s.heatProtection() : s.coldProtection()) > 0;
-            boolean hazardous = (heat ? s.heatTier() : s.coldTier()) > 0;
-            drawFlatText(g, font, Component.translatable("hud.starboundmc.epp." +
-                    (!hazardous ? "thermal_recovery" : protectedFromHazard ? "thermal_protected" : hazard + "_unprotected")),
-                    33, 184, rgb);
-            // The localized readout uses the full row; its color and exposure bar carry the warning.
-        }
-
-        private void drawFlat(GuiGraphics g, float partialTick) {
-            var s = EppClientState.snapshot;
-            var mc = Minecraft.getInstance();
-            int warning = OxygenRules.warning(s.oxygen(), s.capacity());
-            boolean danger = s.airless() && (!s.equipped() || warning >= 2);
-            int rgb = danger ? 0xFF9477 : 0x95E8E2;
-            float fraction = s.equipped() ? Math.clamp((float) s.oxygen() / Math.max(1, s.capacity()), 0f, 1f) : 0f;
-            // Text, warning artwork and bars share one texture and the same local curve.
-            int alpha = s.refilling()
-                    ? 150 + (int) (35 * Math.sin((mc.player.tickCount + partialTick) * 0.16)) : 170;
-            int filled = Math.round(116 * fraction);
-            g.fill(6, 24, 122, 25, 0x28000000 | rgb);
-            if (filled > 0) {
-                g.fill(6, 23, 6 + filled, 26, 0x14000000 | rgb);
-                g.fill(6, 24, 6 + filled, 25, (alpha << 24) | rgb);
-            }
-
-            String value = "O₂  " + (s.equipped() ? Math.round(100f * fraction) + "%" : "—");
-            drawFlatText(g, mc.font, Component.literal(value), 9, 236, rgb);
-            if (!s.equipped() || warning >= 1) {
-                // Amber stays steady; urgent warnings pulse once per second.
-                boolean urgent = !s.equipped() || warning >= 2;
-                float phase = (mc.player.tickCount + partialTick) * (float) Math.PI / 10;
-                int opacity = urgent ? Math.round(140 + 100 * (float) Math.cos(phase)) : 210;
-                int warningRgb = urgent ? 0xFF9477 : 0xFFD17C;
-                drawWarning(g, opacity, warningRgb);
-            }
-
-            // Routine operation stays silent; only actionable states add a caption.
-            String key = !s.equipped() ? "no_epp" : s.airless() && s.oxygen() == 0 ? "depleted"
-                    : s.airless() && warning >= 2 ? "critical" : s.refilling() ? "refill" : null;
-            if (key != null) {
-                var caption = Component.translatable("hud.starboundmc.epp." + key);
-                drawFlatText(g, mc.font, caption, 33, 184, rgb);
-            }
-        }
-
-        /** Draw into the same transparent texture as the readout. */
-        private static void drawWarning(GuiGraphics g, int alpha, int rgb) {
-            g.pose().pushPose();
-            g.pose().translate(21, 9, 0);
-            g.pose().scale(0.5f, 0.5f, 1);
-            int color = (alpha << 24) | rgb;
-            for (int row = 0; row < 18; row++) {
-                int halfWidth = row / 2;
-                g.fill(-halfWidth, row, -halfWidth + 2, row + 1, color);
-                if (halfWidth > 0) g.fill(halfWidth, row, halfWidth + 2, row + 1, color);
-            }
-            g.fill(-8, 17, 10, 19, color);
-            g.fill(0, 6, 2, 12, color);
-            g.fill(0, 14, 2, 16, color);
-            g.pose().popPose();
-        }
-
-        private static void drawFlatText(GuiGraphics g, Font font, Component text,
-                                         float y, int alpha, int rgb) {
-            var ordered = text.getVisualOrderText();
-            float scale = Math.min(1f, 108f / Math.max(1, font.width(ordered)));
-            g.pose().pushPose();
-            g.pose().translate((SURVIVAL_WIDTH - font.width(ordered) * scale) / 2, y, 0);
-            g.pose().scale(scale, scale, 1);
-            g.drawString(font, ordered, 0, 0, (alpha << 24) | rgb, true);
-            g.pose().popPose();
-        }
-
         /** Tiny, bounded optical lag; reset after hiding, menus, pauses or camera cuts. */
         private void updateDrift(Minecraft mc, double seconds) {
             var camera = mc.gameRenderer.getMainCamera();
@@ -357,6 +279,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
 
         private void suspendPresentation() {
             animationClock.suspend();
+            oxygenFeedback.settle(); coldFeedback.settle(); heatFeedback.settle();
             navigation.settle(); controls.settle(); oxygen.settle(); cold.settle(); heat.settle();
         }
     }

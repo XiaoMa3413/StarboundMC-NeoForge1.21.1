@@ -5,6 +5,9 @@ import com.lowdragmc.lowdraglib2.client.shader.LDLibShaders;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.hud.animation.HudComponentPresentation;
+import com.starboundmc.client.hud.animation.SurvivalFeedback;
+import com.starboundmc.client.hud.HudSurvivalRenderer;
+import com.starboundmc.network.EppSnapshotPacket;
 import com.starboundmc.client.hud.ar.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -29,6 +32,7 @@ public final class HudVisorRenderSmoke {
     private static final HudVisorProjection SURVIVAL = new HudVisorProjection(128, 48, HudVisorGeometry.Profile.SURVIVAL);
     private static final HudVisorProjection CONTROLS = new HudVisorProjection(360, 48, HudVisorGeometry.Profile.EVA_CONTROLS);
     private static final HudVisorProjection FLAT = new HudVisorProjection(200, 48);
+    private static final SurvivalFeedback[] FEEDBACK = new SurvivalFeedback[3];
     private static int scenario;
     private static final HudComponentPresentation NAVIGATION =
             new HudComponentPresentation(HudComponentPresentation.Kind.NAVIGATION);
@@ -71,18 +75,20 @@ public final class HudVisorRenderSmoke {
         float hintFit = Math.min(1, (width - 16F) / 360);
         CONTROLS.draw(g, width / 2F - 180 * hintFit, 113, 360 * hintFit, 48 * hintFit, canvas ->
                 canvas.drawCenteredString(mc.font, "WASD 移动  SPACE 上升  SHIFT 下降", 180, 12, 0xEC95E8E2));
+        var snapshot = new EppSnapshotPacket(frames < 12 ? 65 : frames < 42 ? 24 : frames < 66 ? 10 : frames < 90 ? 3 : 85,
+                100, 0, true, frames < 90, frames >= 90, 1,
+                frames < 12 ? 12 : frames < 42 ? 30 : frames < 66 ? 58 : frames < 90 ? 85 : 0,
+                frames < 90 ? 1 : 0, 0,
+                frames < 12 ? 12 : frames < 42 ? 30 : frames < 66 ? 58 : frames < 90 ? 85 : 0,
+                frames < 90 ? 1 : 0, 0);
         for (int row = 0; row < 3; row++) {
+            if (frames == 0) FEEDBACK[row] = new SurvivalFeedback(SurvivalFeedback.Kind.values()[row]);
+            var feedback = FEEDBACK[row];
+            feedback.update(1D / 60, HudSurvivalRenderer.fraction(snapshot, feedback.kind()),
+                    HudSurvivalRenderer.severity(snapshot, feedback.kind()));
             var anchor = HudVisorGeometry.survivalAnchor(width, height, 3, row, SURVIVAL.profile());
-            int index = row;
-            SURVIVAL.draw(g, anchor.x(), anchor.y(), 128, 48, canvas -> {
-                int rgb = index == 0 ? 0xFF9477 : index == 1 ? 0xA7DFFF : 0xFFD17C;
-                canvas.drawCenteredString(mc.font, index == 0 ? "O₂  12%" : index == 1 ? "寒冷暴露 18%" : "热暴露 18%",
-                        64, 9, 0xEC000000 | rgb);
-                canvas.fill(6, 24, 122, 25, 0x40000000 | rgb);
-                canvas.fill(6, 24, index == 0 ? 20 : 70, 25, 0xBA000000 | rgb);
-                canvas.drawCenteredString(mc.font, index == 0 ? "氧气不足" : index == 1 ? "低温环境" : "高温环境",
-                        64, 33, 0xB8000000 | rgb);
-            });
+            SURVIVAL.draw(g, anchor.x(), anchor.y(), 128, 48, 1, feedback.glow(),
+                    canvas -> HudSurvivalRenderer.draw(canvas, snapshot, feedback));
         }
         // A fading projection catches alpha discard and state leakage into subsequent vanilla text.
         FLAT.draw(g, 10, height - 48, 150, 36, .15F, canvas ->
@@ -100,15 +106,15 @@ public final class HudVisorRenderSmoke {
         g.flush();
         ++frames;
         if (frames != 4 && frames != 12 && frames != 42 && frames != 48 && frames != 56
-                && frames != 70 && frames != 90) return;
+                && frames != 70 && frames != 90 && frames != 102 && frames != 150) return;
         var folder = mc.gameDirectory.toPath().resolve("screenshots");
         Files.createDirectories(folder);
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(folder.resolve("hud-visor-" + mc.getWindow().getWidth() + "x"
                     + mc.getWindow().getHeight() + "-" + scale
-                    + (frames < 90 ? "-entry-" + frames : "") + (bright ? "-bright.png" : "-dark.png")));
+                    + (frames < 150 ? "-entry-" + frames : "") + (bright ? "-bright.png" : "-dark.png")));
         }
-        if (frames < 90) return;
+        if (frames < 150) return;
         frames = 0;
         NAVIGATION.update(0, false);
         AR_STATES.clear();
@@ -119,7 +125,7 @@ public final class HudVisorRenderSmoke {
         if (++scenario == 6) {
             finished = true;
             Files.writeString(folder.resolve("hud-visor-smoke-passed.txt"),
-                    "PASS: GUI scales 2/3/4, dark/bright, Compass establishment, AR acquisition/edge/reentry/identity, GL state, buffer release/recreation.\n");
+                    "PASS: GUI scales 2/3/4, dark/bright, Compass establishment, AR acquisition/edge/reentry/identity, survival caution/danger/critical/recovery, GL state, buffer release/recreation.\n");
             mc.stop();
         }
     }
