@@ -147,12 +147,12 @@ public final class StarboundHudLayer implements ModularHudLayer {
                     == com.starboundmc.epp.EvaState.THRUST;
             float delta = mc.isPaused() ? 0 : seconds;
             float navigationOpacity = navigationFade.update(
-                    delta, eva || HudBootController.INSTANCE.localNavigationActive());
+                    delta, eva || HudBootController.INSTANCE.localNavigationActive()
+                            || ArWorldRenderer.INSTANCE.hasTargets());
             float controlsOpacity = evaControlsFade.update(delta, eva);
             navigation.update(delta, navigationOpacity > .001F);
             controls.update(delta, controlsOpacity > .001F);
-            if (navigationOpacity > .001f
-                    && mc.player.level().dimension().equals(com.starboundmc.world.ShipDimensions.SHIP_LEVEL))
+            if (navigationOpacity > .001f)
                 drawNavigation(context.graphics, navigationOpacity, controlsOpacity,
                         boot.statusOpacity());
             var s = EppClientState.snapshot; if (s == null) return;
@@ -225,7 +225,6 @@ public final class StarboundHudLayer implements ModularHudLayer {
                                     float bootStatusOpacity) {
             var mc = Minecraft.getInstance();
             int x = g.guiWidth() / 2;
-            ArWorldRenderer.INSTANCE.render(g, opacity, controlsOpacity > .001F);
             float navFit = Math.min(1f, (g.guiWidth() - 16f) / 272f);
             float visorOpacity = HudBootController.INSTANCE.visorOpacity();
             float bootOffset = 56F * bootStatusOpacity;

@@ -5,8 +5,13 @@ import com.lowdragmc.lowdraglib2.client.shader.LDLibShaders;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.hud.animation.HudComponentPresentation;
+import com.starboundmc.client.hud.ar.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -27,6 +32,8 @@ public final class HudVisorRenderSmoke {
     private static int scenario;
     private static final HudComponentPresentation NAVIGATION =
             new HudComponentPresentation(HudComponentPresentation.Kind.NAVIGATION);
+    private static final ArVisualStateCache AR_STATES = new ArVisualStateCache();
+    private static final ArMarkerRenderer AR_MARKERS = new ArMarkerRenderer();
     private static int frames;
     private static boolean finished;
 
@@ -83,21 +90,28 @@ public final class HudVisorRenderSmoke {
         if (GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING) != drawFbo
                 || RenderSystem.getShader() != previousShader || GL11.glGetError() != GL11.GL_NO_ERROR)
             throw new IllegalStateException("HUD compositor leaked render state or produced an OpenGL error");
+        // Flat vanilla GUI artwork selects its own shader; check it separately from the compositor's restore contract.
+        drawAr(g);
+        g.flush();
+        if (GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING) != drawFbo || GL11.glGetError() != GL11.GL_NO_ERROR)
+            throw new IllegalStateException("AR artwork changed the framebuffer or produced an OpenGL error");
         g.drawString(mc.font, "HUD GPU SMOKE / GUI " + scale + (bright ? " / BRIGHT" : " / DARK"),
                 8, height - 10, 0xFFFFFFFF, true);
         g.flush();
         ++frames;
-        if (frames != 4 && frames != 12 && frames != 42) return;
+        if (frames != 4 && frames != 12 && frames != 42 && frames != 48 && frames != 56
+                && frames != 70 && frames != 90) return;
         var folder = mc.gameDirectory.toPath().resolve("screenshots");
         Files.createDirectories(folder);
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(folder.resolve("hud-visor-" + mc.getWindow().getWidth() + "x"
                     + mc.getWindow().getHeight() + "-" + scale
-                    + (frames < 42 ? "-entry-" + frames : "") + (bright ? "-bright.png" : "-dark.png")));
+                    + (frames < 90 ? "-entry-" + frames : "") + (bright ? "-bright.png" : "-dark.png")));
         }
-        if (frames < 42) return;
+        if (frames < 90) return;
         frames = 0;
         NAVIGATION.update(0, false);
+        AR_STATES.clear();
         // Exercise both viewport changes with existing meshes and explicit release/recreation.
         if (scenario == 2 || scenario == 5) {
             COMPASS.close(); SURVIVAL.close(); CONTROLS.close(); FLAT.close();
@@ -105,8 +119,30 @@ public final class HudVisorRenderSmoke {
         if (++scenario == 6) {
             finished = true;
             Files.writeString(folder.resolve("hud-visor-smoke-passed.txt"),
-                    "PASS: GUI scales 2/3/4, dark/bright, Compass establishment/steady, GL state, buffer release/recreation.\n");
+                    "PASS: GUI scales 2/3/4, dark/bright, Compass establishment, AR acquisition/edge/reentry/identity, GL state, buffer release/recreation.\n");
             mc.stop();
+        }
+    }
+
+    private static void drawAr(GuiGraphics g) {
+        AR_STATES.beginFrame(1D / 60);
+        AR_MARKERS.beginFrame();
+        boolean outside = frames >= 42 && frames < 54;
+        boolean identified = frames >= 66;
+        for (int index = 0; index < 3; index++) {
+            String identity = index == 0 && !identified ? "signal" : "identified";
+            String label = index == 0 ? identified ? "ABANDONED RELAY  84m" : "UNKNOWN SIGNAL  84m"
+                    : index == 1 ? "SHIP  120m" : "WARNING";
+            var target = new ArTarget(ResourceLocation.fromNamespaceAndPath("starboundmc", "smoke_" + index),
+                    index == 2 ? ArTargetCategory.WARNING : ArTargetCategory.POI,
+                    Vec3.ZERO, Component.literal(label), ArGuidanceMode.TARGET,
+                    index == 2 ? 150 : 60, 1000, index == 2 ? 0xFF9477 : 0x95E8E2, identity);
+            float x = 70 + index * 58;
+            float y = g.guiHeight() / 2F + 25 + index * 24;
+            var point = outside && index == 0
+                    ? ArTargetProjection.project(-2, 0, -1, g.guiWidth(), g.guiHeight())
+                    : new ArTargetProjection.Point(x, y, false, false);
+            AR_MARKERS.draw(g, target, point, AR_STATES.present(target, point.edge()), 1, index == 2);
         }
     }
 }

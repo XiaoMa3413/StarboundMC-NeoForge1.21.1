@@ -16,9 +16,6 @@ import java.util.function.Consumer;
 
 /** Converts the currently active relay encounter into a renderer-agnostic POI target. */
 public final class RelayPoiProvider implements ArTargetProvider {
-    private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(
-            StarboundMC.MODID, "relay_poi");
-
     @Override
     public void collect(ArContext context, Consumer<ArTarget> output) {
         var snapshot = RelayClientState.snapshot;
@@ -27,7 +24,8 @@ public final class RelayPoiProvider implements ArTargetProvider {
                 || !RelayClientState.local() || snapshot == null)
             return;
         var position = RelayGeometry.center(snapshot.origin());
-        output.accept(new ArTarget(ID, ArTargetCategory.POI, position,
+        var id = ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "relay_poi/" + snapshot.origin().asLong());
+        output.accept(new ArTarget(id, ArTargetCategory.POI, position,
                 ShipBeaconProvider.label(context.viewerPosition(), position,
                         "hud.starboundmc.relay.beacon"),
                 ArGuidanceMode.TARGET, 80, Double.POSITIVE_INFINITY, 0xFFD17C));

@@ -69,6 +69,9 @@ public final class Stage2ClientRegistrar {
     @SubscribeEvent
     public static void registerGuiLayers(RegisterGuiLayersEvent event) {
         event.registerAbove(VanillaGuiLayers.CHAT,
+                ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "world_ar"),
+                com.starboundmc.client.hud.ar.ArWorldRenderer.INSTANCE::render);
+        event.registerAbove(VanillaGuiLayers.CHAT,
                 ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "starbound_hud"),
                 StarboundHudLayer.INSTANCE);
         event.registerAbove(VanillaGuiLayers.CHAT,

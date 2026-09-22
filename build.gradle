@@ -276,6 +276,9 @@ neoForge {
             if (project.hasProperty('hudNoTransitions')) {
                 systemProperty 'starboundmc.debug.hudNoTransitions', 'true'
             }
+            if (project.hasProperty('hudArStates')) {
+                systemProperty 'starboundmc.debug.hudArStates', 'true'
+            }
             if (project.hasProperty('hudAnimationSpeed')) {
                 systemProperty 'starboundmc.debug.hudAnimationSpeed', project.property('hudAnimationSpeed').toString()
             }
