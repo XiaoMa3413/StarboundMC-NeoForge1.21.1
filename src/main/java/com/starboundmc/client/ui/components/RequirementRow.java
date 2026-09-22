@@ -81,7 +81,7 @@ public final class RequirementRow extends UIElement {
         iconTexture.setItems(stack == null ? ItemStack.EMPTY : stack.copyWithCount(1));
         name.setText(displayName);
         amount.setText(Component.literal(current + " / " + required));
-        style(style -> style.tooltips(tooltip));
+        style(style -> style.tooltips(TooltipLines.split(tooltip)));
         removeClasses("sb-requirement-ok", "sb-requirement-missing");
         addClass(current >= required ? "sb-requirement-ok" : "sb-requirement-missing");
         return this;

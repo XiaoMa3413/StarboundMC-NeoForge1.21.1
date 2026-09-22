@@ -1,5 +1,10 @@
 # Voxel Printing Station — UI Design Contract
 
+> Historical chamber-layout contract. Superseded for the current printer by
+> [the compact appearance contract](voxel-printing-station-polish.md) and
+> [the approved fabrication style](../ui-fabrication-style.md). Do not restore the
+> 440px layout or a second item preview based on this historical document.
+
 ## SCREEN TYPE
 Feature UI.
 

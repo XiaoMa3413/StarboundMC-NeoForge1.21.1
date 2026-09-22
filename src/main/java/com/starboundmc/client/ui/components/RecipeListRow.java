@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -16,12 +17,15 @@ import org.lwjgl.glfw.GLFW;
  * One catalogue entry: the item's icon with its name, and how much one craft yields beneath.
  *
  * <p>This is a browser row, not a button. It has no border and no panel of its own — the icon is the
- * anchor, the name is the label, and the yield is secondary. Selection reads as a subtle background
- * highlight plus the row's own accent rail, so a chosen row stays legible when the pointer moves
- * away without the row lighting up like a card.
+ * anchor, the name is the label, and the yield is secondary. Rows are separated by a single hairline
+ * rule rather than by a gap or a frame, which is what makes the list read as one catalogue.
+ *
+ * <p>Selection reads as a subtle background highlight plus the row's own accent rail, so a chosen
+ * row stays legible when the pointer moves away without the row lighting up like a card.
  */
 public final class RecipeListRow extends Button {
     private static final int H = 22;
+    private static final int RULE_COLOR = 0x1E33505A;
     private static final int ICON = 16;
     private static final int ICON_LEFT = 4;
     private static final int TEXT_LEFT = 24;
@@ -81,6 +85,18 @@ public final class RecipeListRow extends Button {
         removeClasses("sb-craftable", "sb-unavailable");
         addClass(craftable ? "sb-craftable" : "sb-unavailable");
         return this;
+    }
+
+    /**
+     * The separator under this row. Drawn here rather than as a child element because it is a
+     * hairline, not a box: LDLib2 has no border-only rendering for a child, and a 1px fill is the
+     * whole visual.
+     */
+    @Override
+    public void drawBackgroundAdditional(GUIContext context) {
+        int x = Math.round(getPositionX());
+        int y = Math.round(getPositionY() + H - 1);
+        context.graphics.fill(x + TEXT_LEFT, y, x + Math.round(getSizeWidth()), y + 1, RULE_COLOR);
     }
 
     private static Label label(Component text, String styleClass, int height) {

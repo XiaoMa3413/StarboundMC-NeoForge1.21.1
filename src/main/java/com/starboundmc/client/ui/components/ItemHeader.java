@@ -55,7 +55,7 @@ public final class ItemHeader extends UIElement {
     public ItemHeader setItem(Component itemName, Component yieldLine, Component tooltip) {
         name.setText(itemName);
         yield.setText(yieldLine);
-        style(style -> style.tooltips(tooltip));
+        style(style -> style.tooltips(TooltipLines.split(tooltip)));
         return this;
     }
 

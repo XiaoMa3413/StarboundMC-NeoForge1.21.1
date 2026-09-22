@@ -21,7 +21,9 @@ public final class PrintingRecipeGameTests {
             boolean refinery = holder.id().getPath().equals("print_voxel_refinery");
             helper.assertTrue(refinery ? recipe.voxelMaterialCount() == 0 : recipe.voxelMaterialCount() > 0,
                     "Wrong wallet cost: " + holder.id());
-            long categories = java.util.Arrays.stream(PrintingCategory.values()).filter(c -> c.matches(output)).count();
+            // concrete() rather than values(): every output also matches the ALL view filter, so
+            // the invariant is checked against the categories a recipe can really belong to.
+            long categories = PrintingCategory.concrete().stream().filter(c -> c.matches(output)).count();
             helper.assertTrue(categories == 1, "Output must match exactly one category: " + holder.id());
             if (refinery) helper.assertTrue(PrintingCategory.MACHINES.matches(output), "Refinery is a machine");
             if (holder.id().getPath().equals("print_epp_mk3_upgrade_kit")) {

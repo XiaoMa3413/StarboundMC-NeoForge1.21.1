@@ -2,7 +2,6 @@ package com.starboundmc.client.voxel;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
 import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
-import com.lowdragmc.lowdraglib2.gui.texture.Icons;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
@@ -24,7 +23,9 @@ import com.starboundmc.client.ui.components.MaterialRequirementView;
 import com.starboundmc.client.ui.components.QuantityStepper;
 import com.starboundmc.client.ui.components.RecipeBrowser;
 import com.starboundmc.client.ui.components.RecipeListRow;
+import com.starboundmc.client.ui.components.RecipeSearchField;
 import com.starboundmc.client.ui.components.SelectedItemView;
+import com.starboundmc.client.ui.components.TooltipLines;
 import com.starboundmc.menu.VoxelPrintingStationMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.StartPrintPacket;
@@ -69,11 +70,15 @@ public final class VoxelPrintingStationRoot extends UIElement {
     private static final int WORKSPACE_W = 170;
     private static final int WORKSPACE_H = 120;
     private static final int QUEUE_W = 306;
+    /** Height the search field takes off the top of the recipe list. */
+    private static final int SEARCH_ROW_H = 14;
 
     private final VoxelPrintingStationMenu menu;
     private final List<RecipeHolder<VoxelPrintingRecipe>> recipes;
     private final List<RecipeEntry> rows = new ArrayList<>();
     private final RecipeBrowser recipeBrowser;
+    private final RecipeSearchField searchField;
+    private Selector<PrintingCategory> categorySelector;
     private final ScrollerView queueList = new ScrollerView();
     private final Map<UUID, QueueRow> queueRows = new LinkedHashMap<>();
     private final Label wallet = new Label();
@@ -84,6 +89,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
     private final Button queueToggle = new Button();
     private final PrintSubmissionState submission;
     private boolean showingQueue;
+    private PrintingCategory activeCategory = PrintingCategory.SURVIVAL;
     private int selected = -1;
     private int quantity = 1;
     private int outstandingCrafts;
@@ -96,7 +102,11 @@ public final class VoxelPrintingStationRoot extends UIElement {
         this.submission = submission;
         selectedItemView = new SelectedItemView(
                 WORKSPACE_W, WORKSPACE_H, QuantityStepper.Mode.COMPACT);
-        recipeBrowser = new RecipeBrowser(128, 151);
+        recipeBrowser = new RecipeBrowser(128, 151 - SEARCH_ROW_H - 18);
+        searchField = new RecipeSearchField(128);
+        // Search reaches across categories, so a query re-runs the whole filter rather than just
+        // narrowing what is already on screen.
+        searchField.onChanged(text -> filterRecipes(activeCategory));
         recipeBrowser.setEmptyHint(
                 Component.translatable("gui.starboundmc.voxel_printing.hint.no_recipe"));
         var level = Minecraft.getInstance().level;
@@ -137,6 +147,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
         // state, the count line carries the queue amount, and the world renderer carries the machine.
         shell.addChildren(buildHeader(title), recipesPane, workspacePane, queuePane,
                 buildInventory(inventoryTitle));
+        PrinterUiSkin.apply(shell);
         addChild(shell);
         filterRecipes(PrintingCategory.SURVIVAL);
     }
@@ -168,23 +179,33 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 Component.translatable("gui.starboundmc.voxel_printing.recipes"),
                 "voxel-pane-title", 5, 3, 95, 8));
 
-        var category = new Selector<PrintingCategory>();
-        category.setCandidateUIProvider(VoxelPrintingStationRoot::categoryOption);
-        category.setCandidates(List.of(PrintingCategory.values()));
-        category.setSelected(PrintingCategory.SURVIVAL, false);
-        category.setOnValueChanged(this::filterRecipes);
-        category.addClass("voxel-printing-category");
-        category.dialog.addClass("voxel-category-dialog");
-        category.selectorStyle(style -> style.maxItemCount(4));
-        category.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
-                .left(4).top(14).width(128).height(18));
-        pane.addChild(category);
+        // Search sits above the category row: typing is meant to reach across categories, so the
+        // control that does that reads first.
+        searchField.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                .left(4).top(14).width(128).height(RecipeSearchField.height()));
+        pane.addChild(searchField);
 
-        // The browser owns the list, its scrolling and its empty state; the page only feeds it the
-        // catalogue and says which entries are relevant.
+        categorySelector = new Selector<PrintingCategory>();
+        categorySelector.setCandidateUIProvider(VoxelPrintingStationRoot::categoryOption);
+        // ALL leads the list: it is the way back to the whole catalogue after a narrow category.
+        categorySelector.setCandidates(List.of(
+                PrintingCategory.ALL, PrintingCategory.SURVIVAL, PrintingCategory.MATERIALS,
+                PrintingCategory.MACHINES, PrintingCategory.BUILDING));
+        categorySelector.setSelected(PrintingCategory.SURVIVAL, false);
+        categorySelector.setOnValueChanged(this::filterRecipes);
+        categorySelector.addClass("voxel-printing-category");
+        categorySelector.buttonIcon.style(style -> style.backgroundTexture(PrinterUiSkin.DOWN));
+        categorySelector.dialog.addClass("voxel-category-dialog");
+        categorySelector.selectorStyle(style -> style.maxItemCount(5));
+        categorySelector.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
+                .left(4).top(32).width(128).height(18));
+        pane.addChild(categorySelector);
+
+        // The browser owns its list, scrolling and empty state; the page only feeds it the catalogue
+        // and says which entries are relevant.
         recipeBrowser.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
-                .left(4).top(36).width(128).height(151));
+                .left(4).top(54).width(128).height(151 - SEARCH_ROW_H - 18));
         // The browser builds one row per entry; the page keeps the row beside the recipe it stands
         // for, so availability and selection can be written back to it later.
         List<RecipeBrowser.Entry> entries = new ArrayList<>(recipes.size());
@@ -202,17 +223,11 @@ public final class VoxelPrintingStationRoot extends UIElement {
     }
 
     private static UIElement categoryOption(PrintingCategory value) {
-        var category = value == null ? PrintingCategory.SURVIVAL : value;
+        var category = value == null ? PrintingCategory.ALL : value;
         var option = new UIElement().addClass("voxel-category-option");
         option.layout(layout -> layout.widthPercent(100).height(14));
         var icon = VoxelUiSupport.positioned("voxel-category-icon", 1, 1, 12, 12);
-        var texture = switch (category) {
-            case SURVIVAL -> Icons.WIDGET_SETTING;
-            case MATERIALS -> Icons.RESOURCE;
-            case MACHINES -> Icons.PROJECT;
-            case BUILDING -> Icons.WIDGET_GROUP;
-        };
-        icon.style(style -> style.backgroundTexture(texture));
+        icon.style(style -> style.backgroundTexture(PrinterUiSkin.category(category)));
         var text = new Label().setText(Component.translatable(category.translationKey()));
         text.addClass("voxel-category-label");
         text.setAllowHitTest(false);
@@ -225,9 +240,26 @@ public final class VoxelPrintingStationRoot extends UIElement {
     }
 
     private void filterRecipes(PrintingCategory category) {
-        // The page owns the rule for what matches; the browser owns applying it and rewinding.
+        activeCategory = category == null ? PrintingCategory.SURVIVAL : category;
+        String query = searchField.query();
+        // A search always runs over the whole catalogue: a query that only looked inside the current
+        // category would hide the very results the player is asking for, and which category happens
+        // to be selected is not something they should have to remember while typing. So the category
+        // moves to ALL on the first keystroke — and the selector is updated to match, so the control
+        // never shows a filter other than the one actually applied. Clearing the query leaves the
+        // category at ALL: the selector has been showing it all along, so it does not jump.
+        if (!query.isEmpty() && activeCategory != PrintingCategory.ALL) {
+            activeCategory = PrintingCategory.ALL;
+            if (categorySelector != null) {
+                categorySelector.setSelected(PrintingCategory.ALL, false);
+            }
+        }
+        // The page owns both rules — category tag and name match; the browser only applies the answer
+        // and rewinds the list.
+        PrintingCategory applied = activeCategory;
         int first = recipeBrowser.setVisible(
-                index -> category.matches(resultStack(recipes.get(index))));
+                index -> applied.matches(resultStack(recipes.get(index)))
+                        && nameMatches(index, query));
         boolean selectionVisible = selected >= 0 && selected < rows.size()
                 && rows.get(selected).view.isDisplayed();
         if (!selectionVisible) {
@@ -237,6 +269,18 @@ public final class VoxelPrintingStationRoot extends UIElement {
         updateSelectedVisual();
         lastDetailState = null;
         refresh();
+    }
+
+    /**
+     * Whether a recipe matches the typed text. Matching is on the item's own localized name — the
+     * name the player is reading — and ignores case, so "module" finds "Matter Manipulator Module".
+     */
+    private boolean nameMatches(int index, String query) {
+        if (query.isEmpty()) {
+            return true;
+        }
+        String name = resultStack(recipes.get(index)).getHoverName().getString();
+        return name.toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT));
     }
 
     /** One catalogue click: select the recipe by its index in the catalogue. */
@@ -360,6 +404,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
 
     private QueueRow createQueueRow(SyncPrintQueuePacket.Entry entry) {
         var row = new UIElement().addClass("voxel-queue-row");
+        PrinterUiSkin.queueRow(row);
         row.setOverflowVisible(false);
         row.layout(layout -> layout.widthPercent(100).height(52));
         if (entry.active()) row.addClass("voxel-queue-row-active");
@@ -384,7 +429,7 @@ public final class VoxelPrintingStationRoot extends UIElement {
         configureButton(cancel, Component.literal("×"), contentWidth - 14, 31, 18, 18);
         cancel.noText();
         var cancelIcon = VoxelUiSupport.positioned("voxel-cancel-icon", 4, 4, 10, 10);
-        cancelIcon.style(style -> style.backgroundTexture(Icons.CLOSE));
+        cancelIcon.style(style -> style.backgroundTexture(PrinterUiSkin.CLOSE));
         cancel.addChild(cancelIcon);
         cancel.addClass("voxel-queue-cancel");
         var player = Minecraft.getInstance().player;
@@ -400,8 +445,9 @@ public final class VoxelPrintingStationRoot extends UIElement {
                 event.stopPropagation();
             }
         });
-        row.style(style -> style.tooltips(Component.translatable("gui.starboundmc.voxel_printing.queue.tooltip",
-                result.getHoverName(), entry.requesterName(), entry.crafts())));
+        row.style(style -> style.tooltips(TooltipLines.split(Component.translatable(
+                "gui.starboundmc.voxel_printing.queue.tooltip",
+                result.getHoverName(), entry.requesterName(), entry.crafts()))));
         row.addChildren(icon, name, state, requester, track, cancel);
         return new QueueRow(entry, row, state, track);
     }

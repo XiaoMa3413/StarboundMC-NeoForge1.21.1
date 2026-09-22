@@ -72,7 +72,7 @@ public final class OutputPreviewSlot extends UIElement {
         reveal.setItems(icon);
         revealPercent = show && printing ? Math.max(0, Math.min(100, progressPercent)) : 0;
         setDisplay(true);
-        style(style -> style.tooltips(tooltip));
+        style(style -> style.tooltips(TooltipLines.split(tooltip)));
         return this;
     }
 

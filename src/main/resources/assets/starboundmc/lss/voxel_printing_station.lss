@@ -1,13 +1,14 @@
-// Voxel printer sample: reusable semantic components + restrained shipboard skin.
+// Graphite fabrication console. One-pixel relief is drawn by PrinterUiSkin;
+// this sheet owns fills, text and interaction colours. Geometry stays unchanged.
 .machine-inventory-screen { background: rect(#A0050910); }
 
 .voxel-printing-shell {
-  background: group(rect(#091219), border(-1, #3B5963));
+  background: group(rect(#101A22), border(-1, #344B55));
   overflow-clip: true;
 }
 
-.machine-inventory-header { background: rect(#0D1A22); }
-.voxel-printing-rail { background: #63E2DF; }
+.machine-inventory-header { background: rect(#16232D); }
+.voxel-printing-rail { background: #63D8D4; }
 
 .machine-inventory-title {
   font-size: 9;
@@ -23,14 +24,14 @@
 
 .voxel-printing-wallet {
   font-size: 7;
-  text-color: #80DAD7;
+  text-color: #9DBECA;
   text-shadow: false;
 }
 
 .voxel-printing-recipe-pane,
 .voxel-printing-detail-pane,
 .voxel-printing-queue-pane {
-  background: rect(#0A151B);
+  background: rect(#0D171F);
 }
 
 .voxel-pane-title,
@@ -41,11 +42,14 @@
 }
 
 .voxel-printing-category {
-  background: group(rect(#0D1D24), border(-1, #35525C));
+  background: rect(#1A2A35);
+  focus-overlay: border(-1, #63D8D4);
 }
 
+.voxel-printing-category:hover { background: rect(#213642); }
+
 .voxel-category-dialog {
-  background: group(rect(#09161D), border(-1, #476973));
+  background: group(rect(#101D26), border(-1, #526975));
 }
 
 .voxel-category-label {
@@ -71,9 +75,22 @@
 .voxel-recipe-list .__scroller_scroll_bar__,
 .voxel-print-queue-list .__scroller_scroll_bar__,
 .sb-material-requirements .__scroller_scroll_bar__ {
-  base-background: built-in(ui-mc:SCROLLER_V) color(#42616A);
-  hover-background: built-in(ui-mc:SCROLLER_V) color(#5E8A94);
-  pressed-background: built-in(ui-mc:SCROLLER_V) color(#80C6C9);
+  base-background: rect(#506874);
+  hover-background: rect(#80A4AF);
+  pressed-background: rect(#63D8D4);
+}
+
+/* Recessed input with an always-visible baseline; focus stays inside its existing bounds. */
+.sb-recipe-search:host {
+  background: rect(#081116);
+  focus-overlay: border(-1, #63D8D4);
+  padding-horizontal: 3;
+}
+.sb-recipe-search:hover { background: rect(#0D1D27); }
+.sb-recipe-search {
+  font-size: 6;
+  text-color: #CFE5E8;
+  text-shadow: false;
 }
 
 /* Catalogue row: a browser entry, not a button. No border and no panel of its own — selection is a
@@ -84,22 +101,26 @@
 }
 .sb-recipe-row:host {
   base-background: rect(#00000000);
-  hover-background: rect(#121E2730);
-  pressed-background: rect(#201C2C3A);
+  hover-background: rect(#15252F);
+  pressed-background: rect(#1B303A);
 }
 .sb-recipe-row.sb-selected:host {
-  base-background: rect(#121E3A44);
-  hover-background: rect(#181F424E);
-  pressed-background: rect(#221F4854);
+  base-background: rect(#17343E);
+  hover-background: rect(#1E424C);
+  pressed-background: rect(#12303A);
 }
-.sb-recipe-row.sb-selected .sb-recipe-name { text-color: #FFFFFF; }
-.sb-recipe-rail { background: #253F4850; }
-.sb-recipe-row.sb-craftable .sb-recipe-rail { background: #4B4B8F8E; }
-.sb-recipe-row.sb-selected .sb-recipe-rail { background: #63E2DF; }
-.sb-recipe-row.sb-unavailable .sb-recipe-name { text-color: #607981; }
-.sb-recipe-row.sb-unavailable .sb-recipe-amount { text-color: #4A5F66; }
+.sb-recipe-rail { background: #00000000; }
+.sb-recipe-row.sb-craftable .sb-recipe-rail { background: #35545C; }
+.sb-recipe-row.sb-selected .sb-recipe-rail { background: #63D8D4; }
+.sb-recipe-row.sb-unavailable .sb-recipe-name { text-color: #9AAFB9; }
+.sb-recipe-row.sb-unavailable .sb-recipe-amount { text-color: #7F96A2; }
+/* Selection wins even when the chosen recipe has missing ingredients. */
+.sb-recipe-row.sb-selected .sb-recipe-name,
+.sb-recipe-row.sb-selected.sb-unavailable .sb-recipe-name { text-color: #E5F3F5; }
+.sb-recipe-row.sb-selected .sb-recipe-amount,
+.sb-recipe-row.sb-selected.sb-unavailable .sb-recipe-amount { text-color: #A9C7CE; }
 .sb-recipe-name { font-size: 7; text-color: #CFE5E8; text-shadow: false; }
-.sb-recipe-amount { font-size: 6; text-color: #6F929C; text-shadow: false; }
+.sb-recipe-amount { font-size: 5; text-color: #6F929C; text-shadow: false; }
 
 .voxel-recipe-empty,
 .voxel-queue-empty {
@@ -177,43 +198,48 @@
 }
 
 .sb-requirement-row.sb-requirement-ok .sb-requirement-amount {
-  text-color: #83E3A2;
+  text-color: #CDE7E9;
 }
 
 .sb-quantity-stepper {
   background: rect(#00000000);
 }
 
+/* The editable count has the same recessed treatment as search. */
+.sb-quantity-value:host {
+  background: rect(#081116);
+  focus-overlay: border(-1, #63D8D4);
+  padding-horizontal: 3;
+}
 .sb-quantity-value {
   font-size: 6;
   text-color: #D9EEEF;
   text-shadow: false;
-  background: rect(#08151A);
 }
 
 .sb-stepper-button:host {
-  base-background: rect(#00000000);
-  hover-background: group(rect(#152C343A), border(-1, #446871));
-  pressed-background: rect(#25375158);
+  base-background: rect(#1A2A35);
+  hover-background: rect(#293F4B);
+  pressed-background: rect(#101E27);
 }
 
 .sb-stepper-button .__button_text__ {
   font-size: 5;
-  text-color: #AFC8CD;
+  text-color: #C4D7DE;
   text-shadow: false;
 }
 
 .sb-stepper-button.__disabled__:host {
-  base-background: rect(#00000000);
-  hover-background: rect(#00000000);
-  pressed-background: rect(#00000000);
+  base-background: rect(#111D25);
+  hover-background: rect(#111D25);
+  pressed-background: rect(#111D25);
 }
-.sb-stepper-button.__disabled__ .__button_text__ { text-color: #455B62; }
+.sb-stepper-button.__disabled__ .__button_text__ { text-color: #657C88; }
 
 .sb-craft-button:host {
-  base-background: group(rect(#12373B), border(-1, #4DA3A4));
-  hover-background: group(rect(#195056), border(-1, #77D4D1));
-  pressed-background: group(rect(#0A292D), border(-1, #B4F0EC));
+  base-background: rect(#20545D);
+  hover-background: rect(#2C6B73);
+  pressed-background: rect(#123E47);
 }
 .sb-craft-button .__button_text__ {
   font-size: 7;
@@ -221,16 +247,16 @@
   text-shadow: false;
 }
 .sb-craft-button.__disabled__:host {
-  base-background: group(rect(#101A1E), border(-1, #293A40));
-  hover-background: group(rect(#101A1E), border(-1, #293A40));
-  pressed-background: group(rect(#101A1E), border(-1, #293A40));
+  base-background: rect(#18262F);
+  hover-background: rect(#18262F);
+  pressed-background: rect(#18262F);
 }
-.sb-craft-button.__disabled__ .__button_text__ { text-color: #4E666E; }
+.sb-craft-button.__disabled__ .__button_text__ { text-color: #8095A0; }
 
 /* The output frame: the one place the machine's item is shown. The preview layers are drawn by
    the component itself (it has to clip one over the other), so this only carries the frame. */
 .sb-output-slot {
-  background: group(rect(#061014), border(-1, #4A8B91));
+  background: group(rect(#081116), border(-1, #526A76));
 }
 
 /* The print-count line: the quantity control before a craft, the remaining count during one. */
@@ -239,13 +265,13 @@
 }
 .sb-print-count-remaining {
   font-size: 6;
-  text-color: #83E3A2;
+  text-color: #9FCED2;
   text-shadow: false;
 }
 
-.voxel-queue-row { background: rect(#0C1A20); overflow-clip: true; }
-.voxel-queue-row.voxel-queue-row-active { background: group(rect(#10252C), border(-1, #3F8587)); }
-.voxel-queue-row.queue-recent { background: group(rect(#10251F), border(-1, #5D9B79)); }
+.voxel-queue-row { background: rect(#101D26); overflow-clip: true; }
+.voxel-queue-row.voxel-queue-row-active { background: rect(#17343E); }
+.voxel-queue-row.queue-recent { background: rect(#182D2C); }
 .voxel-queue-name { font-size: 7; text-color: #CFE5E7; text-shadow: false; }
 .voxel-queue-state { font-size: 6; text-color: #7897A1; text-shadow: false; }
 .voxel-queue-row-active .voxel-queue-state { text-color: #8EDDD9; }
@@ -256,8 +282,8 @@
 .voxel-queue-cancel:host,
 .voxel-queue-toggle:host {
   base-background: rect(#00000000);
-  hover-background: group(rect(#152A3339), border(-1, #446871));
-  pressed-background: rect(#223A4A50);
+  hover-background: rect(#21343F);
+  pressed-background: rect(#14262F);
 }
 .voxel-queue-cancel .__button_text__,
 .voxel-queue-toggle .__button_text__ {
@@ -268,11 +294,11 @@
 .voxel-queue-cancel.__disabled__ .voxel-cancel-icon { opacity: 0.25; }
 
 .machine-slot-socket {
-  background: group(rect(#071015), border(-1, #344B54));
+  background: rect(#081116);
 }
 .player-slot-socket {
-  background: group(rect(#081217), border(-1, #30434B));
+  background: rect(#0A141C);
 }
 .hotbar-slot-socket {
-  background: group(rect(#0B171C), border(-1, #48616A));
+  background: rect(#0D1922);
 }

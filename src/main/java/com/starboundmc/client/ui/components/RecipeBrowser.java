@@ -18,10 +18,10 @@ import net.minecraft.world.item.ItemStack;
 /**
  * The catalogue of things the machine can make, as a scrollable list of {@link RecipeListRow}s.
  *
- * <p>The browser owns its list, its scrolling and its empty state. What it does not own is which
- * entries are relevant: the page decides that (a category tag, a search, a tier) and calls
- * {@link #setVisible} with the result, because only the page knows the rules. This keeps the
- * filtering semantics on the page while the browse surface stays reusable.
+ * <p>What the browser does not own is which entries are relevant: the page decides that (a category
+ * tag, a name search, a tier) and calls {@link #setVisible} with the answer, because only the page
+ * knows the rules. The browser's job is to apply that answer without the list ever ending up scrolled
+ * past its own content.
  *
  * <p>The rows themselves are a flat catalogue: no bordered cards, no per-row panels — selection is
  * a subtle highlight plus the row's own accent rail.

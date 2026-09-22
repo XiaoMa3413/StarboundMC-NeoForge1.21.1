@@ -160,6 +160,12 @@ class VoxelPrintingStationVisualRegressionTest {
                 "src/main/java/com/starboundmc/client/ui/components/SelectedItemView.java"));
         String recipeRow = Files.readString(Path.of(
                 "src/main/java/com/starboundmc/client/ui/components/RecipeListRow.java"));
+        String browser = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/ui/components/RecipeBrowser.java"));
+        String search = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/ui/components/RecipeSearchField.java"));
+        String quantity = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/client/ui/components/QuantityStepper.java"));
         String stylesheet = Files.readString(Path.of(
                 "src/main/resources/assets/starboundmc/lss/voxel_printing_station.lss"));
 
@@ -286,6 +292,65 @@ class VoxelPrintingStationVisualRegressionTest {
         assertTrue(requirement.contains("NORMAL(18)"));
         assertTrue(requirement.contains("public RequirementRow setMode(Mode value)"));
 
+        // Search is its own component and sits above the category row, so the control that reaches
+        // across categories is the one that reads first.
+        assertTrue(search.contains("extends TextField"));
+        assertTrue(search.contains("sb-recipe-search"));
+        assertTrue(search.contains("gui.starboundmc.voxel_printing.search.placeholder"));
+        assertTrue(search.contains("MAX_QUERY"), "A query is bounded; an unbounded one is not a filter");
+        assertTrue(root.contains("searchField.onChanged("),
+                "A search edit must re-run the filter and re-check the selection");
+        assertTrue(root.contains("recipeBrowser = new RecipeBrowser(128, 151 - SEARCH_ROW_H - 18)"),
+                "The list gives up the room the search and category rows take");
+        assertFalse(browser.contains("TextField"),
+                "The browser is a list again; the search control lives above it, not inside it");
+        // Search must not re-enter: the page never writes the field programmatically.
+        assertFalse(root.contains("searchField.setValue"));
+
+        // Search reaches across categories: any non-empty query runs over the whole catalogue, so a
+        // result is never hidden merely because of which category happened to be selected. The
+        // selector is moved to ALL at the same time, so it never shows a filter other than the one
+        // actually applied.
+        assertTrue(root.contains("nameMatches(index, query)"),
+                "The name match must be part of the same filter as the category");
+        assertTrue(root.contains("!query.isEmpty() && activeCategory != PrintingCategory.ALL"));
+        assertTrue(root.contains("activeCategory = PrintingCategory.ALL"));
+        assertTrue(root.contains("categorySelector.setSelected(PrintingCategory.ALL, false)"),
+                "The selector must show the category that is actually applied");
+
+        // The category list leads with ALL, and ALL matches everything while not counting as a
+        // category a recipe belongs to.
+        assertTrue(root.contains("PrintingCategory.ALL, PrintingCategory.SURVIVAL"));
+        String category = Files.readString(Path.of(
+                "src/main/java/com/starboundmc/recipe/PrintingCategory.java"));
+        assertTrue(category.contains("if (this == ALL) return true;"));
+        assertTrue(category.contains("public static java.util.List<PrintingCategory> concrete()"),
+                "The belongs-to-exactly-one-category invariant needs the tag categories only");
+        String gameTests = Files.readString(Path.of(
+                "src/gameTest/java/com/starboundmc/recipe/PrintingRecipeGameTests.java"));
+        assertTrue(gameTests.contains("PrintingCategory.concrete().stream()"),
+                "The game test must not count ALL as a category a recipe belongs to");
+
+        // Quantity: the count is typeable, bounded by the machine's cap and clamped to the business
+        // limit, and the buttons still work.
+        assertTrue(quantity.contains("private final TextField value"));
+        assertTrue(quantity.contains("setNumbersOnlyInt(1, HARD_CAP)"));
+        assertTrue(quantity.contains("setTextResponder"));
+        assertTrue(quantity.contains("writingSelf"),
+                "A self-write must not re-enter the responder, or the refresh loop would not terminate");
+        assertTrue(quantity.contains("writeField("));
+        assertTrue(quantity.contains("if (!value.isFocused())"),
+                "The page refreshes every tick and must not overwrite a number being typed");
+        assertTrue(quantity.contains("minusTen") && quantity.contains("maximum"),
+                "The existing buttons stay");
+
+        // Recipe list: rows are separated by a hairline rule instead of carrying a border.
+        assertTrue(recipeRow.contains("drawBackgroundAdditional"));
+        assertTrue(recipeRow.contains("RULE_COLOR"));
+        // The row keeps no copy of its name: the page reads it from the recipe stack when filtering,
+        // so there is one source for what the item is called.
+        assertFalse(recipeRow.contains("displayName"));
+
         // The blocking reason travels on the action button, which is the control the player is
         // reaching for.
         assertTrue(root.contains("craftButton().style(style -> style.tooltips(reasonTooltip))"),
@@ -322,6 +387,8 @@ class VoxelPrintingStationVisualRegressionTest {
         assertTrue(stylesheet.contains(".sb-item-name"));
         assertTrue(stylesheet.contains(".sb-craft-action-bar"));
         assertTrue(stylesheet.contains(".sb-output-slot"));
+        assertTrue(stylesheet.contains(".sb-recipe-search"));
+        assertTrue(stylesheet.contains(".sb-quantity-value:host"));
         assertTrue(stylesheet.contains(".sb-print-count-bar"));
         assertFalse(stylesheet.contains(".voxel-fabrication-chamber"));
         assertFalse(stylesheet.contains(".voxel-requirement-card"));

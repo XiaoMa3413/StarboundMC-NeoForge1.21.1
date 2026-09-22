@@ -5,7 +5,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
-import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import java.util.function.IntConsumer;
@@ -13,12 +13,18 @@ import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 /**
- * One semantic quantity control composed from ordinary LDLib2 buttons/label.
+ * One semantic quantity control: the −10/−1/+1/+10/MAX buttons with an editable count between them.
  * The page owns the business limit; this component owns input ergonomics.
  *
- * <p>{@link Mode#FULL} offers the ±10 jumps as well; {@link Mode#COMPACT} keeps the −1/+1/MAX
- * controls and drops the tens, because a pane narrow enough to need it cannot afford to give the
- * action button next to it nothing but a clipped sliver. Either way the control stays compound.
+ * <p>The count is a real {@link TextField}, so a player who knows they want 32 can say so instead of
+ * clicking up twenty-nine times. Typing is validated three ways: only digits reach the field, the
+ * value must stay inside the machine's hard cap, and whatever is committed is clamped to the
+ * business limit the page supplies — which is why a typed 9 with only 4 affordable settles on 4
+ * rather than being refused.
+ *
+ * <p>{@link Mode#FULL} offers the ±10 jumps as well; {@link Mode#COMPACT} drops the tens, because a
+ * pane narrow enough to need it cannot afford to give the action button nothing but a clipped
+ * sliver. Either way the control stays compound.
  */
 public final class QuantityStepper extends UIElement {
     public enum Mode {
@@ -26,9 +32,15 @@ public final class QuantityStepper extends UIElement {
         COMPACT
     }
 
+    /** The machine's own ceiling (64 outstanding crafts); typing can never exceed it. */
+    private static final int HARD_CAP = 64;
+    private static final int FIELD_H = 13;
+    private static final int VALUE_W = 28;
+    private static final int GAP = 2;
+
     private final Button minusTen = button("−10", 20);
     private final Button minus = button("−", 14);
-    private final Label value = new Label();
+    private final TextField value = new TextField();
     private final Button plus = button("+", 14);
     private final Button plusTen = button("+10", 20);
     private final Button maximum = button("MAX", 28);
@@ -36,22 +48,48 @@ public final class QuantityStepper extends UIElement {
     private int current = 1;
     private int max = 1;
     private Mode mode = Mode.FULL;
+    /**
+     * True while this component is writing the field itself. {@code TextField.setValue} notifies its
+     * value listeners, so a programmatic write would re-enter the responder below, which would call
+     * back into the page, which refreshes this control — a loop. Every self-write goes through
+     * {@link #writeField} so the re-entry is refused.
+     */
+    private boolean writingSelf;
 
     public QuantityStepper(int width) {
         addClass("sb-quantity-stepper");
-        layout(layout -> layout.width(width).height(13)
-                .flexDirection(FlexDirection.ROW).gapAll(2));
+        layout(layout -> layout.width(width).height(FIELD_H)
+                .flexDirection(FlexDirection.ROW).gapAll(GAP));
 
         value.addClass("sb-quantity-value");
-        value.setAllowHitTest(false);
-        value.setOverflowVisible(false);
-        value.layout(layout -> layout.width(28).height(13));
-        value.textStyle(style -> style
-                .adaptiveWidth(false)
-                .adaptiveHeight(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
+        // Digits only, and inside the machine's hard cap. The business limit is applied on commit
+        // instead, because rejecting a keystroke would fight a player mid-number.
+        value.setNumbersOnlyInt(1, HARD_CAP);
+        value.layout(layout -> layout.width(VALUE_W).height(FIELD_H));
+        value.textFieldStyle(style -> style
+                .fontSize(6)
+                .textShadow(false)
+                .placeholder(Component.literal("×1")));
+        // Every edit reports upward so the materials list and the action button stay in step with
+        // what has been typed; the field is left alone while focused (see setValueAndMaximum).
+        value.setTextResponder(text -> {
+            if (writingSelf) {
+                return;
+            }
+            Integer typed = parse(text);
+            if (typed != null) {
+                current = Math.max(1, Math.min(typed, max));
+                onChanged.accept(current);
+            }
+        });
+        // Committing — Enter or leaving the field — snaps the text to the value actually allowed.
+        value.addEventListener(UIEvents.KEY_DOWN, event -> {
+            if (event.keyCode == GLFW.GLFW_KEY_ENTER || event.keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                normalizeField();
+                event.stopPropagation();
+            }
+        });
+        value.addEventListener(UIEvents.BLUR, event -> normalizeField());
 
         wire(minusTen, -10);
         wire(minus, -1);
@@ -82,17 +120,20 @@ public final class QuantityStepper extends UIElement {
         boolean full = mode == Mode.FULL;
         minusTen.setDisplay(full);
         plusTen.setDisplay(full);
-        // 20+2+14+2+28+2+14+2+20+2+28 pressed together, minus the two 22px tens cells when compact.
         int width = full ? 134 : 90;
-        layout(layout -> layout.width(width).height(13)
-                .flexDirection(FlexDirection.ROW).gapAll(2));
+        layout(layout -> layout.width(width).height(FIELD_H)
+                .flexDirection(FlexDirection.ROW).gapAll(GAP));
         return this;
     }
 
     public QuantityStepper setValueAndMaximum(int current, int maximumValue) {
         max = Math.max(1, maximumValue);
         this.current = Math.max(1, Math.min(current, max));
-        value.setText(Component.literal("×" + this.current));
+        // Never rewrite the field while the player is typing in it: the page refreshes this control
+        // every tick, and a tick landing mid-number would replace what they were entering.
+        if (!value.isFocused()) {
+            writeField(this.current);
+        }
         boolean canDecrease = this.current > 1;
         boolean canIncrease = this.current < max;
         minusTen.setActive(canDecrease);
@@ -104,10 +145,38 @@ public final class QuantityStepper extends UIElement {
         return this;
     }
 
+    /** Replace the field text with the value that is actually allowed, once editing has stopped. */
+    private void normalizeField() {
+        if (!value.isFocused()) {
+            writeField(current);
+        }
+    }
+
+    /** Write the field without letting the write look like typing. */
+    private void writeField(int amount) {
+        writingSelf = true;
+        try {
+            value.setValue(Integer.toString(amount), false);
+        } finally {
+            writingSelf = false;
+        }
+    }
+
+    private static Integer parse(String text) {
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException notANumber) {
+            return null;
+        }
+    }
+
     /**
-     * The buttons carry their own explanation: a bare "−10"/"MAX" is not self-explanatory, and
-     * at the ceiling the increase buttons must say which limit stopped them rather than going
-     * silently inert.
+     * The buttons and the field carry their own explanation: a bare "−10"/"MAX" is not
+     * self-explanatory, and at the ceiling the controls must say which limit stopped them rather
+     * than going silently inert.
      */
     private void applyTooltips(boolean canDecrease, boolean canIncrease) {
         Component decrease = Component.translatable("gui.starboundmc.voxel_printing.quantity.decrease");
@@ -124,6 +193,9 @@ public final class QuantityStepper extends UIElement {
         plusTen.style(style -> style.tooltips(canIncrease ? increaseTen : limit));
         maximum.style(style -> style.tooltips(Component.translatable(
                 "gui.starboundmc.voxel_printing.quantity.maximum", max)));
+        // The count is typeable, which a field of digits does not advertise on its own.
+        value.style(style -> style.tooltips(Component.translatable(
+                "gui.starboundmc.voxel_printing.quantity.type", max)));
     }
 
     private void wire(Button button, int delta) {
@@ -142,7 +214,7 @@ public final class QuantityStepper extends UIElement {
         button.text.setAllowHitTest(false);
         button.text.setOverflowVisible(false);
         button.text.layout(layout -> layout.widthPercent(100).heightPercent(100).marginHorizontal(0));
-        button.layout(layout -> layout.width(width).height(13).paddingAll(1));
+        button.layout(layout -> layout.width(width).height(FIELD_H).paddingAll(1));
         button.textStyle(style -> style
                 .adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.CENTER)

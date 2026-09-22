@@ -29,6 +29,7 @@
 ## UI 与美术规范
 
 - [UI / 美术风格规范](ui-art-direction.md)：项目级舰载科幻视觉语言、颜色、层级、像素资产、星图、N.O.V.A.、物质枪、打印站、HUD 与动画规则。
+- [石墨舰载制造终端风格约束](ui-fabrication-style.md)：已认可的打印站皮肤基线，约束配色、组件材质、交互状态、悬浮提示和复用边界。
 - [UI 重构工作流](ui-refactor-workflow.md)：定义 Design Contract、设计与 LDLib2 实现分工、Anti-AI UI 检查和后续 UI Kit / Playground 路线。
 
 ## 架构参考
