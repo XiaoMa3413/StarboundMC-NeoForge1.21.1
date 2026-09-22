@@ -11,6 +11,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.ui.MachineUiSkin;
+import com.starboundmc.client.ui.components.TooltipLines;
 import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.item.MatterManipulatorModuleItem;
 import com.starboundmc.menu.UpgradeMenu;
@@ -27,7 +29,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 import java.util.List;
 
-/** LDLib2 upgrade topology for the Matter Manipulator workbench. */
+/** LDLib2 engineering-console presentation for the Matter Manipulator workbench. */
 public final class UpgradeRoot extends UIElement {
     public static final int PANEL_W = 320;
     public static final int PANEL_H = 250;
@@ -54,14 +56,15 @@ public final class UpgradeRoot extends UIElement {
                        UpgradeMenu menu, Inventory inventory) {
         this.menu = menu;
         this.inventory = inventory;
-        addClass("upgrade-screen");
+        addClasses("upgrade-screen", "shipboard-machine");
         setAllowHitTest(false);
         layout(layout -> layout.widthPercent(100).heightPercent(100));
 
         var shell = positioned("upgrade-shell", left, top, PANEL_W, PANEL_H);
         shell.setOverflowVisible(false);
         shell.addChildren(
-                positioned("upgrade-blueprint-sheet", 4, 3, 312, 156),
+                // The graphite shell remains visible around a dedicated green engineering viewport.
+                positioned("upgrade-blueprint-sheet", 4, 23, 312, 136),
                 buildHeader(title), new BlueprintCanvas(),
                 buildTrack(UpgradeMenu.TRACK_SPEED, "speed", "gui.starboundmc.upgrade.track_speed",
                         MatterManipulatorItem.MAX_UPGRADES, 14, 35, true),
@@ -73,6 +76,9 @@ public final class UpgradeRoot extends UIElement {
                         MatterManipulatorItem.MAX_FORTUNE_UPGRADES, 230, 87, false),
                 buildDetailPanel(), buildInventorySection(inventoryTitle));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".upgrade-slot-socket");
+        MachineUiSkin.button(upgradeAction);
         refreshState();
     }
 
@@ -113,18 +119,26 @@ public final class UpgradeRoot extends UIElement {
         detail.addChild(positioned("upgrade-detail-top-line", 0, 0, 312, 1));
         detail.addChild(positioned("upgrade-detail-bottom-line", 0, 29, 312, 1));
         detailName.addClass("upgrade-detail-name");
-        configureLabel(detailName, 9, 3, 132, 9);
+        configureLabel(detailName, 9, 3, 124, 9);
         detailLevel.addClass("upgrade-detail-level");
-        configureLabel(detailLevel, 9, 15, 94, 8);
+        configureLabel(detailLevel, 9, 15, 88, 8);
         detailCost.addClass("upgrade-detail-cost");
-        configureLabel(detailCost, 105, 15, 80, 8);
+        configureLabel(detailCost, 99, 15, 76, 8);
+
+        var slotLabel = label(Component.translatable("gui.starboundmc.upgrade.slot_label"),
+                "upgrade-detail-slot-label", 145, 3, 46, 8);
+        slotLabel.textStyle(style -> style.adaptiveWidth(false)
+                .textAlignHorizontal(Horizontal.RIGHT).textAlignVertical(Vertical.CENTER)
+                .textWrap(TextWrap.HIDE));
 
         upgradeAction.setText(Component.translatable("gui.starboundmc.upgrade.execute"));
         upgradeAction.addClass("upgrade-main-action");
         upgradeAction.text.setOverflowVisible(false);
+        upgradeAction.text.setAllowHitTest(false);
+        upgradeAction.text.layout(l -> l.widthPercent(100).heightPercent(100).marginHorizontal(0));
         upgradeAction.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                 .left(220).top(5).width(84).height(20));
-        upgradeAction.textStyle(style -> style.adaptiveWidth(true)
+        upgradeAction.textStyle(style -> style.adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
         upgradeAction.addEventListener(UIEvents.CLICK, event -> {
@@ -134,7 +148,7 @@ public final class UpgradeRoot extends UIElement {
                 event.stopPropagation();
             }
         });
-        detail.addChildren(detailName, detailLevel, detailCost,
+        detail.addChildren(detailName, detailLevel, detailCost, slotLabel,
                 buildManipulatorSocket(), upgradeAction);
         return detail;
     }
@@ -206,7 +220,7 @@ public final class UpgradeRoot extends UIElement {
             }
         }
         upgradeAction.setActive(active);
-        upgradeAction.style(style -> style.tooltips(tooltip));
+        upgradeAction.style(style -> style.tooltips(TooltipLines.split(tooltip)));
     }
 
     private UpgradeTrack trackById(int id) {
@@ -316,6 +330,10 @@ public final class UpgradeRoot extends UIElement {
             setOverflowVisible(false);
             layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                     .left(4).top(24).width(BLUEPRINT_W).height(BLUEPRINT_H));
+
+            // Give the tool a dedicated engineering viewport so the blueprint, not the
+            // surrounding upgrade nodes, becomes the first visual read.
+            addChild(positioned("upgrade-blueprint-focus", 74, 8, 164, 86));
             var manipulator = positioned("upgrade-manipulator-blueprint",
                     (BLUEPRINT_W - MANIPULATOR_BLUEPRINT_W) / 2,
                     (BLUEPRINT_H - MANIPULATOR_BLUEPRINT_H) / 2,
@@ -330,17 +348,23 @@ public final class UpgradeRoot extends UIElement {
             float x = getPositionX();
             float y = getPositionY();
             var graphics = context.graphics;
-            for (int gx = 6; gx < BLUEPRINT_W; gx += 6) {
-                int color = gx % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
+
+            // A deliberately low-frequency grid keeps the screen "engineering" without
+            // competing with the tool silhouette.
+            for (int gx = 12; gx < BLUEPRINT_W; gx += 12) {
+                int color = gx % 48 == 0 ? 0x2446A06B : 0x0D4A815E;
                 graphics.fill(Math.round(x + gx), Math.round(y), Math.round(x + gx + 1),
                         Math.round(y + BLUEPRINT_H), color);
             }
-            for (int gy = 6; gy < BLUEPRINT_H; gy += 6) {
-                int color = gy % 24 == 0 ? 0x2A41B378 : 0x1156A77B;
+            for (int gy = 12; gy < BLUEPRINT_H; gy += 12) {
+                int color = gy % 48 == 0 ? 0x2446A06B : 0x0D4A815E;
                 graphics.fill(Math.round(x), Math.round(y + gy), Math.round(x + BLUEPRINT_W),
                         Math.round(y + gy + 1), color);
             }
             drawRegistrationMarks(graphics, x, y);
+
+            // Upgrade branches terminate on the equipment instead of behaving like an
+            // abstract skill tree. The selected branch receives the only bright line.
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_SPEED,
                     72, 32, 102, 32, 102, 43, 118, 43);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_RANGE,
@@ -349,23 +373,28 @@ public final class UpgradeRoot extends UIElement {
                     194, 43, 208, 43, 208, 32, 230, 32);
             drawConnector(graphics, x, y, UpgradeMenu.TRACK_FORTUNE,
                     194, 66, 210, 66, 210, 84, 230, 84);
+
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_SPEED, 118, 43);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_RANGE, 120, 66);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_MINING, 194, 43);
+            drawAnchor(graphics, x, y, UpgradeMenu.TRACK_FORTUNE, 194, 66);
             graphics.flush();
         }
 
         private void drawRegistrationMarks(net.minecraft.client.gui.GuiGraphics graphics,
                                            float x, float y) {
-            int edge = 0x8A78E8A8;
-            int center = 0x5965D694;
+            int edge = 0x6678C894;
+            int center = 0x4F62B286;
             int right = Math.round(x + BLUEPRINT_W);
             int bottom = Math.round(y + BLUEPRINT_H);
             int left = Math.round(x);
             int top = Math.round(y);
-            for (int offset = 12; offset < BLUEPRINT_W; offset += 24) {
+            for (int offset = 24; offset < BLUEPRINT_W; offset += 24) {
                 int px = Math.round(x + offset);
                 graphics.fill(px, top, px + 1, top + 3, edge);
                 graphics.fill(px, bottom - 3, px + 1, bottom, edge);
             }
-            for (int offset = 12; offset < BLUEPRINT_H; offset += 24) {
+            for (int offset = 24; offset < BLUEPRINT_H; offset += 24) {
                 int py = Math.round(y + offset);
                 graphics.fill(left, py, left + 3, py + 1, edge);
                 graphics.fill(right - 3, py, right, py + 1, edge);
@@ -380,8 +409,19 @@ public final class UpgradeRoot extends UIElement {
 
         private void drawConnector(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
                                    int track, float... points) {
-            int color = selectedTrack == track ? 0xFFB1FFD0 : 0xFF4E9F70;
-            drawPolyline(graphics, x, y, color, selectedTrack == track ? 1.5F : 1.0F, points);
+            boolean selected = selectedTrack == track;
+            int color = selected ? 0xFFC8FFD8 : 0xB73E7655;
+            drawPolyline(graphics, x, y, color, selected ? 1.5F : 1.0F, points);
+        }
+
+        private void drawAnchor(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,
+                                int track, float anchorX, float anchorY) {
+            boolean selected = selectedTrack == track;
+            int color = selected ? 0xFFC8FFD8 : 0xD05A9B70;
+            int px = Math.round(x + anchorX);
+            int py = Math.round(y + anchorY);
+            graphics.fill(px - 2, py, px + 3, py + 1, color);
+            graphics.fill(px, py - 2, px + 1, py + 3, color);
         }
 
         private void drawPolyline(net.minecraft.client.gui.GuiGraphics graphics, float x, float y,

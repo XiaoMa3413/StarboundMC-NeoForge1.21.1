@@ -142,15 +142,14 @@
   pressed-background: sdf(#63e2df, 2);
 }
 
-// Teleporter-only console skin. It deliberately uses LDLib2's image-backed
-// ui-mc sprites instead of the rounded SDF cards used by the starmap.
+// Teleporter: graphite equipment, white type and persistent cyan navigation markers.
 .teleporter-shell {
-  background: built-in(ui-mc:BORDER_1);
+  background: rect(#101a22);
   overflow-clip: true;
 }
 
 .teleporter-shell .machine-header {
-  background: built-in(ui-mc:RECT_BLACK);
+  background: rect(#0d171f);
 }
 
 .teleporter-shell .machine-title {
@@ -160,7 +159,7 @@
 }
 
 .teleporter-shell .machine-content {
-  background: built-in(ui-mc:RECT_BLACK);
+  background: rect(#0d171f);
 }
 
 .teleporter-header-status {
@@ -170,11 +169,11 @@
 }
 
 .teleporter-pane {
-  background: group(rect(#1a1d1f), border(1, #686e70));
+  background: rect(#0d171f);
 }
 
 .teleporter-detail-pane {
-  background: group(rect(#1d2022), border(1, #747a7c));
+  background: rect(#0d171f);
 }
 
 .teleporter-shell .machine-section-title,
@@ -212,16 +211,16 @@
 }
 
 .teleporter-destination-row:host {
-  base-background: rect(#25292b);
-  hover-background: group(rect(#34393b), border(1, #6f7779));
-  pressed-background: group(rect(#191c1e), border(1, #c4c9ca));
+  base-background: rect(#0d171f);
+  hover-background: rect(#1c2e38);
+  pressed-background: rect(#12242d);
   padding-horizontal: 3;
 }
 
 .teleporter-destination-selected:host {
-  base-background: group(rect(#3d4345), border(1, #aeb5b7));
-  hover-background: group(rect(#4a5153), border(1, #e1e4e5));
-  pressed-background: group(rect(#292e30), border(1, #f4f5f5));
+  base-background: rect(#17343e);
+  hover-background: rect(#20444d);
+  pressed-background: rect(#122c35);
 }
 
 .teleporter-shell .teleporter-destination-selected .teleporter-destination-name {
@@ -233,19 +232,19 @@
 }
 
 .teleporter-destination-marker {
-  background: #555c5e;
+  background: #344b55;
 }
 
 .teleporter-destination-row:hover .teleporter-destination-marker {
-  background: #aeb5b7;
+  background: #8aa2ad;
 }
 
 .teleporter-destination-selected .teleporter-destination-marker {
-  background: #f1f3f3;
+  background: #63d8d4;
 }
 
 .teleporter-destination-icon {
-  background: built-in(ui-mc:RECT_BLACK);
+  background: rect(#0d171f);
 }
 
 .teleporter-detail-icon {
@@ -277,20 +276,20 @@
   background: empty;
   padding-all: 0;
   font-size: 5;
-  text-color: #858b8d;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
 .teleporter-console-button:host {
-  base-background: group(rect(#292d2f), border(1, #73797b));
-  hover-background: group(rect(#3b4143), border(1, #c8cdce));
-  pressed-background: group(rect(#171a1c), border(1, #f1f2f2));
+  base-background: rect(#1c2e38);
+  hover-background: rect(#2a414d);
+  pressed-background: rect(#12232c);
 }
 
 .teleporter-transmit-button:host {
-  base-background: group(rect(#343a3c), border(1, #c2c8c9));
-  hover-background: group(rect(#4b5254), border(1, #ffffff));
-  pressed-background: group(rect(#202426), border(1, #d8dcdd));
+  base-background: rect(#20545d);
+  hover-background: rect(#2c6b73);
+  pressed-background: rect(#163e46);
 }
 
 .teleporter-button-label {
@@ -311,7 +310,7 @@
 
 .teleporter-console-button.__disabled__ .teleporter-button-label,
 .teleporter-console-button.__disabled__ .teleporter-action-arrow {
-  text-color: #686d6f;
+  text-color: #718791;
 }
 
 .teleporter-console-button.__disabled__ .teleporter-action-marker {
@@ -319,16 +318,16 @@
 }
 
 .teleporter-transmit-button.__disabled__:host {
-  base-background: group(rect(#202325), border(1, #555b5d));
-  hover-background: group(rect(#202325), border(1, #555b5d));
-  pressed-background: group(rect(#202325), border(1, #555b5d));
+  base-background: rect(#17242d);
+  hover-background: rect(#17242d);
+  pressed-background: rect(#17242d);
 }
 
 .teleporter-shell .teleporter-destination-type {
   font-size: 5;
   background: empty;
   padding-all: 0;
-  text-color: #85898b;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
@@ -383,8 +382,8 @@
 }
 
 .teleporter-shell .teleporter-name-field:host {
-  background: built-in(ui-mc:RECT_5);
-  focus-overlay: built-in(ui-mc:RECT_6);
+  background: rect(#081116);
+  focus-overlay: empty;
 }
 
 .teleporter-shell .teleporter-rename-section,
@@ -393,7 +392,7 @@
 }
 
 .teleporter-control-divider {
-  background: #565b5d;
+  background: #344b55;
 }
 
 .teleporter-shell .teleporter-destination-list .__scroller_view_vertical-scroller__ {
@@ -402,13 +401,13 @@
 }
 
 .teleporter-shell .teleporter-destination-list .__scroller_scroll_container__ {
-  background: built-in(ui-mc:RECT_BLACK);
+  background: rect(#0d171f);
 }
 
 .teleporter-shell .teleporter-destination-list .__scroller_scroll_bar__ {
-  base-background: built-in(ui-mc:SCROLLER_V);
-  hover-background: built-in(ui-mc:SCROLLER_V_DARK);
-  pressed-background: built-in(ui-mc:SCROLLER_V_DARK) color(#dddddd);
+  base-background: rect(#526975);
+  hover-background: rect(#6b8a97);
+  pressed-background: rect(#63d8d4);
 }
 
 // Shared fail-closed surface for ship systems that are unavailable during

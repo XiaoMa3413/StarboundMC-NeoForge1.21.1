@@ -6,6 +6,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.starboundmc.menu.ShipCrateMenu;
+import com.starboundmc.client.ui.MachineUiSkin;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.network.chat.Component;
 
@@ -16,6 +17,7 @@ public final class ShipCrateRoot extends UIElement {
 
     public ShipCrateRoot(int left, int top, Component title, Component inventoryTitle) {
         addClass("machine-inventory-screen");
+        addClass("shipboard-machine");
         setAllowHitTest(false);
         layout(layout -> layout.widthPercent(100).heightPercent(100));
 
@@ -27,6 +29,8 @@ public final class ShipCrateRoot extends UIElement {
                 buildCargoGrid(),
                 buildInventorySection(inventoryTitle));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".machine-slot-socket");
     }
 
     private UIElement buildHeader(Component title) {

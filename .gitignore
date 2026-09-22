@@ -15,9 +15,22 @@ scripts/__pycache__/
 ### Generated resources ###
 src/generated/**/.cache/
 
-### Local agent workspace (skills, plans) ###
-.agents/
+### Local agent workspace ###
+.agents/*
+!.agents/skills/
+.agents/skills/*
+
+### Project-level agent skills tracked by Git ###
+!.agents/skills/starboundmc-ui-design/
+!.agents/skills/starboundmc-ui-design/**
+!.agents/skills/ldlib2-ui/
+!.agents/skills/ldlib2-ui/**
+
+### Other local agent workspaces remain local ###
 .zcode/
+
+### Local patch inputs ###
+patchs/
 
 ### IntelliJ IDEA ###
 .idea/
@@ -38,10 +51,6 @@ bin/
 
 ### VS Code ###
 .vscode/
-
-### Agent workspace skills (local only) ###
-.agents/
-.zcode/
 
 ### OS files ###
 .DS_Store

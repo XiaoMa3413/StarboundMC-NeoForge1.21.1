@@ -1,6 +1,6 @@
 // Propulsion instrumentation: machined graphite, concentric coils and sparse status accents.
 .engine-screen { background: rect(#a0060c13); }
-.engine-shell { background: group(rect(#0b141d), border(-1, #496778)); }
+.engine-shell { background: rect(#101a22); }
 .engine-rail { background: rect(#79dfea); }
 .engine-divider { background: rect(#2d4555); }
 .engine-title { font-size: 10; text-color: #edf8ff; text-shadow: false; }
@@ -11,5 +11,5 @@
 .engine-status-igniting { text-color: #7eeaff; }
 .engine-caption { font-size: 7; text-color: #91a9b7; text-shadow: false; }
 .engine-socket { background: group(rect(#030b12), border(-1, #a0e6f5)); }
-.engine-inventory-slot { background: group(rect(#080f16), border(-1, #304655)); }
-.engine-hotbar-slot { background: group(rect(#111f2a), border(-1, #527185)); }
+.engine-inventory-slot { background: rect(#081116); }
+.engine-hotbar-slot { background: rect(#0d171f); }

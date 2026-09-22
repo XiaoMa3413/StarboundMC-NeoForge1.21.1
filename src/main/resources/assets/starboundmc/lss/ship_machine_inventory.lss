@@ -12,36 +12,35 @@
 .machine-inventory-title,
 .crate-title {
   font-size: 8;
-  text-color: #edf1f1;
+  text-color: #d8edf0;
   text-shadow: false;
 }
 
 .machine-inventory-caption {
   font-size: 6;
-  text-color: #aeb5b7;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
 .machine-slot-socket {
-  background: group(rect(#090c0e), border(-1, #465055));
+  background: rect(#081116);
 }
 
 .player-slot-socket {
-  background: group(rect(#0c1012), border(-1, #3d474b));
+  background: rect(#081116);
 }
 
 .hotbar-slot-socket {
-  background: group(rect(#111619), border(-1, #697478));
+  background: rect(#0d171f);
 }
 
-// Fuel controller: compact instrumentation with a cyan reserve channel and
-// restrained amber status accents.
+// Fuel: amber energy. Cyan is reserved for digital processing and navigation.
 .fuel-controller-shell {
-  background: group(rect(#10161a), border(-1, #536168));
+  background: rect(#101a22);
 }
 
 .fuel-controller-shell .machine-inventory-header {
-  background: rect(#181f23);
+  background: rect(#16232d);
 }
 
 .fuel-header-rail {
@@ -50,12 +49,12 @@
 
 .fuel-header-status {
   font-size: 5;
-  text-color: #8fd0c8;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
 .fuel-console {
-  background: group(rect(#171e22), border(-1, #3d484e));
+  background: rect(#0d171f);
 }
 
 .fuel-gauge-caption {
@@ -69,15 +68,15 @@
 }
 
 .fuel-gauge-fill {
-  background: group(rect(#3aa9ad), border(-1, #75d5d2));
+  background: rect(#b18546);
 }
 
 .fuel-gauge-low .fuel-gauge-fill {
-  background: group(rect(#a56a32), border(-1, #dfa95b));
+  background: rect(#966537);
 }
 
 .fuel-gauge-full .fuel-gauge-fill {
-  background: group(rect(#56aaa1), border(-1, #a3ddd4));
+  background: rect(#c39755);
 }
 
 .fuel-gauge-tick {
@@ -91,13 +90,13 @@
 }
 
 .fuel-slot-socket {
-  background: group(rect(#080b0d), border(-1, #657177));
+  background: rect(#081116);
 }
 
 .fuel-refuel-button:host {
-  base-background: group(rect(#28363a), border(-1, #809196));
-  hover-background: group(rect(#385156), border(-1, #a7d8d6));
-  pressed-background: group(rect(#182326), border(-1, #d3e9e7));
+  base-background: rect(#624a2c);
+  hover-background: rect(#7d5e36);
+  pressed-background: rect(#42321f);
 }
 
 .fuel-refuel-button .__button_text__ {
@@ -113,7 +112,7 @@
 }
 
 .fuel-refuel-button.__disabled__ .__button_text__ {
-  text-color: #60696c;
+  text-color: #718791;
 }
 
 .fuel-cost-label {
@@ -123,49 +122,47 @@
 }
 
 .fuel-inventory-section {
-  background: group(rect(#101518), border(-1, #313b40));
+  background: rect(#101a22);
 }
 
-// Ship crate: a dense cargo manifest. Muted olive indexing separates it from
-// the fuel console while keeping the slot grid easy to scan.
+// Cargo: neutral graphite. Contents carry the colour, not the storage grid.
 .ship-crate-shell {
-  background: group(rect(#131614), border(-1, #5c625b));
+  background: rect(#101a22);
 }
 
 .crate-header {
-  background: rect(#20241f);
+  background: rect(#16232d);
 }
 
 .crate-header-index {
-  background: #a8a36e;
+  background: #8aa2ad;
 }
 
 .crate-capacity {
   font-size: 5;
-  text-color: #b9b995;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
 .crate-cargo-section {
-  background: group(rect(#171a17), border(-1, #3f463f));
+  background: rect(#0d171f);
 }
 
 .cargo-slot-socket {
-  background: group(rect(#090b09), border(-1, #596058));
+  background: rect(#081116);
 }
 
 .crate-inventory-section {
-  background: group(rect(#111411), border(-1, #353b35));
+  background: rect(#101a22);
 }
 
-// Voxel machinery: cyan matter channels with a yellow voxel output accent.
-.voxel-refinery-shell,
-.voxel-printing-shell {
-  background: group(rect(#0d151a), border(-1, #52717a));
+// Refinery: cyan processing, restrained green only when output can be claimed.
+.voxel-refinery-shell {
+  background: rect(#101a22);
 }
 
 .voxel-machine-header {
-  background: rect(#162229);
+  background: rect(#16232d);
 }
 
 .voxel-refinery-rail {
@@ -174,19 +171,16 @@
 
 .voxel-machine-header-status {
   font-size: 5;
-  text-color: #e4c95d;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
-.voxel-refinery-process,
-.voxel-printing-recipe-pane,
-.voxel-printing-detail-pane,
-.voxel-printing-queue-pane {
-  background: group(rect(#111b21), border(-1, #344c55));
+.voxel-refinery-process {
+  background: rect(#0d171f);
 }
 
 .voxel-inventory-section {
-  background: group(rect(#0f171b), border(-1, #303f45));
+  background: rect(#101a22);
 }
 
 .voxel-machine-caption {
@@ -196,7 +190,7 @@
 }
 
 .voxel-refinery-input-socket {
-  background: group(rect(#070b0d), border(-1, #779099));
+  background: rect(#081116);
 }
 
 .voxel-refinery-arrow {
@@ -222,7 +216,7 @@
 
 .voxel-refinery-wallet {
   font-size: 5;
-  text-color: #e4c95d;
+  text-color: #8aa2ad;
   text-shadow: false;
 }
 
@@ -233,9 +227,9 @@
 }
 
 .voxel-refinery-claim.voxel-output-ready:host {
-  base-background: group(rect(#34301a), border(-1, #d5b94c));
-  hover-background: group(rect(#4b4321), border(-1, #ffe580));
-  pressed-background: group(rect(#25210f), border(-1, #fff0a6));
+  base-background: rect(#26483d);
+  hover-background: rect(#345e4f);
+  pressed-background: rect(#1a3029);
 }
 
 .voxel-refinery-claim.__disabled__:host,
@@ -247,59 +241,25 @@
 
 .voxel-refinery-output-amount {
   font-size: 6;
-  text-color: #ffe57e;
+  text-color: #d8edf0;
   text-shadow: true;
 }
 
 .voxel-refinery-claim.__disabled__ .voxel-refinery-output-amount {
-  text-color: #74766d;
+  text-color: #718791;
   text-shadow: false;
-}
-
-.voxel-quantity-button:host,
-.voxel-queue-cancel:host {
-  base-background: group(rect(#1b292e), border(-1, #526a70));
-  hover-background: group(rect(#294149), border(-1, #8ac7c9));
-  pressed-background: group(rect(#101d21), border(-1, #c0e9e7));
-}
-
-.voxel-quantity-button .__button_text__,
-.voxel-queue-cancel .__button_text__ {
-  font-size: 5;
-  text-color: #dbe7e7;
-  text-shadow: false;
-}
-
-.voxel-quantity-button .__button_text__ {
-  font-size: 6;
-}
-
-.voxel-quantity-button.__disabled__:host,
-.voxel-queue-cancel.__disabled__:host {
-  base-background: group(rect(#171d1f), border(-1, #364145));
-  hover-background: group(rect(#171d1f), border(-1, #364145));
-  pressed-background: group(rect(#171d1f), border(-1, #364145));
-}
-
-.voxel-quantity-button.__disabled__ .__button_text__,
-.voxel-queue-cancel.__disabled__ .__button_text__ {
-  text-color: #626d70;
 }
 
 .voxel-machine-action:host {
-  base-background: group(rect(#21343a), border(-1, #66838a));
-  hover-background: group(rect(#31535a), border(-1, #a0e2e0));
-  pressed-background: group(rect(#14262b), border(-1, #d0f1ef));
+  base-background: rect(#20545d);
+  hover-background: rect(#2c6b73);
+  pressed-background: rect(#163e46);
 }
 
 .voxel-machine-action .__button_text__ {
   font-size: 6;
   text-color: #e7eeee;
   text-shadow: false;
-}
-
-.voxel-printing-action .__button_text__ {
-  font-size: 7;
 }
 
 .voxel-machine-action.voxel-refinery-stop:host {
@@ -319,186 +279,12 @@
 }
 
 .voxel-machine-action.__disabled__ .__button_text__ {
-  text-color: #697477;
+  text-color: #718791;
 }
 
-.voxel-printing-rail {
-  background: #e2c757;
-}
 
-.voxel-printing-wallet {
-  font-size: 6;
-  text-color: #f1d968;
-  text-shadow: false;
-}
-
-.voxel-printing-subtitle {
-  font-size: 5;
-  text-color: #899598;
-  text-shadow: false;
-}
-
-.voxel-pane-title {
-  font-size: 5;
-  text-color: #a9c2c9;
-  text-shadow: false;
-}
-
-.voxel-recipe-list .__scroller_view_vertical-scroller__,
-.voxel-print-queue-list .__scroller_view_vertical-scroller__ {
-  width: 4;
-  margin-left: 2;
-}
-
-.voxel-recipe-list .__scroller_scroll_container__,
-.voxel-print-queue-list .__scroller_scroll_container__ {
-  background: rect(#080d10);
-  padding-all: 0;
-}
-
-.voxel-recipe-list .__scroller_scroll_bar__,
-.voxel-print-queue-list .__scroller_scroll_bar__ {
-  base-background: rect(#3d5b63);
-  hover-background: rect(#68a7ad);
-  pressed-background: rect(#9de5e4);
-}
-
-.voxel-recipe-row:host {
-  base-background: group(rect(#172329), border(-1, #344b53));
-  hover-background: group(rect(#24383f), border(-1, #72aeb3));
-  pressed-background: group(rect(#10191d), border(-1, #b8e4e2));
-}
-
-.voxel-recipe-row.voxel-recipe-selected:host {
-  base-background: group(rect(#2c3f43), border(-1, #d5c257));
-  hover-background: group(rect(#3a5357), border(-1, #ffe77c));
-  pressed-background: group(rect(#1d2b2e), border(-1, #fff0a2));
-}
-
-.voxel-recipe-row.voxel-recipe-unavailable:host {
-  base-background: group(rect(#12181b), border(-1, #2b3539));
-  hover-background: group(rect(#1d292d), border(-1, #536a70));
-  pressed-background: group(rect(#0c1113), border(-1, #77898c));
-}
-
-.voxel-recipe-name {
-  font-size: 6;
-  text-color: #e4eded;
-  text-shadow: false;
-}
-
-.voxel-recipe-unavailable .voxel-recipe-name {
-  text-color: #737f82;
-}
-
-.voxel-recipe-amount {
-  font-size: 5;
-  text-color: #d9e4e4;
-  text-shadow: false;
-}
-
-.voxel-recipe-cost {
-  font-size: 4;
-  text-color: #e5cb5f;
-  text-shadow: false;
-}
-
-.voxel-recipe-unavailable .voxel-recipe-amount,
-.voxel-recipe-unavailable .voxel-recipe-cost {
-  text-color: #6b6f69;
-}
-
-.voxel-recipe-empty {
-  font-size: 6;
-  text-color: #6e7c80;
-  text-shadow: false;
-}
-
-.voxel-printing-detail-name {
-  font-size: 7;
-  text-color: #edf2f1;
-  text-shadow: false;
-}
-
-.voxel-printing-detail-output,
-.voxel-printing-detail-meta {
-  font-size: 6;
-  text-color: #9eb2b7;
-  text-shadow: false;
-}
-
-.voxel-printing-detail-description {
-  font-size: 6;
-  text-color: #82979c;
-  text-shadow: false;
-}
-
-.voxel-printing-detail-status {
-  font-size: 6;
-  text-color: #71d4bd;
-  text-shadow: false;
-}
-
-.voxel-printing-quantity {
-  font-size: 6;
-  text-color: #f0da72;
-  text-shadow: false;
-  background: group(rect(#0a1013), border(-1, #3d5056));
-}
-
-.voxel-queue-empty {
-  font-size: 5;
-  text-color: #6e7c80;
-  text-shadow: false;
-}
-
-.voxel-queue-title {
-  font-size: 4;
-}
-
-.voxel-queue-row {
-  background: group(rect(#11191d), border(-1, #34464c));
-  overflow-clip: true;
-}
-
-.voxel-queue-row.voxel-queue-row-active {
-  background: group(rect(#203b3d), border(-1, #66c7c5));
-}
-
-.voxel-queue-state {
-  font-size: 4;
-  text-color: #d9e4e4;
-  text-shadow: false;
-}
-
-.voxel-queue-requester {
-  font-size: 4;
-  text-color: #8ca1a6;
-  text-shadow: false;
-}
-
-.voxel-queue-row-active .voxel-queue-state {
-  text-color: #8ce3d9;
-}
-
-.voxel-requirement-card {
-  background: group(rect(#0b1114), border(-1, #34464c));
-}
-
-.voxel-requirement-count {
-  font-size: 6;
-  text-color: #8ed1bb;
-  text-shadow: false;
-}
-
-.voxel-detail-title {
-  font-size: 6;
-}
-
-.voxel-requirement-count.voxel-requirement-missing {
-  text-color: #e98276;
-}
-
-.voxel-printing-output-socket {
-  background: group(rect(#13130d), border(-1, #aa9845));
-}
+// Alloy furnace: compact slot geometry, distinct heat and process channels.
+.alloy-shell { background: rect(#101a22); }
+.alloy-process { background: rect(#0d171f); }
+.alloy-title { font-size: 7; text-color: #d8edf0; text-shadow: false; }
+.alloy-status { font-size: 6; text-color: #8aa2ad; text-shadow: false; }

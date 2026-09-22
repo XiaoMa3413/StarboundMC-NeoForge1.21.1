@@ -23,7 +23,7 @@ public final class FuelControllerScreen
 
     @Override
     protected FuelControllerRoot createRoot() {
-        return new FuelControllerRoot(leftPos, topPos, title, playerInventoryTitle);
+        return new FuelControllerRoot(leftPos, topPos, title, playerInventoryTitle, menu);
     }
 
     @Override

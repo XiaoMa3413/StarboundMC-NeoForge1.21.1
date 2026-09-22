@@ -1,0 +1,7 @@
+interface:
+  display_name: "LDLib2 UI Implementation"
+  short_description: "Implement approved StarboundMC UI designs with LDLib2."
+  brand_color: "#63E2DF"
+  default_prompt: "Implement the approved UI design with LDLib2 while preserving the Design Contract and verifying version-specific API usage."
+policy:
+  allow_implicit_invocation: false

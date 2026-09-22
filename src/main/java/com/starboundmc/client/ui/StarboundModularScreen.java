@@ -34,6 +34,10 @@ public abstract class StarboundModularScreen<M extends AbstractContainerMenu, R 
 
     protected abstract ResourceLocation stylesheet();
 
+    public boolean usesShipboardTooltips() {
+        return root != null && root.hasClass("shipboard-machine");
+    }
+
     @Override
     protected void init() {
         disposeModularUi();

@@ -14,3 +14,27 @@
 .epp-service-button .__button_text__ { font-size: 8; text-color: #dbf0ed; text-shadow: false; }
 .epp-service-button.__disabled__:host { base-background: group(rect(#17262c), border(1, #344a53)); }
 .epp-service-button.__disabled__ .__button_text__ { text-color: #6e858d; }
+
+// Machine-only refinement; personal equipment and oxygen HUD retain their own styling.
+.epp-machine .epp-shell { background: rect(#101a22); }
+.epp-machine .epp-title { font-size: 9; text-color: #d8edf0; }
+.epp-machine .epp-caption { font-size: 7; text-color: #8aa2ad; }
+.epp-machine .epp-status { font-size: 8; text-color: #d8edf0; }
+.epp-machine .epp-slot, .epp-machine .epp-socket { background: rect(#081116); }
+.epp-machine .epp-service-button:host {
+    base-background: rect(#20545d);
+    hover-background: rect(#2c6b73);
+    pressed-background: rect(#163e46);
+}
+.epp-machine .epp-service-button .__button_text__ { font-size: 7; }
+.epp-machine .epp-service-button.__disabled__:host {
+    base-background: rect(#17242d);
+    hover-background: rect(#17242d);
+    pressed-background: rect(#17242d);
+}
+.epp-machine .epp-service-button.__disabled__ .__button_text__ { text-color: #718791; }
+.epp-machine .epp-fill-channel { background: rect(#081116); }
+.epp-machine .epp-fill { background: rect(#63d8d4); }
+.epp-machine.epp-no-air .epp-status { text-color: #e2b66f; }
+
+.epp-machine .epp-service-unsafe { text-color: #e2b66f; }

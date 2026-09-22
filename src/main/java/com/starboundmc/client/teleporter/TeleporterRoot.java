@@ -21,6 +21,7 @@ import com.starboundmc.client.StarmapUniverse;
 import com.starboundmc.client.ClientShipEnvironmentState;
 import com.starboundmc.client.ClientTeleporterState;
 import com.starboundmc.client.ui.ShipSystemLockOverlay;
+import com.starboundmc.client.ui.MachineUiSkin;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.TeleporterListPacket;
 import com.starboundmc.network.TeleporterRenamePacket;
@@ -57,6 +58,7 @@ public final class TeleporterRoot extends UIElement {
     private boolean environmentLockInitialized;
     private boolean environmentLocked;
     private String selectedDestinationKey;
+    private String syncedName;
 
     public TeleporterRoot() {
         this(-1);
@@ -64,7 +66,7 @@ public final class TeleporterRoot extends UIElement {
 
     public TeleporterRoot(int containerId) {
         this.containerId = containerId;
-        addClass("machine-screen");
+        addClasses("machine-screen", "shipboard-machine");
         layout(layout -> layout
                 .widthPercent(100)
                 .heightPercent(100)
@@ -74,7 +76,7 @@ public final class TeleporterRoot extends UIElement {
         var shell = new UIElement().addClasses("machine-shell", "teleporter-shell");
         shell.layout(layout -> layout
                 .width(184)
-                .height(178)
+                .height(204)
                 .flexDirection(FlexDirection.COLUMN));
 
         var header = buildHeader();
@@ -89,6 +91,10 @@ public final class TeleporterRoot extends UIElement {
 
         shell.addChildren(header, content);
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.input(nameField);
+        MachineUiSkin.scrollbars(shell);
+        shell.select(".teleporter-console-button", Button.class).forEach(MachineUiSkin::button);
         environmentLock = new ShipSystemLockOverlay();
         addChild(environmentLock);
         refreshFromClient();
@@ -298,7 +304,7 @@ public final class TeleporterRoot extends UIElement {
         var section = new UIElement().addClasses("teleporter-rename-section", "teleporter-subpane");
         section.layout(layout -> layout
                 .widthPercent(100)
-                .height(34)
+                .height(50)
                 .gapAll(2)
                 .flexDirection(FlexDirection.COLUMN));
 
@@ -319,13 +325,14 @@ public final class TeleporterRoot extends UIElement {
         var inputRow = new UIElement();
         inputRow.layout(layout -> layout
                 .widthPercent(100)
-                .height(20)
-                .gapAll(4)
-                .flexDirection(FlexDirection.ROW));
+                .height(40)
+                .gapAll(3)
+                .flexDirection(FlexDirection.COLUMN));
 
         nameField.addClass("teleporter-name-field");
-        nameField.layout(layout -> layout.flex(1).height(20));
+        nameField.layout(layout -> layout.widthPercent(100).height(18));
         nameField.setAnyString();
+        nameField.setTextResponder(value -> nameField.style(style -> style.tooltips(Component.literal(value))));
         nameField.setTextValidator(value -> value.length() <= MAX_NAME_LENGTH);
         nameField.textFieldStyle(style -> style
                 .placeholder(Component.translatable("gui.starboundmc.teleporter.name_placeholder"))
@@ -345,8 +352,8 @@ public final class TeleporterRoot extends UIElement {
         save.addClasses("teleporter-console-button", "teleporter-save-button");
         save.setOverflowVisible(false);
         save.layout(layout -> layout
-                .width(38)
-                .height(20)
+                .widthPercent(100)
+                .height(18)
                 .paddingHorizontal(3)
                 .alignItems(AlignItems.CENTER));
         save.addChild(buildButtonLabel(
@@ -397,7 +404,13 @@ public final class TeleporterRoot extends UIElement {
 
     private void refreshFromClient() {
         List<TeleporterListPacket.Entry> destinations = ClientTeleporterState.getDestinations();
-        nameField.setText(ClientTeleporterState.getCurrentName(), false);
+        String serverName = ClientTeleporterState.getCurrentName();
+        if (syncedName == null || (!nameField.isFocused() && nameField.getValue().equals(syncedName))) {
+            nameField.setText(serverName, false);
+            nameField.setCursor(0);
+        }
+        syncedName = serverName;
+        nameField.style(style -> style.tooltips(Component.literal(nameField.getValue())));
         networkStatus.setText(Component.translatable(
                 "gui.starboundmc.teleporter.link_count", destinations.size()));
         if (selectedDestinationKey != null && destinations.stream()
@@ -557,11 +570,13 @@ public final class TeleporterRoot extends UIElement {
 
     private void updateDetail(TeleporterListPacket.Entry entry) {
         detailIcon.clearAllChildren();
+        detailIcon.setDisplay(entry != null);
         if (entry == null) {
             detailTitle.setText(Component.translatable("gui.starboundmc.teleporter.no_selection"));
             detailType.setText(Component.empty());
             detailHint.setText(Component.translatable("gui.starboundmc.teleporter.select_destination"));
             warpButton.setActive(false);
+            warpButton.style(style -> style.tooltips(Component.translatable("gui.starboundmc.teleporter.select_destination")));
             return;
         }
 
@@ -577,9 +592,11 @@ public final class TeleporterRoot extends UIElement {
                 .marginRight(0));
         detailIcon.addChild(icon);
         detailTitle.setText(destinationName(entry));
+        detailTitle.style(style -> style.tooltips(destinationName(entry)));
         detailType.setText(destinationType(entry));
         detailHint.setText(Component.translatable("gui.starboundmc.teleporter.transmit_hint"));
-            warpButton.setActive(!isEnvironmentLocked());
+        warpButton.setActive(!isEnvironmentLocked());
+        warpButton.style(style -> style.tooltips(destinationName(entry)));
     }
 
     private void sendSelectedDestination() {

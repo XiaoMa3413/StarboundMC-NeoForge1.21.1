@@ -1,6 +1,8 @@
 package com.starboundmc.client.shipai;
 
 import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.starboundmc.client.ui.MachineUiSkin;
+import com.starboundmc.client.ui.components.TooltipLines;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.data.ScrollDisplay;
@@ -76,7 +78,7 @@ public final class ShipAiTerminalRoot extends UIElement
             throw new IllegalArgumentException("containerId must be non-negative");
         this.containerId = containerId;
 
-        addClass("ship-ai-screen");
+        addClasses("ship-ai-screen", "shipboard-machine");
         layout(layout -> layout
                 .widthPercent(100)
                 .heightPercent(100)
@@ -89,6 +91,7 @@ public final class ShipAiTerminalRoot extends UIElement
             syncPresentation();
         });
         addChild(commandLayout);
+        MachineUiSkin.scrollbars(this);
 
         addEventListener(UIEvents.TICK, event -> tickTerminal());
         refreshAuthoritativeSnapshot();
@@ -250,6 +253,8 @@ public final class ShipAiTerminalRoot extends UIElement
         returnLatest.setDisplay(false);
         returnLatest.setOverflowVisible(false);
         returnLatest.layout(layout -> layout.width(72).height(16));
+        MachineUiSkin.button(returnLatest);
+        returnLatest.text.layout(l -> l.widthPercent(100).heightPercent(100).marginHorizontal(0));
         returnLatest.text.setAllowHitTest(false);
         returnLatest.textStyle(style -> style
                 .adaptiveWidth(false)
@@ -785,7 +790,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private void showHint(Component text)
     {
         optionHint.setText(text);
-        optionHint.style(style -> style.tooltips(text));
+        optionHint.style(style -> style.tooltips(TooltipLines.split(text)));
         optionHint.setDisplay(true);
         singleAction.setDisplay(false);
         topicControls.setDisplay(false);
@@ -800,7 +805,7 @@ public final class ShipAiTerminalRoot extends UIElement
                 "gui.starboundmc.ship_ai.prologue.action.reboot_core");
         singleAction.setText(actionText);
         singleAction.setActive(canBeginCoreReboot());
-        singleAction.style(style -> style.tooltips(actionText));
+        singleAction.style(style -> style.tooltips(TooltipLines.split(actionText)));
     }
 
     private void showTopicControls()
@@ -830,7 +835,7 @@ public final class ShipAiTerminalRoot extends UIElement
                                     ? Component.translatable(
                                             "gui.starboundmc.ship_ai.prologue.action_pending")
                                     : option;
-            button.style(style -> style.tooltips(tooltip));
+            button.style(style -> style.tooltips(TooltipLines.split(tooltip)));
             button.setActive(interactive);
             setClass(button, TOPIC_READ_CLASS, read);
             setClass(button, TOPIC_CURRENT_CLASS, topic == session.selectedTopic());
@@ -852,7 +857,7 @@ public final class ShipAiTerminalRoot extends UIElement
         boolean progressionActive = canSelectProgression();
         progressionButton.setText(nextText);
         Component progressionTooltip = progressionActive ? nextText : currentStatusText();
-        progressionButton.style(style -> style.tooltips(progressionTooltip));
+        progressionButton.style(style -> style.tooltips(TooltipLines.split(progressionTooltip)));
         progressionButton.setActive(progressionActive);
     }
 

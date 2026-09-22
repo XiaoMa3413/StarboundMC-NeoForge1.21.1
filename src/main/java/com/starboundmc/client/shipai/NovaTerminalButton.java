@@ -28,7 +28,7 @@ final class NovaTerminalButton extends Button {
             if (selected) g.fill(x + w - 5, y + h / 2 - 1, x + w - 3, y + h / 2 + 1, edge);
             return;
         }
-        if (!primary || !active) {
+        if (!primary) {
             boolean task = hasClass("command-task-row");
             // Rows and secondary actions are typography-led, not filled tiles.
             if (task) {

@@ -1,104 +1,304 @@
-// Shipboard fabrication console. This sheet is loaded only by the printer screen.
-.machine-inventory-screen { background: rect(#99080808); }
+// Graphite fabrication console. One-pixel relief is drawn by PrinterUiSkin;
+// this sheet owns fills, text and interaction colours. Geometry stays unchanged.
+.machine-inventory-screen { background: rect(#A0050910); }
+
 .voxel-printing-shell {
-  background: built-in(ui-mc:RECT) color(#545454);
+  background: group(rect(#101A22), border(-1, #344B55));
   overflow-clip: true;
 }
-.machine-inventory-header { background: group(rect(#2a2a2a), border(-1, #525252)); }
-.voxel-printing-rail { background: rect(#b0b0b0); }
-.voxel-printing-category { background: built-in(ui-mc:RECT_THIN) color(#707070); }
-.voxel-category-dialog { background: group(rect(#292929), border(-1, #a9a9a9)); }
-.voxel-category-label { font-size: 7; text-color: #eeeeee; text-shadow: false; }
-.machine-inventory-title { font-size: 9; text-color: #eaeaea; text-shadow: false; }
-.machine-status { font-size: 7; text-color: #b7b7b7; text-shadow: false; }
-.voxel-printing-wallet { font-size: 8; text-color: #bebebe; text-shadow: false; }
+
+.machine-inventory-header { background: rect(#16232D); }
+.voxel-printing-rail { background: #63D8D4; }
+
+.machine-inventory-title {
+  font-size: 9;
+  text-color: #D8EDF0;
+  text-shadow: false;
+}
+
+.machine-status {
+  font-size: 6;
+  text-color: #7596A0;
+  text-shadow: false;
+}
+
+.voxel-printing-wallet {
+  font-size: 7;
+  text-color: #9DBECA;
+  text-shadow: false;
+}
+
 .voxel-printing-recipe-pane,
 .voxel-printing-detail-pane,
-.voxel-printing-queue-pane,
-.collection-pane { background: rect(#232323); }
+.voxel-printing-queue-pane {
+  background: rect(#0D171F);
+}
+
 .voxel-pane-title,
-.machine-inventory-caption { font-size: 7; text-color: #c1c1c1; text-shadow: false; }
+.machine-inventory-caption {
+  font-size: 7;
+  text-color: #88A6AF;
+  text-shadow: false;
+}
+
+.voxel-printing-category {
+  background: rect(#1A2A35);
+  focus-overlay: border(-1, #63D8D4);
+}
+
+.voxel-printing-category:hover { background: rect(#213642); }
+
+.voxel-category-dialog {
+  background: group(rect(#101D26), border(-1, #526975));
+}
+
+.voxel-category-label {
+  font-size: 7;
+  text-color: #C9E0E4;
+  text-shadow: false;
+}
+
 .voxel-recipe-list .__scroller_view_vertical-scroller__,
-.voxel-print-queue-list .__scroller_view_vertical-scroller__ { width: 4; margin-left: 2; }
+.voxel-print-queue-list .__scroller_view_vertical-scroller__,
+.sb-material-requirements .__scroller_view_vertical-scroller__ {
+  width: 3;
+  margin-left: 2;
+}
+
 .voxel-recipe-list .__scroller_scroll_container__,
-.voxel-print-queue-list .__scroller_scroll_container__ { background: rect(#1c1c1c); padding-all: 0; }
+.voxel-print-queue-list .__scroller_scroll_container__,
+.sb-material-requirements .__scroller_scroll_container__ {
+  background: rect(#081116);
+  padding-all: 0;
+}
+
 .voxel-recipe-list .__scroller_scroll_bar__,
-.voxel-print-queue-list .__scroller_scroll_bar__ {
-  base-background: built-in(ui-mc:SCROLLER_V) color(#909090);
-  hover-background: built-in(ui-mc:SCROLLER_V) color(#cacaca);
-  pressed-background: built-in(ui-mc:SCROLLER_V) color(#eaeaea);
+.voxel-print-queue-list .__scroller_scroll_bar__,
+.sb-material-requirements .__scroller_scroll_bar__ {
+  base-background: rect(#506874);
+  hover-background: rect(#80A4AF);
+  pressed-background: rect(#63D8D4);
 }
-.voxel-recipe-row:host {
-  base-background: rect(#343434);
-  hover-background: group(rect(#494949), border(-1, #9e9e9e));
-  pressed-background: group(rect(#2b2b2b), border(-1, #d4d4d4));
+
+/* Recessed input with an always-visible baseline; focus stays inside its existing bounds. */
+.sb-recipe-search:host {
+  background: rect(#081116);
+  focus-overlay: border(-1, #63D8D4);
+  padding-horizontal: 3;
 }
-.voxel-recipe-row.voxel-recipe-unavailable:host {
-  base-background: rect(#2c2c2c);
-  hover-background: group(rect(#3e3e3e), border(-1, #8e8e8e));
-  pressed-background: rect(#252525);
+.sb-recipe-search:hover { background: rect(#0D1D27); }
+.sb-recipe-search {
+  font-size: 6;
+  text-color: #CFE5E8;
+  text-shadow: false;
 }
-// Selected wins even when this recipe is unavailable. Never hide the current selection.
-.voxel-recipe-row.voxel-recipe-selected:host,
-.voxel-recipe-row.voxel-recipe-selected.voxel-recipe-unavailable:host {
-  base-background: group(rect(#494949), border(-1, #b7b7b7));
-  hover-background: group(rect(#5b5b5b), border(-1, #d7d7d7));
-  pressed-background: group(rect(#3c3c3c), border(-1, #efefef));
+
+/* Catalogue row: a browser entry, not a button. No border and no panel of its own — selection is a
+   subtle fill plus the accent rail, so a chosen row stays legible once the pointer moves away
+   without lighting up like a card. Availability is a separate, quieter rail tone. */
+.sb-recipe-browser {
+  background: rect(#00000000);
 }
-.voxel-recipe-name { font-size: 7; text-color: #e5e5e5; text-shadow: false; }
-.voxel-recipe-amount { font-size: 6; text-color: #aeaeae; text-shadow: false; }
-.voxel-recipe-unavailable .voxel-recipe-name { text-color: #a7a7a7; }
-.voxel-recipe-selected .voxel-recipe-name { text-color: #f4f4f4; }
+.sb-recipe-row:host {
+  base-background: rect(#00000000);
+  hover-background: rect(#15252F);
+  pressed-background: rect(#1B303A);
+}
+.sb-recipe-row.sb-selected:host {
+  base-background: rect(#17343E);
+  hover-background: rect(#1E424C);
+  pressed-background: rect(#12303A);
+}
+.sb-recipe-rail { background: #00000000; }
+.sb-recipe-row.sb-craftable .sb-recipe-rail { background: #35545C; }
+.sb-recipe-row.sb-selected .sb-recipe-rail { background: #63D8D4; }
+.sb-recipe-row.sb-unavailable .sb-recipe-name { text-color: #9AAFB9; }
+.sb-recipe-row.sb-unavailable .sb-recipe-amount { text-color: #7F96A2; }
+/* Selection wins even when the chosen recipe has missing ingredients. */
+.sb-recipe-row.sb-selected .sb-recipe-name,
+.sb-recipe-row.sb-selected.sb-unavailable .sb-recipe-name { text-color: #E5F3F5; }
+.sb-recipe-row.sb-selected .sb-recipe-amount,
+.sb-recipe-row.sb-selected.sb-unavailable .sb-recipe-amount { text-color: #A9C7CE; }
+.sb-recipe-name { font-size: 7; text-color: #CFE5E8; text-shadow: false; }
+.sb-recipe-amount { font-size: 5; text-color: #6F929C; text-shadow: false; }
+
 .voxel-recipe-empty,
-.voxel-queue-empty { font-size: 7; text-color: #a1a1a1; text-shadow: false; }
-.voxel-printing-detail-name { font-size: 8; text-color: #f1f1f1; text-shadow: false; }
-.voxel-printing-detail-output,
-.voxel-printing-detail-meta { font-size: 7; text-color: #b7b7b7; text-shadow: false; }
-.voxel-printing-detail-description { font-size: 6; text-color: #a1a1a1; text-shadow: false; }
-.voxel-requirement-card { background: rect(#353535); }
-.voxel-requirement-name { font-size: 6; text-color: #bebebe; text-shadow: false; }
-.voxel-requirement-count { font-size: 6; text-color: #e1e1e1; text-shadow: false; }
-.voxel-requirement-count.voxel-requirement-missing { text-color: #b1b1b1; }
-.voxel-printing-detail-status { font-size: 7; text-color: #c4c4c4; text-shadow: false; }
-.voxel-printing-detail-status.status-warning { text-color: #bababa; }
-.voxel-printing-detail-status.status-success { text-color: #c2c2c2; }
-.voxel-printing-quantity {
-  font-size: 7; text-color: #e8e8e8; text-shadow: false;
-  background: built-in(ui-mc:RECT_BLACK);
+.voxel-queue-empty {
+  font-size: 7;
+  text-color: #607B84;
+  text-shadow: false;
 }
-.voxel-printing-detail-pane .voxel-quantity-button .__button_text__ { font-size: 6; }
-.voxel-quantity-button:host,
-.voxel-queue-cancel:host {
-  base-background: built-in(ui-mc:RECT_THIN) color(#818181);
-  hover-background: built-in(ui-mc:RECT_THIN) color(#b2b2b2);
-  pressed-background: built-in(ui-mc:RECT_INVERSE) color(#929292);
+
+.voxel-printing-output-socket {
+  background: group(rect(#061014), border(-1, #4A8B91));
 }
-.voxel-quantity-button .__button_text__,
-.voxel-queue-cancel .__button_text__ { font-size: 7; text-color: #ececec; text-shadow: false; }
-.voxel-printing-action:host {
-  base-background: built-in(ui-mc:RECT_THIN) color(#818181);
-  hover-background: built-in(ui-mc:RECT_THIN) color(#ababab);
-  pressed-background: built-in(ui-mc:RECT_INVERSE) color(#7d7d7d);
+
+/* Shared components intentionally avoid card backgrounds. A section heading gets its
+   weight from typography and a rule; the label text itself is authored uppercase. */
+.sb-section-title {
+  font-size: 6;
+  text-color: #6F9099;
+  text-shadow: false;
 }
-.voxel-printing-action .__button_text__ { font-size: 8; text-color: #f5f5f5; text-shadow: false; }
-.voxel-printing-action.__disabled__:host,
-.voxel-quantity-button.__disabled__:host,
-.voxel-queue-cancel.__disabled__:host {
-  base-background: group(rect(#343434), border(-1, #515151));
-  hover-background: group(rect(#343434), border(-1, #515151));
-  pressed-background: group(rect(#343434), border(-1, #515151));
+
+/* Material requirement rows: a flat data line, never a card. The 1px rule below each row is
+   drawn by RequirementRow itself, since LDLib2 has no border-only rendering for a child. */
+.sb-requirement-row {
+  background: rect(#00000000);
 }
-.__disabled__ .__button_text__ { text-color: #909090; }
-.voxel-queue-row { background: rect(#343434); overflow-clip: true; }
-.voxel-queue-row.voxel-queue-row-active { background: group(rect(#434343), border(-1, #9b9b9b)); }
-.voxel-queue-row.queue-recent { background: group(rect(#464646), border(-1, #c4c4c4)); }
-.voxel-queue-name { font-size: 7; text-color: #e7e7e7; text-shadow: false; }
-.voxel-queue-state { font-size: 6; text-color: #bcbcbc; text-shadow: false; }
-.voxel-queue-row-active .voxel-queue-state { text-color: #cccccc; }
-.voxel-queue-requester { font-size: 6; text-color: #a6a6a6; text-shadow: false; }
-.voxel-queue-progress .__progress-bar_bar-container__ { background: rect(#1b1b1b); }
-.voxel-queue-progress .__progress-bar_bar__ { background: rect(#b8b8b8); }
-.voxel-queue-cancel.__disabled__ .voxel-cancel-icon { opacity: 0.3; }
-.machine-slot-socket { background: group(rect(#171717), border(-1, #555555)); }
-.hotbar-slot-socket { background: group(rect(#242424), border(-1, #777777)); }
-.voxel-printing-output-socket { background: group(rect(#111111), border(-1, #cccccc)); }
+
+.sb-requirement-name {
+  font-size: 6;
+  text-color: #8EADB5;
+  text-shadow: false;
+}
+
+/* The item detail view. Hierarchy is carried by the large item sprite and the type scale around
+   it; the region keeps its own background and nothing inside it gets a panel, a card or a frame. */
+.sb-item-header {
+  background: rect(#00000000);
+}
+.sb-item-header-text,
+.sb-socket-cell {
+  background: rect(#00000000);
+}
+.sb-item-name {
+  font-size: 8;
+  text-color: #E6F5F6;
+  text-shadow: false;
+}
+.sb-item-count {
+  font-size: 6;
+  text-color: #7899A3;
+  text-shadow: false;
+}
+/* Pure spacing elements: the band reserving room for the real output socket, the identity column
+   beside the preview, and the two stack containers. None of them is visible. */
+.sb-item-view-content,
+.sb-craft-action-bar {
+  background: rect(#00000000);
+}
+
+/* Materials: a flat table of rows. Only the empty-state hint needs a rule; each row draws its
+   own separator. */
+.sb-material-empty {
+  font-size: 6;
+  text-color: #607B84;
+  text-shadow: false;
+}
+
+.sb-requirement-amount {
+  font-size: 6;
+  text-color: #CDE7E9;
+  text-shadow: false;
+}
+
+.sb-requirement-row.sb-requirement-missing .sb-requirement-amount {
+  text-color: #E2B66F;
+}
+
+.sb-requirement-row.sb-requirement-ok .sb-requirement-amount {
+  text-color: #CDE7E9;
+}
+
+.sb-quantity-stepper {
+  background: rect(#00000000);
+}
+
+/* The editable count has the same recessed treatment as search. */
+.sb-quantity-value:host {
+  background: rect(#081116);
+  focus-overlay: border(-1, #63D8D4);
+  padding-horizontal: 3;
+}
+.sb-quantity-value {
+  font-size: 6;
+  text-color: #D9EEEF;
+  text-shadow: false;
+}
+
+.sb-stepper-button:host {
+  base-background: rect(#1A2A35);
+  hover-background: rect(#293F4B);
+  pressed-background: rect(#101E27);
+}
+
+.sb-stepper-button .__button_text__ {
+  font-size: 5;
+  text-color: #C4D7DE;
+  text-shadow: false;
+}
+
+.sb-stepper-button.__disabled__:host {
+  base-background: rect(#111D25);
+  hover-background: rect(#111D25);
+  pressed-background: rect(#111D25);
+}
+.sb-stepper-button.__disabled__ .__button_text__ { text-color: #657C88; }
+
+.sb-craft-button:host {
+  base-background: rect(#20545D);
+  hover-background: rect(#2C6B73);
+  pressed-background: rect(#123E47);
+}
+.sb-craft-button .__button_text__ {
+  font-size: 7;
+  text-color: #E5FBFA;
+  text-shadow: false;
+}
+.sb-craft-button.__disabled__:host {
+  base-background: rect(#18262F);
+  hover-background: rect(#18262F);
+  pressed-background: rect(#18262F);
+}
+.sb-craft-button.__disabled__ .__button_text__ { text-color: #8095A0; }
+
+/* The output frame: the one place the machine's item is shown. The preview layers are drawn by
+   the component itself (it has to clip one over the other), so this only carries the frame. */
+.sb-output-slot {
+  background: group(rect(#081116), border(-1, #526A76));
+}
+
+/* The print-count line: the quantity control before a craft, the remaining count during one. */
+.sb-print-count-bar {
+  background: rect(#00000000);
+}
+.sb-print-count-remaining {
+  font-size: 6;
+  text-color: #9FCED2;
+  text-shadow: false;
+}
+
+.voxel-queue-row { background: rect(#101D26); overflow-clip: true; }
+.voxel-queue-row.voxel-queue-row-active { background: rect(#17343E); }
+.voxel-queue-row.queue-recent { background: rect(#182D2C); }
+.voxel-queue-name { font-size: 7; text-color: #CFE5E7; text-shadow: false; }
+.voxel-queue-state { font-size: 6; text-color: #7897A1; text-shadow: false; }
+.voxel-queue-row-active .voxel-queue-state { text-color: #8EDDD9; }
+.voxel-queue-requester { font-size: 5; text-color: #617E87; text-shadow: false; }
+.voxel-queue-progress .__progress-bar_bar-container__ { background: rect(#061015); }
+.voxel-queue-progress .__progress-bar_bar__ { background: rect(#63C9C9); }
+
+.voxel-queue-cancel:host,
+.voxel-queue-toggle:host {
+  base-background: rect(#00000000);
+  hover-background: rect(#21343F);
+  pressed-background: rect(#14262F);
+}
+.voxel-queue-cancel .__button_text__,
+.voxel-queue-toggle .__button_text__ {
+  font-size: 6;
+  text-color: #9FBBC1;
+  text-shadow: false;
+}
+.voxel-queue-cancel.__disabled__ .voxel-cancel-icon { opacity: 0.25; }
+
+.machine-slot-socket {
+  background: rect(#081116);
+}
+.player-slot-socket {
+  background: rect(#0A141C);
+}
+.hotbar-slot-socket {
+  background: rect(#0D1922);
+}

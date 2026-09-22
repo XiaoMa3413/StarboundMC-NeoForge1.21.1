@@ -4,18 +4,33 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.ui.StarboundModularScreen;
 import com.starboundmc.client.voxel.VoxelPrintingStationRoot;
 import com.starboundmc.menu.VoxelPrintingStationMenu;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 
 /** LDLib2 printing screen with a recipe list and selected-item details. */
+@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public final class VoxelPrintingStationScreen
         extends StarboundModularScreen<VoxelPrintingStationMenu, VoxelPrintingStationRoot> {
-    private static final int PANEL_W = 440;
-    private static final int COMPACT_W = 320;
+    private static final int PANEL_W = 320;
     private static final int PANEL_H = 240;
     private final PrintSubmissionState submission = new PrintSubmissionState();
+
+    /** Apply the console palette only while this screen owns the tooltip. */
+    @SubscribeEvent
+    public static void tooltipColors(RenderTooltipEvent.Color event) {
+        if (Minecraft.getInstance().screen instanceof VoxelPrintingStationScreen) {
+            event.setBackground(0xF8101A22);
+            event.setBorderStart(0xFF526975);
+            event.setBorderEnd(0xFF344B55);
+        }
+    }
 
     public VoxelPrintingStationScreen(
             VoxelPrintingStationMenu menu, Inventory inventory, Component title) {
@@ -26,14 +41,16 @@ public final class VoxelPrintingStationScreen
 
     @Override
     protected void init() {
-        imageWidth = width < PANEL_W ? COMPACT_W : PANEL_W;
+        // One panel size: the inventory the menu fixes needs 320px, and a wider panel would only add
+        // room the detail view cannot use.
+        imageWidth = PANEL_W;
         super.init();
     }
 
     @Override
     protected VoxelPrintingStationRoot createRoot() {
         return new VoxelPrintingStationRoot(menu, leftPos, topPos, title, playerInventoryTitle,
-                submission, imageWidth < PANEL_W);
+                submission);
     }
 
     public void acceptSubmission(boolean accepted) {
