@@ -10,6 +10,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.client.ClientVoxelMachineState;
 import com.starboundmc.client.ClientVoxelWalletState;
+import com.starboundmc.client.ui.MachineUiSkin;
 import com.starboundmc.item.ModItems;
 import com.starboundmc.menu.VoxelRefineryMenu;
 import com.starboundmc.network.ClaimRefinedVoxelsPacket;
@@ -40,6 +41,7 @@ public final class VoxelRefineryRoot extends UIElement {
                              Component title, Component inventoryTitle) {
         this.menu = menu;
         addClass("machine-inventory-screen");
+        addClass("shipboard-machine");
         setAllowHitTest(false);
         layout(layout -> layout.widthPercent(100).heightPercent(100));
 
@@ -55,6 +57,10 @@ public final class VoxelRefineryRoot extends UIElement {
 
         shell.addChildren(buildHeader(title), buildProcess(), buildInventory(inventoryTitle));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".machine-slot-socket");
+        MachineUiSkin.button(startButton);
+        MachineUiSkin.button(claimButton);
         refresh();
     }
 
@@ -94,19 +100,15 @@ public final class VoxelRefineryRoot extends UIElement {
                 .widthPercent(0)
                 .height(8));
         arrow.addChild(arrowFill);
-        var glyph = VoxelUiSupport.label(Component.literal("➜"),
-                "voxel-refinery-arrow-glyph", 67, 3, 42, 10);
-        VoxelUiSupport.center(glyph);
-
         claimButton.noText();
         claimButton.addClass("voxel-refinery-claim");
         claimButton.setOverflowVisible(false);
         claimButton.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(113)
-                .top(5)
+                .top(9)
                 .width(47)
-                .height(27));
+                .height(18));
         claimButton.addEventListener(UIEvents.CLICK, event -> {
             if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && claimButton.isActive()) {
                 ModNetwork.sendToServer(new ClaimRefinedVoxelsPacket(menu.blockPos()));
@@ -118,8 +120,8 @@ public final class VoxelRefineryRoot extends UIElement {
         voxelIcon.setAllowHitTest(false);
         voxelIcon.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
-                .left(3)
-                .top(5)
+                .left(2)
+                .top(1)
                 .width(16)
                 .height(16));
         voxelIcon.style(style -> style.backgroundTexture(new ItemStackTexture(ModItems.VOXEL.get())));
@@ -130,9 +132,9 @@ public final class VoxelRefineryRoot extends UIElement {
         outputAmount.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(20)
-                .top(3)
-                .width(24)
-                .height(20));
+                .top(1)
+                .width(25)
+                .height(16));
         outputAmount.textStyle(style -> style
                 .adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.CENTER)
@@ -200,7 +202,7 @@ public final class VoxelRefineryRoot extends UIElement {
                 .textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
 
-        process.addChildren(glyph, arrow, claimButton, startButton, wallet, status);
+        process.addChildren(arrow, claimButton, startButton, wallet, status);
         return process;
     }
 
@@ -246,7 +248,7 @@ public final class VoxelRefineryRoot extends UIElement {
         }
         lastState = next;
 
-        arrowFill.layout(layout -> layout.widthPercent(progress));
+        arrowFill.layout(layout -> layout.width(40F * Math.clamp(progress, 0, 100) / 100));
         wallet.setText(Component.translatable("gui.starboundmc.voxel_wallet",
                 String.format(Locale.ROOT, "%,d", balance)));
         Component startHint;

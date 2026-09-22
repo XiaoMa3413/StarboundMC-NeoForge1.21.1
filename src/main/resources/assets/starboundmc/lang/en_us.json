@@ -616,5 +616,21 @@
   "message.starboundmc.nova.relay.interrupted": "Relay operation interrupted. The site and snapshot were preserved; contact an operator for inspection.",
   "hud.starboundmc.eva.behind": "BEHIND",
   "item.starboundmc.epp_mk3": "EPP Mk.III",
-  "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III Upgrade Kit"
+  "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III Upgrade Kit",
+  "gui.starboundmc.fuel_controller.accepted": "Adds %s fuel; unused items stay in the slots",
+  "gui.starboundmc.fuel_controller.no_fitting_fuel": "Insert fuel that fits; move oversized fuel out of earlier slots if needed",
+  "gui.starboundmc.alloy.input": "Input",
+  "gui.starboundmc.alloy.fuel": "Fuel",
+  "gui.starboundmc.alloy.output": "Output",
+  "gui.starboundmc.alloy.working": "Smelting %s%%",
+  "gui.starboundmc.alloy.empty": "Insert input",
+  "gui.starboundmc.alloy.idle": "Waiting",
+  "gui.starboundmc.alloy.hint": "Processes alloy ingredients automatically with fuel. While waiting, check the recipe, fuel and output space.",
+  "gui.starboundmc.epp.service.insert_pack": "Insert an EPP first.",
+  "gui.starboundmc.epp.service.upgrade_ready": "Consumes the kit to upgrade this EPP, preserves oxygen and returns modules that cannot be retained.",
+  "gui.starboundmc.epp.service.install_ready": "Installs the module from the middle slot into this EPP.",
+  "gui.starboundmc.epp.service.remove_ready": "Returns the first installed module to the middle slot.",
+  "gui.starboundmc.epp.service.upgrade_requirements": "Mk.I needs a Mk.II kit; Mk.II needs a Mk.III kit. Check the right-hand slot.",
+  "gui.starboundmc.epp.service.install_requirements": "Requires one compatible module and a free module slot in the EPP.",
+  "gui.starboundmc.epp.service.remove_requirements": "Requires an installed module and an empty middle slot."
 }

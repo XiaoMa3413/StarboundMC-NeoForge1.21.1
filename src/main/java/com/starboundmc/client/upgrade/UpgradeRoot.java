@@ -11,6 +11,8 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
 import com.lowdragmc.lowdraglib2.gui.util.DrawerHelper;
 import com.starboundmc.StarboundMC;
+import com.starboundmc.client.ui.MachineUiSkin;
+import com.starboundmc.client.ui.components.TooltipLines;
 import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.item.MatterManipulatorModuleItem;
 import com.starboundmc.menu.UpgradeMenu;
@@ -54,7 +56,7 @@ public final class UpgradeRoot extends UIElement {
                        UpgradeMenu menu, Inventory inventory) {
         this.menu = menu;
         this.inventory = inventory;
-        addClass("upgrade-screen");
+        addClasses("upgrade-screen", "shipboard-machine");
         setAllowHitTest(false);
         layout(layout -> layout.widthPercent(100).heightPercent(100));
 
@@ -74,6 +76,9 @@ public final class UpgradeRoot extends UIElement {
                         MatterManipulatorItem.MAX_FORTUNE_UPGRADES, 230, 87, false),
                 buildDetailPanel(), buildInventorySection(inventoryTitle));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".upgrade-slot-socket");
+        MachineUiSkin.button(upgradeAction);
         refreshState();
     }
 
@@ -129,9 +134,11 @@ public final class UpgradeRoot extends UIElement {
         upgradeAction.setText(Component.translatable("gui.starboundmc.upgrade.execute"));
         upgradeAction.addClass("upgrade-main-action");
         upgradeAction.text.setOverflowVisible(false);
+        upgradeAction.text.setAllowHitTest(false);
+        upgradeAction.text.layout(l -> l.widthPercent(100).heightPercent(100).marginHorizontal(0));
         upgradeAction.layout(layout -> layout.positionType(TaffyPosition.ABSOLUTE)
                 .left(220).top(5).width(84).height(20));
-        upgradeAction.textStyle(style -> style.adaptiveWidth(true)
+        upgradeAction.textStyle(style -> style.adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
         upgradeAction.addEventListener(UIEvents.CLICK, event -> {
@@ -213,7 +220,7 @@ public final class UpgradeRoot extends UIElement {
             }
         }
         upgradeAction.setActive(active);
-        upgradeAction.style(style -> style.tooltips(tooltip));
+        upgradeAction.style(style -> style.tooltips(TooltipLines.split(tooltip)));
     }
 
     private UpgradeTrack trackById(int id) {

@@ -616,5 +616,21 @@
   "message.starboundmc.nova.relay.interrupted": "中继站操作异常中断。现场与快照已保留，请联系管理员检查。",
   "hud.starboundmc.eva.behind": "后方",
   "item.starboundmc.epp_mk3": "环境保护背包 Mk.III",
-  "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III 升级套件"
+  "item.starboundmc.epp_mk3_upgrade_kit": "EPP Mk.III 升级套件",
+  "gui.starboundmc.fuel_controller.accepted": "本次可补充 %s 单位燃料；多余物品保留",
+  "gui.starboundmc.fuel_controller.no_fitting_fuel": "请放入可用燃料；若剩余容量不足，请先移开前方过大的燃料",
+  "gui.starboundmc.alloy.input": "原料",
+  "gui.starboundmc.alloy.fuel": "燃料",
+  "gui.starboundmc.alloy.output": "产物",
+  "gui.starboundmc.alloy.working": "熔炼 %s%%",
+  "gui.starboundmc.alloy.empty": "等待原料",
+  "gui.starboundmc.alloy.idle": "等待熔炼",
+  "gui.starboundmc.alloy.hint": "放入合金原料和燃料后自动加工。等待时请检查配方、燃料与产物槽。",
+  "gui.starboundmc.epp.service.insert_pack": "请先放入 EPP 背包。",
+  "gui.starboundmc.epp.service.upgrade_ready": "消耗升级套件，升级当前 EPP；保留氧气并返还无法保留的模块。",
+  "gui.starboundmc.epp.service.install_ready": "将中间槽的模块装入当前 EPP。",
+  "gui.starboundmc.epp.service.remove_ready": "取出第一个已安装模块，放回中间槽。",
+  "gui.starboundmc.epp.service.upgrade_requirements": "Mk.I 需要 Mk.II 套件；Mk.II 需要 Mk.III 套件。请检查右侧升级槽。",
+  "gui.starboundmc.epp.service.install_requirements": "需要兼容的单个模块，且 EPP 必须有空余模块槽。",
+  "gui.starboundmc.epp.service.remove_requirements": "EPP 必须装有模块，且中间槽必须为空。"
 }

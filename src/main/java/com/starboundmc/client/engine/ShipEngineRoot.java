@@ -4,6 +4,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.starboundmc.menu.ShipEngineMenu;
+import com.starboundmc.client.ui.MachineUiSkin;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import net.minecraft.network.chat.Component;
 import java.util.Locale;
@@ -18,13 +19,13 @@ public final class ShipEngineRoot extends UIElement {
 
     public ShipEngineRoot(int left, int top, ShipEngineMenu menu, Component title, Component inventoryTitle) {
         this.menu = menu;
-        addClass("engine-screen");
+        addClasses("engine-screen", "shipboard-machine");
         setAllowHitTest(false);
         layout(l -> l.widthPercent(100).heightPercent(100));
         var shell = box("engine-shell", left, top, ShipEngineMenu.WIDTH, ShipEngineMenu.HEIGHT);
         shell.setOverflowVisible(false);
         shell.addChild(box("engine-rail", 0, 0, 3, 26));
-        shell.addChild(label(title, "engine-title", 12, 9, 198, 12));
+        shell.addChild(label(title, "engine-title", 12, 9, 176, 12));
         shell.addChild(label(Component.literal("PROPULSION / 01"), "engine-code", 194, 12, 78, 9));
         shell.addChild(box("engine-divider", 12, 27, 256, 1));
 
@@ -53,14 +54,18 @@ public final class ShipEngineRoot extends UIElement {
         for (int col = 0; col < 9; col++)
             shell.addChild(box("engine-hotbar-slot", 59 + col * 18, 203, 18, 18));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".engine-inventory-slot", ".engine-hotbar-slot", ".engine-socket");
         refresh();
     }
 
     public void refresh() {
         if (previous != menu.status()) {
             previous = menu.status();
-            status.setText(Component.translatable("gui.starboundmc.engine.status."
-                    + previous.name().toLowerCase(Locale.ROOT)));
+            Component text = Component.translatable("gui.starboundmc.engine.status."
+                    + previous.name().toLowerCase(Locale.ROOT));
+            status.setText(text);
+            status.style(style -> style.tooltips(com.starboundmc.client.ui.components.TooltipLines.split(text)));
             status.removeClass("engine-status-online");
             status.removeClass("engine-status-igniting");
             if (previous == ShipEngineMenu.Status.ONLINE) status.addClass("engine-status-online");
@@ -68,8 +73,10 @@ public final class ShipEngineRoot extends UIElement {
         }
         if (previousHyperdrive == null || previousHyperdrive != menu.hyperdriveOnline()) {
             previousHyperdrive = menu.hyperdriveOnline();
-            hyperdrive.setText(Component.translatable(menu.hyperdriveOnline()
-                    ? "gui.starboundmc.engine.hyperdrive_online" : "gui.starboundmc.engine.hyperdrive_offline"));
+            Component text = Component.translatable(menu.hyperdriveOnline()
+                    ? "gui.starboundmc.engine.hyperdrive_online" : "gui.starboundmc.engine.hyperdrive_offline");
+            hyperdrive.setText(text);
+            hyperdrive.style(style -> style.tooltips(text));
         }
     }
 
@@ -84,10 +91,10 @@ public final class ShipEngineRoot extends UIElement {
         var label = new Label();
         label.setText(text);
         label.addClass(cls);
-        label.setAllowHitTest(false);
+        label.style(style -> style.tooltips(text));
         label.setOverflowVisible(false);
         label.layout(l -> l.positionType(TaffyPosition.ABSOLUTE).left(x).top(y).width(w).height(h));
-        label.textStyle(s -> s.adaptiveWidth(false).textWrap(TextWrap.WRAP));
+        label.textStyle(s -> s.adaptiveWidth(false).adaptiveHeight(false).textWrap(TextWrap.WRAP));
         return label;
     }
 }

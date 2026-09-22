@@ -24,12 +24,13 @@
 - [体素提炼与打印合成站计划](voxel-printing-station-plan.md)：M0–M5 已完成，M6 批处理与打印队列
   代码已落地；客户端视觉/交互验收记录仍需补齐。
 - [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：传送器、货箱、燃料控制器和物质枪升级
-  工作台已有 LDLib2 实现；合金炉、旧控制台和最终清理仍未完成。
+  工作台及合金炉已有 LDLib2 实现；旧控制台和完整交互验收仍见原计划。
 
 ## UI 与美术规范
 
 - [UI / 美术风格规范](ui-art-direction.md)：项目级舰载科幻视觉语言、颜色、层级、像素资产、星图、N.O.V.A.、物质枪、打印站、HUD 与动画规则。
 - [石墨舰载制造终端风格约束](ui-fabrication-style.md)：已认可的打印站皮肤基线，约束配色、组件材质、交互状态、悬浮提示和复用边界。
+- [舰载机器 UI 精修与验收记录](ui-design-contracts/ship-machines-polish.md)：10 类设备的差异化外观、状态反馈、渲染复核及验证边界。
 - [UI 重构工作流](ui-refactor-workflow.md)：定义 Design Contract、设计与 LDLib2 实现分工、Anti-AI UI 检查和后续 UI Kit / Playground 路线。
 
 ## 架构参考

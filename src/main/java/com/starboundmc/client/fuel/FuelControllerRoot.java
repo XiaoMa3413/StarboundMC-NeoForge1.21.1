@@ -8,6 +8,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.starboundmc.menu.FuelControllerMenu;
+import com.starboundmc.client.ui.MachineUiSkin;
 import com.starboundmc.network.AddFuelPacket;
 import com.starboundmc.network.ClientNetworkState;
 import com.starboundmc.network.ModNetwork;
@@ -27,9 +28,13 @@ public final class FuelControllerRoot extends UIElement {
     private final Button refuelButton = new Button();
     private int lastFuel = Integer.MIN_VALUE;
     private int lastMaxFuel = Integer.MIN_VALUE;
+    private final FuelControllerMenu menu;
+    private int lastAccepted = -1;
 
-    public FuelControllerRoot(int left, int top, Component title, Component inventoryTitle) {
+    public FuelControllerRoot(int left, int top, Component title, Component inventoryTitle, FuelControllerMenu menu) {
+        this.menu = menu;
         addClass("machine-inventory-screen");
+        addClass("shipboard-machine");
         setAllowHitTest(false);
         layout(layout -> layout.widthPercent(100).heightPercent(100));
 
@@ -48,6 +53,9 @@ public final class FuelControllerRoot extends UIElement {
                 buildFuelConsole(),
                 buildInventorySection(inventoryTitle));
         addChild(shell);
+        MachineUiSkin.shell(shell);
+        MachineUiSkin.slots(shell, ".machine-slot-socket");
+        MachineUiSkin.button(refuelButton);
         refreshFuel();
     }
 
@@ -119,6 +127,8 @@ public final class FuelControllerRoot extends UIElement {
         refuelButton.setText(Component.translatable("gui.starboundmc.fuel_controller.add"));
         refuelButton.addClass("fuel-refuel-button");
         refuelButton.text.setOverflowVisible(false);
+        refuelButton.text.setAllowHitTest(false);
+        refuelButton.text.layout(layout -> layout.widthPercent(100).heightPercent(100).marginHorizontal(0));
         refuelButton.layout(layout -> layout
                 .positionType(TaffyPosition.ABSOLUTE)
                 .left(39)
@@ -126,7 +136,7 @@ public final class FuelControllerRoot extends UIElement {
                 .width(90)
                 .height(16));
         refuelButton.textStyle(style -> style
-                .adaptiveWidth(true)
+                .adaptiveWidth(false)
                 .textAlignHorizontal(Horizontal.CENTER)
                 .textAlignVertical(Vertical.CENTER)
                 .textWrap(TextWrap.HIDE));
@@ -170,11 +180,13 @@ public final class FuelControllerRoot extends UIElement {
     public void refreshFuel() {
         int maxFuel = Math.max(1, ClientNetworkState.maxFuel());
         int fuel = Math.max(0, Math.min(maxFuel, ClientNetworkState.fuel()));
-        if (fuel == lastFuel && maxFuel == lastMaxFuel) return;
+        int accepted = acceptedFuel(fuel, maxFuel);
+        if (fuel == lastFuel && maxFuel == lastMaxFuel && accepted == lastAccepted) return;
 
         lastFuel = fuel;
         lastMaxFuel = maxFuel;
-        gaugeFill.layout(layout -> layout.widthPercent(100F * fuel / maxFuel));
+        lastAccepted = accepted;
+        gaugeFill.layout(layout -> layout.width(116F * fuel / maxFuel));
         gaugeLabel.setText(Component.translatable("gui.starboundmc.fuel", fuel, maxFuel));
 
         gauge.removeClass("fuel-gauge-low");
@@ -185,11 +197,19 @@ public final class FuelControllerRoot extends UIElement {
             gauge.addClass("fuel-gauge-low");
         }
 
-        boolean canRefuel = fuel < maxFuel;
+        boolean canRefuel = accepted > 0;
         refuelButton.setActive(canRefuel);
-        refuelButton.style(style -> style.tooltips(Component.translatable(canRefuel
-                ? "gui.starboundmc.fuel_controller.tip"
-                : "message.starboundmc.fuel.full")));
+        Component hint = Component.translatable(canRefuel ? "gui.starboundmc.fuel_controller.accepted"
+                : fuel >= maxFuel ? "message.starboundmc.fuel.full"
+                : "gui.starboundmc.fuel_controller.no_fitting_fuel", accepted);
+        refuelButton.style(style -> style.tooltips(hint));
+    }
+
+    /** Mirrors the server's ordered whole-item filling, including an early capacity stop. */
+    private int acceptedFuel(int fuel, int capacity) {
+        return FuelPreview.accepted(fuel, capacity, FuelControllerMenu.FUEL_SLOTS,
+                i -> ShipFuelService.fuelValue(menu.getSlot(i).getItem().getItem()),
+                i -> menu.getSlot(i).getItem().getCount());
     }
 
     private static UIElement gaugeTick(int left) {

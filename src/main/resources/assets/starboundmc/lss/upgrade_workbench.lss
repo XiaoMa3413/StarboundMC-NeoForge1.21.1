@@ -3,7 +3,7 @@
 .upgrade-screen { background: rect(#A605080A); }
 
 .upgrade-shell {
-  background: group(rect(#081015), border(-1, #304852));
+  background: rect(#101A22);
   overflow-clip: true;
 }
 
@@ -35,7 +35,7 @@
   background: group(rect(#07110D), border(-1, #6FB487));
 }
 
-.upgrade-branch-label { font-size: 5; text-color: #668474; text-shadow: false; }
+.upgrade-branch-label { font-size: 5; text-color: #83A692; text-shadow: false; }
 .upgrade-branch-selected .upgrade-branch-label { text-color: #D0F2DA; }
 
 .upgrade-node:host {
@@ -51,7 +51,7 @@
 }
 
 .upgrade-node-locked:host { base-background: group(rect(#07100C), border(-1, #294636)); }
-.upgrade-node-locked .__button_text__ { text-color: #405A4A; }
+.upgrade-node-locked .__button_text__ { text-color: #658271; }
 
 .upgrade-node-unlocked:host {
   base-background: group(rect(#123A24), border(-1, #58A771));
@@ -125,10 +125,10 @@
   pressed-background: group(rect(#10191A), border(-1, #324649));
 }
 
-.upgrade-main-action.__disabled__ .__button_text__ { text-color: #52666A; }
+.upgrade-main-action.__disabled__ .__button_text__ { text-color: #718791; }
 
 // Player inventory stays intentionally neutral so it reads as Minecraft inventory, not part of the blueprint.
 .upgrade-inventory-caption { font-size: 5; text-color: #7F9092; text-shadow: false; }
-.upgrade-slot-socket { background: group(rect(#080C0D), border(-1, #3D494B)); }
-.upgrade-player-socket { background: group(rect(#090E0F), border(-1, #3E4B4D)); }
-.upgrade-hotbar-socket { background: group(rect(#0D1415), border(-1, #5B6C6E)); }
+.upgrade-slot-socket { background: rect(#081116); }
+.upgrade-player-socket { background: rect(#081116); }
+.upgrade-hotbar-socket { background: rect(#0D171F); }

@@ -33,7 +33,7 @@
 .command-button .__button_text__ { flex: 1; font-size: 7; text-color: #d1e0e4; text-shadow: false; text-wrap: hide; }
 .command-selected .__button_text__ { text-color: #a0eee0; }
 .command-primary .__button_text__ { text-color: #0b2529; }
-.command-button:disabled .__button_text__ { text-color: #597480; }
+.command-button:disabled .__button_text__ { text-color: #718791; }
 .command-scroll .__scroller_view_vertical-scroller__ { width: 3; margin-left: 3; }
 .command-scroll .__scroller_scroll_container__ { background: rect(#172c35); }
 .command-scroll .__scroller_scroll_bar__ { base-background: rect(#446772); hover-background: rect(#8bc6c1); pressed-background: rect(#a4eee0); }
@@ -178,11 +178,11 @@
 }
 
 .ship-ai-topic-button:disabled .__button_text__ {
-  text-color: #626a6c;
+  text-color: #718791;
 }
 
 .ship-ai-topic-button:disabled:host .__button_text__ {
-  text-color: #687174;
+  text-color: #718791;
   text-shadow: false;
 }
 
@@ -202,7 +202,7 @@
 }
 
 .ship-ai-next-button:disabled .__button_text__ {
-  text-color: #687174;
+  text-color: #718791;
 }
 
 .ship-ai-history .__scroller_view_vertical-scroller__ {
