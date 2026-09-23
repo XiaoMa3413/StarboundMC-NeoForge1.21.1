@@ -2,7 +2,8 @@
     "vertex": "starboundmc:planet_surface",
     "fragment": "starboundmc:planet_surface",
     "samplers": [
-        { "name": "Sampler0" }
+        { "name": "Sampler0" },
+        { "name": "Sampler1" }
     ],
     "uniforms": [
         { "name": "ModelViewMat", "type": "matrix4x4", "count": 16, "values": [ 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0 ] },
@@ -10,6 +11,13 @@
         { "name": "SunDirection", "type": "float", "count": 3, "values": [ 0.0, 0.0, 1.0 ] },
         { "name": "NightFloor", "type": "float", "count": 1, "values": [ 0.08 ] },
         { "name": "TerminatorWidth", "type": "float", "count": 1, "values": [ 0.22 ] },
-        { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [ 1.0 ] }
+        { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [ 1.0 ] },
+        { "name": "Roughness", "type": "float", "count": 1, "values": [ 0.9 ] },
+        { "name": "SpecularStrength", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "FresnelStrength", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "OceanRoughness", "type": "float", "count": 1, "values": [ 0.2 ] },
+        { "name": "OceanSpecular", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "EmissiveStrength", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "EmissiveColor", "type": "float", "count": 3, "values": [ 1.0, 0.5, 0.2 ] }
     ]
 }

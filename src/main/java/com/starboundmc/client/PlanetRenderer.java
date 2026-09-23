@@ -3,6 +3,7 @@ package com.starboundmc.client;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.logging.LogUtils;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -26,6 +27,7 @@ import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.UniverseNavigation;
 import com.starboundmc.world.GasGiantGeometry;
+import com.starboundmc.world.universe.BodyMaterialProfile;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import com.starboundmc.world.universe.StarSystemDefinition;
@@ -45,6 +47,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.slf4j.Logger;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -68,6 +71,10 @@ import java.util.Random;
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class PlanetRenderer
 {
+    private static final Logger LOGGER = LogUtils.getLogger();
+    /** One-shot flag so the first planet's material is logged once per session. */
+    private static boolean loggedPlanetMaterial;
+
     static final float PLANET_RADIUS = 50.0F;
 
     /** Longer velocity build-up prevents a visible kick when the tunnel starts. */
@@ -354,7 +361,7 @@ public class PlanetRenderer
     private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
             java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
             0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
-            java.util.Optional.empty());
+            java.util.Optional.empty(), java.util.Optional.empty());
 
     /**
      * The texture for a body's sphere.
@@ -1309,10 +1316,60 @@ public class PlanetRenderer
         if (globalAlpha != null)
             globalAlpha.set(alpha);
 
+        BodyMaterialProfile material = materialOf(body);
+        if (!loggedPlanetMaterial)
+        {
+            loggedPlanetMaterial = true;
+            LOGGER.info("Planet surface shader active ({}): roughness={} specular={} fresnel={} "
+                            + "oceanRoughness={} oceanSpecular={} emissive={} mask={}",
+                    body.entryId(), material.roughness(), material.specularStrength(),
+                    material.fresnelStrength(), material.oceanRoughness(), material.oceanSpecular(),
+                    material.emissiveStrength(), material.emissiveMask().orElse("none"));
+        }
+        Uniform roughness = shader.getUniform("Roughness");
+        if (roughness != null)
+            roughness.set(material.roughness());
+        Uniform specularStrength = shader.getUniform("SpecularStrength");
+        if (specularStrength != null)
+            specularStrength.set(material.specularStrength());
+        Uniform fresnelStrength = shader.getUniform("FresnelStrength");
+        if (fresnelStrength != null)
+            fresnelStrength.set(material.fresnelStrength());
+        Uniform oceanRoughness = shader.getUniform("OceanRoughness");
+        if (oceanRoughness != null)
+            oceanRoughness.set(material.oceanRoughness());
+        Uniform oceanSpecular = shader.getUniform("OceanSpecular");
+        if (oceanSpecular != null)
+            oceanSpecular.set(material.oceanSpecular());
+
+        // An emissive body without a mask would sample whatever texture last
+        // occupied unit 1, so its strength is forced to zero instead.
+        String emissiveMask = material.emissiveMask().orElse(null);
+        float emissiveStrength = emissiveMask == null ? 0.0F : material.emissiveStrength();
+        Uniform emissive = shader.getUniform("EmissiveStrength");
+        if (emissive != null)
+            emissive.set(emissiveStrength);
+        // Unit 1 is shared vanilla state: entity render types declare their own
+        // Sampler1, so whatever the mask displaces is restored after the draw.
+        int displacedUnit1 = RenderSystem.getShaderTexture(1);
+        if (emissiveStrength > 0.0F)
+        {
+            Uniform emissiveColor = shader.getUniform("EmissiveColor");
+            if (emissiveColor != null)
+            {
+                int color = material.emissiveColor();
+                emissiveColor.set(((color >> 16) & 0xFF) / 255.0F,
+                        ((color >> 8) & 0xFF) / 255.0F,
+                        (color & 0xFF) / 255.0F);
+            }
+            RenderSystem.setShaderTexture(1, ResourceLocation.parse(emissiveMask));
+        }
+
         VertexBuffer surface = planetSphereMesh();
         surface.bind();
         surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), shader);
         VertexBuffer.unbind();
+        RenderSystem.setShaderTexture(1, displacedUnit1);
 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.depthMask(true);
@@ -1340,6 +1397,12 @@ public class PlanetRenderer
             planetSphereBuffer = buffer;
         }
         return planetSphereBuffer;
+    }
+
+    /** The body's surface material, or the diffuse-only default. */
+    private static BodyMaterialProfile materialOf(CelestialBodyDefinition body)
+    {
+        return visual(body).material().orElse(BodyMaterialProfile.DEFAULT);
     }
 
     /**

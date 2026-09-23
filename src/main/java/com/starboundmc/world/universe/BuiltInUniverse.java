@@ -104,7 +104,9 @@ public final class BuiltInUniverse
                                 spaceVisual("starboundmc:textures/planet/barren.png",
                                         0.75F, 0.65F, 0.50F, 0.15F,
                                         12.0F, 285.0F, 0.0F, 0xFFD0B07A,
-                                        0.18F, 0.00275F, 0.06F),
+                                        0.18F, 0.00275F, 0.06F,
+                                        // Dry, dark regolith: almost no reflection.
+                                        material(0.95F, 0.03F, 0.02F)),
                                 surface("starboundmc:barren", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 0, 0, 0, 1.0F))),
 
@@ -123,7 +125,15 @@ public final class BuiltInUniverse
                                 spaceVisual("starboundmc:textures/planet/lush.png",
                                         0.30F, 0.60F, 1.0F, 0.20F,
                                         23.0F, 15.0F, 0.0F, 0xFF68D68A,
-                                        0.24F, 0.00375F, 0.10F),
+                                        0.24F, 0.00375F, 0.10F,
+                                        // Land stays matte while the oceans carry the
+                                        // highlight: the shader reads the water from
+                                        // the albedo's blue-dominant pixels, so the
+                                        // continents never pick up the sheen. The
+                                        // strengths are tuned against a working data
+                                        // pipeline: obvious, never glowing.
+                                        new BodyMaterialProfile(0.85F, 0.10F, 0.10F,
+                                                0.25F, 0.35F, 0.0F, 0, Optional.empty())),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
@@ -145,7 +155,12 @@ public final class BuiltInUniverse
                                 spaceVisual("starboundmc:textures/planet/molten.png",
                                         1.0F, 0.45F, 0.20F, 0.26F,
                                         6.0F, 210.0F, 0.0F, 0xFFFF8A4C,
-                                        0.16F, 0.0075F, 0.16F),
+                                        0.16F, 0.0075F, 0.16F,
+                                        // The rock goes dark on the night side; only the
+                                        // lava veins in the emissive mask keep burning.
+                                        new BodyMaterialProfile(0.90F, 0.05F, 0.02F,
+                                                0.2F, 0.0F, 1.0F, 0xFF8A3C,
+                                                Optional.of("starboundmc:textures/planet/molten_emissive.png"))),
                                 surface("starboundmc:molten", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 0, 1, 0, 1.0F))),
 
@@ -171,7 +186,10 @@ public final class BuiltInUniverse
                                         0.99F, 0.91F, 0.70F, 0.24F,
                                         GasGiantGeometry.AXIAL_TILT_DEGREES, GasGiantGeometry.BODY_YAW_DEGREES, 0.0F,
                                         0xFFE4C893, 0.42F, 0.009F, 0.22F,
-                                        "starboundmc:textures/planet/gasgiant_ring.png"),
+                                        "starboundmc:textures/planet/gasgiant_ring.png",
+                                        // A soft sheen over the bands, never a hard
+                                        // planetary highlight.
+                                        material(0.60F, 0.10F, 0.05F)),
                                 // Orbit-only: no surface definition, which is what the
                                 // landing button reads to refuse with "no solid surface".
                                 Optional.empty()),
@@ -194,7 +212,10 @@ public final class BuiltInUniverse
                                 spaceVisual("starboundmc:textures/planet/rockymoon.png",
                                         0.55F, 0.55F, 0.60F, 0.03F,
                                         8.0F, 160.0F, 0.0F,
-                                        0xFFB4B8BE, 0.12F, 0.002F, 0.03F),
+                                        0xFFB4B8BE, 0.12F, 0.002F, 0.03F,
+                                        // Airless, weathered rock: the darkest and
+                                        // roughest surface in the catalog.
+                                        material(0.97F, 0.02F, 0.01F)),
                                 surface("starboundmc:rockymoon", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(false, 0, 0, 0, 1.0F)))
                 ));
@@ -234,7 +255,10 @@ public final class BuiltInUniverse
                                 spaceVisual("starboundmc:textures/planet/frozen.png",
                                         0.55F, 0.78F, 1.0F, 0.23F,
                                         32.0F, 125.0F, 0.0F, 0xFF8FD7FF,
-                                        0.30F, 0.00225F, 0.14F),
+                                        0.30F, 0.00225F, 0.14F,
+                                        // Ice: the glossiest surface in the catalog,
+                                        // with a colder, wider limb sheen.
+                                        material(0.45F, 0.32F, 0.15F)),
                                 surface("starboundmc:frozen", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 1, 0, 0, 1.0F)))
                 ));
@@ -267,7 +291,9 @@ public final class BuiltInUniverse
      * Builds a body's cockpit-window visual.
      *
      * <p>The atmosphere, orientation, point colour and shading numbers are
-     * transcriptions of the per-planet tables the renderer used to own.</p>
+     * transcriptions of the per-planet tables the renderer used to own. The
+     * material block is what the planet surface shader reads for highlight,
+     * sheen and emission.</p>
      */
     private static Optional<BodySpaceVisualProfile> spaceVisual(String texture,
                                                                 float atmoRed, float atmoGreen,
@@ -276,10 +302,11 @@ public final class BuiltInUniverse
                                                                 int pointColor,
                                                                 float terminatorWidth,
                                                                 float spinRate,
-                                                                float nightFloor)
+                                                                float nightFloor,
+                                                                BodyMaterialProfile material)
     {
         return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
-                pointColor, terminatorWidth, spinRate, nightFloor, null);
+                pointColor, terminatorWidth, spinRate, nightFloor, null, material);
     }
 
     /** Variant for a ringed body, whose ring texture is the only extra datum. */
@@ -291,12 +318,25 @@ public final class BuiltInUniverse
                                                                 float terminatorWidth,
                                                                 float spinRate,
                                                                 float nightFloor,
-                                                                String ringTexture)
+                                                                String ringTexture,
+                                                                BodyMaterialProfile material)
     {
         return Optional.of(new BodySpaceVisualProfile(
                 Optional.ofNullable(texture), atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
-                Optional.ofNullable(ringTexture)));
+                Optional.ofNullable(ringTexture), Optional.ofNullable(material)));
+    }
+
+    /**
+     * A diffuse-leaning material: rough surface, restrained highlight, faint
+     * limb sheen. Used for the rock and ice worlds, where a mirror-like planet
+     * would read as plastic.
+     */
+    private static BodyMaterialProfile material(float roughness, float specularStrength,
+                                                float fresnelStrength)
+    {
+        return new BodyMaterialProfile(roughness, specularStrength, fresnelStrength,
+                0.2F, 0.0F, 0.0F, 0, Optional.empty());
     }
 
     private static Optional<BodySurfaceDefinition> surface(String dimension,

@@ -27,6 +27,11 @@
         "atmosphere_green": 0.78,
         "atmosphere_peak": 0.23,
         "atmosphere_red": 0.55,
+        "material": {
+          "fresnel_strength": 0.15,
+          "roughness": 0.45,
+          "specular_strength": 0.32
+        },
         "night_floor": 0.14,
         "orientation_tilt": 32.0,
         "orientation_yaw": 125.0,

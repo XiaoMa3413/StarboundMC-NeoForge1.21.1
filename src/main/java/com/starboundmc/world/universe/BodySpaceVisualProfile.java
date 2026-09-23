@@ -27,6 +27,10 @@ import java.util.Optional;
  * flight-route planner also reads to keep a corridor clear of the ring plane.
  * Keeping them in one place is what stops the drawn ring and the planned
  * clearance from drifting apart, so only the texture varies per body.</p>
+ *
+ * <p>An absent {@code material} block means the body keeps the pre-material
+ * look: diffuse day/night shading only. Every material field is individually
+ * optional with the same default, so older data decodes unchanged.</p>
  */
 public record BodySpaceVisualProfile(Optional<String> texture,
                                      float atmosphereRed,
@@ -40,7 +44,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float terminatorWidth,
                                      float spinRate,
                                      float nightFloor,
-                                     Optional<String> ringTexture)
+                                     Optional<String> ringTexture,
+                                     Optional<BodyMaterialProfile> material)
 {
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
@@ -71,13 +76,16 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                     Codec.FLOAT.optionalFieldOf("night_floor", 0.10F)
                             .forGetter(BodySpaceVisualProfile::nightFloor),
                     Codec.STRING.optionalFieldOf("ring_texture")
-                            .forGetter(BodySpaceVisualProfile::ringTexture)
+                            .forGetter(BodySpaceVisualProfile::ringTexture),
+                    BodyMaterialProfile.CODEC.optionalFieldOf("material")
+                            .forGetter(BodySpaceVisualProfile::material)
             ).apply(instance, BodySpaceVisualProfile::new));
 
     public BodySpaceVisualProfile
     {
         texture = texture == null ? Optional.empty() : texture;
         ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
+        material = material == null ? Optional.empty() : material;
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);
         requireUnitRange("atmosphereBlue", atmosphereBlue);
