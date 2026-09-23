@@ -1,5 +1,5 @@
 {
-  "parent": "starboundmc:block/voxel_printing_station",
+  "parent": "starboundmc:block/voxel_printer_complete",
   "display": {
     "gui": {
       "rotation": [25, 225, 0],

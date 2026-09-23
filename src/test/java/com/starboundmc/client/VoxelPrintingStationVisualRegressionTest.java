@@ -1,6 +1,5 @@
 package com.starboundmc.client;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.api.Test;
@@ -17,49 +16,50 @@ class VoxelPrintingStationVisualRegressionTest {
             "src/main/resources/assets/starboundmc/models/block/voxel_printing_station.json");
     private static final Path RENDERER = Path.of(
             "src/main/java/com/starboundmc/client/VoxelPrintingStationRenderer.java");
-    private static final String[][] AXIS_FACES = {
-            {"west", "east"},
-            {"down", "up"},
-            {"north", "south"}
-    };
-
     @Test
-    void modelHasNoPositiveVolumeOrSameFacingCoplanarOverlaps() throws IOException {
-        JsonArray elements = JsonParser.parseString(Files.readString(MODEL))
-                .getAsJsonObject().getAsJsonArray("elements");
-
-        for (int firstIndex = 0; firstIndex < elements.size(); firstIndex++) {
-            JsonObject first = elements.get(firstIndex).getAsJsonObject();
-            for (int secondIndex = firstIndex + 1; secondIndex < elements.size(); secondIndex++) {
-                JsonObject second = elements.get(secondIndex).getAsJsonObject();
-                double[] overlaps = new double[3];
-                for (int axis = 0; axis < 3; axis++) {
-                    overlaps[axis] = overlap(first, second, axis);
-                }
-
-                assertFalse(overlaps[0] > 0.0 && overlaps[1] > 0.0 && overlaps[2] > 0.0,
-                        "Elements " + firstIndex + " and " + secondIndex + " overlap in volume");
-
-                for (int axis = 0; axis < 3; axis++) {
-                    int firstOtherAxis = (axis + 1) % 3;
-                    int secondOtherAxis = (axis + 2) % 3;
-                    if (overlaps[firstOtherAxis] <= 0.0 || overlaps[secondOtherAxis] <= 0.0) {
-                        continue;
+    void meshResourcesKeepAnimatedHeadsOutOfChassisAndInsideItem() throws IOException {
+        JsonObject model = JsonParser.parseString(Files.readString(MODEL)).getAsJsonObject();
+        assertTrue(model.get("loader").getAsString().equals("neoforge:obj"));
+        assertTrue(model.get("emissive_ambient").getAsBoolean());
+        assertFalse(model.get("automatic_culling").getAsBoolean());
+        Path assets = Path.of("src/main/resources/assets/starboundmc");
+        String chassis = Files.readString(assets.resolve("models/block/voxel_printer_chassis.obj"));
+        String head = Files.readString(assets.resolve("models/block/voxel_printer_head.obj"));
+        String complete = Files.readString(assets.resolve("models/block/voxel_printer_complete.obj"));
+        assertFalse(chassis.contains("optical_head_body"), "The block must not duplicate moving heads");
+        assertTrue(chassis.contains("fixed_mounting_shoe"));
+        assertTrue(head.contains("optical_head_body"));
+        assertFalse(head.contains("fixed_mounting_shoe"), "Mounts must stay attached to the chassis");
+        assertTrue(complete.contains("l_optical_head_body") && complete.contains("r_optical_head_body"));
+        assertTrue(Files.readString(assets.resolve("models/item/voxel_printing_station.json"))
+                .contains("block/voxel_printer_complete"));
+        for (String obj : new String[]{chassis, head, complete}) {
+            int vertices = 0, uvs = 0, normals = 0;
+            for (String line : obj.lines().toList()) {
+                String[] values = line.split(" ");
+                if (line.startsWith("v ") || line.startsWith("vt ") || line.startsWith("vn ")) {
+                    for (int i = 1; i < values.length; i++) {
+                        double value = Double.parseDouble(values[i]);
+                        assertTrue(Double.isFinite(value));
+                        if (line.startsWith("vt ")) assertTrue(value >= 0 && value <= 1);
+                        if (line.startsWith("v ") && obj != head) assertTrue(value >= 0 && value <= 1);
                     }
-                    for (int side = 0; side < 2; side++) {
-                        String coordinate = side == 0 ? "from" : "to";
-                        String face = AXIS_FACES[axis][side];
-                        double firstPlane = coordinate(first, coordinate, axis);
-                        double secondPlane = coordinate(second, coordinate, axis);
-                        boolean bothFacesRendered = first.getAsJsonObject("faces").has(face)
-                                && second.getAsJsonObject("faces").has(face);
-                        assertFalse(bothFacesRendered && Math.abs(firstPlane - secondPlane) < 1.0E-9,
-                                "Elements " + firstIndex + " and " + secondIndex
-                                        + " render the same-facing " + face + " plane");
+                    if (line.startsWith("v ")) vertices++;
+                    if (line.startsWith("vt ")) uvs++;
+                    if (line.startsWith("vn ")) normals++;
+                } else if (line.startsWith("f ")) {
+                    for (int i = 1; i < values.length; i++) {
+                        String[] indices = values[i].split("/");
+                        assertTrue(Integer.parseInt(indices[0]) > 0 && Integer.parseInt(indices[0]) <= vertices);
+                        assertTrue(Integer.parseInt(indices[1]) > 0 && Integer.parseInt(indices[1]) <= uvs);
+                        assertTrue(Integer.parseInt(indices[2]) > 0 && Integer.parseInt(indices[2]) <= normals);
                     }
                 }
             }
+            assertTrue(vertices > 0 && uvs > 0 && normals > 0);
         }
+        assertTrue(Files.isRegularFile(assets.resolve("textures/block/printer_surface_atlas.png")));
+        assertTrue(Files.isRegularFile(assets.resolve("textures/block/printer_optics.png")));
     }
 
     @Test
@@ -92,14 +92,12 @@ class VoxelPrintingStationVisualRegressionTest {
         int methodEnd = source.indexOf("private static ProbeAim createProbeAim", methodStart);
         String method = source.substring(methodStart, methodEnd);
 
-        int lastSolidDraw = method.indexOf("renderProbeSolids(pose, solids, rightAim)");
+        int lastSolidDraw = method.indexOf("renderProbeModel(pose, solids, rightAim");
         int lineBuffer = method.indexOf("buffers.getBuffer(RenderType.lines())");
-        int firstOutlineDraw = method.indexOf("renderProbeOutlines(pose, lines, leftAim)");
 
         assertTrue(lastSolidDraw >= 0 && lastSolidDraw < lineBuffer,
-                "The debug-filled-box buffer must finish before requesting the line buffer");
-        assertTrue(lineBuffer < firstOutlineDraw,
-                "Probe outlines must be drawn only after the line buffer is requested");
+                "The textured head buffer must finish before requesting the line buffer");
+        assertFalse(source.contains("RenderType.debugFilledBox()"));
     }
 
     @Test
@@ -412,13 +410,4 @@ class VoxelPrintingStationVisualRegressionTest {
         assertFalse(stylesheet.contains("transparent"));
     }
 
-    private static double overlap(JsonObject first, JsonObject second, int axis) {
-        double lower = Math.max(coordinate(first, "from", axis), coordinate(second, "from", axis));
-        double upper = Math.min(coordinate(first, "to", axis), coordinate(second, "to", axis));
-        return upper - lower;
-    }
-
-    private static double coordinate(JsonObject element, String endpoint, int axis) {
-        return element.getAsJsonArray(endpoint).get(axis).getAsDouble();
-    }
 }

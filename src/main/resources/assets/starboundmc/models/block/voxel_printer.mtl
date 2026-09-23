@@ -1,0 +1,11 @@
+# Ka marks only optical surfaces as emissive; no block light is emitted.
+
+newmtl printer_optics
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/printer_optics
+
+newmtl printer_surface_atlas
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/printer_surface_atlas

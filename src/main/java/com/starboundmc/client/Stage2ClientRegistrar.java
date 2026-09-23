@@ -56,6 +56,11 @@ public final class Stage2ClientRegistrar {
     }
 
     @SubscribeEvent
+    public static void registerPrinterModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event) {
+        event.register(VoxelPrintingStationRenderer.HEAD_MODEL);
+    }
+
+    @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SEAT.get(), SeatRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SHIP_ENGINE.get(), ShipThrusterRenderer::new);
