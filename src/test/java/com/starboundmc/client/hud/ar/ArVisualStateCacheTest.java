@@ -136,12 +136,13 @@ class ArVisualStateCacheTest {
         assertNull(ArVisualStateCache.attentionOwner(List.of(poi)));
         var cache = new ArVisualStateCache();
         int activeFrames = 0;
-        for (int frame = 0; frame < 600; frame++) {
+        // Run past the acquisition-age cap: warning pulses must still return to silence.
+        for (int frame = 0; frame < 60 * 90; frame++) {
             cache.beginFrame(1D / 60);
             assertEquals(0, cache.present(poi, false).attention(true));
             var state = cache.present(warning, false);
             assertEquals(0, state.attention(false));
-            if (state.attention(true) > .01) activeFrames++;
+            if (frame >= 60 * 80 && state.attention(true) > .01) activeFrames++;
         }
         assertTrue(activeFrames > 0 && activeFrames < 150);
     }

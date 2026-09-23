@@ -57,6 +57,8 @@ public final class ArVisualStateCache {
         state.lastFrame = frame;
         state.lastPresent = time;
         state.entryAge = Math.min(60, state.entryAge + delta);
+        // Keep periodic attention separate from the bounded one-shot acquisition age.
+        state.attentionAge = (state.attentionAge + delta) % 3.5;
         state.identificationAge = Math.min(1, state.identificationAge + delta);
         if (!edge && state.entryAge >= .55) state.known = true;
         if (state.identificationAge >= .24) state.previousLabel = null;
@@ -95,6 +97,7 @@ public final class ArVisualStateCache {
         private long lastFrame = -2;
         private double lastPresent;
         private double entryAge;
+        private double attentionAge;
         private double identificationAge = 1;
         private boolean edge;
         private boolean known;
@@ -124,7 +127,7 @@ public final class ArVisualStateCache {
         public float attention(boolean selected) {
             if (!selected || DISABLED) return 0;
             if (category == ArTargetCategory.WARNING) {
-                double phase = entryAge % 3.5;
+                double phase = attentionAge;
                 return phase < .6 ? (float) Math.pow(Math.sin(Math.PI * phase / .6), 2) : 0;
             }
             return previousLabel == null ? 0 : 1 - identityBlend();
