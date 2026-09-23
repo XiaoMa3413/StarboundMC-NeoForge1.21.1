@@ -7,6 +7,10 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.hud.animation.HudComponentPresentation;
 import com.starboundmc.client.hud.animation.SurvivalFeedback;
 import com.starboundmc.client.hud.HudSurvivalRenderer;
+import com.starboundmc.client.hud.HudBootController;
+import com.starboundmc.client.hud.HudBootStatusRenderer;
+import com.starboundmc.client.shipai.NovaBroadcastRenderFixture;
+import com.starboundmc.story.CoreState;
 import com.starboundmc.network.EppSnapshotPacket;
 import com.starboundmc.client.hud.ar.*;
 import net.minecraft.client.Minecraft;
@@ -32,6 +36,8 @@ public final class HudVisorRenderSmoke {
     private static final HudVisorProjection SURVIVAL = new HudVisorProjection(128, 48, HudVisorGeometry.Profile.SURVIVAL);
     private static final HudVisorProjection CONTROLS = new HudVisorProjection(360, 48, HudVisorGeometry.Profile.EVA_CONTROLS);
     private static final HudVisorProjection FLAT = new HudVisorProjection(200, 48);
+    private static final HudVisorProjection BOOT = new HudVisorProjection(HudBootStatusRenderer.WIDTH, HudBootStatusRenderer.HEIGHT);
+    private static NovaBroadcastRenderFixture nova;
     private static final SurvivalFeedback[] FEEDBACK = new SurvivalFeedback[3];
     private static int scenario;
     private static final HudComponentPresentation NAVIGATION =
@@ -47,6 +53,17 @@ public final class HudVisorRenderSmoke {
         if (!Boolean.getBoolean("starboundmc.debug.hudVisorSmoke") || finished
                 || mc.level != null || mc.getOverlay() != null || LDLibShaders.getGuiTexture() == null) return;
         event.setCanceled(true);
+        String language = System.getProperty("starboundmc.debug.hudSmokeLanguage", "zh_cn");
+        if (!mc.getLanguageManager().getSelected().equals(language)) {
+            mc.getLanguageManager().setSelected(language);
+            mc.options.languageCode = language;
+            mc.reloadResourcePacks();
+            return;
+        }
+        if (Boolean.getBoolean("starboundmc.debug.hudPresentationSmoke")) {
+            presentation(event.getGuiGraphics());
+            return;
+        }
         int scale = 2 + scenario / 2;
         if (mc.options.guiScale().get() != scale) {
             mc.options.guiScale().set(scale);
@@ -135,20 +152,87 @@ public final class HudVisorRenderSmoke {
         AR_MARKERS.beginFrame();
         boolean outside = frames >= 42 && frames < 54;
         boolean identified = frames >= 66;
-        for (int index = 0; index < 3; index++) {
+        for (int index = 0; index < 8; index++) {
             String identity = index == 0 && !identified ? "signal" : "identified";
             String label = index == 0 ? identified ? "ABANDONED RELAY  84m" : "UNKNOWN SIGNAL  84m"
-                    : index == 1 ? "SHIP  120m" : "WARNING";
+                    : index == 1 ? "SHIP  120m" : index == 2 ? "WARNING" : "RELAY " + index + "  96m";
             var target = new ArTarget(ResourceLocation.fromNamespaceAndPath("starboundmc", "smoke_" + index),
                     index == 2 ? ArTargetCategory.WARNING : ArTargetCategory.POI,
                     Vec3.ZERO, Component.literal(label), ArGuidanceMode.TARGET,
                     index == 2 ? 150 : 60, 1000, index == 2 ? 0xFF9477 : 0x95E8E2, identity);
-            float x = 70 + index * 58;
-            float y = g.guiHeight() / 2F + 25 + index * 24;
+            float x = index < 3 ? 70 + index * 58 : 110 + index % 2 * 4;
+            float y = g.guiHeight() / 2F + (index < 3 ? 25 + index * 24 : 42);
             var point = outside && index == 0
                     ? ArTargetProjection.project(-2, 0, -1, g.guiWidth(), g.guiHeight())
                     : new ArTargetProjection.Point(x, y, false, false);
             AR_MARKERS.draw(g, target, point, AR_STATES.present(target, point.edge()), 1, index == 2);
+        }
+    }
+
+    private static void presentation(GuiGraphics g) throws IOException {
+        var mc = Minecraft.getInstance();
+        int scale = 2 + scenario / 2;
+        if (mc.options.guiScale().get() != scale) {
+            mc.options.guiScale().set(scale);
+            mc.resizeDisplay();
+            return;
+        }
+        if (frames == 0) {
+            HudBootController.INSTANCE.reset();
+            HudBootController.INSTANCE.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
+            NAVIGATION.update(0, false);
+            nova = new NovaBroadcastRenderFixture();
+        }
+        var boot = HudBootController.INSTANCE;
+        if (frames == 225) boot.applyServerState(CoreState.REBOOTING, true, true, false);
+        if (frames == 260) boot.applyServerState(CoreState.ONLINE, true, true, false);
+        if (frames == 500) {
+            boot.reset();
+            boot.applyServerState(CoreState.ONLINE, false, false, false);
+        }
+        // A ten-tick interruption checks that the timeline, including entry and exit, resumes intact.
+        boolean paused = frames >= 155 && frames < 165;
+        boot.tick(paused);
+        boolean bright = scenario % 2 == 1;
+        g.fill(0, 0, g.guiWidth(), g.guiHeight(), bright ? 0xFFCBD6D2 : 0xFF122532);
+        g.flush();
+        while (GL11.glGetError() != GL11.GL_NO_ERROR) { }
+        int fbo = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
+        var presentation = boot.presentation(0);
+        if (presentation.statusOpacity() > .001) {
+            BOOT.draw(g, (g.guiWidth() - HudBootStatusRenderer.WIDTH) / 2F,
+                    g.guiHeight() / 2F - 8, HudBootStatusRenderer.WIDTH, HudBootStatusRenderer.HEIGHT,
+                    presentation.statusOpacity(), .04F, canvas -> HudBootStatusRenderer.draw(canvas, presentation));
+        }
+        if (boot.localNavigationActive()) {
+            NAVIGATION.update(paused ? 0 : .05, true);
+            COMPASS.draw(g, g.guiWidth() / 2F - 136, 18 + NAVIGATION.offsetY(), 272, 48,
+                    1, NAVIGATION.glow(), canvas -> VisorCompassRenderer.draw(canvas, NAVIGATION.progress()));
+        }
+        if (!boot.defersCommunication()) nova.draw(g, paused);
+        g.flush();
+        if (GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING) != fbo || GL11.glGetError() != GL11.GL_NO_ERROR)
+            throw new IllegalStateException("Boot/NOVA produced GL errors or changed framebuffer");
+        if (java.util.Set.of(10, 42, 80, 104, 145, 150, 158, 164, 190, 230, 270, 310, 390, 450, 490, 505, 525, 550, 599).contains(frames)) {
+            var folder = mc.gameDirectory.toPath().resolve("screenshots");
+            Files.createDirectories(folder);
+            try (var capture = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+                capture.writeToFile(folder.resolve("hud-presentation-" + mc.getWindow().getWidth() + "x"
+                        + mc.getWindow().getHeight() + "-" + mc.getLanguageManager().getSelected() + "-"
+                        + scale + "-" + frames + (bright ? "-bright.png" : "-dark.png")));
+            }
+        }
+        if (++frames < 600) return;
+        if (!nova.complete()) throw new IllegalStateException("NOVA did not finish streaming and closing");
+        frames = 0;
+        nova.close();
+        if (++scenario == 6) {
+            finished = true;
+            BOOT.close(); COMPASS.close();
+            Files.writeString(mc.gameDirectory.toPath().resolve("screenshots/hud-presentation-passed.txt"),
+                    "PASS: real Boot and NOVA artwork, GUI 2/3/4, bright/dark, "
+                            + mc.getLanguageManager().getSelected() + ", GL/FBO state. Synthetic timeline.\n");
+            mc.stop();
         }
     }
 }

@@ -32,14 +32,25 @@ final class HudLayerArchitectureTest {
     @Test
     void worldArRemainsOutsideVisorDriftAndNovaRemainsFlat() throws IOException {
         String hud = source("hud/StarboundHudLayer.java");
-        int navigation = hud.indexOf("private void drawNavigation");
-        int worldAr = hud.indexOf("ArWorldRenderer.INSTANCE.render(g, opacity", navigation);
-        int visorDrift = hud.indexOf("g.pose().translate(driftX, driftY, 0)", worldAr);
-        assertTrue(navigation >= 0 && worldAr > navigation && visorDrift > worldAr);
+        assertFalse(hud.contains("ArWorldRenderer.INSTANCE.render("));
+        String registrar = source("Stage2ClientRegistrar.java");
+        assertTrue(registrar.contains("\"world_ar\""));
+        assertTrue(registrar.contains("ArWorldRenderer.INSTANCE::render"));
+        String ar = source("hud/ar/ArWorldRenderer.java");
+        assertFalse(ar.contains("HudVisor"));
+        assertFalse(ar.contains("navigationOpacity"));
+        assertFalse(ar.contains("SHIP_LEVEL"));
+        assertFalse(ar.contains("showEvaNavigation"));
+        String memory = source("hud/ar/ArVisualStateCache.java");
+        assertFalse(memory.contains("HudVisorMotion"));
+        assertFalse(memory.contains("Matrix4f"));
 
         String nova = source("shipai/NovaBroadcastHudLayer.java");
         assertFalse(nova.contains("HudVisor"));
         assertFalse(nova.contains("drift"));
+        String novaRoot = source("shipai/NovaBroadcastHudRoot.java");
+        assertFalse(novaRoot.contains("HudVisor"));
+        assertFalse(novaRoot.contains("ArWorldRenderer"));
     }
 
     private static String source(String relativePath) throws IOException {
