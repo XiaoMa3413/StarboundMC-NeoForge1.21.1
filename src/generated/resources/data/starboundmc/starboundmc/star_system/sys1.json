@@ -85,6 +85,9 @@
         "atmosphere_green": 0.6,
         "atmosphere_peak": 0.2,
         "atmosphere_red": 0.3,
+        "cloud": {
+          "texture": "starboundmc:textures/planet/lush_clouds.png"
+        },
         "material": {
           "fresnel_strength": 0.1,
           "ocean_roughness": 0.25,

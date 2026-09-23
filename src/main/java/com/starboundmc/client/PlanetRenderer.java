@@ -27,6 +27,7 @@ import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.UniverseNavigation;
 import com.starboundmc.world.GasGiantGeometry;
+import com.starboundmc.world.universe.BodyCloudProfile;
 import com.starboundmc.world.universe.BodyMaterialProfile;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
@@ -361,7 +362,7 @@ public class PlanetRenderer
     private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
             java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
             0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
-            java.util.Optional.empty(), java.util.Optional.empty());
+            java.util.Optional.empty(), java.util.Optional.empty(), java.util.Optional.empty());
 
     /**
      * The texture for a body's sphere.
@@ -544,6 +545,8 @@ public class PlanetRenderer
     private static final int HALO_SLICES = 32;
     /** The atmosphere shell's radius as a multiple of the planet radius. */
     private static final float ATMOSPHERE_SHELL_FACTOR = 1.15F;
+    /** The cloud layer's radius as a multiple of the planet radius. */
+    private static final float CLOUD_SHELL_FACTOR = 1.02F;
     /** The one atmosphere shell mesh every body shares, uploaded once. */
     private static VertexBuffer atmosphereShellBuffer;
     private static final float[] HALO_X;
@@ -1308,6 +1311,7 @@ public class PlanetRenderer
             drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose, pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        drawCloudLayer(pose, body, scale, alpha, cx, cy, cz, shipYaw, shipPitch, animationTicks);
         if (hasRings(body))
             drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
     }
@@ -1331,7 +1335,8 @@ public class PlanetRenderer
             // The planet path always passes brightness 1.0 (see renderPlanet),
             // so alpha alone rides in the shader's GlobalAlpha.
             drawPlanetSphereGpu(pose, matrix, body, cx, cy, cz, scale, worldSun, alpha,
-                    shipYaw, shipPitch, animationTicks, shader);
+                    shipYaw, shipPitch, (float) Math.toRadians(animationTicks * spinRate(body)),
+                    textureOf(body), shader);
             return;
         }
 
@@ -1364,19 +1369,22 @@ public class PlanetRenderer
     }
 
     /**
-     * GPU path: one static sphere VBO with per-fragment day/night lighting.
+     * GPU path for a textured sphere with per-fragment day/night lighting: the
+     * planet surface and the cloud layer both draw through it.
      *
      * <p>The sun direction is transformed into the mesh's local frame instead
      * of being baked per vertex. The dot product is invariant under a shared
      * rotation, so pushing the sun back through the inverse of the model's spin
      * and body orientation leaves the lighting exactly where the CPU bake put
-     * it: the surface texture turns while the terminator stays fixed.</p>
+     * it: the surface texture turns while the terminator stays fixed. The spin
+     * is passed in rather than derived from the body so the cloud layer can
+     * rotate at its own rate while sharing the lighting frame.</p>
      */
     private static void drawPlanetSphereGpu(PoseStack pose, Matrix4f matrix, CelestialBodyDefinition body,
                                             float cx, float cy, float cz, float scale,
                                             Vector3f worldSun, float alpha,
-                                            float shipYaw, float shipPitch, float animationTicks,
-                                            ShaderInstance shader)
+                                            float shipYaw, float shipPitch, float spinRadians,
+                                            ResourceLocation texture, ShaderInstance shader)
     {
         FogRenderer.setupNoFog();
         RenderSystem.enableBlend();
@@ -1384,7 +1392,7 @@ public class PlanetRenderer
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.setShader(() -> shader);
-        RenderSystem.setShaderTexture(0, textureOf(body));
+        RenderSystem.setShaderTexture(0, texture);
 
         // The body orientation used to be baked into the mesh; it now composes
         // in the same order (spin outermost, then the fixed orientation).
@@ -1393,13 +1401,13 @@ public class PlanetRenderer
                 .translate(cx, cy, cz)
                 .rotateX((float) Math.toRadians(-shipPitch))
                 .rotateY((float) Math.toRadians(-shipYaw))
-                .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
+                .rotateY(spinRadians)
                 .mul(bodyOrientation(visual(body)))
                 .scale(scale);
 
         Uniform sunDirection = shader.getUniform("SunDirection");
         if (sunDirection != null)
-            sunDirection.set(localSunDirection(body, worldSun, animationTicks));
+            sunDirection.set(localSunDirection(visual(body), worldSun, spinRadians));
         Uniform nightFloor = shader.getUniform("NightFloor");
         if (nightFloor != null)
             nightFloor.set(nightFloor(body));
@@ -1501,19 +1509,43 @@ public class PlanetRenderer
 
     /**
      * The sun direction in the sphere mesh's local frame, matching the frame
-     * the old CPU bake lit in: the model applies spin and then the fixed body
-     * orientation to the mesh, so the sun travels back through the inverse of
-     * both, right to left as Ry(-yaw) * Rx(-tilt) * Ry(-spin).
+     * the old CPU bake lit in: the model applies the given spin and then the
+     * fixed body orientation to the mesh, so the sun travels back through the
+     * inverse of both, right to left as Ry(-yaw) * Rx(-tilt) * Ry(-spin).
      */
-    private static Vector3f localSunDirection(CelestialBodyDefinition body, Vector3f worldSun,
-                                              float animationTicks)
+    private static Vector3f localSunDirection(BodySpaceVisualProfile profile, Vector3f worldSun,
+                                              float spinRadians)
     {
-        BodySpaceVisualProfile profile = visual(body);
         Vector3f sun = new Vector3f(worldSun);
-        sun.rotateY(-(float) Math.toRadians(animationTicks * spinRate(body)));
+        sun.rotateY(-spinRadians);
         sun.rotateX(-(float) Math.toRadians(profile.orientationTilt()));
         sun.rotateY(-(float) Math.toRadians(profile.orientationYaw()));
         return sun;
+    }
+
+    /**
+     * Draws the body's cloud layer, if it authors one: a slightly larger
+     * sphere with a transparent texture, rotating at its own rate so the
+     * clouds drift across the ground. Lighting and geometry are shared with
+     * the planet surface, so the terminator and the body frame stay aligned
+     * and no extra shader or mesh is needed.
+     */
+    private static void drawCloudLayer(PoseStack pose, CelestialBodyDefinition body, float scale,
+                                       float alpha, float cx, float cy, float cz,
+                                       float shipYaw, float shipPitch, float animationTicks)
+    {
+        BodyCloudProfile cloud = visual(body).cloud().orElse(null);
+        if (cloud == null)
+            return;
+        ShaderInstance shader = PlanetSurfaceShader.instance();
+        if (shader == null)
+            return;
+
+        drawPlanetSphereGpu(pose, pose.last().pose(), body, cx, cy, cz,
+                scale * CLOUD_SHELL_FACTOR, fixedSunDirection(body),
+                alpha * cloud.opacity(), shipYaw, shipPitch,
+                (float) Math.toRadians(animationTicks * cloud.spinRate()),
+                ResourceLocation.parse(cloud.texture()), shader);
     }
 
     private static VertexBuffer getPlanetSurfaceBuffer(CelestialBodyDefinition body, Vector3f worldSun,

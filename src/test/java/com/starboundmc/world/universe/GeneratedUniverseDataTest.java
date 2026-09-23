@@ -65,6 +65,25 @@ final class GeneratedUniverseDataTest {
                         id + " emissive strength");
                 assertEquals(expectedMaterial.emissiveMask(), actualMaterial.emissiveMask(),
                         id + " emissive mask");
+
+                Optional<BodyCloudProfile> expectedCloud = expectedBody.spaceVisual()
+                        .map(BodySpaceVisualProfile::cloud).orElse(Optional.empty());
+                Optional<BodyCloudProfile> actualCloud = actual.spaceVisual()
+                        .map(BodySpaceVisualProfile::cloud).orElse(Optional.empty());
+                assertEquals(expectedCloud.isPresent(), actualCloud.isPresent(), id + " cloud presence");
+                if (expectedCloud.isPresent()) {
+                    BodyCloudProfile baselineCloud = expectedCloud.orElseThrow();
+                    Path texture = Path.of("src/main/resources/assets/")
+                            .resolve(baselineCloud.texture().replace(":", "/"));
+                    assertTrue(Files.exists(texture),
+                            id + " cloud texture file missing: " + texture);
+                    assertEquals(baselineCloud.texture(), actualCloud.orElseThrow().texture(),
+                            id + " cloud texture");
+                    assertEquals(baselineCloud.spinRate(), actualCloud.orElseThrow().spinRate(),
+                            id + " cloud spin rate");
+                    assertEquals(baselineCloud.opacity(), actualCloud.orElseThrow().opacity(),
+                            id + " cloud opacity");
+                }
             }
         }
     }

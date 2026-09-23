@@ -133,7 +133,14 @@ public final class BuiltInUniverse
                                         // strengths are tuned against a working data
                                         // pipeline: obvious, never glowing.
                                         new BodyMaterialProfile(0.85F, 0.10F, 0.10F,
-                                                0.25F, 0.35F, 0.0F, 0, Optional.empty())),
+                                                0.25F, 0.35F, 0.0F, 0, Optional.empty()),
+                                        // The only cloud layer in the catalog: a
+                                        // slightly larger sphere drifting against the
+                                        // ground at its own rate, translucent enough
+                                        // that the continents stay readable.
+                                        new BodyCloudProfile(
+                                                "starboundmc:textures/planet/lush_clouds.png",
+                                                0.0055F, 0.85F)),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
@@ -189,7 +196,7 @@ public final class BuiltInUniverse
                                         "starboundmc:textures/planet/gasgiant_ring.png",
                                         // A soft sheen over the bands, never a hard
                                         // planetary highlight.
-                                        material(0.60F, 0.10F, 0.05F)),
+                                        material(0.60F, 0.10F, 0.05F), null),
                                 // Orbit-only: no surface definition, which is what the
                                 // landing button reads to refuse with "no solid surface".
                                 Optional.empty()),
@@ -306,7 +313,23 @@ public final class BuiltInUniverse
                                                                 BodyMaterialProfile material)
     {
         return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
-                pointColor, terminatorWidth, spinRate, nightFloor, null, material);
+                pointColor, terminatorWidth, spinRate, nightFloor, null, material, null);
+    }
+
+    /** Variant that also authors a cloud layer. */
+    private static Optional<BodySpaceVisualProfile> spaceVisual(String texture,
+                                                                float atmoRed, float atmoGreen,
+                                                                float atmoBlue, float atmoPeak,
+                                                                float tilt, float yaw, float roll,
+                                                                int pointColor,
+                                                                float terminatorWidth,
+                                                                float spinRate,
+                                                                float nightFloor,
+                                                                BodyMaterialProfile material,
+                                                                BodyCloudProfile cloud)
+    {
+        return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
+                pointColor, terminatorWidth, spinRate, nightFloor, null, material, cloud);
     }
 
     /** Variant for a ringed body, whose ring texture is the only extra datum. */
@@ -319,12 +342,14 @@ public final class BuiltInUniverse
                                                                 float spinRate,
                                                                 float nightFloor,
                                                                 String ringTexture,
-                                                                BodyMaterialProfile material)
+                                                                BodyMaterialProfile material,
+                                                                BodyCloudProfile cloud)
     {
         return Optional.of(new BodySpaceVisualProfile(
                 Optional.ofNullable(texture), atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
-                Optional.ofNullable(ringTexture), Optional.ofNullable(material)));
+                Optional.ofNullable(ringTexture), Optional.ofNullable(material),
+                Optional.ofNullable(cloud)));
     }
 
     /**
