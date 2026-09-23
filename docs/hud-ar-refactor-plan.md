@@ -1,5 +1,7 @@
 # StarboundMC 通用 HUD / AR 系统重构计划
 
+> 2026-09-23 动画扩展：共享双曲线保持，World AR 已独立注册并具备识别记忆；Boot 已替换旧日志/中央框，N.O.V.A. 与风险反馈同步完善。最新表现和验证证据见 [HUD 动画交付与验证](hud-animation-validation.md)。以下 H4/H5 的旧时长、日志和布局描述保留为阶段历史；H6 任务内容仍未开始。
+
 > 建议文件名：`docs/hud-ar-refactor-plan.md`
 >
 > 状态：H5 Core Link 已完成并推送；Visor 已改为采样全屏上下共享曲线，42 项 HUD 测试及宽屏/超宽屏独立客户端渲染检查通过，待实际游玩确认；暂不进入 H6
