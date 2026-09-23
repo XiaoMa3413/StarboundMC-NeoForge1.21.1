@@ -385,7 +385,8 @@ final class Stage10ResourcesTest {
 
     private static void assertModel(String id, Path source) {
         if (!id.startsWith("starboundmc:")) return;
-        Path model = ASSETS.resolve("models/" + id.substring("starboundmc:".length()) + ".json");
+        String path = id.substring("starboundmc:".length());
+        Path model = ASSETS.resolve(path.endsWith(".obj") ? path : "models/" + path + ".json");
         assertTrue(Files.isRegularFile(model), () -> source + " -> " + id);
     }
 

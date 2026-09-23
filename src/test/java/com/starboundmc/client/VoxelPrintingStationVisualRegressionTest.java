@@ -402,7 +402,8 @@ class VoxelPrintingStationVisualRegressionTest {
         assertFalse(stylesheet.contains(".voxel-printing-detail-name"));
 
         // Requirement rows stay flat data lines: no per-row panel background survives.
-        assertTrue(stylesheet.contains(".sb-requirement-row {\n  background: rect(#00000000);\n}"));
+        assertTrue(stylesheet.replace("\r\n", "\n")
+                .contains(".sb-requirement-row {\n  background: rect(#00000000);\n}"));
 
         // The v1.1 overlay proposed text-transform and a `transparent` keyword; LDLib2 2.2.36.a
         // has neither (no such property, and no such texture expression), so a stylesheet

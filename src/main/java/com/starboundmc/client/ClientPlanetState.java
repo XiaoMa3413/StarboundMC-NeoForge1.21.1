@@ -177,6 +177,10 @@ public final class ClientPlanetState {
         return ShipFlightController.sampleRoll(
                 current,warpTarget,totalTicks,sampledTicks());}
     public static synchronized FlightPhase getFlightPhase(){return phase;} public static synchronized boolean isWarping(){return phase!=FlightPhase.DOCKED;}
+    /** Exhaust uses the same clock as navigation and shuts off during a crew safety hold. */
+    public static synchronized float thrusterIntensity() {
+        return ThrusterVisualState.intensity(phase, sampledTicks(), totalTicks, crewHold);
+    }
     public static synchronized boolean consumeArrivalCue(){boolean c=arrivalCue;arrivalCue=false;return c;}
     public static synchronized float warpProgress(){return Mth.clamp((float)(sampledTicks()/totalTicks),0,1);} public static synchronized int getWarpDurationTicks(){return totalTicks;}
     public static synchronized double getShipX(){return getShipPosition().x;}public static synchronized double getShipY(){return getShipPosition().y;}public static synchronized double getShipZ(){return getShipPosition().z;}

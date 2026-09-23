@@ -221,6 +221,9 @@ if (project.hasProperty('hudVisorSmoke')) {
 if (project.hasProperty('hudWorldSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('thrusterSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -236,6 +239,11 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('thrusterSmoke')) {
+                gameDirectory = file('run-thruster-smoke')
+                systemProperty 'starboundmc.debug.thrusterSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
             if (project.hasProperty('hudVisorSmoke')) {
                 gameDirectory = file('run-hud-visor-smoke')
                 systemProperty 'starboundmc.debug.hudVisorSmoke', 'true'
