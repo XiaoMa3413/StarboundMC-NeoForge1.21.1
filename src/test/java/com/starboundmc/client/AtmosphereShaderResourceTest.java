@@ -46,6 +46,11 @@ final class AtmosphereShaderResourceTest {
         assertTrue(fragment.contains("#version 150"), "fragment shader version");
         assertTrue(vertex.contains("in vec3 Position;"), "position attribute");
         assertTrue(vertex.contains("out vec3 shellDirection;"), "shell direction output");
+        // The camera is the view-space origin: measuring the shell direction
+        // from the planet centre instead puts every shell point outside the
+        // limb ramp and the glow renders pure black.
+        assertTrue(vertex.contains("shellDirection = normalize(viewPos.xyz);"),
+                "the shell direction must be measured from the camera");
         assertTrue(vertex.contains("out vec3 sunDirectionView;"), "view-space sun output");
         assertTrue(fragment.contains("in vec3 shellDirection;"), "shell direction input");
         assertTrue(fragment.contains("in vec3 sunDirectionView;"), "view-space sun input");
