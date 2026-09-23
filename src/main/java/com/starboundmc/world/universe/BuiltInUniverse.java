@@ -140,7 +140,7 @@ public final class BuiltInUniverse
                                         // that the continents stay readable.
                                         new BodyCloudProfile(
                                                 "starboundmc:textures/planet/lush_clouds.png",
-                                                0.0055F, 0.85F)),
+                                                0.009F, 0.85F)),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
