@@ -24,12 +24,17 @@ class PlanetRendererTableEquivalenceTest
 {
     private static final UniverseCatalog CATALOG = UniverseCatalog.of(BuiltInUniverse.systems());
 
-    /** Atmosphere tint (r,g,b) and peak alpha, per body. */
+    /**
+     * Atmosphere tint (r,g,b) and peak alpha, per body. The densities were
+     * retuned when the atmosphere moved to the sun-aware shader (PR3): ice is
+     * thinner, the airless worlds keep only a faint contour, and the molten
+     * edge is warm but never a fire shell.
+     */
     private static final Map<String, float[]> ATMOSPHERE = Map.of(
             "sys1:lush", new float[] {0.30F, 0.60F, 1.0F, 0.20F},
-            "sys1:molten", new float[] {1.0F, 0.45F, 0.20F, 0.26F},
-            "sys2:frozen", new float[] {0.55F, 0.78F, 1.0F, 0.23F},
-            "sys1:barren", new float[] {0.75F, 0.65F, 0.50F, 0.15F});
+            "sys1:molten", new float[] {1.0F, 0.45F, 0.20F, 0.18F},
+            "sys2:frozen", new float[] {0.55F, 0.78F, 1.0F, 0.16F},
+            "sys1:barren", new float[] {0.75F, 0.65F, 0.50F, 0.05F});
 
     /** Fixed body orientation: x=axis tilt, y=fixed yaw, z=fixed roll. */
     private static final Map<String, float[]> ORIENTATION = Map.of(

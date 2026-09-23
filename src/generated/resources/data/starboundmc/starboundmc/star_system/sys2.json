@@ -25,7 +25,7 @@
       "space_visual": {
         "atmosphere_blue": 1.0,
         "atmosphere_green": 0.78,
-        "atmosphere_peak": 0.23,
+        "atmosphere_peak": 0.16,
         "atmosphere_red": 0.55,
         "material": {
           "fresnel_strength": 0.15,

@@ -102,7 +102,7 @@ public final class BuiltInUniverse
                                         -5002.668504563659, 102.8, -1994.1827254324958,
                                         4.0, 335.0),
                                 spaceVisual("starboundmc:textures/planet/barren.png",
-                                        0.75F, 0.65F, 0.50F, 0.15F,
+                                        0.75F, 0.65F, 0.50F, 0.05F,
                                         12.0F, 285.0F, 0.0F, 0xFFD0B07A,
                                         0.18F, 0.00275F, 0.06F,
                                         // Dry, dark regolith: almost no reflection.
@@ -153,7 +153,7 @@ public final class BuiltInUniverse
                                         -83.94, 99.2, -2.4000000000000004,
                                         6.0 / 3.67, 330.0),
                                 spaceVisual("starboundmc:textures/planet/molten.png",
-                                        1.0F, 0.45F, 0.20F, 0.26F,
+                                        1.0F, 0.45F, 0.20F, 0.18F,
                                         6.0F, 210.0F, 0.0F, 0xFFFF8A4C,
                                         0.16F, 0.0075F, 0.16F,
                                         // The rock goes dark on the night side; only the
@@ -253,7 +253,7 @@ public final class BuiltInUniverse
                                         32408.8, 103.1, 20549.945,
                                         5.5, 90.0),
                                 spaceVisual("starboundmc:textures/planet/frozen.png",
-                                        0.55F, 0.78F, 1.0F, 0.23F,
+                                        0.55F, 0.78F, 1.0F, 0.16F,
                                         32.0F, 125.0F, 0.0F, 0xFF8FD7FF,
                                         0.30F, 0.00225F, 0.14F,
                                         // Ice: the glossiest surface in the catalog,

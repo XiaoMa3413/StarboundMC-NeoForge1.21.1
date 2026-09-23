@@ -542,6 +542,10 @@ public class PlanetRenderer
     // its per-frame CPU work to one quarter of the surface mesh.
     private static final int HALO_STACKS = 16;
     private static final int HALO_SLICES = 32;
+    /** The atmosphere shell's radius as a multiple of the planet radius. */
+    private static final float ATMOSPHERE_SHELL_FACTOR = 1.15F;
+    /** The one atmosphere shell mesh every body shares, uploaded once. */
+    private static VertexBuffer atmosphereShellBuffer;
     private static final float[] HALO_X;
     private static final float[] HALO_Y;
     private static final float[] HALO_Z;
@@ -1056,14 +1060,20 @@ public class PlanetRenderer
     }
 
     /**
-     * Additive limb glow drawn as a single sphere shell around the planet. Alpha
-     * is computed from the angular distance to the planet's projected limb: it is
-     * brightest at the limb and fades to zero at the outer edge of the shell, so
-     * the halo always hugs the planet and never has a bright outer rim.
+     * Additive limb glow around the planet. The GPU path evaluates the limb
+     * ramp and the sun dependence per fragment; the CPU shell is kept as the
+     * fallback for a failed shader load.
      */
     private static void renderAtmosphereGlow(PoseStack pose, CelestialBodyDefinition body, float scale, float alpha,
                                              float cx, float cy, float cz)
     {
+        ShaderInstance shader = AtmosphereShader.instance();
+        if (shader != null)
+        {
+            drawAtmosphereGlowGpu(pose, body, scale, alpha, cx, cy, cz, shader);
+            return;
+        }
+
         Matrix4f matrix = pose.last().pose();
         BodySpaceVisualProfile profile = visual(body);
         Vector3f color = new Vector3f(profile.atmosphereRed(),
@@ -1076,8 +1086,7 @@ public class PlanetRenderer
         float axisZ = cz / distC;
 
         float planetRadius = PLANET_RADIUS * scale;
-        float outerFactor = 1.15F;
-        float outerRadius = planetRadius * outerFactor;
+        float outerRadius = planetRadius * ATMOSPHERE_SHELL_FACTOR;
         float limbAngle = (float) Math.asin(Math.min(1.0, planetRadius / distC));
         float outerAngle = (float) Math.asin(Math.min(1.0, outerRadius / distC));
         float angleRange = Math.max(0.0001F, outerAngle - limbAngle);
@@ -1098,9 +1107,9 @@ public class PlanetRenderer
                 VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         for (int i = 0; i < HALO_X.length; i++)
         {
-            float wx = cx + HALO_X[i] * outerFactor * scale;
-            float wy = cy + HALO_Y[i] * outerFactor * scale;
-            float wz = cz + HALO_Z[i] * outerFactor * scale;
+            float wx = cx + HALO_X[i] * ATMOSPHERE_SHELL_FACTOR * scale;
+            float wy = cy + HALO_Y[i] * ATMOSPHERE_SHELL_FACTOR * scale;
+            float wz = cz + HALO_Z[i] * ATMOSPHERE_SHELL_FACTOR * scale;
 
             float len = (float) Math.sqrt(wx * wx + wy * wy + wz * wz);
             float vx = wx / len;
@@ -1133,6 +1142,91 @@ public class PlanetRenderer
         RenderSystem.enableCull();
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableBlend();
+    }
+
+    /**
+     * GPU path for the atmosphere: one static shell VBO with a per-fragment
+     * limb ramp times a sun-facing factor.
+     *
+     * <p>The shell is a sphere centred on the body, so no orientation or spin
+     * enters the model matrix, and the sun rides the sky frame directly — the
+     * same frame the planet surface's terminator is fixed in, which keeps the
+     * atmosphere's lit limb aligned with the planet's day side.</p>
+     */
+    private static void drawAtmosphereGlowGpu(PoseStack pose, CelestialBodyDefinition body, float scale,
+                                              float alpha, float cx, float cy, float cz,
+                                              ShaderInstance shader)
+    {
+        BodySpaceVisualProfile profile = visual(body);
+        float planetRadius = PLANET_RADIUS * scale;
+        float shellRadius = planetRadius * ATMOSPHERE_SHELL_FACTOR;
+
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+        RenderSystem.disableCull();
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(() -> shader);
+
+        Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
+                .mul(pose.last().pose())
+                .translate(cx, cy, cz)
+                .scale(shellRadius / PLANET_RADIUS);
+        Vector3f center = model.transformPosition(new Vector3f());
+
+        Uniform centerUniform = shader.getUniform("AtmosphereCenter");
+        if (centerUniform != null)
+            centerUniform.set(center);
+        Uniform planetRadiusUniform = shader.getUniform("PlanetRadius");
+        if (planetRadiusUniform != null)
+            planetRadiusUniform.set(planetRadius);
+        Uniform shellRadiusUniform = shader.getUniform("ShellRadius");
+        if (shellRadiusUniform != null)
+            shellRadiusUniform.set(shellRadius);
+        Uniform sunDirection = shader.getUniform("SunDirection");
+        if (sunDirection != null)
+            sunDirection.set(fixedSunDirection(body));
+        Uniform color = shader.getUniform("AtmosphereColor");
+        if (color != null)
+            color.set(profile.atmosphereRed(), profile.atmosphereGreen(),
+                    profile.atmosphereBlue());
+        Uniform density = shader.getUniform("Density");
+        if (density != null)
+            density.set(profile.atmospherePeak() * alpha);
+
+        VertexBuffer shell = atmosphereShellMesh();
+        shell.bind();
+        shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), shader);
+        VertexBuffer.unbind();
+
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableCull();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * The shared atmosphere shell VBO: a plain sphere, uploaded once. The shell
+     * carries no orientation because a sphere reads the same from every angle;
+     * only its centre and radius matter, and both ride the model matrix.
+     */
+    static VertexBuffer atmosphereShellMesh()
+    {
+        if (atmosphereShellBuffer == null || atmosphereShellBuffer.isInvalid())
+        {
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            for (int i = 0; i < HALO_X.length; i++)
+                bb.addVertex(HALO_X[i], HALO_Y[i], HALO_Z[i]);
+            VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+            buffer.bind();
+            buffer.upload(bb.buildOrThrow());
+            VertexBuffer.unbind();
+            atmosphereShellBuffer = buffer;
+        }
+        return atmosphereShellBuffer;
     }
 
     private static Vector3f fixedSunDirection(CelestialBodyDefinition body)

@@ -25,7 +25,7 @@
       "space_visual": {
         "atmosphere_blue": 0.5,
         "atmosphere_green": 0.65,
-        "atmosphere_peak": 0.15,
+        "atmosphere_peak": 0.05,
         "atmosphere_red": 0.75,
         "material": {
           "fresnel_strength": 0.02,
@@ -144,7 +144,7 @@
       "space_visual": {
         "atmosphere_blue": 0.2,
         "atmosphere_green": 0.45,
-        "atmosphere_peak": 0.26,
+        "atmosphere_peak": 0.18,
         "atmosphere_red": 1.0,
         "material": {
           "emissive_color": 16747068,
