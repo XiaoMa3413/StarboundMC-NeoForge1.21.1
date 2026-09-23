@@ -11,18 +11,13 @@ public final class HudBootController {
     public static final String TERMINAL_REMINDER_KEY =
             "message.starboundmc.nova.prologue.locate_terminal";
 
-    static final int STARTING_TICKS = 130;
+    static final int STARTING_TICKS = 96;
     static final int VISOR_FADE_TICKS = 30;
-    static final int PROMPT_FADE_IN_TICKS = 10;
-    static final int PROMPT_HOLD_END_TICK = 52;
-    static final int PROMPT_END_TICK = 70;
-    static final int STATUS_START_TICK = 24;
-    static final int STATUS_FADE_IN_TICKS = 8;
-    static final int STATUS_STEP_TICKS = 15;
-    static final int STATUS_SCROLL_TICKS = 6;
-    static final int STATUS_STEP_COUNT = 6;
+    static final int NAVIGATION_START_TICK = 32;
+    static final int CORE_CHECK_TICK = 58;
+    static final int AR_START_TICK = 72;
     static final int SAFE_MODE_HOLD_TICKS = 30;
-    static final int SAFE_MODE_FADE_TICKS = 30;
+    static final int SAFE_MODE_FADE_TICKS = 16;
     static final int CORE_LINK_TICKS = 50;
     static final int PERSONAL_LINK_TICKS = 40;
     static final int ONLINE_HOLD_TICKS = 25;
@@ -65,7 +60,7 @@ public final class HudBootController {
                 beginLink(false);
         } else if (!wakePresented && !terminalContacted && state != State.STARTING) {
             enter(State.DORMANT);
-        } else if (state != State.STARTING || terminalContacted) {
+        } else if ((state != State.STARTING || terminalContacted) && state != State.SAFE_MODE) {
             enter(State.SAFE_MODE);
             safeModeTicks = SAFE_MODE_HOLD_TICKS + SAFE_MODE_FADE_TICKS;
         }
@@ -122,6 +117,7 @@ public final class HudBootController {
 
     public boolean defersCommunication() {
         return state == State.STARTING || state == State.LINKING
+                || state == State.SAFE_MODE && safeModeTicks < SAFE_MODE_HOLD_TICKS + SAFE_MODE_FADE_TICKS
                 || state == State.ONLINE && onlineTicks < ONLINE_STATUS_TICKS;
     }
 
@@ -148,44 +144,44 @@ public final class HudBootController {
     }
 
     public Presentation presentation(float partialTick) {
-        if (paused)
-            partialTick = 0F;
-        float tick = Math.max(0F, stateTicks + Math.clamp(partialTick, 0F, 1F));
-        if (state == State.LINKING || state == State.ONLINE) {
-            boolean linking = state == State.LINKING;
-            int lineCount = personalLink || !linking ? 4 : 3;
-            int lines = linking ? Math.min(lineCount, (int) (tick / 8F) + 1) : lineCount;
-            float opacity = linking ? smoothStep(Math.clamp(tick / 8F, 0F, 1F))
-                    : 1F - smoothStep(Math.clamp(
-                            (onlineTicks - ONLINE_HOLD_TICKS + Math.clamp(partialTick, 0F, 1F))
-                                    / ONLINE_FADE_TICKS, 0F, 1F));
-            float progress = linking ? Math.clamp(tick
-                    / (personalLink ? PERSONAL_LINK_TICKS : CORE_LINK_TICKS), 0F, .95F) : 1F;
-            return new Presentation(state, visorOpacity(), 0F, opacity, lines, 0F,
-                    progress, false, personalLink);
-        }
-        float statusTick = tick - STATUS_START_TICK;
-        int lines = state == State.STARTING && statusTick >= 0F
-                ? Math.min(STATUS_STEP_COUNT,
-                        (int) (statusTick / STATUS_STEP_TICKS) + 1)
-                : state == State.SAFE_MODE ? STATUS_STEP_COUNT : 0;
-        float scrollRows = state == State.SAFE_MODE
-                ? Math.max(0, lines - 4) : scrollRows(tick, lines);
-        float promptOpacity = state == State.STARTING ? promptOpacity(tick) : 0F;
+        float partial = paused ? 0F : Math.clamp(partialTick, 0F, 1F);
+        float tick = stateTicks + partial;
+        Cue cue;
         float opacity;
-        if (state == State.STARTING) {
-            opacity = smoothStep(Math.clamp(statusTick / STATUS_FADE_IN_TICKS, 0F, 1F));
-        } else if (state == State.SAFE_MODE) {
-            float fade = (safeModeTicks - SAFE_MODE_HOLD_TICKS + Math.clamp(partialTick, 0F, 1F))
-                    / SAFE_MODE_FADE_TICKS;
-            opacity = 1F - smoothStep(Math.clamp(fade, 0F, 1F));
-        } else {
-            opacity = 0F;
+        switch (state) {
+            case STARTING -> {
+                cue = tick < NAVIGATION_START_TICK ? Cue.VISUAL_RESTORE
+                        : tick < CORE_CHECK_TICK ? Cue.LOCAL_NAVIGATION : Cue.CORE_UNAVAILABLE;
+                float start = cue == Cue.VISUAL_RESTORE ? 0
+                        : cue == Cue.LOCAL_NAVIGATION ? NAVIGATION_START_TICK : CORE_CHECK_TICK;
+                float end = cue == Cue.VISUAL_RESTORE ? NAVIGATION_START_TICK
+                        : cue == Cue.LOCAL_NAVIGATION ? CORE_CHECK_TICK : STARTING_TICKS;
+                // Sequential fades: two different capability messages never overlap.
+                opacity = smoothStep(Math.clamp((tick - start) / 6F, 0F, 1F))
+                        * smoothStep(Math.clamp((end - tick) / 5F, 0F, 1F));
+            }
+            case SAFE_MODE -> {
+                cue = Cue.SAFE_MODE;
+                opacity = 1F - smoothStep(Math.clamp((safeModeTicks + partial - SAFE_MODE_HOLD_TICKS)
+                        / SAFE_MODE_FADE_TICKS, 0F, 1F));
+            }
+            case LINKING -> {
+                cue = personalLink ? tick < 16 ? Cue.PERSONAL_INITIALIZATION : Cue.CORE_SYNCHRONIZING
+                        : Cue.CORE_CONNECTING;
+                opacity = smoothStep(Math.clamp(tick / 6F, 0F, 1F));
+                if (personalLink) opacity *= tick < 16
+                        ? smoothStep(Math.clamp((16 - tick) / 4F, 0F, 1F))
+                        : smoothStep(Math.clamp((tick - 16) / 4F, 0F, 1F));
+            }
+            case ONLINE -> {
+                cue = Cue.ONLINE;
+                opacity = 1F - smoothStep(Math.clamp((onlineTicks + partial - ONLINE_HOLD_TICKS)
+                        / ONLINE_FADE_TICKS, 0F, 1F));
+            }
+            default -> { cue = Cue.NONE; opacity = 0F; }
         }
-        float scan = state == State.STARTING
-                ? Math.clamp(statusTick / (STARTING_TICKS - STATUS_START_TICK), 0F, 1F) : 1F;
-        return new Presentation(state, visorOpacity(), promptOpacity, opacity, lines,
-                scrollRows, scan, terminalGuidanceActive(), false);
+        float calibration = state == State.STARTING ? Math.clamp(tick / NAVIGATION_START_TICK, 0F, 1F) : 1F;
+        return new Presentation(state, visorOpacity(), opacity, cue, calibration, personalLink);
     }
 
     public boolean terminalGuidanceActive() {
@@ -194,7 +190,15 @@ public final class HudBootController {
     }
 
     public boolean localNavigationActive() {
-        return state == State.SAFE_MODE && terminalGuidanceActive();
+        return state == State.LINKING || state == State.ONLINE && onlineTicks < ONLINE_STATUS_TICKS
+                || terminalGuidanceActive() && (state == State.SAFE_MODE
+                || state == State.STARTING && stateTicks >= NAVIGATION_START_TICK);
+    }
+
+    /** Presentation gate only: reference acquisition precedes the first world lock. */
+    public boolean worldArActive() {
+        return state != State.DORMANT
+                && (state != State.STARTING || stateTicks >= AR_START_TICK);
     }
 
     public void reset() {
@@ -223,26 +227,6 @@ public final class HudBootController {
         return value * value * (3F - 2F * value);
     }
 
-    private static float promptOpacity(float tick) {
-        if (tick < PROMPT_FADE_IN_TICKS)
-            return smoothStep(Math.clamp(tick / PROMPT_FADE_IN_TICKS, 0F, 1F));
-        if (tick <= PROMPT_HOLD_END_TICK)
-            return 1F;
-        return 1F - smoothStep(Math.clamp(
-                (tick - PROMPT_HOLD_END_TICK)
-                        / (PROMPT_END_TICK - PROMPT_HOLD_END_TICK), 0F, 1F));
-    }
-
-    private static float scrollRows(float tick, int lines) {
-        if (lines <= 4)
-            return 0F;
-        int completedScrolls = lines - 5;
-        float revealTick = STATUS_START_TICK + (lines - 1) * STATUS_STEP_TICKS;
-        float activeScroll = smoothStep(Math.clamp(
-                (tick - revealTick) / STATUS_SCROLL_TICKS, 0F, 1F));
-        return completedScrolls + activeScroll;
-    }
-
     public enum State {
         DORMANT,
         STARTING,
@@ -251,8 +235,11 @@ public final class HudBootController {
         ONLINE
     }
 
-    public record Presentation(State state, float visorOpacity, float promptOpacity,
-                               float statusOpacity, int revealedLines, float scrollRows,
-                               float scanProgress,
-                               boolean terminalGuidance, boolean personalLink) { }
+    public enum Cue {
+        NONE, VISUAL_RESTORE, LOCAL_NAVIGATION, CORE_UNAVAILABLE, SAFE_MODE,
+        PERSONAL_INITIALIZATION, CORE_CONNECTING, CORE_SYNCHRONIZING, ONLINE
+    }
+
+    public record Presentation(State state, float visorOpacity, float statusOpacity,
+                               Cue cue, float calibrationProgress, boolean personalLink) { }
 }

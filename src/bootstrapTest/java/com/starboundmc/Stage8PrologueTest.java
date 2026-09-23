@@ -91,9 +91,9 @@ final class Stage8PrologueTest
         assertTrue(broadcast.contains("INITIAL_WAKE_BROADCAST"));
         assertTrue(handler.contains("HudBootController.INSTANCE.onNovaBroadcast"));
         assertTrue(handler.contains("HudBootController.INSTANCE.applyServerState"));
-        assertTrue(controller.contains("STARTING_TICKS = 130"));
-        assertTrue(controller.contains("PROMPT_END_TICK = 70"));
-        assertTrue(controller.contains("STATUS_STEP_COUNT = 6"));
+        // Timing and cue order are covered by HudBootControllerTest; assert the integration here.
+        assertTrue(controller.contains("worldArActive()"));
+        assertTrue(controller.contains("defersCommunication()"));
         assertTrue(controller.contains("State.SAFE_MODE"));
         assertTrue(provider.contains("ShipStructure.SHIP_AI_TERMINAL_POS"));
         assertFalse(provider.contains("HudVisor"));
@@ -104,15 +104,14 @@ final class Stage8PrologueTest
                 "src/main/resources/assets/starboundmc/lang/zh_cn.json"));
         for (String key : new String[]{
                 "hud.starboundmc.ar.ai_terminal",
-                "hud.starboundmc.boot.starting",
-                "hud.starboundmc.boot.safe_mode",
-                "hud.starboundmc.boot.restarting",
-                "hud.starboundmc.boot.visor_bus",
-                "hud.starboundmc.boot.visual_link",
-                "hud.starboundmc.boot.optical_array",
-                "hud.starboundmc.boot.local_nav",
-                "hud.starboundmc.boot.ship_network",
-                "hud.starboundmc.boot.nova_core"})
+                "hud.starboundmc.capability.restore",
+                "hud.starboundmc.capability.restore.detail",
+                "hud.starboundmc.capability.navigation",
+                "hud.starboundmc.capability.navigation.detail",
+                "hud.starboundmc.capability.unavailable",
+                "hud.starboundmc.capability.unavailable.detail",
+                "hud.starboundmc.capability.safe",
+                "hud.starboundmc.capability.safe.detail"})
         {
             assertTrue(english.contains("\"" + key + "\""), key + " en_us");
             assertTrue(chinese.contains("\"" + key + "\""), key + " zh_cn");

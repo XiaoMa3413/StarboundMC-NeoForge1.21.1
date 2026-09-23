@@ -5,109 +5,57 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
-/** Compact visor-native boot readout; no full-screen surface or persistent panel. */
-final class HudBootStatusRenderer {
-    static final int WIDTH = 192;
-    static final int HEIGHT = 68;
-    static final int PROMPT_WIDTH = 228;
-    static final int PROMPT_HEIGHT = 36;
+/** One quiet capability cue below the reticle; no terminal log, enclosing panel or scanning surface. */
+public final class HudBootStatusRenderer {
+    public static final int WIDTH = 228;
+    public static final int HEIGHT = 64;
     private static final int CYAN = 0x95E8E2;
     private static final int AMBER = 0xFFD17C;
-    private static final int RED = 0xFF9477;
-    private static final String[] STEP_KEYS = {
-            "hud.starboundmc.boot.visor_bus",
-            "hud.starboundmc.boot.visual_link",
-            "hud.starboundmc.boot.optical_array",
-            "hud.starboundmc.boot.local_nav",
-            "hud.starboundmc.boot.ship_network",
-            "hud.starboundmc.boot.nova_core"
-    };
-    private static final int[] STEP_COLORS = {CYAN, CYAN, CYAN, AMBER, RED, RED};
-    private static final String[] LINK_KEYS = {
-            "hud.starboundmc.link.ship_connecting",
-            "hud.starboundmc.link.nova_syncing",
-            "hud.starboundmc.link.nav_initializing"
-    };
-    private static final String[] PERSONAL_LINK_KEYS = {
-            "hud.starboundmc.boot.visual_link",
-            "hud.starboundmc.link.ship_connected",
-            "hud.starboundmc.link.nova_connected",
-            "hud.starboundmc.link.nav_online"
-    };
-    private static final String[] ONLINE_KEYS = {
-            "hud.starboundmc.link.nova_connected",
-            "hud.starboundmc.link.nav_online",
-            "hud.starboundmc.link.environment_online",
-            "hud.starboundmc.link.established"
-    };
 
     private HudBootStatusRenderer() { }
 
-    static void draw(GuiGraphics graphics, HudBootController.Presentation presentation) {
-        var font = Minecraft.getInstance().font;
-        boolean starting = presentation.state() == HudBootController.State.STARTING;
-        boolean safeMode = presentation.state() == HudBootController.State.SAFE_MODE;
-        String headerKey = switch (presentation.state()) {
-            case LINKING -> presentation.personalLink()
-                    ? "hud.starboundmc.link.initializing" : "hud.starboundmc.link.linking";
-            case ONLINE -> "hud.starboundmc.link.online";
-            default -> starting ? "hud.starboundmc.boot.starting" : "hud.starboundmc.boot.safe_mode";
+    public static void draw(GuiGraphics graphics, HudBootController.Presentation presentation) {
+        var cue = presentation.cue();
+        if (cue == HudBootController.Cue.NONE) return;
+        boolean limited = cue == HudBootController.Cue.CORE_UNAVAILABLE || cue == HudBootController.Cue.SAFE_MODE;
+        int accent = limited ? AMBER : CYAN;
+        String key = switch (cue) {
+            case VISUAL_RESTORE -> "restore";
+            case LOCAL_NAVIGATION -> "navigation";
+            case CORE_UNAVAILABLE -> "unavailable";
+            case SAFE_MODE -> "safe";
+            case PERSONAL_INITIALIZATION -> "personal";
+            case CORE_CONNECTING -> "connecting";
+            case CORE_SYNCHRONIZING -> "synchronizing";
+            case ONLINE -> "online";
+            default -> throw new IllegalStateException("No artwork for " + cue);
         };
-        String[] keys = switch (presentation.state()) {
-            case LINKING -> presentation.personalLink() ? PERSONAL_LINK_KEYS : LINK_KEYS;
-            case ONLINE -> ONLINE_KEYS;
-            default -> STEP_KEYS;
-        };
-        int accent = safeMode ? AMBER : CYAN;
-        Component header = Component.translatable(headerKey);
-        graphics.fill(3, 3, WIDTH - 3, HEIGHT - 3, 0x24050D12);
-        graphics.fill(5, 5, 7, 15, 0xB0000000 | accent);
-        graphics.drawString(font, header, 11, 6, 0xD8000000 | accent, false);
-        graphics.fill(5, 17, WIDTH - 6, 18, 0x30000000 | CYAN);
+        line(graphics, Component.translatable("hud.starboundmc.capability." + key), 28, 236, accent);
+        line(graphics, Component.translatable("hud.starboundmc.capability." + key + ".detail"), 42, 180, accent);
+        // A small reference mark distinguishes system cues from the independent communication layer.
+        graphics.fill(WIDTH / 2 - 6, 58, WIDTH / 2 + 6, 59, 0x60000000 | accent);
 
-        int lines = presentation.revealedLines();
-        for (int index = 0; index < Math.min(lines, keys.length); index++) {
-            float y = 23F + (index - presentation.scrollRows()) * 11F;
-            if (y >= 19F && y < HEIGHT - 2F)
-                line(graphics, Component.translatable(keys[index]), y,
-                        keys == STEP_KEYS ? STEP_COLORS[index] : CYAN);
+        float calibration = presentation.calibrationProgress();
+        if (calibration > 0 && calibration < 1) {
+            float amount = (float) Math.sin(Math.PI * calibration);
+            int color = Math.round(110 * amount) << 24 | CYAN;
+            int radius = Math.round(3 + 3 * (1 - calibration));
+            int center = WIDTH / 2;
+            // Four short references settle around the reticle once; never a screen-wide sweep.
+            graphics.fill(center - radius - 4, 8, center - radius, 9, color);
+            graphics.fill(center + radius, 8, center + radius + 4, 9, color);
+            graphics.fill(center, 8 - radius, center + 1, 11 - radius, color);
+            graphics.fill(center, 6 + radius, center + 1, 9 + radius, color);
         }
-
-        int scanY = 19 + Math.round(46F * presentation.scanProgress());
-        graphics.fill(4, scanY, WIDTH - 5, scanY + 1, 0x18000000 | CYAN);
     }
 
-    static void drawPrompt(GuiGraphics graphics, HudBootController.Presentation presentation) {
+    private static void line(GuiGraphics graphics, Component text, int y, int alpha, int rgb) {
         var font = Minecraft.getInstance().font;
-        graphics.fill(1, 1, PROMPT_WIDTH - 1, PROMPT_HEIGHT - 1, 0x42050D12);
-        graphics.fill(1, 1, PROMPT_WIDTH - 1, 2, 0x78000000 | CYAN);
-        graphics.fill(1, PROMPT_HEIGHT - 2, PROMPT_WIDTH - 1, PROMPT_HEIGHT - 1,
-                0x78000000 | CYAN);
-        graphics.fill(1, 1, 2, PROMPT_HEIGHT - 1, 0x78000000 | CYAN);
-        graphics.fill(PROMPT_WIDTH - 2, 1, PROMPT_WIDTH - 1, PROMPT_HEIGHT - 1,
-                0x78000000 | CYAN);
-        graphics.fill(7, 7, 9, PROMPT_HEIGHT - 7, 0xC0000000 | CYAN);
-
-        Component text = Component.translatable("hud.starboundmc.boot.restarting");
-        float scale = Math.min(1F, 198F / Math.max(1, font.width(text)));
+        float scale = Math.min(1F, (WIDTH - 16F) / Math.max(1, font.width(text)));
         graphics.pose().pushPose();
-        graphics.pose().translate(PROMPT_WIDTH / 2F,
-                (PROMPT_HEIGHT - font.lineHeight * scale) / 2F, 0);
+        graphics.pose().translate(WIDTH / 2F, y, 0);
         graphics.pose().scale(scale, scale, 1);
-        graphics.drawCenteredString(font, text, 0, 0, 0xEC000000 | CYAN);
-        graphics.pose().popPose();
-
-        int scanY = 4 + Math.round((PROMPT_HEIGHT - 8F) * presentation.scanProgress());
-        graphics.fill(3, scanY, PROMPT_WIDTH - 3, scanY + 1, 0x20000000 | CYAN);
-    }
-
-    private static void line(GuiGraphics graphics, Component text, float y, int rgb) {
-        var font = Minecraft.getInstance().font;
-        float scale = Math.min(1F, 180F / Math.max(1, font.width(text)));
-        graphics.pose().pushPose();
-        graphics.pose().translate(7, y, 0);
-        graphics.pose().scale(scale, scale, 1);
-        graphics.drawString(font, text, 0, 0, 0xC8000000 | rgb, false);
+        graphics.drawCenteredString(font, text, 0, 0, alpha << 24 | rgb);
         graphics.pose().popPose();
     }
 }

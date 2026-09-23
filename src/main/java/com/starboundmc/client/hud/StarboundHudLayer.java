@@ -40,15 +40,13 @@ public final class StarboundHudLayer implements ModularHudLayer {
     private final HudVisorProjection controlsProjection = new HudVisorProjection(360, COMPONENT_HEIGHT, Profile.EVA_CONTROLS);
     private final HudVisorProjection bootStatusProjection = new HudVisorProjection(
             HudBootStatusRenderer.WIDTH, HudBootStatusRenderer.HEIGHT);
-    private final HudVisorProjection bootPromptProjection = new HudVisorProjection(
-            HudBootStatusRenderer.PROMPT_WIDTH, HudBootStatusRenderer.PROMPT_HEIGHT);
     @Override public ModularUI getModularUI() {
         var mc = Minecraft.getInstance();
         if (mc.player == null || !mc.player.isAlive()) { releaseUi(); return null; }
         if (mc.options.hideGui) { resetVisorMotion(); return null; }
         if (ui == null) {
             root = new HudRoot(survivalProjection, compassProjection, controlsProjection,
-                    bootStatusProjection, bootPromptProjection, visorMotion);
+                    bootStatusProjection, visorMotion);
             ui = ModularUI.of(UI.of(root,
                     ResourceLocation.fromNamespaceAndPath("starboundmc", "lss/epp.lss")));
         }
@@ -77,7 +75,6 @@ public final class StarboundHudLayer implements ModularHudLayer {
         compassProjection.close();
         controlsProjection.close();
         bootStatusProjection.close();
-        bootPromptProjection.close();
         ArWorldRenderer.INSTANCE.reset();
     }
     private static boolean showEvaNavigation() {
@@ -109,16 +106,14 @@ public final class StarboundHudLayer implements ModularHudLayer {
         private final HudVisorProjection compassProjection;
         private final HudVisorProjection controlsProjection;
         private final HudVisorProjection bootStatusProjection;
-        private final HudVisorProjection bootPromptProjection;
 
         HudRoot(HudVisorProjection survivalProjection, HudVisorProjection compassProjection,
                 HudVisorProjection controlsProjection, HudVisorProjection bootStatusProjection,
-                HudVisorProjection bootPromptProjection, HudVisorMotion motion) {
+                HudVisorMotion motion) {
             this.survivalProjection = survivalProjection;
             this.compassProjection = compassProjection;
             this.controlsProjection = controlsProjection;
             this.bootStatusProjection = bootStatusProjection;
-            this.bootPromptProjection = bootPromptProjection;
             this.motion = motion;
             layout(l -> l.widthPercent(100).heightPercent(100)); setAllowHitTest(false);
         }
@@ -138,7 +133,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
                         survivalProjection.profile()).y();
                 g.pose().pushPose();
                 g.pose().translate(motion.x(), motion.y(), 0);
-                HudVisorCalibrationGrid.renderGuides(g, 42 + 56 * boot.statusOpacity(), bottom,
+                HudVisorCalibrationGrid.renderGuides(g, 42, bottom,
                         compassProjection.profile(), survivalProjection.profile());
                 g.pose().popPose();
             }
@@ -155,8 +150,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             navigation.update(delta, navigationOpacity > .001F);
             controls.update(delta, controlsOpacity > .001F);
             if (navigationOpacity > .001f)
-                drawNavigation(context.graphics, navigationOpacity, controlsOpacity,
-                        boot.statusOpacity());
+                drawNavigation(context.graphics, navigationOpacity, controlsOpacity);
             var s = EppClientState.snapshot; if (s == null) return;
             oxygenFeedback.update(delta, HudSurvivalRenderer.fraction(s, oxygenFeedback.kind()), HudSurvivalRenderer.severity(s, oxygenFeedback.kind()));
             coldFeedback.update(delta, HudSurvivalRenderer.fraction(s, coldFeedback.kind()), HudSurvivalRenderer.severity(s, coldFeedback.kind()));
@@ -200,42 +194,25 @@ public final class StarboundHudLayer implements ModularHudLayer {
         }
 
         private void drawBootPresentation(GuiGraphics g, HudBootController.Presentation boot) {
-            if (boot.promptOpacity() > .001F) {
-                float fit = Math.min(1F,
-                        Math.max(1F, g.guiWidth() - 24F) / HudBootStatusRenderer.PROMPT_WIDTH);
-                float width = HudBootStatusRenderer.PROMPT_WIDTH * fit;
-                float height = HudBootStatusRenderer.PROMPT_HEIGHT * fit;
-                g.pose().pushPose();
-                g.pose().translate(motion.x(), motion.y(), 0);
-                bootPromptProjection.draw(g, (g.guiWidth() - width) / 2F,
-                        (g.guiHeight() - height) / 2F, width, height, boot.promptOpacity(),
-                        canvas -> HudBootStatusRenderer.drawPrompt(canvas, boot));
-                g.pose().popPose();
-            }
             if (boot.statusOpacity() > .001F) {
                 float fit = Math.min(1F,
                         Math.max(1F, g.guiWidth() - 20F) / HudBootStatusRenderer.WIDTH);
                 float width = HudBootStatusRenderer.WIDTH * fit;
                 float height = HudBootStatusRenderer.HEIGHT * fit;
-                g.pose().pushPose();
-                g.pose().translate(motion.x(), motion.y(), 0);
-                bootStatusProjection.draw(g, g.guiWidth() - width - 10F, 10F,
-                        width, height, boot.statusOpacity(),
+                bootStatusProjection.draw(g, (g.guiWidth() - width) / 2F, g.guiHeight() / 2F - 8 * fit,
+                        width, height, boot.statusOpacity(), .04F,
                         canvas -> HudBootStatusRenderer.draw(canvas, boot));
-                g.pose().popPose();
             }
         }
 
-        private void drawNavigation(GuiGraphics g, float opacity, float controlsOpacity,
-                                    float bootStatusOpacity) {
+        private void drawNavigation(GuiGraphics g, float opacity, float controlsOpacity) {
             var mc = Minecraft.getInstance();
             int x = g.guiWidth() / 2;
             float navFit = Math.min(1f, (g.guiWidth() - 16f) / 272f);
             float visorOpacity = HudBootController.INSTANCE.visorOpacity();
-            float bootOffset = 56F * bootStatusOpacity;
             g.pose().pushPose();
             g.pose().translate(motion.x(), motion.y(), 0);
-            compassProjection.draw(g, x - 136 * navFit, 18 + bootOffset + navigation.offsetY(),
+            compassProjection.draw(g, x - 136 * navFit, 18 + navigation.offsetY(),
                     272 * navFit, COMPONENT_HEIGHT * navFit, opacity * visorOpacity, navigation.glow(),
                     canvas -> VisorCompassRenderer.draw(canvas, navigation.progress()));
             if (controlsOpacity <= .001F) {
@@ -252,7 +229,7 @@ public final class StarboundHudLayer implements ModularHudLayer {
             // Render text at its native aspect ratio into a genuinely wider target.
             float width = Math.min(g.guiWidth() - 16f, 360f);
             float fit = width / 360f;
-            controlsProjection.draw(g, x - width / 2, 63 + bootOffset + controls.offsetY(),
+            controlsProjection.draw(g, x - width / 2, 63 + controls.offsetY(),
                     width, COMPONENT_HEIGHT * fit, controlsOpacity * visorOpacity, controls.glow(), canvas -> {
                 float textScale = Math.min(1f, 340f / Math.max(1, mc.font.width(hint)));
                 canvas.pose().pushPose();

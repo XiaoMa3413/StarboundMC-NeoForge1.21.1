@@ -77,7 +77,7 @@ public final class ArWorldRenderer {
             return;
         }
         var boot = HudBootController.INSTANCE;
-        if (boot.state() == HudBootController.State.DORMANT || boot.state() == HudBootController.State.STARTING) {
+        if (!boot.worldArActive()) {
             hasTargets = false;
             suspend();
             return;
