@@ -18,7 +18,10 @@ void main() {
     vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
     gl_Position = ProjMat * viewPos;
 
-    shellDirection = normalize(viewPos.xyz - AtmosphereCenter);
+    // The camera sits at the view-space origin, so the shell point's direction
+    // from the camera is the position itself: the limb ramp compares it with
+    // the centre direction, exactly as the CPU bake did.
+    shellDirection = normalize(viewPos.xyz);
     shellNormal = normalize(mat3(ModelViewMat) * normalize(Position));
     sunDirectionView = normalize(mat3(ModelViewMat) * SunDirection);
 }
