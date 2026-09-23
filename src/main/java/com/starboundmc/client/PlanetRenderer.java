@@ -1,6 +1,7 @@
 package com.starboundmc.client;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
@@ -35,6 +36,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -143,6 +145,12 @@ public class PlanetRenderer
     private static float moonSurfaceSunX = Float.NaN;
     private static float moonSurfaceSunY = Float.NaN;
     private static float moonSurfaceSunZ = Float.NaN;
+    /**
+     * The one sphere mesh every body shares: position + uv only, uploaded once.
+     * Lighting runs per fragment in the planet surface shader, so the geometry
+     * never depends on the sun direction or the animation clock.
+     */
+    private static VertexBuffer planetSphereBuffer;
 
     static
     {
@@ -1203,12 +1211,29 @@ public class PlanetRenderer
             drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
     }
 
-    /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
+    /**
+     * Draws a planet with a fixed body-space orientation, transformed by the ship view.
+     *
+     * <p>The GPU path (shared static sphere VBO plus the planet surface shader)
+     * is the normal route. The CPU-baked VBO stays as a fallback for a failed
+     * shader load, where rebuilding the buffer per animation tick is still
+     * better than dropping the planet.</p>
+     */
     private static void drawOrientedPlanetSphere(PoseStack pose, Matrix4f matrix, CelestialBodyDefinition body,
                                                   float cx, float cy, float cz, float scale,
                                                   Vector3f worldSun, float brightness, float alpha,
                                                   float shipYaw, float shipPitch, float animationTicks)
     {
+        ShaderInstance shader = PlanetSurfaceShader.instance();
+        if (shader != null)
+        {
+            // The planet path always passes brightness 1.0 (see renderPlanet),
+            // so alpha alone rides in the shader's GlobalAlpha.
+            drawPlanetSphereGpu(pose, matrix, body, cx, cy, cz, scale, worldSun, alpha,
+                    shipYaw, shipPitch, animationTicks, shader);
+            return;
+        }
+
         FogRenderer.setupNoFog();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
@@ -1235,6 +1260,103 @@ public class PlanetRenderer
         VertexBuffer.unbind();
 
         RenderSystem.setShaderColor(1,1,1,1); RenderSystem.depthMask(true); RenderSystem.disableBlend();
+    }
+
+    /**
+     * GPU path: one static sphere VBO with per-fragment day/night lighting.
+     *
+     * <p>The sun direction is transformed into the mesh's local frame instead
+     * of being baked per vertex. The dot product is invariant under a shared
+     * rotation, so pushing the sun back through the inverse of the model's spin
+     * and body orientation leaves the lighting exactly where the CPU bake put
+     * it: the surface texture turns while the terminator stays fixed.</p>
+     */
+    private static void drawPlanetSphereGpu(PoseStack pose, Matrix4f matrix, CelestialBodyDefinition body,
+                                            float cx, float cy, float cz, float scale,
+                                            Vector3f worldSun, float alpha,
+                                            float shipYaw, float shipPitch, float animationTicks,
+                                            ShaderInstance shader)
+    {
+        FogRenderer.setupNoFog();
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.enableDepthTest();
+        RenderSystem.depthMask(false);
+        RenderSystem.setShader(() -> shader);
+        RenderSystem.setShaderTexture(0, textureOf(body));
+
+        // The body orientation used to be baked into the mesh; it now composes
+        // in the same order (spin outermost, then the fixed orientation).
+        Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
+                .mul(matrix)
+                .translate(cx, cy, cz)
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw))
+                .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
+                .mul(bodyOrientation(visual(body)))
+                .scale(scale);
+
+        Uniform sunDirection = shader.getUniform("SunDirection");
+        if (sunDirection != null)
+            sunDirection.set(localSunDirection(body, worldSun, animationTicks));
+        Uniform nightFloor = shader.getUniform("NightFloor");
+        if (nightFloor != null)
+            nightFloor.set(nightFloor(body));
+        Uniform terminatorWidth = shader.getUniform("TerminatorWidth");
+        if (terminatorWidth != null)
+            terminatorWidth.set(terminatorWidth(body));
+        Uniform globalAlpha = shader.getUniform("GlobalAlpha");
+        if (globalAlpha != null)
+            globalAlpha.set(alpha);
+
+        VertexBuffer surface = planetSphereMesh();
+        surface.bind();
+        surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), shader);
+        VertexBuffer.unbind();
+
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.depthMask(true);
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * The shared sphere VBO: position + uv in the body-local frame, uploaded
+     * once and reused by every body. The upload is lazy because a GL context
+     * only exists on the render thread; the mesh data is static, so nothing
+     * ever re-uploads it and resource reloads or window resizes cannot touch it.
+     */
+    static VertexBuffer planetSphereMesh()
+    {
+        if (planetSphereBuffer == null || planetSphereBuffer.isInvalid())
+        {
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            for (int i = 0; i < SPHERE_X.length; i++)
+                bb.addVertex(SPHERE_X[i], SPHERE_Y[i], SPHERE_Z[i]).setUv(SPHERE_U[i], SPHERE_V[i]);
+            VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+            buffer.bind();
+            buffer.upload(bb.buildOrThrow());
+            VertexBuffer.unbind();
+            planetSphereBuffer = buffer;
+        }
+        return planetSphereBuffer;
+    }
+
+    /**
+     * The sun direction in the sphere mesh's local frame, matching the frame
+     * the old CPU bake lit in: the model applies spin and then the fixed body
+     * orientation to the mesh, so the sun travels back through the inverse of
+     * both, right to left as Ry(-yaw) * Rx(-tilt) * Ry(-spin).
+     */
+    private static Vector3f localSunDirection(CelestialBodyDefinition body, Vector3f worldSun,
+                                              float animationTicks)
+    {
+        BodySpaceVisualProfile profile = visual(body);
+        Vector3f sun = new Vector3f(worldSun);
+        sun.rotateY(-(float) Math.toRadians(animationTicks * spinRate(body)));
+        sun.rotateX(-(float) Math.toRadians(profile.orientationTilt()));
+        sun.rotateY(-(float) Math.toRadians(profile.orientationYaw()));
+        return sun;
     }
 
     private static VertexBuffer getPlanetSurfaceBuffer(CelestialBodyDefinition body, Vector3f worldSun,
