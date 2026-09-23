@@ -7,7 +7,7 @@ import java.util.Deque;
 final class NovaBroadcastTimeline
 {
     static final int MAX_QUEUED_MESSAGES = 16;
-    static final int OPENING_TICKS = 3;
+    static final int OPENING_TICKS = 5;
     static final int COMPLETION_HOLD_TICKS = 60;
     static final int CLOSING_TICKS = 5;
     static final int BETWEEN_MESSAGES_TICKS = 4;
@@ -79,6 +79,7 @@ final class NovaBroadcastTimeline
     private int phaseTicks;
     private int pauseTicks;
     private int betweenMessageTicks;
+    private boolean paused;
 
     boolean enqueue(String translationKey, String body)
     {
@@ -92,6 +93,7 @@ final class NovaBroadcastTimeline
 
     Step tick(boolean paused)
     {
+        this.paused = paused;
         if (paused)
             return Step.NONE;
 
@@ -121,6 +123,19 @@ final class NovaBroadcastTimeline
         return snapshot;
     }
 
+    /** Entry and exit share the typewriter clock; rendering never consumes timeline time. */
+    float presentationProgress(float partialTick)
+    {
+        float tick = phaseTicks + (paused ? 0F : Math.clamp(partialTick, 0F, 1F));
+        return switch (phase)
+        {
+            case IDLE -> 0F;
+            case OPENING -> Math.clamp(tick / OPENING_TICKS, 0F, 1F);
+            case CLOSING -> Math.clamp(tick / CLOSING_TICKS, 0F, 1F);
+            default -> 1F;
+        };
+    }
+
     int queuedMessageCount()
     {
         return pending.size() + (active == null ? 0 : 1);
@@ -148,6 +163,7 @@ final class NovaBroadcastTimeline
         phaseTicks = 0;
         pauseTicks = 0;
         betweenMessageTicks = 0;
+        paused = false;
     }
 
     private Step tickOpening()
@@ -168,7 +184,7 @@ final class NovaBroadcastTimeline
         int revealed = active.revealedCodePoints();
         int firstCodePoint = codePointAt(active.body(), revealed);
         int budget = isWideCharacter(firstCodePoint) ? 1 : 2;
-        if (isProgressDot(active.body(), revealed)
+        if (punctuationPause(firstCodePoint) > 0 || isProgressDot(active.body(), revealed)
                 || (budget > 1 && revealed + 1 < active.totalCodePoints()
                 && isProgressDot(active.body(), revealed + 1)))
             budget = 1;
@@ -282,6 +298,7 @@ final class NovaBroadcastTimeline
         {
             case '.', '!', '?', '。', '！', '？' -> 3;
             case ',', ';', ':', '，', '；', '：' -> 1;
+            case '\n' -> 2;
             default -> 0;
         };
     }

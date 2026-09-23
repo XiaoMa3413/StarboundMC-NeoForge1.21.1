@@ -43,9 +43,9 @@ public final class NovaBroadcastHudLayer implements ModularHudLayer
         if (current == null || root == null || !validModularUI(current))
             return;
 
-        root.sync(ClientNovaBroadcastState.snapshot(),
-                ClientNovaBroadcastState.textPulseSequence());
         float partialTick = deltaTracker.getGameTimeDeltaPartialTick(false);
+        root.sync(ClientNovaBroadcastState.snapshot(), ClientNovaBroadcastState.textPulseSequence(),
+                ClientNovaBroadcastState.presentationProgress(partialTick));
         current.getWidget().render(graphics, Integer.MAX_VALUE, Integer.MAX_VALUE, partialTick);
     }
 
