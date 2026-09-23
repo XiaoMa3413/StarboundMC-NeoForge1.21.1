@@ -8,7 +8,7 @@ import java.util.List;
 
 /** Aggregates, distance-filters, de-duplicates and prioritizes provider output. */
 public final class ArTargetCollector {
-    private static final int MAX_TARGETS = 8;
+    static final int MAX_TARGETS = 8;
     private final List<ArTargetProvider> providers;
 
     public ArTargetCollector(List<ArTargetProvider> providers) {

@@ -9,10 +9,9 @@ import net.minecraft.network.chat.Component;
 /** Flat artwork around an immutable projected center. Animation changes strokes, never the target anchor. */
 public final class ArMarkerRenderer {
     private static final boolean DEBUG = Boolean.getBoolean("starboundmc.debug.hudArStates");
-    private final float[] labelX = new float[8], labelY = new float[8], labelHalf = new float[8];
-    private int labels;
+    private final ArLabelLayout labels = new ArLabelLayout();
 
-    public void beginFrame() { labels = 0; }
+    public void beginFrame() { labels.clear(); }
 
     public void draw(GuiGraphics g, ArTarget target, ArTargetProjection.Point point,
                      ArVisualStateCache.State state, float opacity, boolean attentionOwner) {
@@ -49,29 +48,12 @@ public final class ArMarkerRenderer {
         int width = Math.max(font.width(current), previous == null ? 0 : font.width(previous));
         float scale = Math.min(.68F, (g.guiWidth() - 20F) / Math.max(1, width));
         float half = width * scale / 2;
-        float textX = Math.clamp(x, half + 8, g.guiWidth() - half - 8);
-        float textY = Math.min(y + 10, g.guiHeight() - 14);
         // Only labels yield to each other. The world-locked geometry never moves for layout.
-        for (int attempt = 0; attempt < 8; attempt++) {
-            boolean collision = false;
-            for (int i = 0; i < labels; i++) {
-                if (Math.abs(textX - labelX[i]) < half + labelHalf[i] + 4 && Math.abs(textY - labelY[i]) < 10) {
-                    collision = true;
-                    break;
-                }
-            }
-            if (!collision) break;
-            textY = y + 10 + (attempt + 1) * 11;
-            if (textY > g.guiHeight() - 14) textY = y - 18 - attempt * 11;
-            textY = Math.clamp(textY, 8, g.guiHeight() - 14);
-        }
-        if (labels < labelX.length) {
-            labelX[labels] = textX; labelY[labels] = textY; labelHalf[labels++] = half;
-        }
+        if (!labels.place(x, y, half, g.guiWidth(), g.guiHeight())) return;
         float labelAlpha = 208 * opacity * state.labelOpacity();
         float blend = state.identityBlend();
         g.pose().pushPose();
-        g.pose().translate(textX, textY, 0);
+        g.pose().translate(labels.x(), labels.y(), 0);
         g.pose().scale(scale, scale, 1);
         if (previous != null) text(g, previous, target.rgb(), labelAlpha * state.previousLabelOpacity());
         text(g, current, target.rgb(), labelAlpha * blend);
