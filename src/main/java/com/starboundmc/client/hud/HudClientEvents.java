@@ -25,6 +25,8 @@ public final class HudClientEvents {
         // F1 can skip the entire GUI render, so reset motion from the client lifecycle too.
         if (hidden || !minecraft.options.getCameraType().isFirstPerson())
             StarboundHudLayer.INSTANCE.resetVisorMotion();
+        if (hidden || !minecraft.options.getCameraType().isFirstPerson())
+            com.starboundmc.client.hud.ar.ArWorldRenderer.INSTANCE.suspend();
         if (minecraft.player != null && minecraft.getConnection() != null
                 && HudBootController.INSTANCE.consumeCoreLinkReceipt())
             ModNetwork.sendToServer(new HudCoreLinkPresentedPacket());

@@ -4,12 +4,17 @@ package com.starboundmc.client.hud.visor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
+import com.starboundmc.client.hud.animation.HudComponentPresentation;
 
 /** Flat compass artwork with smooth motion and directional fading within the component. */
 public final class VisorCompassRenderer {
     private VisorCompassRenderer() { }
 
     public static void draw(GuiGraphics graphics) {
+        draw(graphics, 1F);
+    }
+
+    public static void draw(GuiGraphics graphics, float establishment) {
         var mc = Minecraft.getInstance();
         float heading = Mth.positiveModulo(mc.gameRenderer.getMainCamera().getYRot() + 180, 360);
         for (int degree = 0; degree < 360; degree += 10) {
@@ -19,7 +24,8 @@ public final class VisorCompassRenderer {
             float x = 136 + offset * 1.5F;
             float edge = Math.clamp((80 - Math.abs(offset)) / 26F, 0F, 1F);
             edge = edge * edge * (3 - 2 * edge);
-            int alpha = Math.round(210 * (1 - Math.abs(offset) / 105) * edge);
+            float reveal = HudComponentPresentation.compassReveal(establishment, Math.abs(offset) / 80F);
+            int alpha = Math.round(210 * (1 - Math.abs(offset) / 105) * edge * reveal);
             int color = alpha << 24 | 0x95E8E2;
             // Keep subpixel positions through the supersampled component texture.
             graphics.pose().pushPose();
@@ -39,8 +45,10 @@ public final class VisorCompassRenderer {
             }
             graphics.pose().popPose();
         }
-        graphics.fill(135, 26, 138, 30, 0xEE95E8E2);
-        graphics.drawCenteredString(mc.font, Math.round(heading) % 360 + "°", 136, 34,
-                0xECC5EFEB);
+        float reference = HudComponentPresentation.smooth(establishment / .18F);
+        graphics.fill(135, 26, 138, 30, Math.round(238 * reference) << 24 | 0x95E8E2);
+        if (Math.round(236 * reference) >= 4)
+            graphics.drawCenteredString(mc.font, Math.round(heading) % 360 + "°", 136, 34,
+                    Math.round(236 * reference) << 24 | 0xC5EFEB);
     }
 }

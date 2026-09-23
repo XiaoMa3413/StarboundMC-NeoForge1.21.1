@@ -51,6 +51,7 @@ sourceSets {
             include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/client/hud/*.java'
             include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/animation/*.java'
             include 'com/starboundmc/client/hud/provider/*.java'
             include 'com/starboundmc/client/hud/visor/*.java'
             include 'com/starboundmc/recipe/*.java'
@@ -198,6 +199,7 @@ sourceSets {
             include 'com/starboundmc/client/epp/*.java'
             include 'com/starboundmc/client/hud/*.java'
             include 'com/starboundmc/client/hud/ar/*.java'
+            include 'com/starboundmc/client/hud/animation/*.java'
             include 'com/starboundmc/client/hud/provider/*.java'
             include 'com/starboundmc/client/hud/visor/*.java'
         }
@@ -214,6 +216,9 @@ if (project.hasProperty('shipGameTests')) {
     sourceSets.main.resources.srcDir('src/gameTest/resources')
 }
 if (project.hasProperty('hudVisorSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('hudWorldSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
 
@@ -236,9 +241,18 @@ neoForge {
                 systemProperty 'starboundmc.debug.hudVisorSmoke', 'true'
                 programArguments.addAll '--width', (project.findProperty('hudVisorSmokeWidth') ?: '1920').toString(),
                         '--height', (project.findProperty('hudVisorSmokeHeight') ?: '1080').toString()
+                if (project.hasProperty('hudPresentationSmoke'))
+                    systemProperty 'starboundmc.debug.hudPresentationSmoke', 'true'
+                systemProperty 'starboundmc.debug.hudSmokeLanguage',
+                        (project.findProperty('hudSmokeLanguage') ?: 'zh_cn').toString()
             }
             if (project.hasProperty('quickPlayWorld')) {
                 programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+            }
+            if (project.hasProperty('hudWorldSmoke')) {
+                gameDirectory = file('run-hud-world-smoke')
+                systemProperty 'starboundmc.debug.hudWorldSmoke', 'true'
+                programArguments.addAll '--width', '1920', '--height', '1080'
             }
         }
 
@@ -271,6 +285,15 @@ neoForge {
             }
             if (project.hasProperty('hudVisorNoGlow')) {
                 systemProperty 'starboundmc.debug.hudVisorNoGlow', 'true'
+            }
+            if (project.hasProperty('hudNoTransitions')) {
+                systemProperty 'starboundmc.debug.hudNoTransitions', 'true'
+            }
+            if (project.hasProperty('hudArStates')) {
+                systemProperty 'starboundmc.debug.hudArStates', 'true'
+            }
+            if (project.hasProperty('hudAnimationSpeed')) {
+                systemProperty 'starboundmc.debug.hudAnimationSpeed', project.property('hudAnimationSpeed').toString()
             }
             logLevel = org.slf4j.event.Level.DEBUG
         }

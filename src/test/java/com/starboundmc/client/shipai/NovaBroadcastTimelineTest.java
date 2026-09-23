@@ -11,6 +11,44 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NovaBroadcastTimelineTest
 {
     @Test
+    void punctuationAndParagraphsStopTheLatinCharacterBatch() {
+        for (String text : new String[]{"AB.CD", "AB,CD", "AB\nCD", "中文。下一句"}) {
+            NovaBroadcastTimeline timeline = streaming(text);
+            while (timeline.snapshot().visibleText().codePointCount(0,
+                    timeline.snapshot().visibleText().length()) < 2)
+                timeline.tick(false);
+            assertEquals(1, timeline.tick(false).revealedCount());
+            String before = timeline.snapshot().visibleText();
+            assertEquals(0, timeline.tick(false).revealedCount());
+            assertEquals(before, timeline.snapshot().visibleText());
+            assertTrue(advanceUntilReveal(timeline).revealedCount() > 0);
+        }
+    }
+
+    @Test
+    void entryAndExitFollowThePausedTimelineAndRenderingDoesNotAdvanceIt() {
+        NovaBroadcastTimeline timeline = new NovaBroadcastTimeline();
+        timeline.enqueue("test", "Hi");
+        timeline.tick(false);
+        assertEquals(0F, timeline.presentationProgress(0F));
+        timeline.tick(false);
+        float before = timeline.presentationProgress(0F);
+        assertTrue(timeline.presentationProgress(.8F) > before);
+        advance(timeline, 100, true);
+        assertEquals(before, timeline.presentationProgress(.8F));
+        advance(timeline, NovaBroadcastTimeline.OPENING_TICKS);
+        assertEquals(1F, timeline.presentationProgress(0F));
+        timeline.tick(false);
+        advance(timeline, NovaBroadcastTimeline.COMPLETION_HOLD_TICKS);
+        assertEquals(NovaBroadcastTimeline.Phase.CLOSING, timeline.snapshot().phase());
+        before = timeline.presentationProgress(0F);
+        advance(timeline, 100, true);
+        assertEquals(before, timeline.presentationProgress(.8F));
+        advance(timeline, NovaBroadcastTimeline.CLOSING_TICKS);
+        assertFalse(timeline.snapshot().visible());
+    }
+
+    @Test
     void completedLineEntersChatHistoryOnlyAfterTheHudCloses()
     {
         NovaBroadcastTimeline timeline = new NovaBroadcastTimeline();

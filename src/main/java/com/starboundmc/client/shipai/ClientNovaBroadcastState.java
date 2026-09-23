@@ -86,6 +86,12 @@ public final class ClientNovaBroadcastState
         return textPulseSequence;
     }
 
+    static float presentationProgress(float partialTick)
+    {
+        return timeline.presentationProgress(isPresentationPaused(Minecraft.getInstance())
+                || HudBootController.INSTANCE.defersCommunication() ? 0F : partialTick);
+    }
+
     static boolean shouldRender()
     {
         Minecraft minecraft = Minecraft.getInstance();

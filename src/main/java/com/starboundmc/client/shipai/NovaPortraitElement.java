@@ -48,6 +48,7 @@ public final class NovaPortraitElement extends UIElement {
     private int activityStartTick = Integer.MIN_VALUE;
     private int confirmationStartTick = Integer.MIN_VALUE;
     private boolean speaking;
+    private boolean remoteCommunication;
     private CoreState coreState;
     private int textPulseStep = -1;
     private int textPulseUpdateTick = Integer.MIN_VALUE;
@@ -81,6 +82,11 @@ public final class NovaPortraitElement extends UIElement {
 
     public void setSpeaking(boolean speaking) {
         this.speaking = speaking;
+    }
+
+    /** The compact remote channel prioritizes text over terminal projection effects. */
+    void setRemoteCommunication(boolean remoteCommunication) {
+        this.remoteCommunication = remoteCommunication;
     }
 
     void setActivity(NovaPortraitActivity activity) {
@@ -130,9 +136,11 @@ public final class NovaPortraitElement extends UIElement {
         } else {
             drawPrototypePlaceholder(context.graphics, x, y, width, height);
         }
-        drawFaultGlitch(context.graphics, x, y, width, height, ticks + context.partialTick);
-        drawHologramOverlay(context, x, y, width, height);
-        drawProjectionTelemetry(context, x, y, width, height);
+        if (!remoteCommunication) {
+            drawFaultGlitch(context.graphics, x, y, width, height, ticks + context.partialTick);
+            drawHologramOverlay(context, x, y, width, height);
+            drawProjectionTelemetry(context, x, y, width, height);
+        }
     }
 
     /** Peripheral projection light stays clear of the face and uses interpolated time. */
@@ -166,9 +174,9 @@ public final class NovaPortraitElement extends UIElement {
         float time = ticks + context.partialTick;
         float onlineActivity = coreState == CoreState.ONLINE ? 1F
                 : coreState == CoreState.REBOOTING ? 0.45F : 0F;
-        float hoverY = Mth.sin(time * TWO_PI / 72F) * 0.85F * onlineActivity;
-        float breathe = 1F + Mth.sin(time * TWO_PI / 62F) * 0.006F * onlineActivity;
-        float jitterX = projectionJitter(time);
+        float hoverY = remoteCommunication ? 0F : Mth.sin(time * TWO_PI / 72F) * 0.85F * onlineActivity;
+        float breathe = remoteCommunication ? 1F : 1F + Mth.sin(time * TWO_PI / 62F) * 0.006F * onlineActivity;
+        float jitterX = remoteCommunication ? 0F : projectionJitter(time);
         float textPulse = textPulse(context.partialTick);
         float warningPulse = activity == NovaPortraitActivity.WARNING
                 ? NovaEyeMotion.activityPulse(time, activityStartTick) : 0F;
@@ -189,7 +197,9 @@ public final class NovaPortraitElement extends UIElement {
             gazeY--;
 
         float portraitAlpha;
-        if (coreState == null) {
+        if (remoteCommunication) {
+            portraitAlpha = coreState == CoreState.REBOOTING ? .72F : .97F;
+        } else if (coreState == null) {
             portraitAlpha = 0.5F + Mth.sin(time * TWO_PI / 44F) * 0.08F;
         } else {
             portraitAlpha = switch (coreState) {
@@ -208,7 +218,9 @@ public final class NovaPortraitElement extends UIElement {
 
         if (eyeLayerPresent) {
             float eyesAlpha;
-            if (coreState == null) {
+            if (remoteCommunication) {
+                eyesAlpha = speaking ? .65F + textPulse * .3F : .9F;
+            } else if (coreState == null) {
                 eyesAlpha = 0.28F;
             } else {
                 eyesAlpha = switch (coreState) {

@@ -6,21 +6,15 @@ import com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Transform2D;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.style.PropertyRegistry;
-import com.lowdragmc.lowdraglib2.math.interpolate.Eases;
-import com.lowdragmc.lowdraglib2.syncdata.ISubscription;
 import com.starboundmc.story.CoreState;
 import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
-import it.unimi.dsi.fastutil.floats.FloatObjectPair;
 import net.minecraft.network.chat.Component;
 
 /** Stable LDLib2 element tree for the compact lower-left remote communication window. */
 final class NovaBroadcastHudRoot extends UIElement
 {
-    private static final float SHOW_DURATION = 0.14F;
-    private static final float HIDE_DURATION = 0.16F;
     private static final String EMERGENCY_KEY = "message.starboundmc.nova.prologue.emergency";
     private static final String LOCATE_TERMINAL_KEY =
             "message.starboundmc.nova.prologue.locate_terminal";
@@ -28,13 +22,14 @@ final class NovaBroadcastHudRoot extends UIElement
     private final UIElement panel = new UIElement();
     private final NovaPortraitElement portrait = new NovaPortraitElement();
     private final Label body = new Label();
+    private float observedPresentation = Float.NaN;
     private long observedRevision = Long.MIN_VALUE;
     private int observedPulseSequence;
     private NovaBroadcastTimeline.Phase observedPhase = NovaBroadcastTimeline.Phase.IDLE;
-    private ISubscription transition = () -> { };
 
     NovaBroadcastHudRoot()
     {
+        portrait.setRemoteCommunication(true);
         addClass("nova-remote-root");
         setAllowHitTest(false);
         setOverflowVisible(false);
@@ -62,17 +57,11 @@ final class NovaBroadcastHudRoot extends UIElement
         addChild(panel);
     }
 
-    void sync(NovaBroadcastTimeline.Snapshot snapshot, int pulseSequence)
+    void sync(NovaBroadcastTimeline.Snapshot snapshot, int pulseSequence, float progress)
     {
+        applyPresentation(snapshot.phase(), progress);
         if (snapshot.revision() == observedRevision && pulseSequence == observedPulseSequence)
             return;
-
-        if (snapshot.phase() == NovaBroadcastTimeline.Phase.OPENING
-                && observedPhase != NovaBroadcastTimeline.Phase.OPENING)
-            animateIn();
-        else if (snapshot.phase() == NovaBroadcastTimeline.Phase.CLOSING
-                && observedPhase != NovaBroadcastTimeline.Phase.CLOSING)
-            animateOut();
 
         body.setText(Component.literal(snapshot.visibleText()));
         portrait.setSpeaking(snapshot.speaking());
@@ -136,7 +125,7 @@ final class NovaBroadcastHudRoot extends UIElement
         link.addClass("nova-remote-link");
         configureSingleLine(link, Horizontal.RIGHT);
         link.layout(layout -> layout.flex(1).height(9));
-        header.addChild(speaker);
+        header.addChildren(speaker, link);
 
         body.addClass("nova-remote-body");
         body.setText(Component.empty());
@@ -167,36 +156,22 @@ final class NovaBroadcastHudRoot extends UIElement
                 .textWrap(TextWrap.HIDE));
     }
 
-    private void animateIn()
+    private void applyPresentation(NovaBroadcastTimeline.Phase phase, float progress)
     {
-        transition.unsubscribe();
-        Transform2D from = new Transform2D().translate(-7F, 0F);
-        Transform2D to = Transform2D.identity();
-        panel.style(style -> style.opacity(0F).transform2D(from));
-        transition = panel.animation()
-                .duration(SHOW_DURATION)
-                .ease(Eases.QUAD_OUT)
-                .style(PropertyRegistry.OPACITY,
-                        FloatObjectPair.of(0F, 0F), FloatObjectPair.of(1F, 1F))
-                .style(PropertyRegistry.TRANSFORM_2D,
-                        FloatObjectPair.of(0F, from), FloatObjectPair.of(1F, to))
-                .start();
-    }
-
-    private void animateOut()
-    {
-        transition.unsubscribe();
-        Transform2D from = Transform2D.identity();
-        Transform2D to = new Transform2D().translate(-4F, 0F);
-        panel.style(style -> style.opacity(1F).transform2D(from));
-        transition = panel.animation()
-                .duration(HIDE_DURATION)
-                .ease(Eases.QUAD_OUT)
-                .style(PropertyRegistry.OPACITY,
-                        FloatObjectPair.of(0F, 1F), FloatObjectPair.of(1F, 0F))
-                .style(PropertyRegistry.TRANSFORM_2D,
-                        FloatObjectPair.of(0F, from), FloatObjectPair.of(1F, to))
-                .start();
+        if (phase == observedPhase && progress == observedPresentation)
+            return;
+        float eased = 1F - (1F - progress) * (1F - progress);
+        float opacity = switch (phase)
+        {
+            case IDLE -> 0F;
+            case OPENING -> eased;
+            case CLOSING -> 1F - eased;
+            default -> 1F;
+        };
+        // A small flat communication slide, independent of visor curvature and camera motion.
+        panel.style(style -> style.opacity(opacity)
+                .transform2D(new Transform2D().translate(-3F * (1F - opacity), 0F)));
+        observedPresentation = progress;
     }
 
     private static CoreState presentationCoreState(String translationKey)

@@ -17,6 +17,27 @@ class HudBootControllerTest {
     }
 
     @Test
+    void navigationEstablishesBeforeArAndSafeModeWithoutAdvancingWhilePaused() {
+        controller.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
+        int navigationTick = -1, arTick = -1;
+        for (int tick = 0; tick < HudBootController.STARTING_TICKS; tick++) {
+            if (controller.localNavigationActive() && navigationTick < 0) navigationTick = tick;
+            if (controller.worldArActive() && arTick < 0) arTick = tick;
+            boolean navigation = controller.localNavigationActive();
+            boolean ar = controller.worldArActive();
+            controller.tick(true);
+            assertEquals(navigation, controller.localNavigationActive());
+            assertEquals(ar, controller.worldArActive());
+            assertEquals(HudBootController.State.STARTING, controller.state());
+            controller.tick(false);
+        }
+        assertTrue(navigationTick > 0 && arTick > navigationTick);
+        assertEquals(HudBootController.State.SAFE_MODE, controller.state());
+        assertTrue(controller.localNavigationActive());
+        assertTrue(controller.worldArActive());
+    }
+
+    @Test
     void initialWakeRunsStartingThenSettlesInSafeMode() {
         controller.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
         assertEquals(HudBootController.State.STARTING, controller.state());
@@ -41,28 +62,24 @@ class HudBootControllerTest {
     }
 
     @Test
-    void centerPromptLeadsIntoTheScrollingStatusSequence() {
+    void capabilityCuesFollowRestorationAndFinishBeforeCommunication() {
         controller.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
-        assertEquals(0F, controller.presentation(0F).promptOpacity());
-        assertEquals(0, controller.presentation(0F).revealedLines());
-
-        for (int tick = 0; tick < HudBootController.STATUS_START_TICK; tick++)
-            controller.tick(false);
-        var firstStatus = controller.presentation(0F);
-        assertTrue(firstStatus.promptOpacity() > 0F);
-        assertEquals(1, firstStatus.revealedLines());
-
-        for (int tick = HudBootController.STATUS_START_TICK;
-             tick < HudBootController.STATUS_START_TICK
-                     + HudBootController.STATUS_STEP_TICKS * 5
-                     + HudBootController.STATUS_SCROLL_TICKS;
-             tick++)
-            controller.tick(false);
-        var finalStatus = controller.presentation(0F);
-        assertEquals(HudBootController.STATUS_STEP_COUNT, finalStatus.revealedLines());
-        assertTrue(finalStatus.scrollRows() > 1.9F);
-        assertEquals(0F, finalStatus.promptOpacity());
-        assertFalse(controller.localNavigationActive());
+        assertEquals(HudBootController.Cue.VISUAL_RESTORE, controller.presentation(0).cue());
+        assertEquals(0F, controller.presentation(0F).statusOpacity());
+        advance(HudBootController.NAVIGATION_START_TICK);
+        assertEquals(HudBootController.Cue.LOCAL_NAVIGATION, controller.presentation(0).cue());
+        assertEquals(1F, controller.presentation(0).calibrationProgress());
+        assertTrue(controller.localNavigationActive());
+        assertFalse(controller.worldArActive());
+        advance(HudBootController.CORE_CHECK_TICK - HudBootController.NAVIGATION_START_TICK);
+        assertEquals(HudBootController.Cue.CORE_UNAVAILABLE, controller.presentation(0).cue());
+        advance(HudBootController.STARTING_TICKS - HudBootController.CORE_CHECK_TICK);
+        assertEquals(HudBootController.Cue.SAFE_MODE, controller.presentation(0).cue());
+        assertTrue(controller.defersCommunication());
+        advance(HudBootController.SAFE_MODE_HOLD_TICKS + HudBootController.SAFE_MODE_FADE_TICKS);
+        assertFalse(controller.defersCommunication());
+        assertEquals(0F, controller.presentation(0F).statusOpacity());
+        assertTrue(controller.worldArActive());
     }
 
     @Test
@@ -117,7 +134,8 @@ class HudBootControllerTest {
         controller.applyServerState(CoreState.ONLINE, false, false, false);
         assertEquals(HudBootController.State.LINKING, controller.state());
         assertTrue(controller.presentation(0F).personalLink());
-        assertEquals(0F, controller.presentation(0F).promptOpacity());
+        assertEquals(HudBootController.Cue.PERSONAL_INITIALIZATION, controller.presentation(0F).cue());
+        assertEquals(1F, controller.presentation(0F).calibrationProgress());
         assertFalse(controller.terminalGuidanceActive());
         controller.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
         assertEquals(HudBootController.State.LINKING, controller.state());
@@ -195,6 +213,30 @@ class HudBootControllerTest {
         assertTrue(controller.defersCommunication());
         assertEquals(HudBootController.State.ONLINE, returning.state());
         assertEquals(HudBootController.State.LINKING, controller.state());
+    }
+
+    @Test
+    void repeatedOfflineSnapshotDoesNotDismissSafeModeCue() {
+        controller.onNovaBroadcast(HudBootController.INITIAL_WAKE_KEY);
+        advance(HudBootController.STARTING_TICKS + 5);
+        var before = controller.presentation(0);
+        controller.applyServerState(CoreState.OFFLINE, true, false, false);
+        assertEquals(before, controller.presentation(0));
+        assertTrue(controller.defersCommunication());
+    }
+
+    @Test
+    void lateJoinNeverShowsAnOfflineCueAndOnlyAcknowledgesVisibleCompletion() {
+        controller.applyServerState(CoreState.ONLINE, false, false, false);
+        for (int tick = 0; tick < HudBootController.PERSONAL_LINK_TICKS + HudBootController.ONLINE_STATUS_TICKS; tick++) {
+            var cue = controller.presentation(.5F).cue();
+            assertTrue(cue == HudBootController.Cue.PERSONAL_INITIALIZATION
+                    || cue == HudBootController.Cue.CORE_SYNCHRONIZING || cue == HudBootController.Cue.ONLINE);
+            controller.tick(true);
+            assertFalse(controller.consumeCoreLinkReceipt());
+            controller.tick(false);
+        }
+        assertTrue(controller.consumeCoreLinkReceipt());
     }
 
     private void advance(int ticks) {
