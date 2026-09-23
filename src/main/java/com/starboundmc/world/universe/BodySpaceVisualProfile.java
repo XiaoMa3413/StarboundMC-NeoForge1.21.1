@@ -31,6 +31,9 @@ import java.util.Optional;
  * <p>An absent {@code material} block means the body keeps the pre-material
  * look: diffuse day/night shading only. Every material field is individually
  * optional with the same default, so older data decodes unchanged.</p>
+ *
+ * <p>A present {@code cloud} block adds an independent cloud layer on a
+ * slightly larger sphere, with procedural density and its own rotation.</p>
  */
 public record BodySpaceVisualProfile(Optional<String> texture,
                                      float atmosphereRed,
@@ -45,7 +48,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float spinRate,
                                      float nightFloor,
                                      Optional<String> ringTexture,
-                                     Optional<BodyMaterialProfile> material)
+                                     Optional<BodyMaterialProfile> material,
+                                     Optional<BodyCloudProfile> cloud)
 {
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
@@ -78,7 +82,9 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                     Codec.STRING.optionalFieldOf("ring_texture")
                             .forGetter(BodySpaceVisualProfile::ringTexture),
                     BodyMaterialProfile.CODEC.optionalFieldOf("material")
-                            .forGetter(BodySpaceVisualProfile::material)
+                            .forGetter(BodySpaceVisualProfile::material),
+                    BodyCloudProfile.CODEC.optionalFieldOf("cloud")
+                            .forGetter(BodySpaceVisualProfile::cloud)
             ).apply(instance, BodySpaceVisualProfile::new));
 
     public BodySpaceVisualProfile
@@ -86,6 +92,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         texture = texture == null ? Optional.empty() : texture;
         ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
         material = material == null ? Optional.empty() : material;
+        cloud = cloud == null ? Optional.empty() : cloud;
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);
         requireUnitRange("atmosphereBlue", atmosphereBlue);

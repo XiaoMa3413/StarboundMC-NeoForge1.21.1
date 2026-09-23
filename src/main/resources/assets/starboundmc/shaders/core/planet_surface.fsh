@@ -16,12 +16,47 @@ uniform float OceanSpecular;
 uniform float EmissiveStrength;
 uniform vec3 EmissiveColor;
 
+// Cloud layer: when CloudMode is 1 the albedo is procedural (no texture), the
+// alpha comes from animated noise, and the colour is the day/night light. One
+// shader shades both spheres so the terminator maths exists exactly once.
+uniform float CloudMode;
+uniform float CloudCoverage;
+uniform float CloudTime;
+
 in vec2 texCoord0;
 in vec3 viewNormal;
 in vec3 viewPosition;
 in vec3 sunDirectionView;
+in vec3 spherePosition;
 
 out vec4 fragColor;
+
+float hash(vec3 p) {
+    p = fract(p * 0.3183099 + vec3(0.1, 0.2, 0.3));
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+}
+
+float noise(vec3 x) {
+    vec3 i = floor(x);
+    vec3 f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(mix(hash(i + vec3(0.0, 0.0, 0.0)), hash(i + vec3(1.0, 0.0, 0.0)), f.x),
+                   mix(hash(i + vec3(0.0, 1.0, 0.0)), hash(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+               mix(mix(hash(i + vec3(0.0, 0.0, 1.0)), hash(i + vec3(1.0, 0.0, 1.0)), f.x),
+                   mix(hash(i + vec3(0.0, 1.0, 1.0)), hash(i + vec3(1.0, 1.0, 1.0)), f.x), f.y), f.z);
+}
+
+float fbm(vec3 p) {
+    float total = 0.0;
+    float amp = 0.5;
+    for (int i = 0; i < 5; i++) {
+        total += noise(p) * amp;
+        p *= 2.03;
+        amp *= 0.5;
+    }
+    return total;
+}
 
 void main() {
     vec3 normal = normalize(viewNormal);
@@ -44,6 +79,22 @@ void main() {
     light.r += (0.90 - light.r) * terminator * 0.35;
     light.g += (0.55 - light.g) * terminator * 0.25;
     light.b += (0.25 - light.b) * terminator * 0.18;
+
+    if (CloudMode > 0.5) {
+        // Cloud density on the sphere's own frame, so the pattern rotates with
+        // the mesh and stays seamless at the poles. The field scrolls over
+        // time, so the weather evolves instead of merely revolving. A light
+        // domain warp keeps the masses filamentary rather than blobby.
+        vec3 p = normalize(spherePosition) * 6.5;
+        vec3 warp = vec3(noise(p * 1.7 + 11.3), noise(p * 1.7 + 27.1), noise(p * 1.7 + 41.7));
+        float density = fbm(p + warp * 0.55 + vec3(0.0, CloudTime * 0.012, CloudTime * 0.005));
+        float alpha = smoothstep(CloudCoverage, CloudCoverage + 0.16, density);
+        if (alpha < 0.02) {
+            discard;
+        }
+        fragColor = vec4(light, alpha * GlobalAlpha);
+        return;
+    }
 
     vec4 texel = texture(Sampler0, texCoord0);
     if (texel.a < 0.1) {

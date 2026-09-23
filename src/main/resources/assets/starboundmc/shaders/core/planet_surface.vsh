@@ -13,6 +13,7 @@ out vec2 texCoord0;
 out vec3 viewNormal;
 out vec3 viewPosition;
 out vec3 sunDirectionView;
+out vec3 spherePosition;
 
 void main() {
     vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
@@ -28,4 +29,8 @@ void main() {
     viewNormal = normalize(mat3(ModelViewMat) * normalize(Position));
     viewPosition = viewPos.xyz;
     sunDirectionView = normalize(mat3(ModelViewMat) * SunDirection);
+    // The mesh-local position, for the procedural cloud density: sampling the
+    // noise on the sphere's own frame keeps the pattern seamless at the poles
+    // and free of texture-wrap seams, and rotates it with the mesh.
+    spherePosition = Position;
 }

@@ -85,6 +85,11 @@
         "atmosphere_green": 0.6,
         "atmosphere_peak": 0.2,
         "atmosphere_red": 0.3,
+        "cloud": {
+          "coverage": 0.58,
+          "opacity": 0.85,
+          "spin_rate": 0.009
+        },
         "material": {
           "fresnel_strength": 0.1,
           "ocean_roughness": 0.25,

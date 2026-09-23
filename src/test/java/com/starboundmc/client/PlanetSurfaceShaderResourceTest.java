@@ -23,6 +23,8 @@ final class PlanetSurfaceShaderResourceTest {
             "Roughness", "SpecularStrength", "FresnelStrength",
             "OceanRoughness", "OceanSpecular", "EmissiveStrength" };
 
+    private static final String[] CLOUD_UNIFORMS = {
+            "CloudMode", "CloudCoverage", "CloudTime" };
     @Test
     void shaderAssetsExistWithTheExpectedLayout() {
         assertTrue(Files.exists(SHADER_DIR.resolve("planet_surface.json")),
@@ -47,6 +49,8 @@ final class PlanetSurfaceShaderResourceTest {
         for (String uniform : SHADING_UNIFORMS)
             assertTrue(json.contains("\"" + uniform + "\""), uniform + " must be declared in the JSON");
         for (String uniform : MATERIAL_UNIFORMS)
+            assertTrue(json.contains("\"" + uniform + "\""), uniform + " must be declared in the JSON");
+        for (String uniform : CLOUD_UNIFORMS)
             assertTrue(json.contains("\"" + uniform + "\""), uniform + " must be declared in the JSON");
         assertTrue(json.contains("\"EmissiveColor\""), "emissive colour must be declared in the JSON");
     }
@@ -77,6 +81,18 @@ final class PlanetSurfaceShaderResourceTest {
         for (String uniform : MATERIAL_UNIFORMS)
             assertTrue(fragment.contains("uniform float " + uniform + ";"), uniform + " declaration");
         assertTrue(fragment.contains("uniform vec3 EmissiveColor;"), "emissive colour declaration");
+        // The procedural cloud layer shares this shader through CloudMode, so
+        // its noise, its sphere-frame input and its branch are all pinned.
+        assertTrue(fragment.contains("uniform float CloudMode;"), "cloud mode declaration");
+        assertTrue(fragment.contains("uniform float CloudCoverage;"), "cloud coverage declaration");
+        assertTrue(fragment.contains("uniform float CloudTime;"), "cloud time declaration");
+        assertTrue(vertex.contains("out vec3 spherePosition;"), "mesh-local position output");
+        assertTrue(fragment.contains("in vec3 spherePosition;"), "mesh-local position input");
+        assertTrue(fragment.contains("float hash(vec3 p)"), "cloud noise hash");
+        assertTrue(fragment.contains("normalize(spherePosition) * 6.5"),
+                "the cloud noise frequency is calibrated to the measured coverage");
+        assertTrue(fragment.contains("fragColor = vec4(light, alpha * GlobalAlpha);"),
+                "the cloud branch must shade with the shared day/night light");
         // Water is derived from the albedo's blue dominance, and only bodies
         // that author an ocean highlight take part; both are pinned so the
         // mask cannot silently drift or leak onto non-ocean worlds.

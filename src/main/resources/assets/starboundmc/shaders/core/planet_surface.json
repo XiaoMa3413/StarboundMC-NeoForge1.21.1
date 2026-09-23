@@ -18,6 +18,9 @@
         { "name": "OceanRoughness", "type": "float", "count": 1, "values": [ 0.2 ] },
         { "name": "OceanSpecular", "type": "float", "count": 1, "values": [ 0.0 ] },
         { "name": "EmissiveStrength", "type": "float", "count": 1, "values": [ 0.0 ] },
-        { "name": "EmissiveColor", "type": "float", "count": 3, "values": [ 1.0, 0.5, 0.2 ] }
+        { "name": "EmissiveColor", "type": "float", "count": 3, "values": [ 1.0, 0.5, 0.2 ] },
+        { "name": "CloudMode", "type": "float", "count": 1, "values": [ 0.0 ] },
+        { "name": "CloudCoverage", "type": "float", "count": 1, "values": [ 0.58 ] },
+        { "name": "CloudTime", "type": "float", "count": 1, "values": [ 0.0 ] }
     ]
 }
