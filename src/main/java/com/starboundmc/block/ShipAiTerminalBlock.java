@@ -36,9 +36,13 @@ public final class ShipAiTerminalBlock extends Block {
 
     /** Base model faces north, with its casing backed against the south edge. */
     private static final VoxelShape NORTH_SHAPE = Shapes.or(
-            Block.box(2.0, 2.0, 12.0, 14.0, 14.0, 16.0),
-            Block.box(1.0, 2.0, 9.25, 15.0, 14.0, 12.0),
-            Block.box(3.0, 1.0, 9.0, 13.0, 3.0, 14.0));
+            Block.box(2.2, 2.0, 14.35, 13.8, 14.0, 16.0),
+            Block.box(0.65, 2.25, 9.85, 15.35, 14.15, 14.9),
+            Block.box(1.8, 14.15, 9.85, 14.2, 15.4, 14.9),
+            Block.box(1.15, 1.05, 8.39, 14.85, 3.75, 13.9),
+            Block.box(1.85, 0.8, 8.7, 14.15, 1.05, 13.65),
+            Block.box(3.0, 1.65, 8.035, 4.0, 2.72, 8.5),
+            Block.box(12.0, 1.65, 8.035, 13.0, 2.72, 8.5));
     private static final Map<Direction, VoxelShape> SHAPES = new EnumMap<>(Direction.class);
 
     static {

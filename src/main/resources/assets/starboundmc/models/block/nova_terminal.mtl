@@ -1,0 +1,36 @@
+# Screen and small status markers use ambient emissivity.
+
+newmtl nova_cyan
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/nova_cyan
+
+newmtl nova_edge
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/nova_edge
+
+newmtl nova_graphite
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/nova_graphite
+
+newmtl nova_ident
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/nova_ident
+
+newmtl nova_recess
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/nova_recess
+
+newmtl nova_screen
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/nova_screen
+
+newmtl nova_titanium
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/nova_titanium

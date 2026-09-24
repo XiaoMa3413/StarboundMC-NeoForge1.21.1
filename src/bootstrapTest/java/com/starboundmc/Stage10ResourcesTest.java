@@ -289,68 +289,67 @@ final class Stage10ResourcesTest {
     }
 
     @Test
-    void shipAiTerminalUsesDedicatedAnimatedTextures() throws IOException {
-        JsonObject textures = json(ASSETS.resolve("models/block/ship_ai_terminal.json"))
-                .getAsJsonObject("textures");
-        assertEquals("starboundmc:block/command_deck_atlas", textures.get("atlas").getAsString());
-        assertEquals("starboundmc:block/ship_ai_terminal_screen", textures.get("screen").getAsString());
-        assertFalse(textures.toString().contains("ship_console"));
-
-        BufferedImage atlas = ImageIO.read(ASSETS.resolve("textures/block/command_deck_atlas.png").toFile());
-        assertNotNull(atlas);
-        assertEquals(256, atlas.getWidth());
-        assertEquals(256, atlas.getHeight());
-        BufferedImage edges = ImageIO.read(ASSETS.resolve("textures/block/command_deck_edges.png").toFile());
-        assertNotNull(edges);
-        assertEquals(1024, edges.getWidth());
-        assertEquals(1024, edges.getHeight());
-        Path screen = ASSETS.resolve("textures/block/ship_ai_terminal_screen.png");
+    void shipAiTerminalPackagesAnimatedPortraitAndIndependentLayers() throws IOException {
+        JsonObject model = json(ASSETS.resolve("models/block/ship_ai_terminal.json"));
+        assertEquals("neoforge:obj", model.get("loader").getAsString());
+        assertEquals("starboundmc:models/block/nova_terminal.obj", model.get("model").getAsString());
+        assertTrue(model.get("emissive_ambient").getAsBoolean());
+        Path screen = ASSETS.resolve("textures/block/nova_screen.png");
         BufferedImage image = ImageIO.read(screen.toFile());
-        assertNotNull(image);
-        assertEquals(48, image.getWidth());
-        assertEquals(96, image.getHeight());
-        assertTrue(Files.isRegularFile(Path.of(screen + ".mcmeta")));
         JsonObject animation = json(Path.of(screen + ".mcmeta")).getAsJsonObject("animation");
-        assertEquals(48, animation.get("width").getAsInt());
-        assertEquals(32, animation.get("height").getAsInt());
+        int w = animation.get("width").getAsInt(), h = animation.get("height").getAsInt();
+        assertEquals(w, image.getWidth());
+        assertEquals(48, image.getHeight() / h);
+        assertEquals(2, animation.get("frametime").getAsInt());
+        assertFalse(animation.get("interpolate").getAsBoolean());
+        Set<Integer> frames = new HashSet<>();
+        for (int i = 0; i < 48; i++) {
+            int[] pixels = image.getRGB(0, i * h, w, h, null, 0, w);
+            frames.add(java.util.Arrays.hashCode(pixels));
+            for (int pixel : pixels) assertEquals(255, pixel >>> 24, "Solid screen must be opaque");
+        }
+        assertTrue(frames.size() > 24, "Portrait must contain actual motion");
+        int open = 0, closed = 0;
+        for (int y = 41; y < 65; y++) for (int x = 49; x < 84; x++) {
+            if ((image.getRGB(x, y) & 255) > 210) open++;
+            if ((image.getRGB(x, 31 * h + y) & 255) > 210) closed++;
+        }
+        assertTrue(closed < open / 2, "Blink must visibly close both eyes");
+        JsonObject source = json(Path.of("docs/models/nova-terminal-textured-v1.bbmodel"));
+        for (String layer : List.of("nova_body", "nova_eyes")) {
+            JsonObject found = null;
+            for (JsonElement entry : source.getAsJsonArray("textures"))
+                if (entry.getAsJsonObject().get("name").getAsString().equals(layer)) found = entry.getAsJsonObject();
+            assertNotNull(found, "Editable source must retain independent " + layer);
+            byte[] data = java.util.Base64.getDecoder().decode(found.get("source").getAsString().split(",", 2)[1]);
+            BufferedImage embedded = ImageIO.read(new java.io.ByteArrayInputStream(data));
+            BufferedImage original = ImageIO.read(ASSETS.resolve("textures/gui/ship_ai/" + layer + ".png").toFile());
+            org.junit.jupiter.api.Assertions.assertArrayEquals(original.getRGB(0, 0, 96, 112, null, 0, 96),
+                    embedded.getRGB(0, 0, 96, 112, null, 0, 96));
+        }
     }
 
     @Test
-    void commandDeckFacesKeepConsistentTexelDensity() throws IOException {
-        for (String name : List.of("ship_ai_terminal")) {
-            for (JsonElement entry : json(ASSETS.resolve("models/block/" + name + ".json"))
-                    .getAsJsonArray("elements")) {
-                JsonObject element = entry.getAsJsonObject();
-                double[] size = new double[3];
-                for (int axis = 0; axis < 3; axis++) {
-                    size[axis] = element.getAsJsonArray("to").get(axis).getAsDouble()
-                            - element.getAsJsonArray("from").get(axis).getAsDouble();
-                }
-                for (var faceEntry : element.getAsJsonObject("faces").entrySet()) {
-                    JsonObject face = faceEntry.getValue().getAsJsonObject();
-                    String texture = face.get("texture").getAsString();
-                    if (texture.equals("#screen")) continue;
-                    String side = faceEntry.getKey();
-                    double width = side.equals("east") || side.equals("west") ? size[2] : size[0];
-                    double height = side.equals("up") || side.equals("down") ? size[2] : size[1];
-                    var uv = face.getAsJsonArray("uv");
-                    if (!texture.equals("#chart") && (Math.min(width, height) <= 4
-                            || side.equals("east") || side.equals("west"))) {
-                        assertEquals("#edges", texture, name + ":" + side + " needs complete tailored artwork");
-                    }
-                    assertEquals(width / height,
-                            (uv.get(2).getAsDouble() - uv.get(0).getAsDouble())
-                                    / (uv.get(3).getAsDouble() - uv.get(1).getAsDouble()),
-                            0.00001, name + ":" + side + " must not stretch");
-                    if (texture.equals("#chart")) continue;
-                    double texelsPerUv = texture.equals("#edges") ? 64 : 16;
-                    assertEquals(width * 8, texelsPerUv * (uv.get(2).getAsDouble() - uv.get(0).getAsDouble()),
-                            0.00001, name + ":" + side + " horizontal density");
-                    assertEquals(height * 8, texelsPerUv * (uv.get(3).getAsDouble() - uv.get(1).getAsDouble()),
-                            0.00001, name + ":" + side + " vertical density");
-                }
+    void novaTerminalObjResolvesMaterialsAndAtlasUvs() throws IOException {
+        String obj = Files.readString(ASSETS.resolve("models/block/nova_terminal.obj"));
+        String mtl = Files.readString(ASSETS.resolve("models/block/nova_terminal.mtl"));
+        assertTrue(obj.contains("mtllib nova_terminal.mtl"));
+        Set<String> used = new HashSet<>(), declared = new HashSet<>();
+        for (String line : obj.lines().toList()) {
+            if (line.startsWith("usemtl ")) used.add(line.substring(7));
+            if (line.startsWith("vt ")) for (String value : line.substring(3).split(" ")) {
+                double uv = Double.parseDouble(value);
+                assertTrue(uv >= -0.000001 && uv <= 1.000001, "Atlas UV outside sprite: " + line);
             }
         }
+        for (String line : mtl.lines().toList()) {
+            if (line.startsWith("newmtl ")) declared.add(line.substring(7));
+            if (line.startsWith("map_Kd ")) assertTexture(line.substring(7), ASSETS.resolve("models/block/nova_terminal.mtl"));
+        }
+        assertEquals(declared, used);
+        assertTrue(mtl.replace("\r\n", "\n").contains("newmtl nova_screen\nKa 1 1 1"));
+        JsonObject source = json(Path.of("docs/models/nova-terminal-textured-v1.bbmodel"));
+        assertEquals(source.getAsJsonArray("elements").size(), obj.lines().filter(l -> l.startsWith("o ")).count());
     }
 
     @Test

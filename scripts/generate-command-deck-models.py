@@ -47,6 +47,10 @@ def box(start, end, material='casing', overrides=None):
 
 
 def write(name, elements):
+    target = ASSETS / f'models/block/{name}.json'
+    if target.exists() and json.loads(target.read_text(encoding='utf-8')).get('loader') == 'neoforge:obj':
+        print(f'{name}: preserving authored Blockbench OBJ model')
+        return
     model = {'parent': 'minecraft:block/block',
              'textures': {'atlas': 'starboundmc:block/command_deck_atlas',
                           'edges': 'starboundmc:block/command_deck_edges',
