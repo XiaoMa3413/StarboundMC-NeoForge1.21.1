@@ -34,4 +34,10 @@ final class PlanetSurfaceLighting
                 .rotateX((float) Math.toRadians(-orientationTiltDegrees))
                 .rotateY((float) Math.toRadians(-orientationYawDegrees));
     }
+
+    /** Camera origin transformed into the unrotated sphere mesh frame. */
+    static Vector3f cameraPositionMesh(Matrix4f modelViewModel)
+    {
+        return new Matrix4f(modelViewModel).invert().transformPosition(new Vector3f());
+    }
 }

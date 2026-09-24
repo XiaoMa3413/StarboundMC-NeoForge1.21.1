@@ -9,9 +9,11 @@ uniform mat4 ProjMat;
 
 out vec2 texCoord0;
 out vec3 surfaceNormal;
+out vec3 meshPosition;
 
 void main() {
     gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
     texCoord0 = UV0;
     surfaceNormal = Normal;
+    meshPosition = Position;
 }

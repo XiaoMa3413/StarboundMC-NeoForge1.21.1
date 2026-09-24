@@ -18,8 +18,12 @@
       "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     },
     { "name": "SunDirection", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] },
+    { "name": "CameraPositionMesh", "type": "float", "count": 3, "values": [0.0, 0.0, 0.0] },
     { "name": "TerminatorWidth", "type": "float", "count": 1, "values": [0.00375] },
     { "name": "NightFloor", "type": "float", "count": 1, "values": [0.1] },
+    { "name": "SpecularStrength", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "Roughness", "type": "float", "count": 1, "values": [1.0] },
+    { "name": "FresnelStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "SurfaceAlpha", "type": "float", "count": 1, "values": [1.0] },
     { "name": "Brightness", "type": "float", "count": 1, "values": [1.0] }
   ]

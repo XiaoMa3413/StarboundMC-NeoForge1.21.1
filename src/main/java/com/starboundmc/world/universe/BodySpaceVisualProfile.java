@@ -10,9 +10,10 @@ import java.util.Optional;
  *
  * <p>This mirrors the per-planet tables inside {@code PlanetRenderer}: the
  * atmosphere tint and peak alpha, the fixed body orientation, the point colour
- * used when the body is too far to shade, and the planet texture. The renderer
- * keeps its own tables for now; a later batch moves it onto this profile, at
- * which point the two must agree exactly.</p>
+ * used when the body is too far to shade, the planet texture, and the basic
+ * view-dependent surface response. The surface shader reads the material
+ * controls here; the remaining values continue to mirror the renderer's
+ * per-body configuration.</p>
  *
  * <p>The atmosphere tint is stored as three floats rather than a packed colour
  * because that is how the renderer holds it. Rounding it into an int here would
@@ -40,6 +41,9 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float terminatorWidth,
                                      float spinRate,
                                      float nightFloor,
+                                     float specularStrength,
+                                     float roughness,
+                                     float fresnelStrength,
                                      Optional<String> ringTexture)
 {
     public static final Codec<BodySpaceVisualProfile> CODEC =
@@ -61,15 +65,21 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                     Codec.FLOAT.optionalFieldOf("orientation_roll", 0.0F)
                             .forGetter(BodySpaceVisualProfile::orientationRoll),
                     Codec.INT.fieldOf("point_color").forGetter(BodySpaceVisualProfile::pointColor),
-                    // Shading controls. These were per-planet switches in the
-                    // renderer; moving them here is what lets the renderer stop
-                    // branching on the body's identity.
+                    // Shading and material controls live in data so the renderer
+                    // does not branch on body identity. Material defaults preserve
+                    // the old look when older datapacks omit the fields.
                     Codec.FLOAT.optionalFieldOf("terminator_width", 0.20F)
                             .forGetter(BodySpaceVisualProfile::terminatorWidth),
                     Codec.FLOAT.optionalFieldOf("spin_rate", 0.00375F)
                             .forGetter(BodySpaceVisualProfile::spinRate),
                     Codec.FLOAT.optionalFieldOf("night_floor", 0.10F)
                             .forGetter(BodySpaceVisualProfile::nightFloor),
+                    Codec.FLOAT.optionalFieldOf("specular_strength", 0.0F)
+                            .forGetter(BodySpaceVisualProfile::specularStrength),
+                    Codec.FLOAT.optionalFieldOf("roughness", 1.0F)
+                            .forGetter(BodySpaceVisualProfile::roughness),
+                    Codec.FLOAT.optionalFieldOf("fresnel_strength", 0.0F)
+                            .forGetter(BodySpaceVisualProfile::fresnelStrength),
                     Codec.STRING.optionalFieldOf("ring_texture")
                             .forGetter(BodySpaceVisualProfile::ringTexture)
             ).apply(instance, BodySpaceVisualProfile::new));
@@ -91,6 +101,9 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         requireFinite("spinRate", spinRate);
         if (!Float.isFinite(nightFloor) || nightFloor < 0.0F || nightFloor > 1.0F)
             throw new IllegalArgumentException("nightFloor must be finite and within [0, 1]");
+        requireUnitRange("specularStrength", specularStrength);
+        requireUnitRange("roughness", roughness);
+        requireUnitRange("fresnelStrength", fresnelStrength);
     }
 
     /** The atmosphere tint as a vector, for renderers that work in float triples. */

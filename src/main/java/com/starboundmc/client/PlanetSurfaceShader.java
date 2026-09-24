@@ -42,12 +42,19 @@ final class PlanetSurfaceShader
         return shader;
     }
 
-    static void setLighting(ShaderInstance target, Vector3f sunDirection, float terminatorWidth,
-                            float nightFloor, float alpha, float brightness)
+    static void setLighting(ShaderInstance target, Vector3f sunDirection, Vector3f cameraPositionMesh,
+                            float terminatorWidth, float nightFloor,
+                            float specularStrength, float roughness, float fresnelStrength,
+                            float alpha, float brightness)
     {
         target.safeGetUniform("SunDirection").set(sunDirection.x, sunDirection.y, sunDirection.z);
+        target.safeGetUniform("CameraPositionMesh").set(
+                cameraPositionMesh.x, cameraPositionMesh.y, cameraPositionMesh.z);
         target.safeGetUniform("TerminatorWidth").set(terminatorWidth);
         target.safeGetUniform("NightFloor").set(nightFloor);
+        target.safeGetUniform("SpecularStrength").set(specularStrength);
+        target.safeGetUniform("Roughness").set(roughness);
+        target.safeGetUniform("FresnelStrength").set(fresnelStrength);
         target.safeGetUniform("SurfaceAlpha").set(alpha);
         target.safeGetUniform("Brightness").set(brightness);
     }

@@ -1,5 +1,7 @@
 package com.starboundmc.world.universe;
 
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -51,6 +53,15 @@ class PlanetRendererTableEquivalenceTest
             "sys1:molten", new float[] {0.16F, 0.0075F, 0.16F},
             "sys2:frozen", new float[] {0.30F, 0.00225F, 0.14F},
             "sys1:barren", new float[] {0.18F, 0.00275F, 0.06F});
+
+    /** Specular strength, roughness, and fresnel strength for the first material pass. */
+    private static final Map<String, float[]> MATERIALS = Map.of(
+            "sys1:lush", new float[] {0.14F, 0.56F, 0.05F},
+            "sys1:molten", new float[] {0.025F, 0.78F, 0.0F},
+            "sys1:gasgiant", new float[] {0.02F, 0.92F, 0.035F},
+            "sys1:rockymoon", new float[] {0.0F, 1.0F, 0.0F},
+            "sys2:frozen", new float[] {0.34F, 0.30F, 0.12F},
+            "sys1:barren", new float[] {0.02F, 0.92F, 0.0F});
 
     /** The planet texture each body's sphere is drawn with. */
     private static final Map<String, String> TEXTURE = Map.of(
@@ -116,6 +127,32 @@ class PlanetRendererTableEquivalenceTest
             assertEquals(expected[1], profile.spinRate(), 0.0F, id + " spin rate");
             assertEquals(expected[2], profile.nightFloor(), 0.0F, id + " night floor");
         }
+    }
+
+    @Test
+    void materialParametersMatchTheInitialBodyProfiles()
+    {
+        for (var entry : MATERIALS.entrySet())
+        {
+            BodySpaceVisualProfile profile = visual(entry.getKey());
+            float[] expected = entry.getValue();
+            String id = entry.getKey();
+            assertEquals(expected[0], profile.specularStrength(), 0.0F, id + " specular strength");
+            assertEquals(expected[1], profile.roughness(), 0.0F, id + " roughness");
+            assertEquals(expected[2], profile.fresnelStrength(), 0.0F, id + " fresnel strength");
+        }
+    }
+
+    @Test
+    void legacyDatapackProfileDefaultsToNoMaterialResponse()
+    {
+        BodySpaceVisualProfile profile = BodySpaceVisualProfile.CODEC.parse(JsonOps.INSTANCE,
+                JsonParser.parseString("{\"point_color\":-1}"))
+                .result().orElseThrow();
+
+        assertEquals(0.0F, profile.specularStrength(), 0.0F);
+        assertEquals(1.0F, profile.roughness(), 0.0F);
+        assertEquals(0.0F, profile.fresnelStrength(), 0.0F);
     }
 
     @Test

@@ -117,6 +117,7 @@ public class PlanetRenderer
     private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
             java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
             0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
+            0.0F, 1.0F, 0.0F,
             java.util.Optional.empty());
 
     /**
@@ -585,8 +586,11 @@ public class PlanetRenderer
             {
                 RenderSystem.setShader(() -> surfaceShader);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun,
-                        terminatorWidth(body), nightFloor(body), alpha, brightness);
+                Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
+                PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun, cameraPositionMesh,
+                        terminatorWidth(body), nightFloor(body),
+                        profile.specularStrength(), profile.roughness(), profile.fresnelStrength(),
+                        alpha, brightness);
             }
             else
             {
