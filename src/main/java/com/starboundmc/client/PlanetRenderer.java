@@ -9,102 +9,49 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.CelestialLod;
 import com.starboundmc.client.space.CelestialLodPolicy;
 import com.starboundmc.client.space.CelestialLodTransitions;
+import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
-import com.starboundmc.client.space.SpaceRenderState;
-import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.StarSystemResolver;
 import com.starboundmc.client.space.StellarLod;
 import com.starboundmc.space.UniversePosition;
-import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
-import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.UniverseNavigation;
-import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
-import com.starboundmc.world.universe.StarSystemDefinition;
-import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.client.StarmapUniverse;
-import com.starboundmc.world.starmap.StellarVisualProfile;
+import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 /**
- * Renders the ship dimension's space surroundings and the warp sequence.
+ * Draws visible planets and moons in the ship's sky frame.
  *
- * <p>The AFTER_SKY pose matrix contains camera rotation only (no translation),
- * and in that local frame <b>+Z points forward</b> from the camera. All sky
- * elements are drawn as fixed offsets in this frame, rotated by the ship's
- * turn "heading" during the warp.</p>
- *
- * <p>Warp sequence: the ship turns away from the planet first (the starfield
- * and the planet visibly sweep across the view), then the streak tunnel
- * engages, and on arrival the target planet reappears head-on from the front
- * while the starfield fades back in. The dimension uses SkyType.NONE, so this
- * renderer also owns the space dome and the starfield.</p>
+ * <p>The top-level {@link SpaceRenderer} owns the render event and pass order;
+ * background, system-star, ring and warp drawing live in their own renderers.</p>
  */
-@EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class PlanetRenderer
 {
     static final float PLANET_RADIUS = 50.0F;
 
-    /** Longer velocity build-up prevents a visible kick when the tunnel starts. */
-    private static final float MOTION_RAMP = 0.10F;
-    /** Minimum streak length so the "dots" stay visible before stretching. */
-    private static final double MIN_LENGTH = 0.04;
-    /** Extra stretch past the cruise length during the intro, so the handoff
-     *  into the motion phase feels punchier and the length settles smoothly. */
-    private static final float STRETCH_OVERSHOOT = 1.2F;
-    /** All tunnel geometry stays in front of the camera's near plane. */
-    private static final double TUNNEL_NEAR_Z = 8.0;
-    private static final double TUNNEL_FAR_Z = 260.0;
-
-    // ---- Space starfield (drawn by us; the dimension uses SkyType.NONE) ----
-    private static final int STAR_COUNT = 2000;
-    private static final float STAR_DISTANCE = 200.0F;
-    private static final float STAR_SIZE_SCALE = 0.85F;
-
-    // ---- Streak tunnel ----
-    private static final int STREAK_COUNT = 220;
-    /** Close, bright streaks that provide speed parallax near the cockpit. */
-    private static final int NEAR_STREAK_COUNT = 120;
-    /** Thin, slow, dim background streaks drawn behind the main tunnel for depth. */
-    private static final int TUNNEL_STAR_COUNT = 420;
-    /** Fast, wide-angle particles that skim the cockpit edges and sell speed. */
-    private static final int EDGE_STREAK_COUNT = 96;
-    /** Full surround layer extending ahead, beside and behind the ship. */
-    private static final int SURROUND_STREAK_COUNT = 260;
-
-    /** Corona colour per system id, for the arrival tunnel tint. */
-    private static final Map<String, Vector3f> STELLAR_CORONA_COLORS = new HashMap<>();
     /**
-     * Bodies drawn outside the window, in draw order. Sourced from the universe
+     * Bodies drawn outside the window, sourced from the universe
      * catalog and re-read when it changes, so a datapack body renders without a
      * new enum constant.
      */
     private static CelestialBodyDefinition[] drawOrder = new CelestialBodyDefinition[0];
     private static double[] drawDistanceSq = new double[0];
-    /** Distance-driven body quality with a temporal blend to avoid popping. */
     /**
      * Distance-driven body quality with a temporal blend to avoid popping.
      *
@@ -119,192 +66,12 @@ public class PlanetRenderer
     /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
     private static final Map<String, VertexBuffer> PLANET_SURFACE_BUFFERS = new HashMap<>();
     private static final Map<String, Float> PLANET_SURFACE_TICKS = new HashMap<>();
-    /** Ringed-body support: strip texture plus equatorial quad geometry (see buildRingBand). */
-    private static final int RING_SEGMENTS = 144;
-    /** Real Saturn proportions: the main rings span ~1.24-2.27 planetary radii. */
-    private static final float RING_INNER = GasGiantGeometry.RING_INNER_RADII;
-    private static final float RING_OUTER = GasGiantGeometry.RING_OUTER_RADII;
-    private static final float RING_ALPHA = 0.90F;
-    /** The strip texture supplies the colour; only a faint warm lift on top. */
-    private static final float RING_TINT_R = 1.00F;
-    private static final float RING_TINT_G = 0.97F;
-    private static final float RING_TINT_B = 0.92F;
-    /** 4 corners per segment: inner(a0), outer(a0), outer(a1), inner(a1). Local, PLANET_RADIUS units. */
-    private static final float[] RING_VX = new float[RING_SEGMENTS * 4];
-    private static final float[] RING_VY = new float[RING_SEGMENTS * 4];
-    private static final float[] RING_VZ = new float[RING_SEGMENTS * 4];
-    private static final float[] RING_VU = new float[RING_SEGMENTS * 4];
-    /** Segment centroid in the same oriented local frame, for the far/near draw split. */
-    private static final float[] RING_MID_X = new float[RING_SEGMENTS];
-    private static final float[] RING_MID_Y = new float[RING_SEGMENTS];
-    private static final float[] RING_MID_Z = new float[RING_SEGMENTS];
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
     private static float moonSurfaceSunY = Float.NaN;
     private static float moonSurfaceSunZ = Float.NaN;
 
-    static
-    {
-        // Corona colour per system, so the arrival tunnel tint can be resolved from
-        // the destination body's owning system.
-        for (var system : StarmapUniverse.allSystems())
-        {
-            int color = system.stellarVisual().getCoronaColor();
-            STELLAR_CORONA_COLORS.put(system.systemId(), new Vector3f(
-                    ((color >> 16) & 0xFF) / 255.0F,
-                    ((color >> 8) & 0xFF) / 255.0F,
-                    (color & 0xFF) / 255.0F));
-        }
-        buildRingBand();
-    }
-
-    /**
-     * Whether a body draws a ring band.
-     *
-     * <p>Read from the body's profile rather than from its identity, so a body
-     * added by a datapack can be ringed without a branch here. The baked geometry
-     * is shared: ring proportions are canonical ratios (see
-     * {@code GasGiantGeometry}), and the far/near split is resolved per draw from
-     * the actual camera position, so one bake serves any ringed body.</p>
-     */
-    private static boolean hasRings(CelestialBodyDefinition body)
-    {
-        return visual(body).hasRings();
-    }
-
-    /**
-     * Bakes the gas giant's ring as quads in the body-local <b>equatorial</b>
-     * plane (x/z, pole on +y). The ring is deliberately left un-oriented:
-     * every caller composes its own body frame into the model matrix, exactly
-     * as it already does for the sphere. That is what keeps the ring glued to
-     * the band texture's equator from the ship berth <i>and</i> from the rocky
-     * moon's sky, which run different body-frame transforms. The strip texture
-     * supplies per-radius alpha; the far/near split is resolved at draw time.
-     */
-    private static void buildRingBand()
-    {
-        for (int seg = 0; seg < RING_SEGMENTS; seg++)
-        {
-            double a0 = Math.PI * 2.0 * seg / RING_SEGMENTS;
-            double a1 = Math.PI * 2.0 * (seg + 1) / RING_SEGMENTS;
-            float cos0 = (float) Math.cos(a0), sin0 = (float) Math.sin(a0);
-            float cos1 = (float) Math.cos(a1), sin1 = (float) Math.sin(a1);
-
-            // Corner order: inner@a0 (u0), outer@a0 (u1), outer@a1 (u1), inner@a1 (u0).
-            for (int corner = 0; corner < 4; corner++)
-            {
-                float radius = (corner == 0 || corner == 3) ? RING_INNER : RING_OUTER;
-                float angleCos = (corner <= 1) ? cos0 : cos1;
-                float angleSin = (corner <= 1) ? sin0 : sin1;
-                float u = (corner == 1 || corner == 2) ? 1.0F : 0.0F;
-                int idx = seg * 4 + corner;
-                RING_VX[idx] = angleCos * radius * PLANET_RADIUS;
-                RING_VY[idx] = 0.0F;
-                RING_VZ[idx] = angleSin * radius * PLANET_RADIUS;
-                RING_VU[idx] = u;
-            }
-            RING_MID_X[seg] = 0.25F * (RING_VX[seg * 4] + RING_VX[seg * 4 + 1]
-                    + RING_VX[seg * 4 + 2] + RING_VX[seg * 4 + 3]);
-            RING_MID_Y[seg] = 0.0F;
-            RING_MID_Z[seg] = 0.25F * (RING_VZ[seg * 4] + RING_VZ[seg * 4 + 1]
-                    + RING_VZ[seg * 4 + 2] + RING_VZ[seg * 4 + 3]);
-        }
-    }
-
-    /**
-     * Draws the pre-oriented ring band, restricted to the far half (nearPass =
-     * false, drawn before the disk) or the near half (nearPass = true, drawn
-     * after the disk). A segment is "near" when its centroid lands closer to the
-     * camera than the body centre: |c + o|^2 < |c|^2.
-     */
-    private static void drawPlanetRings(PoseStack pose, CelestialBodyDefinition body,
-                                        float cx, float cy, float cz,
-                                        float scale, float shipYaw, float shipPitch,
-                                        float alpha, boolean nearPass)
-    {
-        // Match the disk's orientation-minus-spin so ring and surface tilt
-        // together: the baked ring is equatorial, so the body frame has to be
-        // composed here, before the ship-view rotation.
-        BodySpaceVisualProfile profile = visual(body);
-        String ringTexture = profile.ringTexture().orElse(null);
-        if (ringTexture == null)
-            return;
-        Matrix4f model = new Matrix4f()
-                .translate(cx, cy, cz)
-                .rotateX((float) Math.toRadians(-shipPitch))
-                .rotateY((float) Math.toRadians(-shipYaw))
-                .mul(bodyOrientation(profile))
-                .scale(scale);
-        drawRingPass(pose, model, ResourceLocation.parse(ringTexture), alpha, nearPass);
-    }
-
-    /**
-     * Draws one half of the baked ring band. {@code model} maps the ring's local
-     * PLANET_RADIUS-unit frame (centred on the body) into the pose's frame; the
-     * far/near split is classified by each segment centroid's distance to the
-     * camera, which sits at the origin of the pose's outermost frame. Any caller
-     * (ship berth view, a moon's sky) therefore gets correct occlusion against
-     * its own disc for free.
-     */
-    static void drawRingPass(PoseStack pose, Matrix4f model, ResourceLocation texture,
-                             float alpha, boolean nearPass)
-    {
-        if (alpha <= 0.002F || texture == null)
-            return;
-
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
-
-        Matrix4f full = new Matrix4f(pose.last().pose()).mul(model);
-        Vector3f centre = full.transformPosition(new Vector3f());
-        Vector3f centroid = new Vector3f();
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-        int drawn = 0;
-        for (int seg = 0; seg < RING_SEGMENTS; seg++)
-        {
-            full.transformPosition(RING_MID_X[seg], RING_MID_Y[seg], RING_MID_Z[seg], centroid);
-            boolean near = centroid.lengthSquared() < centre.lengthSquared();
-            if (near != nearPass)
-                continue;
-            drawn++;
-            for (int corner = 0; corner < 4; corner++)
-            {
-                int idx = seg * 4 + corner;
-                bb.addVertex(full, RING_VX[idx], RING_VY[idx], RING_VZ[idx])
-                        .setUv(RING_VU[idx], 0.5F)
-                        .setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1.0F);
-            }
-        }
-        if (drawn > 0)
-            BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableCull();
-        RenderSystem.depthMask(true);
-        RenderSystem.disableBlend();
-    }
-
-    /**
-     * The body's shared frame: the surface bake applies yaw about Y first and the
-     * axial tilt about X second, so this composes as {@code Rx(tilt) * Ry(yaw)}.
-     * The sphere bake and the ring both go through it, so the band texture's
-     * equator and the ring plane can never separate.
-     */
-    static Matrix4f bodyOrientation(BodySpaceVisualProfile profile)
-    {
-        return new Matrix4f()
-                .rotateX((float) Math.toRadians(profile.orientationTilt()))
-                .rotateY((float) Math.toRadians(profile.orientationYaw()));
-    }
 
     /**
      * Rebuilds the draw arrays when the active universe changes.
@@ -368,150 +135,6 @@ public class PlanetRenderer
     // Arrival crossfade: the target planet grows and fades in over the last ~28%
     // of the warp while the ship swings back to face it. Package-visible so the
     // star map (ShipConsoleScreen) can sync its ship animation to the same timing.
-
-    // ---- Deterministic starfield: directions on the unit sphere + size/brightness ----
-    private static final float[] STAR_X = new float[STAR_COUNT];
-    private static final float[] STAR_Y = new float[STAR_COUNT];
-    private static final float[] STAR_Z = new float[STAR_COUNT];
-    private static final float[] STAR_SIZE = new float[STAR_COUNT];
-    private static final float[] STAR_BRIGHT = new float[STAR_COUNT];
-    private static final float[] STAR_R = new float[STAR_COUNT];
-    private static final float[] STAR_G = new float[STAR_COUNT];
-    private static final float[] STAR_B = new float[STAR_COUNT];
-    private static final float[] STAR_TWINKLE = new float[STAR_COUNT];
-
-    // Static tunnel attributes keep each star's identity stable from frame to
-    // frame. Only its phase advances during the flight, preventing random
-    // re-seeding from turning into shimmer or a post-pause position jump.
-    private static final float[] TUNNEL_THETA = new float[TUNNEL_STAR_COUNT];
-    private static final float[] TUNNEL_RADIUS = new float[TUNNEL_STAR_COUNT];
-    private static final float[] TUNNEL_PHASE = new float[TUNNEL_STAR_COUNT];
-    private static final float[] TUNNEL_PERIOD = new float[TUNNEL_STAR_COUNT];
-    private static final float[] TUNNEL_WIDTH = new float[TUNNEL_STAR_COUNT];
-    private static final float[] STREAK_THETA = new float[STREAK_COUNT];
-    private static final float[] STREAK_RADIUS = new float[STREAK_COUNT];
-    private static final float[] STREAK_PHASE = new float[STREAK_COUNT];
-    private static final float[] STREAK_PERIOD = new float[STREAK_COUNT];
-    private static final float[] STREAK_WIDTH = new float[STREAK_COUNT];
-    private static final float[] NEAR_THETA = new float[NEAR_STREAK_COUNT];
-    private static final float[] NEAR_RADIUS = new float[NEAR_STREAK_COUNT];
-    private static final float[] NEAR_PHASE = new float[NEAR_STREAK_COUNT];
-    private static final float[] NEAR_PERIOD = new float[NEAR_STREAK_COUNT];
-    private static final float[] NEAR_WIDTH = new float[NEAR_STREAK_COUNT];
-    private static final float[] EDGE_THETA = new float[EDGE_STREAK_COUNT];
-    private static final float[] EDGE_RADIUS = new float[EDGE_STREAK_COUNT];
-    private static final float[] EDGE_PHASE = new float[EDGE_STREAK_COUNT];
-    private static final float[] EDGE_PERIOD = new float[EDGE_STREAK_COUNT];
-    private static final float[] EDGE_WIDTH = new float[EDGE_STREAK_COUNT];
-    private static final float[] SURROUND_THETA = new float[SURROUND_STREAK_COUNT];
-    private static final float[] SURROUND_RADIUS = new float[SURROUND_STREAK_COUNT];
-    private static final float[] SURROUND_PHASE = new float[SURROUND_STREAK_COUNT];
-    private static final float[] SURROUND_PERIOD = new float[SURROUND_STREAK_COUNT];
-    private static final float[] SURROUND_WIDTH = new float[SURROUND_STREAK_COUNT];
-
-    static
-    {
-        Random random = new Random(42424242L);
-        for (int i = 0; i < STAR_COUNT; i++)
-        {
-            // Uniform direction on the sphere.
-            double z = 1.0 - 2.0 * random.nextDouble();
-            double r = Math.sqrt(Math.max(0.0, 1.0 - z * z));
-            double phi = random.nextDouble() * Math.PI * 2.0;
-            STAR_X[i] = (float) (r * Math.cos(phi));
-            STAR_Y[i] = (float) (r * Math.sin(phi));
-            STAR_Z[i] = (float) z;
-
-            // Sizes: mostly 1-2 px, a few bright 3-4 px stars.
-            double sizeRoll = random.nextDouble();
-            if (sizeRoll < 0.70)
-                STAR_SIZE[i] = 0.10F + (float) random.nextDouble() * 0.10F;
-            else if (sizeRoll < 0.95)
-                STAR_SIZE[i] = 0.20F + (float) random.nextDouble() * 0.20F;
-            else
-                STAR_SIZE[i] = 0.40F + (float) random.nextDouble() * 0.15F;
-            STAR_SIZE[i] *= STAR_SIZE_SCALE;
-
-            STAR_BRIGHT[i] = 0.55F + (float) random.nextDouble() * 0.45F;
-
-            double tint = random.nextDouble();
-            if (tint < 0.08)
-            {
-                // rare orange-red giants
-                STAR_R[i] = 1.00F; STAR_G[i] = 0.62F; STAR_B[i] = 0.45F;
-            }
-            else if (tint < 0.20)
-            {
-                // warm yellow-white
-                STAR_R[i] = 1.00F; STAR_G[i] = 0.88F; STAR_B[i] = 0.68F;
-            }
-            else if (tint < 0.42)
-            {
-                // blue-white
-                STAR_R[i] = 0.72F; STAR_G[i] = 0.83F; STAR_B[i] = 1.00F;
-            }
-            else
-            {
-                // white
-                STAR_R[i] = 0.93F; STAR_G[i] = 0.96F; STAR_B[i] = 1.00F;
-            }
-
-            STAR_TWINKLE[i] = (float) (random.nextDouble() * Math.PI * 2.0);
-        }
-
-        Random far = new Random(987654321L);
-        for (int i = 0; i < TUNNEL_STAR_COUNT; i++)
-        {
-            TUNNEL_THETA[i] = (float) (far.nextDouble() * Math.PI * 2.0);
-            // Keep the centre readable while filling the full field of view.
-            TUNNEL_RADIUS[i] = (float) (5.0 + Math.sqrt(far.nextDouble()) * 58.0);
-            TUNNEL_PHASE[i] = (float) (far.nextDouble() * 120.0);
-            TUNNEL_PERIOD[i] = (float) (64.0 + far.nextDouble() * 72.0);
-            TUNNEL_WIDTH[i] = (float) (0.05 + far.nextDouble() * 0.16);
-        }
-
-        Random mid = new Random(1234567L);
-        for (int i = 0; i < STREAK_COUNT; i++)
-        {
-            STREAK_THETA[i] = (float) (mid.nextDouble() * Math.PI * 2.0);
-            STREAK_RADIUS[i] = (float) (4.0 + Math.sqrt(mid.nextDouble()) * 46.0);
-            STREAK_PHASE[i] = (float) (mid.nextDouble() * 96.0);
-            STREAK_PERIOD[i] = (float) (44.0 + mid.nextDouble() * 52.0);
-            STREAK_WIDTH[i] = (float) (0.20 + mid.nextDouble() * 0.70);
-        }
-
-        Random near = new Random(7654321L);
-        for (int i = 0; i < NEAR_STREAK_COUNT; i++)
-        {
-            NEAR_THETA[i] = (float) (near.nextDouble() * Math.PI * 2.0);
-            NEAR_RADIUS[i] = (float) (7.0 + Math.sqrt(near.nextDouble()) * 30.0);
-            NEAR_PHASE[i] = (float) (near.nextDouble() * 72.0);
-            NEAR_PERIOD[i] = (float) (30.0 + near.nextDouble() * 34.0);
-            NEAR_WIDTH[i] = (float) (0.28 + near.nextDouble() * 0.78);
-        }
-
-        Random edge = new Random(246813579L);
-        for (int i = 0; i < EDGE_STREAK_COUNT; i++)
-        {
-            EDGE_THETA[i] = (float) (edge.nextDouble() * Math.PI * 2.0);
-            EDGE_RADIUS[i] = (float) (22.0 + Math.sqrt(edge.nextDouble()) * 54.0);
-            EDGE_PHASE[i] = (float) (edge.nextDouble() * 48.0);
-            EDGE_PERIOD[i] = (float) (16.0 + edge.nextDouble() * 18.0);
-            EDGE_WIDTH[i] = (float) (0.18 + edge.nextDouble() * 0.48);
-        }
-
-        Random surround = new Random(135792468L);
-        for (int i = 0; i < SURROUND_STREAK_COUNT; i++)
-        {
-            SURROUND_THETA[i] = (float) (surround.nextDouble() * Math.PI * 2.0);
-            // A hollow shell leaves the cockpit readable while surrounding it
-            // with motion that remains visible through side and rear windows.
-            SURROUND_RADIUS[i] = (float) (28.0 + Math.sqrt(surround.nextDouble()) * 68.0);
-            SURROUND_PHASE[i] = (float) (surround.nextDouble() * 110.0);
-            SURROUND_PERIOD[i] = (float) (76.0 + surround.nextDouble() * 54.0);
-            SURROUND_WIDTH[i] = (float) (0.12 + surround.nextDouble() * 0.34);
-        }
-    }
 
     // Cached UV-sphere geometry - 32×64 for 4k/8k textures, silky round (was 16×32, faceting visible at 38°)
     private static final int SPHERE_STACKS = 32;
@@ -600,79 +223,9 @@ public class PlanetRenderer
         HALO_Z[idx] = PLANET_RADIUS * sinPhi * (float) Math.sin(theta);
     }
 
-    @SubscribeEvent
-    public static void onRenderLevel(RenderLevelStageEvent event)
-    {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY)
-            return;
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null)
-            return;
-        if (!mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL))
-            return;
-
-        float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-        SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + partialTick);
-        // AFTER_SKY already carries the camera rotation. Keep the space scene
-        // anchored to the ship rather than subtracting the player eye position:
-        // walking around the bridge must not drag the distant planet across view.
-        double yaw = space.yaw();
-        double pitch = space.pitch();
-        FlightPhase phase = space.flightPhase();
-
-        // Rebuild the camera rotation without GameRenderer's walk/view bobbing.
-        // The event stack contains bobbing when that option is enabled, which
-        // incorrectly makes astronomical bodies shake relative to the window.
-        PoseStack skyPose = stableCameraPose(event.getCamera());
-        // Visual-only bank: rotate the outside universe, never the player entity/camera.
-        skyPose.mulPose(Axis.ZP.rotationDegrees((float) -space.roll()));
-        renderSpaceDome(skyPose);
-        float starAlpha = 1.0F;
-        float starConvergence = 0.0F;
-        if (space.warping() && space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS)
-        {
-            float warpProgress = space.warpProgress();
-            int duration = Math.max(1, space.warpDurationTicks());
-            float accelStart = ShipFlightController.TURN_TICKS / (float) duration;
-            float hyperspaceStart = (ShipFlightController.TURN_TICKS + ShipFlightController.ACCEL_TICKS)
-                    / (float) duration;
-            float enter = smoothstep((warpProgress - 0.16F) / 0.18F);
-            float exit = smoothstep((warpProgress - 0.68F) / 0.24F);
-            float convergenceIn = smoothstep((warpProgress - accelStart)
-                    / Math.max(0.0001F, hyperspaceStart - accelStart));
-            starConvergence = convergenceIn * (1.0F - exit);
-            // During the jump the moving tunnel is the environment. Keep a
-            // restrained floor of the static shell so first-person peripheral
-            // vision retains orientation and depth instead of becoming a flat
-            // blue void through the middle of a long jump.
-            float shellFade = enter * (1.0F - exit);
-            starAlpha = 1.0F - 0.88F * shellFade;
-        }
-        StarSystemResolver.ResolvedStarField stars = StarSystemResolver.resolve(space);
-        GalaxyEnvironmentBlend environment = stars.environment();
-        renderStarField(skyPose, (float) -yaw, (float) -pitch, starAlpha, starConvergence,
-                environment.skyTintColor(), environment.skyTintAmount());
-
-        // Stars live on a projection-safe shell and are drawn before planets,
-        // allowing a planet disc to pass cleanly in front of its system's star.
-        renderSystemStars(skyPose, space, stars);
-
-        // Coordinate visibility replaces the old current/target special cases.
-        // It works unchanged when a manual controller supplies an arbitrary pose.
-        renderVisiblePlanets(skyPose, event.getCamera(), space, stars);
-
-        // Pre-stretch belongs only to routes that will actually enter
-        // HYPERSPACE. Short sublight routes share ACCELERATE but transition
-        // into CRUISE, so they must never render warp streaks.
-        boolean hyperspaceRoute = space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS;
-        if (hyperspaceRoute
-                && (phase == FlightPhase.HYPERSPACE || phase == FlightPhase.DECELERATE
-                    || phase == FlightPhase.ACCELERATE))
-            renderWarpStreaks(skyPose, event.getCamera(), partialTick, space);
-    }
-
-    private static void renderVisiblePlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
-                                              StarSystemResolver.ResolvedStarField stars)
+    static void renderVisiblePlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
+                                     SpaceCoordinateFrame coordinateFrame,
+                                     StarSystemResolver.ResolvedStarField stars)
     {
         boolean longRoute = space.warpDurationTicks() > ShipFlightController.SHORT_ROUTE_TICKS;
         float warpProgress = space.warpProgress();
@@ -724,7 +277,8 @@ public class PlanetRenderer
                 continue;
             }
 
-            Vec3 bodyCenter = virtualToView(UniverseNavigation.universeBodyPosition(body.entryId()), space);
+            Vec3 bodyCenter = coordinateFrame.toView(
+                    UniverseNavigation.universeBodyPosition(body.entryId()));
             double distance = bodyCenter.length();
             double angularDiameter = CelestialLodPolicy.angularDiameterDegrees(
                     UniverseNavigation.radius(body.entryId()), distance);
@@ -745,7 +299,7 @@ public class PlanetRenderer
             // the only visual transition, so an approaching planet cannot
             // appear, disappear, and then restart a second fade.
             if (detail > 0.001F)
-                renderVirtualPlanet(pose, camera, body, space, 1.0F, detail);
+                renderVirtualPlanet(pose, camera, body, space, coordinateFrame, 1.0F, detail);
         }
     }
 
@@ -778,9 +332,11 @@ public class PlanetRenderer
 
     /** Draw one body at true near distance or angularly projected on the sky shell. */
     private static void renderVirtualPlanet(PoseStack pose, Camera camera, CelestialBodyDefinition body,
-                                            SpaceRenderContext space, float alpha, float lodDetail)
+                                            SpaceRenderContext space, SpaceCoordinateFrame coordinateFrame,
+                                            float alpha, float lodDetail)
     {
-        Vec3 bodyCenter = virtualToView(UniverseNavigation.universeBodyPosition(body.entryId()), space);
+        Vec3 bodyCenter = coordinateFrame.toView(
+                UniverseNavigation.universeBodyPosition(body.entryId()));
         float bodyScale = (float) (UniverseNavigation.radius(body.entryId()) / PLANET_RADIUS);
         double distance = bodyCenter.length();
         if (distance > PLANET_SKY_DISTANCE)
@@ -818,228 +374,6 @@ public class PlanetRenderer
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
 
-    /** Camera rotation only: deliberately excludes walk/view bobbing. */
-    private static PoseStack stableCameraPose(Camera camera)
-    {
-        PoseStack pose = new PoseStack();
-        pose.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-        pose.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-        return pose;
-    }
-
-    /** Transform a universe coordinate into the rotation-only sky frame. */
-    private static Vec3 virtualToView(UniversePosition universePoint, SpaceRenderContext space)
-    {
-        Vec3 relative = space.universePosition().deltaTo(universePoint).toVec3();
-        relative = ShipSpace.rotateYaw(relative, -space.yaw());
-        return ShipSpace.rotatePitch(relative, -space.pitch());
-    }
-
-    /** The owning system's stellar visual, or null when the body has no system. */
-    private static StellarVisualProfile stellarProfile(CelestialBodyDefinition body)
-    {
-        StarSystemDefinition system = StarmapUniverse.systemOf(body.entryId());
-        return system == null ? null : system.stellarVisual();
-    }
-
-    private static void renderSystemStars(PoseStack pose, SpaceRenderContext space,
-                                          StarSystemResolver.ResolvedStarField stars)
-    {
-        double yawRadians = Math.toRadians(-space.yaw());
-        double yawCos = Math.cos(yawRadians);
-        double yawSin = Math.sin(yawRadians);
-        double pitchRadians = Math.toRadians(-space.pitch());
-        double pitchCos = Math.cos(pitchRadians);
-        double pitchSin = Math.sin(pitchRadians);
-
-        // LOD-2 points are submitted first in one additive batch. Nearer
-        // simplified/full discs render afterwards and can cover aligned points.
-        StellarPointBatchRenderer.render(pose, stars, yawCos, yawSin,
-                pitchCos, pitchSin);
-
-        for (int i = 0; i < stars.count(); i++)
-        {
-            StarSystemResolver.VisibleStar star = stars.star(i);
-            float simplifiedWeight = star.simplifiedLodWeight();
-            float fullWeight = star.fullLodWeight();
-            if (simplifiedWeight <= 0.002F && fullWeight <= 0.002F)
-                continue;
-            double viewX = star.relativeX() * yawCos + star.relativeZ() * yawSin;
-            double yawZ = -star.relativeX() * yawSin + star.relativeZ() * yawCos;
-            double viewY = star.relativeY() * pitchCos - yawZ * pitchSin;
-            double viewZ = star.relativeY() * pitchSin + yawZ * pitchCos;
-            StellarVisualProfile profile = star.system().stellarVisual();
-            float apparentScale = star.projectedRadius() / profile.getApparentRadius();
-            if (simplifiedWeight > 0.002F)
-                StellarRenderer.render(pose, profile, viewX, viewY, viewZ,
-                        StellarRenderer.SHIP_SKY_DISTANCE, star.stellarBrightness() * simplifiedWeight,
-                        space.animationTicks(), apparentScale, star.coronaDetail(),
-                        star.effectDetail(), StellarLod.SIMPLIFIED);
-            if (fullWeight > 0.002F)
-                StellarRenderer.render(pose, profile, viewX, viewY, viewZ,
-                        StellarRenderer.SHIP_SKY_DISTANCE, star.stellarBrightness() * fullWeight,
-                        space.animationTicks(), apparentScale, star.coronaDetail(),
-                        star.effectDetail(), StellarLod.FULL);
-        }
-    }
-
-    /**
-     * Very dark space dome with a subtle blue gradient. The ship dimension uses
-     * SkyType.NONE, so without this the sky behind the starfield is just the
-     * clear color; the dome guarantees a proper deep-space backdrop.
-     */
-    static void renderSpaceDome(PoseStack pose)
-    {
-        Matrix4f matrix = pose.last().pose();
-        FogRenderer.setupNoFog();
-        RenderSystem.disableBlend();
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-
-        // 430 keeps the cube corners (430*√3 ≈ 745) inside the default far plane
-        // (render distance 12 → 768); a larger dome gets clipped at the corners.
-        float s = 430.0F;
-        addDomeFace(bb, matrix, -s, -s, -s, s, -s, -s, s, s, -s, -s, s, -s);
-        addDomeFace(bb, matrix, -s, -s, s, s, -s, s, s, s, s, -s, s, s);
-        addDomeFace(bb, matrix, -s, -s, -s, -s, -s, s, -s, s, s, -s, s, -s);
-        addDomeFace(bb, matrix, s, -s, -s, s, -s, s, s, s, s, s, s, -s);
-        addDomeFace(bb, matrix, -s, s, -s, s, s, -s, s, s, s, -s, s, s);
-        addDomeFace(bb, matrix, -s, -s, -s, s, -s, -s, s, -s, s, -s, -s, s);
-
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-    }
-
-    private static void addDomeFace(BufferBuilder bb, Matrix4f matrix,
-                                    float x1, float y1, float z1,
-                                    float x2, float y2, float z2,
-                                    float x3, float y3, float z3,
-                                    float x4, float y4, float z4)
-    {
-        vertexColor(bb, matrix, x1, y1, z1, domeColor(y1));
-        vertexColor(bb, matrix, x2, y2, z2, domeColor(y2));
-        vertexColor(bb, matrix, x3, y3, z3, domeColor(y3));
-        vertexColor(bb, matrix, x4, y4, z4, domeColor(y4));
-    }
-
-    /** Slightly blue at the top, near-black at the bottom. */
-    private static float[] domeColor(float y)
-    {
-        float t = Math.max(0.0F, Math.min(1.0F, (y + 430.0F) / 860.0F));
-        return new float[] { lerp(0.010F, 0.028F, t), lerp(0.014F, 0.038F, t), lerp(0.035F, 0.095F, t), 1.0F };
-    }
-
-    /**
-     * Dense additive starfield on a shell at STAR_DISTANCE. The whole shell is
-     * rotated by the ship heading, so during the turn the stars sweep across the
-     * view exactly like the planet does.
-     */
-    static void renderStarField(PoseStack pose, float yawDeg, float pitchDeg,
-                                        float alpha, float convergence,
-                                        int tintColor, float tintAmount)
-    {
-        if (alpha <= 0.01F)
-            return;
-
-        Matrix4f matrix = pose.last().pose();
-        long now = System.currentTimeMillis();
-        float cy = (float) Math.cos(Math.toRadians(yawDeg));
-        float sy = (float) Math.sin(Math.toRadians(yawDeg));
-        float cp = (float) Math.cos(Math.toRadians(pitchDeg));
-        float sp = (float) Math.sin(Math.toRadians(pitchDeg));
-        float tintR = ((tintColor >> 16) & 0xFF) / 255.0F;
-        float tintG = ((tintColor >> 8) & 0xFF) / 255.0F;
-        float tintB = (tintColor & 0xFF) / 255.0F;
-
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-
-        for (int i = 0; i < STAR_COUNT; i++)
-        {
-            // Yaw around Y, then pitch around X (ship heading).
-            float x1 = STAR_X[i] * cy + STAR_Z[i] * sy;
-            float z1 = -STAR_X[i] * sy + STAR_Z[i] * cy;
-            float y2 = STAR_Y[i] * cp - z1 * sp;
-            float z2 = STAR_Y[i] * sp + z1 * cp;
-
-            // Hyperspace entrance: stars in the forward hemisphere collapse
-            // toward the flight axis before the tunnel takes over. Renormalize
-            // after squeezing so the star shell stays at a stable distance.
-            float frontWeight = smoothstep((z2 + 0.05F) / 0.95F);
-            float squeeze = 1.0F - 0.82F * convergence * frontWeight;
-            x1 *= squeeze;
-            y2 *= squeeze;
-            float dirLength = (float) Math.sqrt(x1 * x1 + y2 * y2 + z2 * z2);
-            if (dirLength > 0.0001F)
-            {
-                x1 /= dirLength;
-                y2 /= dirLength;
-                z2 /= dirLength;
-            }
-
-            float px = x1 * STAR_DISTANCE;
-            float py = y2 * STAR_DISTANCE;
-            float pz = z2 * STAR_DISTANCE;
-
-            // Billboard basis perpendicular to the star's own direction (the
-            // same trick vanilla stars use): the quad faces the camera from
-            // every direction and shrinks gracefully at grazing angles instead
-            // of blowing up, so no per-star frustum culling is needed and the
-            // whole sky stays populated.
-            float bx, bz;
-            if (Math.abs(y2) > 0.99F)
-            {
-                bx = 1.0F;
-                bz = 0.0F;
-            }
-            else
-            {
-                float inv = 1.0F / (float) Math.sqrt(z2 * z2 + x1 * x1);
-                bx = -z2 * inv;
-                bz = x1 * inv;
-            }
-            float ux = -bz * y2;
-            float uy = bz * x1 - bx * z2;
-            float uz = bx * y2;
-
-            float s = STAR_SIZE[i] * (1.0F + convergence * frontWeight * 0.65F);
-            float twinkle = 0.85F + 0.15F * (float) Math.sin(now * 0.003 + STAR_TWINKLE[i]);
-            float focusBrightness = 1.0F + convergence * frontWeight * 1.15F;
-            float a = Math.min(1.0F, STAR_BRIGHT[i] * alpha * twinkle * focusBrightness);
-
-            float r = lerp(STAR_R[i], tintR, tintAmount);
-            float g = lerp(STAR_G[i], tintG, tintAmount);
-            float b = lerp(STAR_B[i], tintB, tintAmount);
-            vertexColor(bb, matrix, px + (bx + ux) * s, py + uy * s, pz + (bz + uz) * s, r, g, b, a);
-            vertexColor(bb, matrix, px + (ux - bx) * s, py + uy * s, pz + (uz - bz) * s, r, g, b, a);
-            vertexColor(bb, matrix, px - (bx + ux) * s, py - uy * s, pz - (bz + uz) * s, r, g, b, a);
-            vertexColor(bb, matrix, px + (bx - ux) * s, py - uy * s, pz + (bz - uz) * s, r, g, b, a);
-        }
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-    }
-
     /**
      * Additive limb glow drawn as a single sphere shell around the planet. Alpha
      * is computed from the angular distance to the planet's projected limb: it is
@@ -1072,52 +406,54 @@ public class PlanetRenderer
         float innerRange = Math.max(0.0001F, limbAngle - innerAngle);
 
         FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-        for (int i = 0; i < HALO_X.length; i++)
+        try
         {
-            float wx = cx + HALO_X[i] * outerFactor * scale;
-            float wy = cy + HALO_Y[i] * outerFactor * scale;
-            float wz = cz + HALO_Z[i] * outerFactor * scale;
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            RenderSystem.disableCull();
+            RenderSystem.disableDepthTest();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-            float len = (float) Math.sqrt(wx * wx + wy * wy + wz * wz);
-            float vx = wx / len;
-            float vy = wy / len;
-            float vz = wz / len;
-            float dot = axisX * vx + axisY * vy + axisZ * vz;
-            dot = Math.max(-1.0F, Math.min(1.0F, dot));
-            float angle = (float) Math.acos(dot);
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            for (int i = 0; i < HALO_X.length; i++)
+            {
+                float wx = cx + HALO_X[i] * outerFactor * scale;
+                float wy = cy + HALO_Y[i] * outerFactor * scale;
+                float wz = cz + HALO_Z[i] * outerFactor * scale;
 
-            float a = 0.0F;
-            if (angle >= innerAngle && angle <= limbAngle)
-            {
-                // Ramp up from the inner edge to the limb so the glow overlaps
-                // the planet's rim and appears glued to the surface.
-                float t = (angle - innerAngle) / innerRange;
-                a = peak * smoothstep(t) * alpha;
+                float len = (float) Math.sqrt(wx * wx + wy * wy + wz * wz);
+                float vx = wx / len;
+                float vy = wy / len;
+                float vz = wz / len;
+                float dot = axisX * vx + axisY * vy + axisZ * vz;
+                dot = Math.max(-1.0F, Math.min(1.0F, dot));
+                float angle = (float) Math.acos(dot);
+
+                float a = 0.0F;
+                if (angle >= innerAngle && angle <= limbAngle)
+                {
+                    // Ramp up from the inner edge to the limb so the glow overlaps
+                    // the planet's rim and appears glued to the surface.
+                    float t = (angle - innerAngle) / innerRange;
+                    a = peak * smoothstep(t) * alpha;
+                }
+                else if (angle > limbAngle && angle <= outerAngle)
+                {
+                    float t = (angle - limbAngle) / angleRange;
+                    float fade = (float) Math.pow(1.0F - t, 1.5);
+                    a = peak * fade * alpha;
+                }
+                vertexColor(bb, matrix, wx, wy, wz, color.x, color.y, color.z, a);
             }
-            else if (angle > limbAngle && angle <= outerAngle)
-            {
-                float t = (angle - limbAngle) / angleRange;
-                float fade = (float) Math.pow(1.0F - t, 1.5);
-                a = peak * fade * alpha;
-            }
-            vertexColor(bb, matrix, wx, wy, wz, color.x, color.y, color.z, a);
+            BufferUploader.drawWithShader(bb.buildOrThrow());
         }
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 
     private static Vector3f fixedSunDirection(CelestialBodyDefinition body)
@@ -1154,37 +490,39 @@ public class PlanetRenderer
         float b = (color & 0xFF) / 255.0F;
 
         FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        Matrix4f matrix = pose.last().pose();
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-        for (int i = 0; i < 8; i++)
+        try
         {
-            double a0 = Math.PI * 2.0 * i / 8.0;
-            double a1 = Math.PI * 2.0 * (i + 1) / 8.0;
-            vertexColor(bb, matrix, cx, cy, cz, r, g, b, alpha);
-            vertexColor(bb, matrix,
-                    cx + (float) Math.cos(a0) * size,
-                    cy + (float) Math.sin(a0) * size, cz,
-                    r, g, b, alpha * 0.72F);
-            vertexColor(bb, matrix,
-                    cx + (float) Math.cos(a1) * size,
-                    cy + (float) Math.sin(a1) * size, cz,
-                    r, g, b, alpha * 0.72F);
-        }
-        BufferUploader.drawWithShader(bb.buildOrThrow());
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            RenderSystem.disableCull();
+            RenderSystem.disableDepthTest();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
+            Matrix4f matrix = pose.last().pose();
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            for (int i = 0; i < 8; i++)
+            {
+                double a0 = Math.PI * 2.0 * i / 8.0;
+                double a1 = Math.PI * 2.0 * (i + 1) / 8.0;
+                vertexColor(bb, matrix, cx, cy, cz, r, g, b, alpha);
+                vertexColor(bb, matrix,
+                        cx + (float) Math.cos(a0) * size,
+                        cy + (float) Math.sin(a0) * size, cz,
+                        r, g, b, alpha * 0.72F);
+                vertexColor(bb, matrix,
+                        cx + (float) Math.cos(a1) * size,
+                        cy + (float) Math.sin(a1) * size, cz,
+                        r, g, b, alpha * 0.72F);
+            }
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+        }
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 
     private static void renderPlanet(PoseStack pose, Camera cam, CelestialBodyDefinition body, float scale, float alpha,
@@ -1195,12 +533,15 @@ public class PlanetRenderer
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
         // The ring writes no depth either, so its far half is drawn first, the disk
         // second, and the near half last to read as orbiting the body.
-        if (hasRings(body))
-            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, false);
+        BodySpaceVisualProfile profile = visual(body);
+        if (RingRenderer.hasRings(profile))
+            RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
+                    shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose, pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
-        if (hasRings(body))
-            drawPlanetRings(pose, body, cx, cy, cz, scale, shipYaw, shipPitch, alpha, true);
+        if (RingRenderer.hasRings(profile))
+            RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
+                    shipYaw, shipPitch, alpha, true);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
@@ -1210,31 +551,43 @@ public class PlanetRenderer
                                                   float shipYaw, float shipPitch, float animationTicks)
     {
         FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, textureOf(body));
-        RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
+        try
+        {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.setShaderTexture(0, textureOf(body));
+            RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
-        // The VBO contains body-oriented positions and fixed per-vertex light.
-        // Only the ship view changes each frame, so compose it into the model
-        // matrix instead of allocating Vec3 objects and recalculating trig for
-        // every vertex.
-        Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
-                .mul(matrix)
-                .translate(cx, cy, cz)
-                .rotateX((float) Math.toRadians(-shipPitch))
-                .rotateY((float) Math.toRadians(-shipYaw))
-                .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
-                .scale(scale);
-        VertexBuffer surface = getPlanetSurfaceBuffer(body, worldSun, animationTicks);
-        surface.bind();
-        surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
-        VertexBuffer.unbind();
-
-        RenderSystem.setShaderColor(1,1,1,1); RenderSystem.depthMask(true); RenderSystem.disableBlend();
+            // The VBO contains body-oriented positions and fixed per-vertex light.
+            // Only the ship view changes each frame, so compose it into the model
+            // matrix instead of allocating Vec3 objects and recalculating trig for
+            // every vertex.
+            Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
+                    .mul(matrix)
+                    .translate(cx, cy, cz)
+                    .rotateX((float) Math.toRadians(-shipPitch))
+                    .rotateY((float) Math.toRadians(-shipYaw))
+                    .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
+                    .scale(scale);
+            VertexBuffer surface = getPlanetSurfaceBuffer(body, worldSun, animationTicks);
+            surface.bind();
+            try
+            {
+                surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+            }
+            finally
+            {
+                VertexBuffer.unbind();
+            }
+        }
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 
     private static VertexBuffer getPlanetSurfaceBuffer(CelestialBodyDefinition body, Vector3f worldSun,
@@ -1309,26 +662,36 @@ public class PlanetRenderer
                                  Vector3f sun, float brightness, float alpha)
     {
         FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
+        try
+        {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.setShaderTexture(0, texture);
+            RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
-        Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
-                .mul(matrix)
-                .translate(cx, cy, cz)
-                .scale(scale);
-        VertexBuffer surface = getMoonSurfaceBuffer(sun);
-        surface.bind();
-        surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
-        VertexBuffer.unbind();
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.depthMask(true);
-        RenderSystem.disableBlend();
+            Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
+                    .mul(matrix)
+                    .translate(cx, cy, cz)
+                    .scale(scale);
+            VertexBuffer surface = getMoonSurfaceBuffer(sun);
+            surface.bind();
+            try
+            {
+                surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+            }
+            finally
+            {
+                VertexBuffer.unbind();
+            }
+        }
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 
     private static VertexBuffer getMoonSurfaceBuffer(Vector3f sun)
@@ -1397,411 +760,10 @@ public class PlanetRenderer
         bb.addVertex(x, y, z).setColor(r, g, b, 1.0F).setUv(u, v);
     }
 
-    private static void renderWarpStreaks(PoseStack pose, Camera cam, float partialTick,
-                                          SpaceRenderContext space)
-    {
-        float progress = space.warpProgress();
-        FlightPhase flightPhase = space.flightPhase();
-        int duration = Math.max(1, space.warpDurationTicks());
-        float accelStart = ShipFlightController.TURN_TICKS / (float) duration;
-        float hyperspaceStart = (ShipFlightController.TURN_TICKS + ShipFlightController.ACCEL_TICKS) / (float) duration;
-
-        // Entrance choreography: the tunnel builds during the last part of the
-        // ship's turn as individual dots; the dots then stretch into streaks
-        // toward the vanishing point; only after the turn completes does the
-        // streak motion (the "jump") ramp in.
-        // Use the last half of ACCELERATE as the pre-jump buildup. The first
-        // quarter shows bright points, then they elongate while remaining fixed;
-        // actual forward motion starts exactly at HYPERSPACE.
-        float introStart = lerp(accelStart, hyperspaceStart, 0.45F);
-        float introSpan = Math.max(0.0001F, hyperspaceStart - introStart);
-        float introElapsed = Math.max(0.0F, Math.min(1.0F, (progress - introStart) / introSpan));
-        double fadeIn = smoothstep(introElapsed / 0.28F);
-        double introStretch = smoothstep((introElapsed - 0.22F) / 0.78F);
-
-        // Crossfade with the arriving planet: the tunnel fades out over the tail of the warp.
-        float decelStart = (duration - ShipFlightController.DECEL_TICKS - ShipFlightController.ARRIVE_TICKS) / (float) duration;
-        float fadeEnd = (duration - ShipFlightController.ARRIVE_TICKS) / (float) duration;
-        double tunnelFade = 1.0 - smoothstep((progress - decelStart) / Math.max(0.0001F, fadeEnd - decelStart));
-        double tunnelAlpha = tunnelFade * fadeIn;
-        if (tunnelAlpha <= 0.001)
-            return;
-
-        // Motion ramps in after the turn and keeps cruising until the tunnel
-        // crossfades out on arrival.
-        double motionIn = (flightPhase == FlightPhase.HYPERSPACE || flightPhase == FlightPhase.DECELERATE)
-                ? smoothstep((progress - hyperspaceStart) / Math.max(MOTION_RAMP, 0.015F)) : 0.0;
-
-        // Length: dots stretch with an overshoot for a smoother handoff into the
-        // motion phase, then settle at the cruise length.
-        double overshoot = STRETCH_OVERSHOOT * Math.max(0.0, introStretch - motionIn);
-        double lenScale = Math.max(MIN_LENGTH, introStretch) * (1.0 + overshoot);
-
-        Matrix4f matrix = pose.last().pose();
-        // Use the authoritative interpolated flight clock. This remains
-        // continuous through pauses and tracks the ship's actual acceleration
-        // instead of advancing independently on wall-clock time.
-        double animationTicks = progress * duration;
-
-        // Entrance geometry appears and stretches before it travels. A separate
-        // clock starts at the hyperspace boundary and eases its velocity from
-        // rest, avoiding the old pre-jump motion plus speed multiplier kick.
-        double hyperspaceStartTicks = hyperspaceStart * duration;
-        double cruiseTicks = Math.max(0.0, animationTicks - hyperspaceStartTicks);
-        double accelerationRamp = smoothstep((float) (cruiseTicks
-                / Math.max(1.0, duration * MOTION_RAMP)));
-        // Reach a substantially faster cruise without changing the zero-speed
-        // handoff. The eased multiplier preserves the heavy acceleration feel.
-        double motionTicks = cruiseTicks * (0.10 + 1.70 * accelerationRamp);
-        double motionLengthScale = lenScale * (1.0 + 0.42 * accelerationRamp);
-
-        // A slow intensity breath keeps the long hyperspace middle alive
-        // without introducing a visible camera shake or changing travel speed.
-        double cruiseBreath = 0.94 + 0.06 * Math.sin(cruiseTicks * 0.16);
-        tunnelAlpha *= cruiseBreath;
-
-        // Slow rotation of the whole tunnel; streaks lengthen as the warp progresses.
-        double swirl = motionTicks * 0.006;
-
-        // Near arrival the tunnel shifts toward the target star's corona color,
-        // linking the jump flash to the stellar identity of the destination.
-        float tintAmount = 0.0F;
-        Vector3f arrivalTint = null;
-        String targetSystemId = StarmapUniverse.systemIdOfEntry(space.targetBodyId());
-        if (targetSystemId != null && progress >= WarpVisualTiming.ARRIVAL_FADE_START)
-        {
-            arrivalTint = STELLAR_CORONA_COLORS.get(targetSystemId);
-            tintAmount = smoothstep((progress - WarpVisualTiming.ARRIVAL_FADE_START)
-                    / (1.0F - WarpVisualTiming.ARRIVAL_FADE_START)) * 0.65F;
-        }
-
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableCull();
-        RenderSystem.depthMask(false);
-        RenderSystem.disableDepthTest();
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-
-        // Distant star layer: thin, slow, dim streaks behind the main tunnel.
-        // Drawn first so the bright foreground streaks layer on top.
-        for (int i = 0; i < TUNNEL_STAR_COUNT; i++)
-        {
-            double theta = TUNNEL_THETA[i] + swirl * 0.55;
-            double d = TUNNEL_RADIUS[i];
-            double rx = Math.cos(theta) * d;
-            double ry = Math.sin(theta) * d;
-
-            double period = TUNNEL_PERIOD[i];
-            double travel = ((motionTicks * 0.62 + TUNNEL_PHASE[i]) % period) / period;
-            double headZ = TUNNEL_NEAR_Z + (1.0 - travel) * (TUNNEL_FAR_Z - TUNNEL_NEAR_Z);
-            double tailZ = Math.min(TUNNEL_FAR_Z + 34.0, headZ + 8.0 + 26.0 * motionLengthScale);
-            // Keep a star on one world-space ray and vary only depth. Scaling
-            // x/y by z here would preserve the same screen coordinate at both
-            // ends, collapsing the streak into a point after projection.
-            double headX = rx;
-            double headY = ry;
-            double tailX = rx;
-            double tailY = ry;
-            double halfW = TUNNEL_WIDTH[i];
-            double fade = 0.15 + 0.85 * travel;
-            double alpha = 0.36 * fade * (1.0 - progress * 0.16) * tunnelAlpha;
-
-            // Width is applied along the tangential (perpendicular to radial)
-            // direction, so every streak points at the vanishing point.
-            double len = Math.max(0.0001, d);
-            double tx = -ry / len;
-            double ty = rx / len;
-            float cr = 0.72F, cg = 0.82F, cb = 1.0F;
-            if (arrivalTint != null)
-            {
-                cr = lerp(cr, arrivalTint.x, tintAmount);
-                cg = lerp(cg, arrivalTint.y, tintAmount);
-                cb = lerp(cb, arrivalTint.z, tintAmount);
-            }
-            float a = (float) alpha;
-
-            taperedStreak(bb, matrix, headX, headY, headZ, tailX, tailY, tailZ,
-                    tx, ty, halfW, halfW * 0.70, cr, cg, cb, a);
-        }
-
-        // Main foreground streak tunnel.
-        for (int i = 0; i < STREAK_COUNT; i++)
-        {
-            // radial distribution around the view axis, biased toward the core
-            double theta = STREAK_THETA[i] + swirl;
-            double d = STREAK_RADIUS[i];
-            double rx = Math.cos(theta) * d;
-            double ry = Math.sin(theta) * d;
-
-            double period = STREAK_PERIOD[i];
-            double travel = ((motionTicks * 0.88 + STREAK_PHASE[i]) % period) / period;
-            double headZ = TUNNEL_NEAR_Z + (1.0 - travel) * (TUNNEL_FAR_Z - TUNNEL_NEAR_Z);
-            double tailZ = Math.min(TUNNEL_FAR_Z + 48.0, headZ + 14.0 + 42.0 * motionLengthScale);
-            double headX = rx;
-            double headY = ry;
-            double tailX = rx;
-            double tailY = ry;
-
-            double halfW = STREAK_WIDTH[i];
-            double fade = 0.15 + 0.85 * travel;
-            double alpha = 0.66 * fade * (1.0 - progress * 0.18) * tunnelAlpha;
-
-            // Mostly ice blue-white, with cyan and violet accents.
-            float cr, cg, cb;
-            double tint = ((i * 37) % 100) / 100.0;
-            if (tint < 0.12)
-            {
-                cr = 0.75F; cg = 0.65F; cb = 1.0F;
-            }
-            else if (tint < 0.30)
-            {
-                cr = 0.55F; cg = 0.95F; cb = 1.0F;
-            }
-            else
-            {
-                cr = 0.85F; cg = 0.95F; cb = 1.0F;
-            }
-            if (arrivalTint != null)
-            {
-                cr = lerp(cr, arrivalTint.x, tintAmount);
-                cg = lerp(cg, arrivalTint.y, tintAmount);
-                cb = lerp(cb, arrivalTint.z, tintAmount);
-            }
-
-            // Same tangential width as the star layer: radial streaks, not bars.
-            double len = Math.max(0.0001, d);
-            double tx = -ry / len;
-            double ty = rx / len;
-            taperedStreak(bb, matrix, headX, headY, headZ, tailX, tailY, tailZ,
-                    tx, ty, halfW, halfW * 0.80, cr, cg, cb, (float) alpha);
-            taperedStreak(bb, matrix, headX, headY, headZ, tailX, tailY, tailZ,
-                    tx, ty, halfW * 0.22, halfW * 0.12,
-                    0.96F, 0.99F, 1.0F, (float) Math.min(1.0, alpha * 1.35));
-        }
-
-        // Near layer: fewer, broader streaks with a shorter travel depth. The
-        // parallax against the mid layer makes the tunnel read as volume rather
-        // than a flat set of radial bars.
-        for (int i = 0; i < NEAR_STREAK_COUNT; i++)
-        {
-            double theta = NEAR_THETA[i] + swirl * 1.25;
-            double d = NEAR_RADIUS[i];
-            double rx = Math.cos(theta) * d;
-            double ry = Math.sin(theta) * d;
-            double period = NEAR_PERIOD[i];
-            double travel = ((motionTicks * 1.12 + NEAR_PHASE[i]) % period) / period;
-            double headZ = TUNNEL_NEAR_Z + (1.0 - travel) * (TUNNEL_FAR_Z - TUNNEL_NEAR_Z);
-            double tailZ = Math.min(TUNNEL_FAR_Z + 64.0, headZ + 20.0 + 58.0 * motionLengthScale);
-            double tailX = rx;
-            double tailY = ry;
-            double headX = rx;
-            double headY = ry;
-            double halfW = NEAR_WIDTH[i];
-            double fade = 0.15 + 0.85 * travel;
-            double alpha = 0.82 * fade * (1.0 - progress * 0.14) * tunnelAlpha;
-            double len = Math.max(0.0001, d);
-            double tx = -ry / len;
-            double ty = rx / len;
-            float cr = 0.72F, cg = 0.92F, cb = 1.0F;
-            if (arrivalTint != null)
-            {
-                cr = lerp(cr, arrivalTint.x, tintAmount);
-                cg = lerp(cg, arrivalTint.y, tintAmount);
-                cb = lerp(cb, arrivalTint.z, tintAmount);
-            }
-            taperedStreak(bb, matrix, headX, headY, headZ, tailX, tailY, tailZ,
-                    tx, ty, halfW, halfW * 0.72, cr, cg, cb, (float) alpha);
-            taperedStreak(bb, matrix, headX, headY, headZ, tailX, tailY, tailZ,
-                    tx, ty, halfW * 0.20, halfW * 0.11,
-                    1.0F, 1.0F, 1.0F, (float) Math.min(1.0, alpha * 1.45));
-        }
-
-        // Edge layer: short, fast particles with a much wider radial spread.
-        // These cross the outer screen instead of clustering around the core.
-        for (int i = 0; i < EDGE_STREAK_COUNT; i++)
-        {
-            double theta = EDGE_THETA[i] + swirl * 1.55;
-            double d = EDGE_RADIUS[i];
-            double rx = Math.cos(theta) * d;
-            double ry = Math.sin(theta) * d;
-            double period = EDGE_PERIOD[i];
-            double travel = ((motionTicks * 1.55 + EDGE_PHASE[i]) % period) / period;
-            double headZ = TUNNEL_NEAR_Z + (1.0 - travel) * 96.0;
-            double tailZ = Math.min(148.0, headZ + 8.0 + 24.0 * motionLengthScale);
-            double len = Math.max(0.0001, d);
-            double tx = -ry / len;
-            double ty = rx / len;
-            double alpha = 0.58 * (0.20 + 0.80 * travel) * (1.0 - progress * 0.16) * tunnelAlpha;
-            float cr = 0.48F, cg = 0.82F, cb = 1.0F;
-            if (arrivalTint != null)
-            {
-                cr = lerp(cr, arrivalTint.x, tintAmount * 0.5F);
-                cg = lerp(cg, arrivalTint.y, tintAmount * 0.5F);
-                cb = lerp(cb, arrivalTint.z, tintAmount * 0.5F);
-            }
-            taperedStreak(bb, matrix, rx, ry, headZ, rx, ry, tailZ,
-                    tx, ty, EDGE_WIDTH[i], EDGE_WIDTH[i] * 0.55, cr, cg, cb, (float) alpha);
-            taperedStreak(bb, matrix, rx, ry, headZ, rx, ry, tailZ,
-                    tx, ty, EDGE_WIDTH[i] * 0.18, EDGE_WIDTH[i] * 0.09,
-                    0.92F, 0.98F, 1.0F, (float) Math.min(1.0, alpha * 1.30));
-        }
-
-        // Full surround shell. Unlike the forward tunnel, z spans both sides of
-        // the camera, so turning toward a side or rear window still reveals
-        // flowing space. The near-camera exclusion prevents sudden white clips.
-        for (int i = 0; i < SURROUND_STREAK_COUNT; i++)
-        {
-            double theta = SURROUND_THETA[i] + swirl * 0.38;
-            double radius = SURROUND_RADIUS[i];
-            double x = Math.cos(theta) * radius;
-            double y = Math.sin(theta) * radius;
-            double period = SURROUND_PERIOD[i];
-            double travel = ((motionTicks * 0.78 + SURROUND_PHASE[i]) % period) / period;
-            double headZ = -170.0 + travel * 340.0;
-            if (Math.abs(headZ) < 7.0)
-                headZ = Math.copySign(7.0, headZ == 0.0 ? 1.0 : headZ);
-            double direction = headZ >= 0.0 ? 1.0 : -1.0;
-            double tailZ = headZ + direction * (10.0 + 34.0 * motionLengthScale);
-            double alpha = 0.42 * (0.45 + 0.55 * Math.abs(headZ) / 170.0)
-                    * (0.35 + 0.65 * smoothstep((float) Math.min(1.0, cruiseTicks / 18.0))) * tunnelAlpha;
-            double tx = -Math.sin(theta);
-            double ty = Math.cos(theta);
-            float cr = 0.62F, cg = 0.86F, cb = 1.0F;
-            if (arrivalTint != null)
-            {
-                cr = lerp(cr, arrivalTint.x, tintAmount * 0.45F);
-                cg = lerp(cg, arrivalTint.y, tintAmount * 0.45F);
-                cb = lerp(cb, arrivalTint.z, tintAmount * 0.45F);
-            }
-            taperedStreak(bb, matrix, x, y, headZ, x, y, tailZ,
-                    tx, ty, SURROUND_WIDTH[i], SURROUND_WIDTH[i] * 0.62,
-                    cr, cg, cb, (float) alpha);
-            taperedStreak(bb, matrix, x, y, headZ, x, y, tailZ,
-                    tx, ty, SURROUND_WIDTH[i] * 0.18, SURROUND_WIDTH[i] * 0.10,
-                    0.90F, 0.97F, 1.0F, (float) Math.min(0.90, alpha * 1.25));
-        }
-
-        // Core glow at the vanishing point (+Z is forward): pulses, grows as the
-        // warp progresses, and picks up the target planet's color on approach.
-        double pulse = 0.18 + 0.04 * Math.sin(animationTicks * 0.16);
-        float coreR = 0.35F, coreG = 0.75F, coreB = 1.0F;
-        if (arrivalTint != null)
-        {
-            coreR = lerp(coreR, arrivalTint.x, tintAmount);
-            coreG = lerp(coreG, arrivalTint.y, tintAmount);
-            coreB = lerp(coreB, arrivalTint.z, tintAmount);
-        }
-        float coreGrow = 1.0F + progress * 0.9F;
-        // The core blooms as the dots stretch toward the vanishing point.
-        float coreBloom = 0.4F + 0.6F * (float) introStretch;
-        double coreAlpha = tunnelAlpha * introStretch;
-        drawRadialGlow(bb, matrix, 44.0F * coreGrow * coreBloom,
-                coreR, coreG, coreB, (float) (pulse * coreAlpha));
-        drawRadialGlow(bb, matrix, 14.0F * coreGrow * coreBloom,
-                1.0F, 1.0F, 1.0F, (float) (pulse * 1.25 * coreAlpha));
-
-        // Localized hyperspace-entry flash. It blooms at the vanishing point
-        // for a fraction of a second instead of covering the entire viewport.
-        // The short span keeps this distinct from the normal cruising glow.
-        double entryT = (progress - hyperspaceStart) / 0.025F;
-        double entryUp = smoothstep((float) (entryT / 0.16));
-        double entryDown = smoothstep((float) ((entryT - 0.16) / 0.84));
-        double entryFlash = entryUp * (1.0 - entryDown);
-        if (entryFlash > 0.001)
-        {
-            double flashAlpha = entryFlash * tunnelAlpha;
-            // Full-viewport entry flash. The outer ring is large enough to
-            // cover the complete projection at the tunnel depth; its lower
-            // opacity preserves the blue-white falloff instead of producing a
-            // flat opaque white frame.
-            drawRadialGlow(bb, matrix, 920.0F * (1.0F + (float) entryFlash * 0.12F),
-                    coreR, coreG, coreB, (float) (flashAlpha * 0.30));
-            drawRadialGlow(bb, matrix, 600.0F * (1.0F + (float) entryFlash * 0.16F),
-                    0.66F, 0.88F, 1.0F, (float) (flashAlpha * 0.46));
-            drawRadialGlow(bb, matrix, 190.0F * (1.0F + (float) entryFlash * 0.22F),
-                    1.0F, 1.0F, 1.0F, (float) (flashAlpha * 0.80));
-        }
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-    }
-
-    /** Multi-ring radial falloff without a texture or visible square boundary. */
-    private static void drawRadialGlow(BufferBuilder bb, Matrix4f matrix, float radius,
-                                       float r, float g, float b, float alpha)
-    {
-        final int segments = 64;
-        float[] rings = { 0.0F, 0.18F, 0.42F, 0.72F, 1.0F };
-        float[] alphas = { alpha, alpha * 0.82F, alpha * 0.42F, alpha * 0.12F, 0.0F };
-        for (int ring = 0; ring < rings.length - 1; ring++)
-        {
-            float inner = radius * rings[ring];
-            float outer = radius * rings[ring + 1];
-            for (int i = 0; i < segments; i++)
-            {
-                double a0 = Math.PI * 2.0 * i / segments;
-                double a1 = Math.PI * 2.0 * (i + 1) / segments;
-                float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0);
-                float c1 = (float) Math.cos(a1), s1 = (float) Math.sin(a1);
-                vertexColor(bb, matrix, c0 * inner, s0 * inner, 300.0F, r, g, b, alphas[ring]);
-                vertexColor(bb, matrix, c1 * inner, s1 * inner, 300.0F, r, g, b, alphas[ring]);
-                vertexColor(bb, matrix, c1 * outer, s1 * outer, 300.0F, r, g, b, alphas[ring + 1]);
-                vertexColor(bb, matrix, c0 * inner, s0 * inner, 300.0F, r, g, b, alphas[ring]);
-                vertexColor(bb, matrix, c1 * outer, s1 * outer, 300.0F, r, g, b, alphas[ring + 1]);
-                vertexColor(bb, matrix, c0 * outer, s0 * outer, 300.0F, r, g, b, alphas[ring + 1]);
-            }
-        }
-    }
-
-    /** Pointed streak geometry avoids the square cap produced by a wide quad. */
-    private static void taperedStreak(BufferBuilder bb, Matrix4f matrix,
-                                      double headX, double headY, double headZ,
-                                      double tailX, double tailY, double tailZ,
-                                      double tx, double ty, double halfWidth,
-                                      double tailHalfWidth, float r, float g, float b,
-                                      float headAlpha)
-    {
-        float hx = (float) headX, hy = (float) headY, hz = (float) headZ;
-        float tailPlusX = (float) (tailX + tx * tailHalfWidth);
-        float tailPlusY = (float) (tailY + ty * tailHalfWidth);
-        float tailMinusX = (float) (tailX - tx * tailHalfWidth);
-        float tailMinusY = (float) (tailY - ty * tailHalfWidth);
-        float tailZf = (float) tailZ;
-        float shoulderPlusX = (float) (headX + (tailX - headX) * 0.16 + tx * halfWidth * 0.18);
-        float shoulderPlusY = (float) (headY + (tailY - headY) * 0.16 + ty * halfWidth * 0.18);
-        float shoulderMinusX = (float) (headX + (tailX - headX) * 0.16 - tx * halfWidth * 0.18);
-        float shoulderMinusY = (float) (headY + (tailY - headY) * 0.16 - ty * halfWidth * 0.18);
-        float shoulderZ = (float) (headZ + (tailZ - headZ) * 0.16);
-
-        // Pointed cap.
-        vertexColor(bb, matrix, hx, hy, hz, r, g, b, headAlpha);
-        vertexColor(bb, matrix, shoulderPlusX, shoulderPlusY, shoulderZ, r, g, b, headAlpha * 0.72F);
-        vertexColor(bb, matrix, shoulderMinusX, shoulderMinusY, shoulderZ, r, g, b, headAlpha * 0.72F);
-        // Filled fading ribbon behind the cap.
-        vertexColor(bb, matrix, shoulderPlusX, shoulderPlusY, shoulderZ, r, g, b, headAlpha * 0.72F);
-        vertexColor(bb, matrix, tailPlusX, tailPlusY, tailZf, r, g, b, headAlpha * 0.035F);
-        vertexColor(bb, matrix, tailMinusX, tailMinusY, tailZf, r, g, b, headAlpha * 0.035F);
-        vertexColor(bb, matrix, shoulderPlusX, shoulderPlusY, shoulderZ, r, g, b, headAlpha * 0.72F);
-        vertexColor(bb, matrix, tailMinusX, tailMinusY, tailZf, r, g, b, headAlpha * 0.035F);
-        vertexColor(bb, matrix, shoulderMinusX, shoulderMinusY, shoulderZ, r, g, b, headAlpha * 0.72F);
-    }
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z,
                                     float r, float g, float b, float a)
     {
         bb.addVertex(matrix, x, y, z).setColor(r, g, b, a);
-    }
-
-    private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z, float[] rgba)
-    {
-        vertexColor(bb, matrix, x, y, z, rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 }

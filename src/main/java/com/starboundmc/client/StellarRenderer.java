@@ -76,97 +76,92 @@ public final class StellarRenderer
         float cy = dy * shellDistance;
         float cz = dz * shellDistance;
 
-        ensureBuffers();
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-
-        float radiation = profile.getRadiationStrength();
-        coronaDetail = Math.max(0.0F, Math.min(1.0F, coronaDetail));
-        effectDetail = Math.max(0.0F, Math.min(1.0F, effectDetail));
-        float pulsePhase = animationTicks * profile.getPulseSpeed();
-        float pulse = 1.0F + 0.025F * (float) Math.sin(pulsePhase);
-        if (radiation > 0.0F)
-            pulse += radiation * 0.035F * (float) Math.sin(pulsePhase * 2.37F + 1.4F);
-        float radius = profile.getApparentRadius() * apparentScale * pulse;
-        float nearField = Math.max(0.0F, Math.min(1.0F, (radius - 28.0F) / 44.0F));
-
-        // Keep the simplified disc at least as wide as the batch point core so
-        // the point/simplified crossfade never looks like a temporary shrink.
-        if (lod == StellarLod.SIMPLIFIED)
-            radius = Math.max(radius, 1.45F);
-        if (lod == StellarLod.SIMPLIFIED)
+        try
         {
+            ensureBuffers();
+            FogRenderer.setupNoFog();
+            RenderSystem.enableBlend();
+            RenderSystem.disableCull();
+            RenderSystem.disableDepthTest();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+
+            float radiation = profile.getRadiationStrength();
+            coronaDetail = Math.max(0.0F, Math.min(1.0F, coronaDetail));
+            effectDetail = Math.max(0.0F, Math.min(1.0F, effectDetail));
+            float pulsePhase = animationTicks * profile.getPulseSpeed();
+            float pulse = 1.0F + 0.025F * (float) Math.sin(pulsePhase);
+            if (radiation > 0.0F)
+                pulse += radiation * 0.035F * (float) Math.sin(pulsePhase * 2.37F + 1.4F);
+            float radius = profile.getApparentRadius() * apparentScale * pulse;
+            float nearField = Math.max(0.0F, Math.min(1.0F, (radius - 28.0F) / 44.0F));
+
+            // Keep the simplified disc at least as wide as the batch point core so
+            // the point/simplified crossfade never looks like a temporary shrink.
+            if (lod == StellarLod.SIMPLIFIED)
+                radius = Math.max(radius, 1.45F);
+            if (lod == StellarLod.SIMPLIFIED)
+            {
+                RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+                drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * 1.65F, 0.0F, profile.getCoronaColor(),
+                        alpha * (0.12F + coronaDetail * 0.18F));
+                RenderSystem.defaultBlendFunc();
+                drawLayer(discBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius, 0.0F, profile.getSurfaceColor(), alpha);
+                return;
+            }
+
+            // Additive energy layers are behind the opaque photosphere.
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            if (radiation > 0.0F && effectDetail > 0.08F)
+            {
+                float phaseA = fractional(animationTicks * 0.0065F);
+                float phaseB = fractional(phaseA + 0.5F);
+                drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * (1.65F + phaseA * 2.25F), animationTicks * 0.0022F,
+                        profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseA) * 0.34F);
+                drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * (1.65F + phaseB * 2.25F), -animationTicks * 0.0017F,
+                        profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseB) * 0.25F);
+                drawLayer(particleBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * 2.85F, -animationTicks * 0.0031F,
+                        profile.getCoronaColor(), alpha * radiation * effectDetail * 0.42F);
+            }
+
+            float flare = profile.getFlareStrength();
+            if (flare > 0.0F && effectDetail > 0.08F)
+            {
+                drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * (2.30F + flare * 0.75F), animationTicks * 0.0018F,
+                        profile.getCoronaColor(), alpha * flare * effectDetail * 0.62F);
+                drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
+                        radius * (1.85F + flare * 0.50F), -animationTicks * 0.0026F,
+                        profile.getCoreColor(), alpha * flare * effectDetail * 0.25F);
+            }
+
             drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * 1.65F, 0.0F, profile.getCoronaColor(),
-                    alpha * (0.12F + coronaDetail * 0.18F));
+                    radius * profile.getGlowScale(), 0.0F,
+                    profile.getCoronaColor(), alpha * (0.035F + coronaDetail * 0.235F
+                            + radiation * effectDetail * 0.10F + nearField * coronaDetail * 0.10F));
+            drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+                    radius * 1.48F, 0.0F,
+                    profile.getSurfaceColor(), alpha * (0.08F + coronaDetail * 0.28F));
+
+            // The surface uses normal alpha blending so background stars do not
+            // shine through its solid disc. A small additive core prevents flatness.
             RenderSystem.defaultBlendFunc();
             drawLayer(discBuffer, pose, cx, cy, cz, dx, dy, dz,
                     radius, 0.0F, profile.getSurfaceColor(), alpha);
-            restoreRenderState();
-            return;
-        }
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+                    radius * 0.72F, 0.0F, profile.getCoreColor(), alpha * 0.52F);
 
-        // Additive energy layers are behind the opaque photosphere.
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        if (radiation > 0.0F && effectDetail > 0.08F)
+        }
+        finally
         {
-            float phaseA = fractional(animationTicks * 0.0065F);
-            float phaseB = fractional(phaseA + 0.5F);
-            drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * (1.65F + phaseA * 2.25F), animationTicks * 0.0022F,
-                    profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseA) * 0.34F);
-            drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * (1.65F + phaseB * 2.25F), -animationTicks * 0.0017F,
-                    profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseB) * 0.25F);
-            drawLayer(particleBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * 2.85F, -animationTicks * 0.0031F,
-                    profile.getCoronaColor(), alpha * radiation * effectDetail * 0.42F);
+            SpaceRenderPassState.restoreDefaults();
         }
-
-        float flare = profile.getFlareStrength();
-        if (flare > 0.0F && effectDetail > 0.08F)
-        {
-            drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * (2.30F + flare * 0.75F), animationTicks * 0.0018F,
-                    profile.getCoronaColor(), alpha * flare * effectDetail * 0.62F);
-            drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
-                    radius * (1.85F + flare * 0.50F), -animationTicks * 0.0026F,
-                    profile.getCoreColor(), alpha * flare * effectDetail * 0.25F);
-        }
-
-        drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
-                radius * profile.getGlowScale(), 0.0F,
-                profile.getCoronaColor(), alpha * (0.035F + coronaDetail * 0.235F
-                        + radiation * effectDetail * 0.10F + nearField * coronaDetail * 0.10F));
-        drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
-                radius * 1.48F, 0.0F,
-                profile.getSurfaceColor(), alpha * (0.08F + coronaDetail * 0.28F));
-
-        // The surface uses normal alpha blending so background stars do not
-        // shine through its solid disc. A small additive core prevents flatness.
-        RenderSystem.defaultBlendFunc();
-        drawLayer(discBuffer, pose, cx, cy, cz, dx, dy, dz,
-                radius, 0.0F, profile.getSurfaceColor(), alpha);
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
-                radius * 0.72F, 0.0F, profile.getCoreColor(), alpha * 0.52F);
-
-        restoreRenderState();
-    }
-
-    private static void restoreRenderState()
-    {
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
     }
 
     private static float fractional(float value)
