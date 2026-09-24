@@ -30,7 +30,7 @@ public final class ModBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
     public static final DeferredBlock<StarmapTerminalBlock> STARMAP_TERMINAL = BLOCKS.registerBlock(
             "starmap_terminal", StarmapTerminalBlock::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 8));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().lightLevel(state -> 8));
     public static final DeferredBlock<ShipAiTerminalBlock> SHIP_AI_TERMINAL = BLOCKS.registerBlock(
             "ship_ai_terminal", ShipAiTerminalBlock::new,
             BlockBehaviour.Properties.of()

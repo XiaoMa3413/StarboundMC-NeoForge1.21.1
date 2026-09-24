@@ -1,0 +1,36 @@
+# Blockbench MCP materials; chart and instrument surfaces are emissive.
+
+newmtl terminal_amber
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_amber
+
+newmtl terminal_chart
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_chart
+
+newmtl terminal_cyan
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_cyan
+
+newmtl terminal_edge
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_edge
+
+newmtl terminal_graphite
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_graphite
+
+newmtl terminal_instruments
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_instruments
+
+newmtl terminal_titanium
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/terminal_titanium

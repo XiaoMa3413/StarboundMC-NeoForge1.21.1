@@ -304,10 +304,6 @@ final class Stage10ResourcesTest {
         assertNotNull(edges);
         assertEquals(1024, edges.getWidth());
         assertEquals(1024, edges.getHeight());
-        JsonObject navigation = json(ASSETS.resolve("models/block/starmap_terminal.json"));
-        assertEquals("minecraft:block/block", navigation.get("parent").getAsString());
-        assertFalse(navigation.getAsJsonArray("elements").isEmpty());
-
         Path screen = ASSETS.resolve("textures/block/ship_ai_terminal_screen.png");
         BufferedImage image = ImageIO.read(screen.toFile());
         assertNotNull(image);
@@ -321,7 +317,7 @@ final class Stage10ResourcesTest {
 
     @Test
     void commandDeckFacesKeepConsistentTexelDensity() throws IOException {
-        for (String name : List.of("ship_ai_terminal", "starmap_terminal")) {
+        for (String name : List.of("ship_ai_terminal")) {
             for (JsonElement entry : json(ASSETS.resolve("models/block/" + name + ".json"))
                     .getAsJsonArray("elements")) {
                 JsonObject element = entry.getAsJsonObject();
@@ -355,6 +351,63 @@ final class Stage10ResourcesTest {
                 }
             }
         }
+    }
+
+    @Test
+    void starmapTerminalObjPackagesItsMaterialsAndContinuousChartMapping() throws IOException {
+        JsonObject model = json(ASSETS.resolve("models/block/starmap_terminal.json"));
+        assertEquals("neoforge:obj", model.get("loader").getAsString());
+        assertEquals("starboundmc:models/block/starmap_console.obj", model.get("model").getAsString());
+        assertFalse(model.get("automatic_culling").getAsBoolean());
+        String obj = Files.readString(ASSETS.resolve("models/block/starmap_console.obj"));
+        assertTrue(obj.contains("mtllib starmap_console.mtl"));
+        assertTrue(obj.lines().filter(line -> line.startsWith("f ")).count() > 500);
+        String mtl = Files.readString(ASSETS.resolve("models/block/starmap_console.mtl"));
+        Set<String> declared = new HashSet<>();
+        for (String line : mtl.lines().toList()) {
+            if (line.startsWith("newmtl ")) declared.add(line.substring(7));
+            if (line.startsWith("map_Kd ")) assertTexture(line.substring(7), ASSETS.resolve("models/block/starmap_console.mtl"));
+        }
+        Set<String> used = new HashSet<>();
+        obj.lines().filter(line -> line.startsWith("usemtl ")).forEach(line -> used.add(line.substring(7)));
+        assertEquals(declared, used, "Every OBJ material must resolve to the packaged MTL");
+        for (String texture : List.of("terminal_chart", "terminal_instruments")) {
+            var image = ImageIO.read(ASSETS.resolve("textures/block/" + texture + ".png").toFile());
+            assertNotNull(image);
+            assertEquals(128, image.getWidth());
+            assertEquals(128, image.getHeight());
+        }
+
+        JsonObject source = json(Path.of("docs/models/starmap-console-textured-v1.bbmodel"));
+        JsonObject chart = null;
+        int chartTexture = -1;
+        for (int i = 0; i < source.getAsJsonArray("textures").size(); i++) {
+            if (source.getAsJsonArray("textures").get(i).getAsJsonObject().get("name").getAsString().equals("terminal_chart"))
+                chartTexture = i;
+        }
+        for (JsonElement element : source.getAsJsonArray("elements")) {
+            if (element.getAsJsonObject().get("name").getAsString().equals("inset_chart_glass"))
+                chart = element.getAsJsonObject();
+        }
+        assertNotNull(chart);
+        assertTrue(chartTexture >= 0);
+        var seen = new java.util.HashMap<String, JsonElement>();
+        int chartFaces = 0;
+        for (var face : chart.getAsJsonObject("faces").asMap().values()) {
+            var f = face.getAsJsonObject();
+            if (f.get("texture").getAsInt() != chartTexture) continue;
+            chartFaces++;
+            for (var entry : f.getAsJsonObject("uv").entrySet()) {
+                var previous = seen.putIfAbsent(entry.getKey(), entry.getValue());
+                if (previous != null) assertEquals(previous, entry.getValue(), "Shared chart vertices must not split UVs");
+            }
+        }
+        assertTrue(chartFaces > 1 && seen.size() > 4, "Check the triangulated chart surface, not an empty mapping");
+        assertTrue(seen.values().stream().anyMatch(value -> {
+            var uv = value.getAsJsonArray();
+            return uv.get(0).getAsDouble() > 32 && uv.get(0).getAsDouble() < 96
+                    && uv.get(1).getAsDouble() > 32 && uv.get(1).getAsDouble() < 96;
+        }), "The chart centre must map to the texture centre, not repeat a corner on every triangle");
     }
 
     @Test
