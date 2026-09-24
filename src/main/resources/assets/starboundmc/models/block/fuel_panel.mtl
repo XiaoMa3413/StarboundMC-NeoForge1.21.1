@@ -1,0 +1,36 @@
+# Blockbench MCP materials; only the amber display surface is emissive.
+
+newmtl fuel_panel_amber
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_amber
+
+newmtl fuel_panel_edge
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_edge
+
+newmtl fuel_panel_graphite
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_graphite
+
+newmtl fuel_panel_markings
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_markings
+
+newmtl fuel_panel_rubber
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_rubber
+
+newmtl fuel_panel_screen
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_screen
+
+newmtl fuel_panel_titanium
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/fuel_panel_titanium

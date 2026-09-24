@@ -344,9 +344,40 @@ public final class Stage2Blocks {
 
     public static final class FuelController extends FacingEntityBlock {
         public static final MapCodec<FuelController> CODEC = simpleCodec(FuelController::new);
+        private static final VoxelShape NORTH = Block.box(0.5, 2, 12.35, 15.5, 14, 16);
+        private static final VoxelShape SOUTH = Block.box(0.5, 2, 0, 15.5, 14, 3.65);
+        private static final VoxelShape EAST = Block.box(0, 2, 0.5, 3.65, 14, 15.5);
+        private static final VoxelShape WEST = Block.box(12.35, 2, 0.5, 16, 14, 15.5);
 
         public FuelController(Properties properties) {
             super(properties);
+        }
+
+        @Override
+        public BlockState getStateForPlacement(BlockPlaceContext context) {
+            Direction facing = context.getClickedFace().getAxis().isHorizontal()
+                    ? context.getClickedFace() : context.getHorizontalDirection().getOpposite();
+            return defaultBlockState().setValue(FACING, facing);
+        }
+
+        @Override
+        protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            return switch (state.getValue(FACING)) {
+                case SOUTH -> SOUTH;
+                case EAST -> EAST;
+                case WEST -> WEST;
+                default -> NORTH;
+            };
+        }
+
+        @Override
+        protected BlockState rotate(BlockState state, net.minecraft.world.level.block.Rotation rotation) {
+            return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+        }
+
+        @Override
+        protected BlockState mirror(BlockState state, net.minecraft.world.level.block.Mirror mirror) {
+            return rotate(state, mirror.getRotation(state.getValue(FACING)));
         }
 
         @Override
