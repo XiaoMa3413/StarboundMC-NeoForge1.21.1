@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormatElement;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.CelestialLod;
 import com.starboundmc.client.space.CelestialLodPolicy;
@@ -27,13 +28,12 @@ import com.starboundmc.world.universe.StarSystemDefinition;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Draws visible planets and moons in the ship's sky frame.
@@ -63,9 +63,13 @@ public class PlanetRenderer
     private static Object drawOrderCatalog;
     private static final float PLANET_SKY_DISTANCE = 280.0F;
     private static final float MIN_PLANET_SKY_RADIUS = 0.12F;
-    /** Surface geometry and fixed lighting are uploaded once, then transformed on the GPU. */
-    private static final Map<String, VertexBuffer> PLANET_SURFACE_BUFFERS = new HashMap<>();
-    private static final Map<String, Float> PLANET_SURFACE_TICKS = new HashMap<>();
+    /** One shared, unlit mesh; per-body lighting is supplied as shader uniforms. */
+    static final VertexFormat PLANET_SURFACE_FORMAT = VertexFormat.builder()
+            .add("Position", VertexFormatElement.POSITION)
+            .add("UV0", VertexFormatElement.UV0)
+            .add("Normal", VertexFormatElement.NORMAL)
+            .build();
+    private static VertexBuffer planetSurfaceBuffer;
     /** The overworld moon changes lighting only when its discrete moon phase changes. */
     private static VertexBuffer moonSurfaceBuffer;
     private static float moonSurfaceSunX = Float.NaN;
@@ -537,7 +541,7 @@ public class PlanetRenderer
         if (RingRenderer.hasRings(profile))
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
                     shipYaw, shipPitch, alpha, false);
-        drawOrientedPlanetSphere(pose, pose.last().pose(), body, cx, cy, cz, scale,
+        drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
         if (RingRenderer.hasRings(profile))
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
@@ -545,11 +549,13 @@ public class PlanetRenderer
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
-    private static void drawOrientedPlanetSphere(PoseStack pose, Matrix4f matrix, CelestialBodyDefinition body,
+    private static void drawOrientedPlanetSphere(Matrix4f matrix, CelestialBodyDefinition body,
                                                   float cx, float cy, float cz, float scale,
                                                   Vector3f worldSun, float brightness, float alpha,
                                                   float shipYaw, float shipPitch, float animationTicks)
     {
+        ShaderInstance previousShader = RenderSystem.getShader();
+        int previousTexture = RenderSystem.getShaderTexture(0);
         FogRenderer.setupNoFog();
         try
         {
@@ -558,25 +564,53 @@ public class PlanetRenderer
             RenderSystem.enableDepthTest();
             RenderSystem.enableCull();
             RenderSystem.depthMask(false);
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, textureOf(body));
-            RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
-            // The VBO contains body-oriented positions and fixed per-vertex light.
-            // Only the ship view changes each frame, so compose it into the model
-            // matrix instead of allocating Vec3 objects and recalculating trig for
-            // every vertex.
+            BodySpaceVisualProfile profile = visual(body);
+            float spinDegrees = animationTicks * spinRate(body);
+            // Keep the sphere mesh shared and unrotated. Body orientation and spin
+            // stay in the model matrix, while the matching inverse is applied to
+            // the fixed virtual-space sun direction for per-fragment lighting.
             Matrix4f model = new Matrix4f(matrix)
                     .translate(cx, cy, cz)
                     .rotateX((float) Math.toRadians(-shipPitch))
-                    .rotateY((float) Math.toRadians(-shipYaw))
-                    .rotateY((float) Math.toRadians(animationTicks * spinRate(body)))
-                    .scale(scale);
-            VertexBuffer surface = getPlanetSurfaceBuffer(body, worldSun, animationTicks);
+                    .rotateY((float) Math.toRadians(-shipYaw));
+            PlanetSurfaceLighting.appendBodyOrientation(model, spinDegrees,
+                    profile.orientationTilt(), profile.orientationYaw()).scale(scale);
+            Vector3f meshSpaceSun = PlanetSurfaceLighting.toMeshSpaceSun(worldSun, spinDegrees,
+                    profile.orientationTilt(), profile.orientationYaw());
+            VertexBuffer surface = getPlanetSurfaceBuffer();
+            ShaderInstance surfaceShader = PlanetSurfaceShader.current();
+            if (surfaceShader != null)
+            {
+                RenderSystem.setShader(() -> surfaceShader);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun,
+                        terminatorWidth(body), nightFloor(body), alpha, brightness);
+            }
+            else
+            {
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
+            }
             surface.bind();
             try
             {
-                surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+                try
+                {
+                    surface.drawWithShader(model, RenderSystem.getProjectionMatrix(),
+                            surfaceShader == null ? RenderSystem.getShader() : surfaceShader);
+                }
+                catch (RuntimeException shaderFailure)
+                {
+                    if (surfaceShader == null)
+                        throw shaderFailure;
+
+                    PlanetSurfaceShader.disableAfterFailure(surfaceShader, shaderFailure);
+                    RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                    RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
+                    surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+                }
             }
             finally
             {
@@ -585,75 +619,46 @@ public class PlanetRenderer
         }
         finally
         {
+            RenderSystem.setShader(() -> previousShader);
+            RenderSystem.setShaderTexture(0, previousTexture);
             SpaceRenderPassState.restoreDefaults();
         }
     }
 
-    private static VertexBuffer getPlanetSurfaceBuffer(CelestialBodyDefinition body, Vector3f worldSun,
-                                                        float animationTicks)
+    private static VertexBuffer getPlanetSurfaceBuffer()
     {
-        VertexBuffer cached = PLANET_SURFACE_BUFFERS.get(body.entryId());
-        Float cachedTick = PLANET_SURFACE_TICKS.get(body.entryId());
-        if (cached != null && !cached.isInvalid() && cachedTick != null
-                && Float.compare(cachedTick, animationTicks) == 0)
-            return cached;
-        if (cached != null && !cached.isInvalid())
-            cached.close();
+        if (planetSurfaceBuffer != null && !planetSurfaceBuffer.isInvalid())
+            return planetSurfaceBuffer;
+        if (planetSurfaceBuffer != null)
+            planetSurfaceBuffer.close();
 
-        // The model rotates by +spin below. Bake the opposite rotation into
-        // the light vector so the stellar direction remains fixed in world
-        // space while the surface texture turns underneath it.
-        float spin = (float) Math.toRadians(animationTicks * spinRate(body));
-        float spinCos = (float) Math.cos(-spin);
-        float spinSin = (float) Math.sin(-spin);
-        Vector3f compensatedSun = new Vector3f(
-                worldSun.x * spinCos + worldSun.z * spinSin,
-                worldSun.y,
-                -worldSun.x * spinSin + worldSun.z * spinCos);
-
-        float sunX = compensatedSun.x;
-        float sunY = compensatedSun.y;
-        float sunZ = compensatedSun.z;
-        Vector3f bakedSun = new Vector3f(sunX, sunY, sunZ);
-        BodySpaceVisualProfile profile = visual(body);
-        Vector3f orientation = new Vector3f(profile.orientationTilt(),
-                profile.orientationYaw(), profile.orientationRoll());
-        float yaw = (float) Math.toRadians(orientation.y);
-        float pitch = (float) Math.toRadians(orientation.x);
-        float yawCos = (float) Math.cos(yaw);
-        float yawSin = (float) Math.sin(yaw);
-        float pitchCos = (float) Math.cos(pitch);
-        float pitchSin = (float) Math.sin(pitch);
-
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        BufferBuilder bb = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, PLANET_SURFACE_FORMAT);
         for (int i = 0; i < SPHERE_X.length; i++)
         {
             float localX = SPHERE_X[i];
             float localY = SPHERE_Y[i];
             float localZ = SPHERE_Z[i];
-            float yawX = localX * yawCos + localZ * yawSin;
-            float yawZ = -localX * yawSin + localZ * yawCos;
-            float worldX = yawX;
-            float worldY = localY * pitchCos - yawZ * pitchSin;
-            float worldZ = localY * pitchSin + yawZ * pitchCos;
-            addLitSphereVertex(bb, worldX, worldY, worldZ, SPHERE_U[i], SPHERE_V[i],
-                    bakedSun,
-                    terminatorWidth(body), nightFloor(body));
+            bb.addVertex(localX, localY, localZ)
+                    .setUv(SPHERE_U[i], SPHERE_V[i])
+                    .setNormal(localX / PLANET_RADIUS, localY / PLANET_RADIUS, localZ / PLANET_RADIUS);
         }
 
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
-        buffer.bind();
         try
         {
+            buffer.bind();
             buffer.upload(bb.buildOrThrow());
+        }
+        catch (RuntimeException failure)
+        {
+            buffer.close();
+            throw failure;
         }
         finally
         {
             VertexBuffer.unbind();
         }
-        PLANET_SURFACE_BUFFERS.put(body.entryId(), buffer);
-        PLANET_SURFACE_TICKS.put(body.entryId(), animationTicks);
+        planetSurfaceBuffer = buffer;
         return buffer;
     }
 
@@ -773,7 +778,6 @@ public class PlanetRenderer
         b += (0.25F - b) * terminator * 0.18F;
         bb.addVertex(x, y, z).setColor(r, g, b, 1.0F).setUv(u, v);
     }
-
 
     private static void vertexColor(BufferBuilder bb, Matrix4f matrix, float x, float y, float z,
                                     float r, float g, float b, float a)
