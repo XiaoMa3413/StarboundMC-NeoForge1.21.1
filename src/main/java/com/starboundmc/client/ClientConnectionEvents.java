@@ -6,6 +6,7 @@ import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
 import com.starboundmc.client.hud.StarboundHudLayer;
+import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
 import com.starboundmc.network.ClientNetworkState;
 import com.starboundmc.world.universe.ClientUniverseCatalog;
 import net.minecraft.client.Minecraft;
@@ -46,6 +47,7 @@ public final class ClientConnectionEvents {
     }
 
     private static void resetConnectionState() {
+        StellarViewStarfield.resetSession();
         ClientNetworkState.resetConnectionState();
         com.starboundmc.client.space.RelayClientState.reset();
         com.starboundmc.client.epp.EppClientState.reset();

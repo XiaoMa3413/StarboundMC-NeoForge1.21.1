@@ -11,6 +11,7 @@ import com.starboundmc.world.ShipDimensions;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -31,13 +32,13 @@ public final class SpaceRenderer
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_SKY)
             return;
         Minecraft mc = Minecraft.getInstance();
-        if (mc.level == null || mc.player == null)
+        if (!(mc.level instanceof ClientLevel level) || mc.player == null)
             return;
-        if (!mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL))
+        if (!level.dimension().equals(ShipDimensions.SHIP_LEVEL))
             return;
 
         float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-        SpaceRenderContext space = SpaceRenderState.capture(mc.level.getGameTime() + partialTick);
+        SpaceRenderContext space = SpaceRenderState.capture(level.getGameTime() + partialTick);
         SpaceCoordinateFrame coordinateFrame = new SpaceCoordinateFrame(space);
 
         // AFTER_SKY carries view bobbing. Rebuild the camera-only pose so walking
@@ -46,7 +47,8 @@ public final class SpaceRenderer
 
         SpaceBackgroundRenderer.renderSpaceDome(skyPose);
         StarSystemResolver.ResolvedStarField stars = StarSystemResolver.resolve(space);
-        SpaceBackgroundRenderer.renderStarField(skyPose, space, coordinateFrame, stars.environment());
+        SpaceBackgroundRenderer.renderStarField(skyPose, level, event.getCamera(), partialTick,
+                space, coordinateFrame, stars.environment());
 
         // Stellar points and discs precede planets so planetary discs occlude
         // aligned stars in the same way as the existing render path.

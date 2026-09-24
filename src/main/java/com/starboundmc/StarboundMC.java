@@ -29,6 +29,8 @@ public final class StarboundMC {
     public StarboundMC(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.SERVER,
                 com.starboundmc.epp.EppConfig.SPEC);
+        modContainer.registerConfig(net.neoforged.fml.config.ModConfig.Type.CLIENT,
+                com.starboundmc.client.StarfieldClientConfig.SPEC);
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(ModNetwork::register);
         // Ship dimension and universe definitions share one datapack-registry

@@ -34,3 +34,10 @@ type="required"
 versionRange="${ldlib2_version_range}"
 ordering="AFTER"
 side="CLIENT"
+
+[[dependencies.${mod_id}]]
+modId="stellarview"
+type="optional"
+versionRange="[0.5.4-alpha-externalview1]"
+ordering="AFTER"
+side="CLIENT"

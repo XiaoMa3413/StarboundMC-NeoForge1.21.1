@@ -8,10 +8,13 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.warp.ShipFlightController;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4f;
@@ -91,7 +94,8 @@ public final class SpaceBackgroundRenderer
     {
     }
 
-    static void renderStarField(PoseStack pose, SpaceRenderContext space,
+    static void renderStarField(PoseStack pose, ClientLevel level, Camera camera, float partialTick,
+                                SpaceRenderContext space,
                                 SpaceCoordinateFrame frame, GalaxyEnvironmentBlend environment)
     {
         float starAlpha = 1.0F;
@@ -115,6 +119,19 @@ public final class SpaceBackgroundRenderer
             float shellFade = enter * (1.0F - exit);
             starAlpha = 1.0F - 0.88F * shellFade;
         }
+        if (starAlpha > 0.01F)
+        {
+            // Match the established star orientation: stable camera + visual roll,
+            // then inverse ship pitch/yaw. The coordinate provider independently
+            // anchors the field to the virtual ship position, never the player.
+            Matrix4f starModelView = new Matrix4f(pose.last().pose())
+                    .rotateX((float) Math.toRadians(-space.pitch()))
+                    .rotateY((float) Math.toRadians(-space.yaw()));
+            if (StellarViewStarfield.render(level, camera, partialTick, starModelView,
+                    RenderSystem.getProjectionMatrix(), space, starAlpha))
+                return;
+        }
+
         renderStarField(pose, frame, starAlpha, starConvergence,
                 environment.skyTintColor(), environment.skyTintAmount());
     }
