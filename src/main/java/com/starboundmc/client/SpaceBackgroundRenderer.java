@@ -128,7 +128,8 @@ public final class SpaceBackgroundRenderer
                     .rotateX((float) Math.toRadians(-space.pitch()))
                     .rotateY((float) Math.toRadians(-space.yaw()));
             if (StellarViewStarfield.render(level, camera, partialTick, starModelView,
-                    RenderSystem.getProjectionMatrix(), space, starAlpha))
+                    RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
+                    frame.backgroundForwardDirection(new Vector3f())))
                 return;
         }
 

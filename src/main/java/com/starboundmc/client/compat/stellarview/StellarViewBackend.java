@@ -12,6 +12,7 @@ import net.povstalec.stellarview.api.common.space_objects.resourcepack.StarField
 import net.povstalec.stellarview.common.util.AxisRotation;
 import net.povstalec.stellarview.common.util.SpaceCoords;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 /** Loaded only after the compatibility boundary confirms Stellar View is present. */
 final class StellarViewBackend
@@ -27,7 +28,8 @@ final class StellarViewBackend
 
     static boolean render(ClientLevel level, Camera camera, float partialTick,
                           Matrix4f modelView, Matrix4f projection,
-                          SpaceRenderContext space, float brightness)
+                          SpaceRenderContext space, float brightness,
+                          float convergence, Vector3f convergenceForward)
     {
         if (stars == null)
         {
@@ -41,7 +43,8 @@ final class StellarViewBackend
                     FIELD_SEED, FIELD_DIAMETER_LY, List.of()), position);
         }
         position.setPosition(space.universePosition());
-        return stars.render(level, camera, partialTick, modelView, projection, brightness);
+        return stars.render(level, camera, partialTick, modelView, projection,
+                brightness, convergence, convergenceForward);
     }
 
     static void reset()

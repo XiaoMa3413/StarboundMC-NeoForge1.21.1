@@ -7,6 +7,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.neoforged.fml.ModList;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.slf4j.Logger;
 
 /** Optional-mod boundary. Space renderers do not load Stellar View classes directly. */
@@ -20,7 +21,8 @@ public final class StellarViewStarfield
 
     public static boolean render(ClientLevel level, Camera camera, float partialTick,
                                  Matrix4f modelView, Matrix4f projection,
-                                 SpaceRenderContext space, float brightness)
+                                 SpaceRenderContext space, float brightness,
+                                 float convergence, Vector3f convergenceForward)
     {
         if (failedThisSession || !StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.get()
                 || !ModList.get().isLoaded(MOD_ID))
@@ -28,7 +30,8 @@ public final class StellarViewStarfield
 
         try
         {
-            return StellarViewBackend.render(level, camera, partialTick, modelView, projection, space, brightness);
+            return StellarViewBackend.render(level, camera, partialTick, modelView, projection,
+                    space, brightness, convergence, convergenceForward);
         }
         catch (LinkageError | RuntimeException error)
         {

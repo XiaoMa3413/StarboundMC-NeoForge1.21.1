@@ -137,4 +137,12 @@ public final class SpaceCoordinateFrame
         float viewZ = y * backgroundPitchSin + yawZ * backgroundPitchCos;
         return result.set(yawX, viewY, viewZ);
     }
+
+    /** Returns the world-space direction that maps to +Z after the background yaw/pitch transform. */
+    public Vector3f backgroundForwardDirection(Vector3f result)
+    {
+        return result.set(-backgroundYawSin * backgroundPitchCos,
+                backgroundPitchSin,
+                backgroundYawCos * backgroundPitchCos);
+    }
 }
