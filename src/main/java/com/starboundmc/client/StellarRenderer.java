@@ -45,8 +45,8 @@ public final class StellarRenderer
     {
         if (direction == null)
             return;
-        render(pose, profile, direction.x, direction.y, direction.z, shellDistance,
-                alpha, animationTicks, apparentScale, 1.0F, 1.0F, StellarLod.FULL);
+        renderWithModelView(pose.last().pose(), profile, direction, shellDistance,
+                alpha, animationTicks, apparentScale);
     }
 
     public static void render(PoseStack pose, StellarVisualProfile profile,
@@ -54,6 +54,28 @@ public final class StellarRenderer
                               float shellDistance, float alpha, float animationTicks,
                               float apparentScale, float coronaDetail, float effectDetail,
                               StellarLod lod)
+    {
+        renderWithModelView(pose.last().pose(), profile, directionX, directionY, directionZ,
+                shellDistance, alpha, animationTicks, apparentScale, coronaDetail, effectDetail, lod);
+    }
+
+    /** Renders against the caller's complete camera/model-view frame. */
+    public static void renderWithModelView(Matrix4f cameraModelView, StellarVisualProfile profile,
+                                           Vec3 direction, float shellDistance, float alpha,
+                                           float animationTicks, float apparentScale)
+    {
+        if (direction == null)
+            return;
+        renderWithModelView(cameraModelView, profile, direction.x, direction.y, direction.z,
+                shellDistance, alpha, animationTicks, apparentScale, 1.0F, 1.0F, StellarLod.FULL);
+    }
+
+    /** Renders against the caller's complete camera/model-view frame. */
+    public static void renderWithModelView(Matrix4f cameraModelView, StellarVisualProfile profile,
+                                           double directionX, double directionY, double directionZ,
+                                           float shellDistance, float alpha, float animationTicks,
+                                           float apparentScale, float coronaDetail, float effectDetail,
+                                           StellarLod lod)
     {
         lod = lod == null ? StellarLod.FULL : lod;
         // Ship-space points must go through StellarPointBatchRenderer. Keeping
@@ -103,11 +125,11 @@ public final class StellarRenderer
             if (lod == StellarLod.SIMPLIFIED)
             {
                 RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-                drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(glowBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * 1.65F, 0.0F, profile.getCoronaColor(),
                         alpha * (0.12F + coronaDetail * 0.18F));
                 RenderSystem.defaultBlendFunc();
-                drawLayer(discBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(discBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius, 0.0F, profile.getSurfaceColor(), alpha);
                 return;
             }
@@ -118,13 +140,13 @@ public final class StellarRenderer
             {
                 float phaseA = fractional(animationTicks * 0.0065F);
                 float phaseB = fractional(phaseA + 0.5F);
-                drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(radiationBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * (1.65F + phaseA * 2.25F), animationTicks * 0.0022F,
                         profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseA) * 0.34F);
-                drawLayer(radiationBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(radiationBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * (1.65F + phaseB * 2.25F), -animationTicks * 0.0017F,
                         profile.getCoronaColor(), alpha * radiation * effectDetail * (1.0F - phaseB) * 0.25F);
-                drawLayer(particleBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(particleBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * 2.85F, -animationTicks * 0.0031F,
                         profile.getCoronaColor(), alpha * radiation * effectDetail * 0.42F);
             }
@@ -132,29 +154,29 @@ public final class StellarRenderer
             float flare = profile.getFlareStrength();
             if (flare > 0.0F && effectDetail > 0.08F)
             {
-                drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(rayBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * (2.30F + flare * 0.75F), animationTicks * 0.0018F,
                         profile.getCoronaColor(), alpha * flare * effectDetail * 0.62F);
-                drawLayer(rayBuffer, pose, cx, cy, cz, dx, dy, dz,
+                drawLayer(rayBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                         radius * (1.85F + flare * 0.50F), -animationTicks * 0.0026F,
                         profile.getCoreColor(), alpha * flare * effectDetail * 0.25F);
             }
 
-            drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+            drawLayer(glowBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                     radius * profile.getGlowScale(), 0.0F,
                     profile.getCoronaColor(), alpha * (0.035F + coronaDetail * 0.235F
                             + radiation * effectDetail * 0.10F + nearField * coronaDetail * 0.10F));
-            drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+            drawLayer(glowBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                     radius * 1.48F, 0.0F,
                     profile.getSurfaceColor(), alpha * (0.08F + coronaDetail * 0.28F));
 
             // The surface uses normal alpha blending so background stars do not
             // shine through its solid disc. A small additive core prevents flatness.
             RenderSystem.defaultBlendFunc();
-            drawLayer(discBuffer, pose, cx, cy, cz, dx, dy, dz,
+            drawLayer(discBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                     radius, 0.0F, profile.getSurfaceColor(), alpha);
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-            drawLayer(glowBuffer, pose, cx, cy, cz, dx, dy, dz,
+            drawLayer(glowBuffer, cameraModelView, cx, cy, cz, dx, dy, dz,
                     radius * 0.72F, 0.0F, profile.getCoreColor(), alpha * 0.52F);
 
         }
@@ -169,7 +191,7 @@ public final class StellarRenderer
         return value - (float) Math.floor(value);
     }
 
-    private static void drawLayer(VertexBuffer buffer, PoseStack pose,
+    private static void drawLayer(VertexBuffer buffer, Matrix4f cameraModelView,
                                   float cx, float cy, float cz,
                                   float dx, float dy, float dz,
                                   float scale, float rotation,
@@ -180,8 +202,7 @@ public final class StellarRenderer
 
         float yaw = (float) Math.atan2(dx, dz);
         float pitch = -(float) Math.asin(Math.max(-1.0F, Math.min(1.0F, dy)));
-        Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
-                .mul(pose.last().pose())
+        Matrix4f model = new Matrix4f(cameraModelView)
                 .translate(cx, cy, cz)
                 .rotateY(yaw)
                 .rotateX(pitch)

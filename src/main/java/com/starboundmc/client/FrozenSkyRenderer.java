@@ -117,7 +117,9 @@ public class FrozenSkyRenderer
         pose.mulPose(Axis.XP.rotationDegrees(level.getTimeOfDay(partialTick) * 360.0F));
         // The cold system's stellar profile, from the same catalog the rest of the
         // rendering reads.
-        StellarRenderer.render(pose, coldStellarVisual(),
+        Matrix4f cameraModelView = new Matrix4f(RenderSystem.getModelViewMatrix())
+                .mul(pose.last().pose());
+        StellarRenderer.renderWithModelView(cameraModelView, coldStellarVisual(),
                 LOCAL_STAR_DIRECTION, 100.0F, 0.90F,
                 level.getGameTime() + partialTick, 0.92F);
         pose.popPose();

@@ -566,8 +566,7 @@ public class PlanetRenderer
             // Only the ship view changes each frame, so compose it into the model
             // matrix instead of allocating Vec3 objects and recalculating trig for
             // every vertex.
-            Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
-                    .mul(matrix)
+            Matrix4f model = new Matrix4f(matrix)
                     .translate(cx, cy, cz)
                     .rotateX((float) Math.toRadians(-shipPitch))
                     .rotateY((float) Math.toRadians(-shipYaw))
@@ -679,6 +678,9 @@ public class PlanetRenderer
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
 
+            // This shared helper serves normal-world sky renderers, which own
+            // camera rotation through RenderSystem's model-view. Ship-space
+            // planets use drawOrientedPlanetSphere with the caller's full frame.
             Matrix4f model = new Matrix4f(RenderSystem.getModelViewMatrix())
                     .mul(matrix)
                     .translate(cx, cy, cz)
