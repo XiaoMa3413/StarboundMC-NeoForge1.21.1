@@ -207,25 +207,32 @@ public class RockyMoonSkyRenderer
     /** Vanilla-style square sun: the same textured additive quad the overworld draws. */
     private static void renderVanillaSun(PoseStack pose)
     {
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE,
-                GlStateManager.DestFactor.ZERO);
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, VANILLA_SUN_TEXTURE);
+        try
+        {
+            FogRenderer.setupNoFog();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ZERO);
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShaderTexture(0, VANILLA_SUN_TEXTURE);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        Matrix4f matrix = pose.last().pose();
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(0.0F, 0.0F);
-        bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(1.0F, 0.0F);
-        bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(1.0F, 1.0F);
-        bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(0.0F, 1.0F);
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.depthMask(true);
+            Matrix4f matrix = pose.last().pose();
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(0.0F, 0.0F);
+            bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(1.0F, 0.0F);
+            bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(1.0F, 1.0F);
+            bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(0.0F, 1.0F);
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+        }
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 }

@@ -193,8 +193,14 @@ public final class StellarRenderer
         float b = (color & 0xFF) / 255.0F;
         RenderSystem.setShaderColor(r, g, b, alpha);
         buffer.bind();
-        buffer.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
-        VertexBuffer.unbind();
+        try
+        {
+            buffer.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
+        }
+        finally
+        {
+            VertexBuffer.unbind();
+        }
     }
 
     private static void ensureBuffers()
@@ -223,8 +229,14 @@ public final class StellarRenderer
         geometry.build(bb);
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
-        buffer.upload(bb.buildOrThrow());
-        VertexBuffer.unbind();
+        try
+        {
+            buffer.upload(bb.buildOrThrow());
+        }
+        finally
+        {
+            VertexBuffer.unbind();
+        }
         return buffer;
     }
 

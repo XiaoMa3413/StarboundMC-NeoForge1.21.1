@@ -645,8 +645,14 @@ public class PlanetRenderer
 
         VertexBuffer buffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
         buffer.bind();
-        buffer.upload(bb.buildOrThrow());
-        VertexBuffer.unbind();
+        try
+        {
+            buffer.upload(bb.buildOrThrow());
+        }
+        finally
+        {
+            VertexBuffer.unbind();
+        }
         PLANET_SURFACE_BUFFERS.put(body.entryId(), buffer);
         PLANET_SURFACE_TICKS.put(body.entryId(), animationTicks);
         return buffer;
@@ -711,8 +717,14 @@ public class PlanetRenderer
         if (moonSurfaceBuffer == null || moonSurfaceBuffer.isInvalid())
             moonSurfaceBuffer = new VertexBuffer(VertexBuffer.Usage.DYNAMIC);
         moonSurfaceBuffer.bind();
-        moonSurfaceBuffer.upload(bb.buildOrThrow());
-        VertexBuffer.unbind();
+        try
+        {
+            moonSurfaceBuffer.upload(bb.buildOrThrow());
+        }
+        finally
+        {
+            VertexBuffer.unbind();
+        }
         moonSurfaceSunX = sun.x;
         moonSurfaceSunY = sun.y;
         moonSurfaceSunZ = sun.z;
