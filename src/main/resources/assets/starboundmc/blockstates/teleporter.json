@@ -1,7 +1,52 @@
 {
   "variants": {
-    "": {
-      "model": "starboundmc:block/teleporter"
+    "facing=north,part=0": {
+      "model": "starboundmc:block/transporter_lower",
+      "y": 0
+    },
+    "facing=north,part=1": {
+      "model": "starboundmc:block/transporter_middle",
+      "y": 0
+    },
+    "facing=north,part=2": {
+      "model": "starboundmc:block/transporter_upper",
+      "y": 0
+    },
+    "facing=east,part=0": {
+      "model": "starboundmc:block/transporter_lower",
+      "y": 90
+    },
+    "facing=east,part=1": {
+      "model": "starboundmc:block/transporter_middle",
+      "y": 90
+    },
+    "facing=east,part=2": {
+      "model": "starboundmc:block/transporter_upper",
+      "y": 90
+    },
+    "facing=south,part=0": {
+      "model": "starboundmc:block/transporter_lower",
+      "y": 180
+    },
+    "facing=south,part=1": {
+      "model": "starboundmc:block/transporter_middle",
+      "y": 180
+    },
+    "facing=south,part=2": {
+      "model": "starboundmc:block/transporter_upper",
+      "y": 180
+    },
+    "facing=west,part=0": {
+      "model": "starboundmc:block/transporter_lower",
+      "y": 270
+    },
+    "facing=west,part=1": {
+      "model": "starboundmc:block/transporter_middle",
+      "y": 270
+    },
+    "facing=west,part=2": {
+      "model": "starboundmc:block/transporter_upper",
+      "y": 270
     }
   }
 }

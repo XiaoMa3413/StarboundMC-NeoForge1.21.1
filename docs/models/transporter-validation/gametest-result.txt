@@ -1,0 +1,3 @@
+[13:42:12] [Server thread/INFO] [minecraft/GameTestServer]: ========= 46 GAME TESTS COMPLETE IN 2.216 s ======================
+[13:42:12] [Server thread/INFO] [minecraft/GameTestServer]: All 46 required tests passed :)
+All test assertions passed. Process remained in ChunkMap.processUnloads during server shutdown and was explicitly stopped after a thread dump. This is not a clean Gradle GameTest exit.

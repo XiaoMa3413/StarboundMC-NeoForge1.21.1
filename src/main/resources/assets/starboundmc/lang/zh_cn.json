@@ -240,6 +240,7 @@
   "container.starboundmc.matter_manipulator_workbench": "物质枪升级工作台",
   "container.starboundmc.ship_console": "飞船驾驶台（已废弃）",
   "container.starboundmc.ship_crate": "飞船储物仓",
+  "message.starboundmc.teleporter.obstructed": "传送位被阻挡，请清空设备上方和站立区域。",
   "container.starboundmc.teleporter": "传送器",
   "container.starboundmc.titanium_alloy_furnace": "钛制合金炉",
   "gui.starboundmc.current": "（当前）",

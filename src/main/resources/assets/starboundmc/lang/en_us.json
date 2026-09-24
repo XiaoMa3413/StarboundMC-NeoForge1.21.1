@@ -265,6 +265,7 @@
   "message.starboundmc.upgrade.success_range": "Laser range upgraded! (Level %1$s)",
   "message.starboundmc.upgrade.success_fortune": "Fortune upgraded! (Level %1$s)",
   "block.starboundmc.teleporter": "Teleporter",
+  "message.starboundmc.teleporter.obstructed": "Transporter bay obstructed. Clear the space above and inside the station.",
   "container.starboundmc.teleporter": "Teleporter",
   "gui.starboundmc.teleporter.ship": "Ship",
   "gui.starboundmc.teleporter.planet": "Planet Surface",

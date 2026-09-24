@@ -9,12 +9,7 @@ import com.starboundmc.menu.AlloyFurnaceMenu;
 import com.starboundmc.menu.FuelControllerMenu;
 import com.starboundmc.menu.ShipConsoleMenu;
 import com.starboundmc.menu.ShipCrateMenu;
-import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
-import com.starboundmc.network.ModNetwork;
-import com.starboundmc.network.TeleporterListPacketHelper;
-import com.starboundmc.story.ShipEnvironmentService;
-import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -148,40 +143,10 @@ public final class Stage2Blocks {
         }
     }
 
-    public static final class Teleporter extends Block {
+    public static final class Teleporter extends TransporterBlock {
         public static final MapCodec<Teleporter> CODEC = simpleCodec(Teleporter::new);
-
-        public Teleporter(Properties properties) {
-            super(properties);
-        }
-
-        @Override
-        protected MapCodec<? extends Block> codec() {
-            return CODEC;
-        }
-
-        @Override
-        protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
-                BlockHitResult hit) {
-            if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.openMenu(new SimpleMenuProvider(
-                        (containerId, inventory, ignored) -> new TeleporterMenu(containerId, inventory,
-                                ContainerLevelAccess.create(level, pos), pos),
-                        Component.translatable("container.starboundmc.teleporter")))
-                        .ifPresent(containerId -> ShipEnvironmentService.sendSnapshot(serverPlayer, containerId));
-                ModNetwork.sendToPlayer(serverPlayer,
-                        TeleporterListPacketHelper.build(serverPlayer.getServer(), level.dimension(), pos));
-            }
-            return InteractionResult.sidedSuccess(level.isClientSide);
-        }
-
-        @Override
-        protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
-            if (!state.is(newState.getBlock()) && !level.isClientSide && level.getServer() != null) {
-                TeleporterManager.remove(level.getServer(), level.dimension(), pos);
-            }
-            super.onRemove(state, level, pos, newState, moving);
-        }
+        public Teleporter(Properties properties) { super(properties); }
+        @Override protected MapCodec<? extends Block> codec() { return CODEC; }
     }
 
     public static final class ShipCrate extends FacingEntityBlock {

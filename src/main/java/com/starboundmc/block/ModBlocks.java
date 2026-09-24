@@ -24,7 +24,8 @@ public final class ModBlocks {
             "matter_manipulator_workbench", Stage2Blocks.Workbench::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE));
     public static final DeferredBlock<Stage2Blocks.Teleporter> TELEPORTER = BLOCKS.registerBlock(
-            "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
+            "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
     public static final DeferredBlock<Stage2Blocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
             Stage2Blocks.ShipConsole::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
