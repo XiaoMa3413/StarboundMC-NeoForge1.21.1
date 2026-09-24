@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -101,9 +102,12 @@ final class PlanetSurfaceShaderResourceTest {
         assertTrue(fragment.contains("step(0.001, OceanSpecular)"),
                 "the water mask must be gated on the ocean highlight");
         // The view-independent sheen is what keeps the ocean reflective from
-        // vantage points where the mirror glint falls outside the disc.
-        assertTrue(fragment.contains("pow(max(sunDot, 0.0), 3.0)"),
-                "the water sheen must face the sun, not the camera");
+        // vantage points where the mirror glint falls outside the disc. It is
+        // an ocean effect only: gating it on the water mask and the ocean
+        // highlight keeps land, Frozen, Barren and Gas Giant surfaces sheen-free
+        // even when the body authors a land specular strength.
+        assertTrue(fragment.contains("pow(max(sunDot, 0.0), 3.0) * OceanSpecular * water"),
+                "the water sheen must be gated on the water mask and the ocean highlight");
         // The deep-water darkening must be masked to water only; applied to
         // the whole disc it would dim every planet.
         assertTrue(fragment.contains("mix(1.0, 0.88, water)"),
@@ -111,10 +115,45 @@ final class PlanetSurfaceShaderResourceTest {
         // The smoothstep curve is the lit amount: inverting it, or gating the
         // highlights with its complement, swaps the lit and dark hemispheres,
         // so both the curve and the shade expression are pinned.
-        assertTrue(fragment.contains("float litAmount = smoothstep(0.0, 1.0, (sunDot + TerminatorWidth)"),
+        assertTrue(fragment.contains("float litAmount = smoothstep(0.0, 1.0, (sunDot + terminatorWidth)"),
                 "lit amount must come straight from the smoothstep curve");
         assertTrue(fragment.contains("float shade = (1.0 - litAmount) * (1.0 - NightFloor);"),
                 "shade must be the darkness amount, matching the CPU bake");
+    }
+
+    @Test
+    void theReviewFixesStayPinned() throws Exception {
+        String fragment = Files.readString(SHADER_DIR.resolve("planet_surface.fsh"));
+
+        // Fade and LOD crossfade ride GlobalAlpha. Scaling the RGB by it as
+        // well attenuates the colour twice under standard alpha blending, so
+        // a planet fading in reads as roughly alpha-squared dark; only the
+        // alpha channel may carry it, which is what the cloud branch does.
+        assertTrue(fragment.contains("fragColor = vec4(color, texel.a * GlobalAlpha);"),
+                "the surface alpha must multiply GlobalAlpha exactly once");
+        assertFalse(fragment.contains("vec4(color, texel.a) * GlobalAlpha"),
+                "GlobalAlpha must not scale the surface RGB");
+
+        // Both terminator expressions divide by the width, so the uniform is
+        // floored once into a local and the raw value never reaches a
+        // division: a body authoring zero would otherwise spread NaN across
+        // the disc. The floor only touches zero, so old datapacks keep the
+        // curve they always had.
+        assertTrue(fragment.contains("float terminatorWidth = max(TerminatorWidth, 0.0001);"),
+                "TerminatorWidth must be floored before any division");
+        assertTrue(fragment.contains("(sunDot + terminatorWidth) / (terminatorWidth * 2.0)"),
+                "the lit amount must divide by the floored width");
+        assertTrue(fragment.contains("1.0 - abs(sunDot) / terminatorWidth"),
+                "the terminator warm lift must divide by the floored width");
+        assertFalse(fragment.contains("(sunDot + TerminatorWidth) / (TerminatorWidth * 2.0)"),
+                "the raw uniform must not reach the lit amount division");
+        assertFalse(fragment.contains("abs(sunDot) / TerminatorWidth"),
+                "the raw uniform must not reach the warm lift division");
+
+        // The sheen is structurally zero wherever the water mask is zero, so
+        // land, Frozen, Barren and Gas Giant surfaces cannot pick it up.
+        assertTrue(fragment.contains("pow(max(sunDot, 0.0), 3.0) * OceanSpecular * water * 0.22"),
+                "the water sheen must be gated on the water mask and the ocean highlight");
     }
 
     @Test

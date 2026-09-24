@@ -66,8 +66,12 @@ void main() {
 
     // Terminator curve: 1 on the fully lit side, 0 on the dark side. Same
     // smoothstep the CPU bake used, evaluated per fragment so the boundary
-    // stays smooth across the sphere.
-    float litAmount = smoothstep(0.0, 1.0, (sunDot + TerminatorWidth) / (TerminatorWidth * 2.0));
+    // stays smooth across the sphere. Both the curve and the warm lift below
+    // divide by the width, so it is floored here once: a body that authors
+    // zero would otherwise make the division produce NaN across the disc.
+    // Old datapacks keep their authored value; the floor only touches zero.
+    float terminatorWidth = max(TerminatorWidth, 0.0001);
+    float litAmount = smoothstep(0.0, 1.0, (sunDot + terminatorWidth) / (terminatorWidth * 2.0));
     float shade = (1.0 - litAmount) * (1.0 - NightFloor);
     vec3 light = vec3(
         mix(1.0, 0.06, shade),
@@ -75,7 +79,7 @@ void main() {
         mix(1.0, 0.20, shade));
 
     // Warm lift right at the terminator, scaled down away from it.
-    float terminator = max(0.0, 1.0 - abs(sunDot) / TerminatorWidth);
+    float terminator = max(0.0, 1.0 - abs(sunDot) / terminatorWidth);
     light.r += (0.90 - light.r) * terminator * 0.35;
     light.g += (0.55 - light.g) * terminator * 0.25;
     light.b += (0.25 - light.b) * terminator * 0.18;
@@ -122,8 +126,10 @@ void main() {
     // above only lands on the visible disc when the camera, sun and planet
     // line up, which at planet scale happens from few vantage points; this
     // keeps the ocean reading as reflective from any angle that sees the day
-    // side, brightest around the sub-solar point.
-    float waterSheen = pow(max(sunDot, 0.0), 3.0) * specularStrength * 0.22;
+    // side, brightest around the sub-solar point. The sheen is an ocean
+    // effect only: it is gated on the water mask and the ocean highlight, so
+    // land never picks it up even on a body that authors a land specular.
+    float waterSheen = pow(max(sunDot, 0.0), 3.0) * OceanSpecular * water * 0.22;
 
     // A gentle deep-water darkening: the ocean reads as deep azure rather
     // than a bright sheet, while land keeps its authored albedo untouched.
@@ -140,5 +146,8 @@ void main() {
     vec3 emissive = texture(Sampler1, texCoord0).rgb * EmissiveColor * EmissiveStrength;
 
     vec3 color = albedo * light + vec3(specular + waterSheen) + light * fresnel + emissive;
-    fragColor = vec4(color, texel.a) * GlobalAlpha;
+    // GlobalAlpha rides the alpha channel alone, matching the cloud branch:
+    // scaling RGB by it too would attenuate the colour twice under standard
+    // blending, so a planet fading in reads as roughly alpha-squared dark.
+    fragColor = vec4(color, texel.a * GlobalAlpha);
 }

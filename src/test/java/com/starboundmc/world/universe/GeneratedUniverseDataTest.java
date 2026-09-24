@@ -63,6 +63,8 @@ final class GeneratedUniverseDataTest {
                         id + " ocean specular");
                 assertEquals(expectedMaterial.emissiveStrength(), actualMaterial.emissiveStrength(),
                         id + " emissive strength");
+                assertEquals(expectedMaterial.emissiveColor(), actualMaterial.emissiveColor(),
+                        id + " emissive color");
                 assertEquals(expectedMaterial.emissiveMask(), actualMaterial.emissiveMask(),
                         id + " emissive mask");
 
