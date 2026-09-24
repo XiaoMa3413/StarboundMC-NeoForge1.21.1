@@ -49,7 +49,7 @@ public final class ModBlocks {
             "fuel_controller", Stage2Blocks.FuelController::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
     public static final DeferredBlock<Stage2Blocks.ShipCrate> SHIP_CRATE = BLOCKS.registerBlock(
-            "ship_crate", Stage2Blocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
+            "ship_crate", Stage2Blocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.ShipDoor> SHIP_DOOR = BLOCKS.registerBlock(
             "ship_door", Stage2Blocks.ShipDoor::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());

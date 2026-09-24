@@ -186,9 +186,46 @@ public final class Stage2Blocks {
 
     public static final class ShipCrate extends FacingEntityBlock {
         public static final MapCodec<ShipCrate> CODEC = simpleCodec(ShipCrate::new);
+        private static final VoxelShape NORTH = Block.box(0.5, 2, 9, 15.5, 14, 16);
+        private static final VoxelShape SOUTH = Block.box(0.5, 2, 0, 15.5, 14, 7);
+        private static final VoxelShape EAST = Block.box(0, 2, 0.5, 7, 14, 15.5);
+        private static final VoxelShape WEST = Block.box(9, 2, 0.5, 16, 14, 15.5);
 
         public ShipCrate(Properties properties) {
             super(properties);
+        }
+
+        @Override
+        public BlockState getStateForPlacement(BlockPlaceContext context) {
+            Direction facing = context.getClickedFace().getAxis().isHorizontal()
+                    ? context.getClickedFace() : context.getHorizontalDirection().getOpposite();
+            return defaultBlockState().setValue(FACING, facing);
+        }
+
+        @Override
+        protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            return switch (state.getValue(FACING)) {
+                case SOUTH -> SOUTH;
+                case EAST -> EAST;
+                case WEST -> WEST;
+                default -> NORTH;
+            };
+        }
+
+        @Override
+        protected BlockState rotate(BlockState state, net.minecraft.world.level.block.Rotation rotation) {
+            return state.setValue(FACING, rotation.rotate(state.getValue(FACING)));
+        }
+
+        @Override
+        protected BlockState mirror(BlockState state, net.minecraft.world.level.block.Mirror mirror) {
+            return rotate(state, mirror.getRotation(state.getValue(FACING)));
+        }
+
+        @Override
+        public <T extends BlockEntity> BlockEntityTicker<T> getTicker(
+                Level level, BlockState state, BlockEntityType<T> type) {
+            return createTickerHelper(type, ModBlockEntities.SHIP_CRATE.get(), ShipCrateBlockEntity::tick);
         }
 
         @Override
@@ -208,7 +245,7 @@ public final class Stage2Blocks {
                     && level.getBlockEntity(pos) instanceof ShipCrateBlockEntity crate) {
                 serverPlayer.openMenu(new SimpleMenuProvider(
                         (containerId, inventory, ignored) -> new ShipCrateMenu(containerId, inventory,
-                                crate.getContainer(), ContainerLevelAccess.create(level, pos), crate::setChanged),
+                                crate, ContainerLevelAccess.create(level, pos), crate::setChanged),
                         Component.translatable("container.starboundmc.ship_crate")));
             }
             return InteractionResult.sidedSuccess(level.isClientSide);

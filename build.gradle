@@ -227,6 +227,9 @@ if (project.hasProperty('thrusterSmoke')) {
 if (project.hasProperty('printerSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('lockerSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 if (project.hasProperty('chairSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
@@ -248,6 +251,11 @@ neoForge {
             if (project.hasProperty('printerSmoke')) {
                 gameDirectory = file('run-printer-smoke')
                 systemProperty 'starboundmc.debug.printerSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('lockerSmoke')) {
+                gameDirectory = file('run-locker-smoke')
+                systemProperty 'starboundmc.debug.lockerSmoke', 'true'
                 programArguments.addAll '--width', '1440', '--height', '900'
             }
             if (project.hasProperty('chairSmoke')) {

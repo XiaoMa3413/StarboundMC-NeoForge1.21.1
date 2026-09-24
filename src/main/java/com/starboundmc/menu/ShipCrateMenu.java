@@ -58,6 +58,11 @@ public class ShipCrateMenu extends AbstractContainerMenu
         this.onChanged.run();
     }
 
+    public boolean isUsing(Container candidate)
+    {
+        return container == candidate;
+    }
+
     @Override
     public void removed(Player player)
     {

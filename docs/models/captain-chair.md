@@ -24,11 +24,11 @@ The packager validates mesh count, finite positions, footprint/height, UV bounds
 
 ## Validation
 
-- `gradlew test build`: 669 tests passed in the current workspace (including the pending locker work), no failures, errors or skips.
+- `gradlew test build`: 669 tests passed in the workspace including the locker work, no failures, errors or skips.
 - Opt-in fixture: `gradlew runClient -PchairSmoke`, isolated fresh world under `run-chair-smoke`, excluded from the normal mod JAR.
 - Fixture checks four-facing raised shapes and arm openings, right-click mounting, repeated-click seat reuse, seated head clearance under a two-block ceiling, safe dismount and unused seat cleanup. It also checks item model lookup and instrument atlas registration after resource reload.
 - Blockbench views: `captain-chair-perspective.png`, `captain-chair-front.png`, `captain-chair-side.png`, `captain-chair-rear.png`. `captain-chair-preview.png` crops the perspective capture onto a dark background.
 - Eight client stages completed successfully. Front and seated captures were visually reviewed; the seated player fits below the two-block ceiling. Selected captures are in `captain-chair-validation/`.
 - The user independently tested the model in game and accepted it on 2026-09-24.
 
-Existing uncommitted locker work is retained separately from this chair change.
+The locker work is tracked in a separate change from this chair.
