@@ -90,10 +90,18 @@ public final class ShuttleGameTests
             }
             helper.assertTrue(state.canSurvive(ship, entry.getKey()), "Unsupported block at " + entry.getKey());
         }
+        helper.assertTrue(com.starboundmc.block.TransporterBlock.ensureAssembly(ship, ShipStructure.SHIP_TELEPORTER_POS),
+                "Legacy ship transporter could not acquire upper parts");
         for (int z = -8; z <= 9; z++)
             for (int x = -1; x <= 1; x++)
                 for (int y = 102; y <= 103; y++)
-                    helper.assertTrue(ship.isEmptyBlock(new BlockPos(x, y, z)), "Main passage obstructed");
+                    if (x == 0 && z == -7) {
+                        var pos = new BlockPos(x, y, z);
+                        var state = ship.getBlockState(pos);
+                        helper.assertTrue(state.getBlock() instanceof com.starboundmc.block.TransporterBlock
+                                        && state.getValue(com.starboundmc.block.TransporterBlock.PART) == y - 101,
+                                "Missing transporter upper assembly");
+                    } else helper.assertTrue(ship.isEmptyBlock(new BlockPos(x, y, z)), "Main passage obstructed");
         var destination = ShipDimensions.shipTeleporterDestination(ship);
         helper.assertTrue(destination.equals(new BlockPos(0, 102, -7)), "Wrong teleporter landing");
         var crate = (ShipCrateBlockEntity) ship.getBlockEntity(new BlockPos(-2, 103, 3));
@@ -107,6 +115,10 @@ public final class ShuttleGameTests
         // chair without pretending a vanilla test connection negotiated mod payloads.
         var player = new ServerPlayer(ship.getServer(), ship,
                 new GameProfile(UUID.randomUUID(), "ShuttleTest"), ClientInformation.createDefault());
+        var transporterLanding = com.starboundmc.block.TransporterBlock.landingPosition(
+                ShipStructure.SHIP_TELEPORTER_POS, ship.getBlockState(ShipStructure.SHIP_TELEPORTER_POS));
+        helper.assertTrue(ship.noCollision(player, player.getDimensions(net.minecraft.world.entity.Pose.STANDING)
+                .makeBoundingBox(transporterLanding).deflate(.001)), "Transporter passenger intersects ship roof or backboard");
         var connection = new Connection(PacketFlow.SERVERBOUND);
         var channel = new EmbeddedChannel(connection);
         player.connection = new ServerGamePacketListenerImpl(ship.getServer(), connection, player,

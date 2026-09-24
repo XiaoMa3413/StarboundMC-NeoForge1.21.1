@@ -1,8 +1,14 @@
 {
-  "parent": "minecraft:block/orientable",
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "starboundmc:models/block/fuel_panel.obj",
+  "automatic_culling": false,
+  "shade_quads": true,
+  "flip_v": true,
+  "emissive_ambient": true,
+  "render_type": "minecraft:solid",
+  "ambientocclusion": false,
   "textures": {
-    "top": "starboundmc:block/fuel_controller_top",
-    "front": "starboundmc:block/fuel_controller_front",
-    "side": "starboundmc:block/fuel_controller_side"
+    "particle": "starboundmc:block/fuel_panel_titanium"
   }
 }

@@ -127,7 +127,12 @@ public final class ShipStructure
         BlockState state()
         {
             BlockState result = NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), stateTag);
-            if (!NbtUtils.writeBlockState(result).equals(stateTag))
+            // Archived teleporters predate the three-part facing state. Accept only that
+            // precise legacy encoding; keep strict validation for every other block.
+            boolean legacyTeleporter = stateTag.size() == 1
+                    && stateTag.getString("Name").equals("starboundmc:teleporter")
+                    && result.getBlock() instanceof com.starboundmc.block.TransporterBlock;
+            if (!legacyTeleporter && !NbtUtils.writeBlockState(result).equals(stateTag))
                 throw new IllegalStateException("Unknown or invalid default ship block state: " + stateTag);
             return result;
         }

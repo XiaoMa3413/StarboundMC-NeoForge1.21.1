@@ -1,0 +1,6 @@
+{
+  "sources": [
+    { "type": "minecraft:single", "resource": "starboundmc:effect/locker_hologram" },
+    { "type": "minecraft:single", "resource": "starboundmc:effect/locker_hologram_frame" }
+  ]
+}

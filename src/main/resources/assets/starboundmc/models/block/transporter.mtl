@@ -1,0 +1,41 @@
+# Restrained emitter surfaces and instruments are emissive.
+
+newmtl transporter_cyan
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_cyan
+
+newmtl transporter_deck
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_deck
+
+newmtl transporter_graphite
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_graphite
+
+newmtl transporter_instruments
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_instruments
+
+newmtl transporter_light
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_light
+
+newmtl transporter_rubber
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_rubber
+
+newmtl transporter_titanium
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_titanium
+
+newmtl transporter_warm
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/transporter_warm

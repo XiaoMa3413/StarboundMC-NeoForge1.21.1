@@ -1,0 +1,16 @@
+{
+  "date": "2026-09-24",
+  "command": "gradlew test build",
+  "result": "BUILD SUCCESSFUL",
+  "unit_tests": {
+    "tests": 673,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar": "starboundmc-0.1-alpha.jar",
+  "test_classes_in_jar": [],
+  "asset_export_deterministic": true,
+  "native_project_sha256": "cf388c5c142d9ec7dc4d30ca2c9344cc8a595c61c7bb5370a716d322a870776b",
+  "blockbench_saved_state_verified": true
+}

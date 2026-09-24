@@ -24,13 +24,14 @@ public final class ModBlocks {
             "matter_manipulator_workbench", Stage2Blocks.Workbench::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE));
     public static final DeferredBlock<Stage2Blocks.Teleporter> TELEPORTER = BLOCKS.registerBlock(
-            "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
+            "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+                    .noOcclusion().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
     public static final DeferredBlock<Stage2Blocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
             Stage2Blocks.ShipConsole::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
     public static final DeferredBlock<StarmapTerminalBlock> STARMAP_TERMINAL = BLOCKS.registerBlock(
             "starmap_terminal", StarmapTerminalBlock::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 8));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().lightLevel(state -> 8));
     public static final DeferredBlock<ShipAiTerminalBlock> SHIP_AI_TERMINAL = BLOCKS.registerBlock(
             "ship_ai_terminal", ShipAiTerminalBlock::new,
             BlockBehaviour.Properties.of()
@@ -39,7 +40,7 @@ public final class ModBlocks {
                     .noOcclusion()
                     .lightLevel(state -> 4));
     public static final DeferredBlock<ShipEngineBlock> SHIP_ENGINE = BLOCKS.registerBlock("ship_engine",
-            ShipEngineBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 14));
+            ShipEngineBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
     public static final DeferredBlock<ShipEngineUnitBlock> SHIP_ENGINE_UNIT = BLOCKS.registerBlock("ship_engine_unit",
             ShipEngineUnitBlock::new, BlockBehaviour.Properties.of().strength(4.0F, 8.0F)
                     .sound(SoundType.METAL).noOcclusion().lightLevel(state -> 8));
@@ -47,9 +48,9 @@ public final class ModBlocks {
             CaptainChairBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.QUARTZ_BLOCK).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.FuelController> FUEL_CONTROLLER = BLOCKS.registerBlock(
             "fuel_controller", Stage2Blocks.FuelController::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.ShipCrate> SHIP_CRATE = BLOCKS.registerBlock(
-            "ship_crate", Stage2Blocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK));
+            "ship_crate", Stage2Blocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.ShipDoor> SHIP_DOOR = BLOCKS.registerBlock(
             "ship_door", Stage2Blocks.ShipDoor::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "starboundmc:teleporter",
     "starboundmc:tungsten_ore",
     "starboundmc:titanium_ore",
     "starboundmc:durasteel_ore",

@@ -38,8 +38,22 @@ public class CaptainChairBlock extends Block
 
     /** Unrotated model faces south (+Z): seat in the front, backrest on the north side. */
     private static final VoxelShape SHAPE = Shapes.or(
-            Block.box(2.0, 0.0, 3.0, 14.0, 6.0, 13.0),   // seat
-            Block.box(2.0, 6.0, 0.0, 14.0, 16.0, 3.0));  // backrest (north, -Z)
+            Block.box(2.6, 0.0, 3.65, 13.4, 0.9, 14.15), // floor plate
+            Block.box(5.8, 0.9, 5.85, 10.2, 4.5, 10.7), // short pedestal
+            Block.box(1.0, 4.25, 3.7, 15.0, 6.2, 15.0), // undertray
+            Block.box(3.0, 6.2, 4.65, 13.0, 7.8, 14.65), // cushion
+            Block.box(1.0, 6.2, 4.0, 3.2, 8.4, 14.5),
+            Block.box(12.8, 6.2, 4.0, 15.0, 8.4, 14.5), // seat bolsters
+            Block.box(1.25, 5.1, 2.9, 14.75, 9.0, 6.8),
+            Block.box(1.5, 9.0, 2.0, 14.5, 15.0, 5.8),
+            Block.box(2.3, 15.0, 0.95, 13.7, 19.6, 4.6), // reclined back
+            Block.box(3.3, 19.0, 0.8, 12.7, 22.6, 4.8), // headrest
+            Block.box(0.7, 10.1, 4.2, 3.1, 11.9, 10.0),
+            Block.box(12.9, 10.1, 4.2, 15.3, 11.9, 10.0), // open arm bridges
+            Block.box(0.7, 10.7, 10.0, 3.1, 13.4, 15.5),
+            Block.box(12.9, 10.7, 10.0, 15.3, 13.4, 15.5), // control pods
+            Block.box(0.7, 7.6, 10.2, 3.1, 10.7, 12.0),
+            Block.box(12.9, 7.6, 10.2, 15.3, 10.7, 12.0)); // arm supports
 
     /** Shape rotated per facing, so the collision box follows the visual model. */
     private static final Map<Direction, VoxelShape> SHAPES_BY_FACING = new EnumMap<>(Direction.class);
@@ -104,12 +118,11 @@ public class CaptainChairBlock extends Block
         return SHAPES_BY_FACING.get(state.getValue(FACING));
     }
 
-    /** The seat/backrest leave the top half of the block empty; use the full cube for
-     *  raycasting so right-clicking/breaking works no matter where the chair is aimed. */
+    /** Include the raised back/headrest while keeping the spaces below the arms open. */
     @Override
     public VoxelShape getInteractionShape(BlockState state, BlockGetter level, BlockPos pos)
     {
-        return Shapes.block();
+        return SHAPES_BY_FACING.get(state.getValue(FACING));
     }
 
     @Override

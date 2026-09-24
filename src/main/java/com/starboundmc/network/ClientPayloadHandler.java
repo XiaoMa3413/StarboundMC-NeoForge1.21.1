@@ -18,6 +18,9 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(TransporterEffectPacket payload, IPayloadContext context) {
+        com.starboundmc.client.TransporterEffectRenderer.receive(payload);
+    }
     public static void handle(MobilityStatePacket payload, IPayloadContext context) {
         var state = context.player().getData(com.starboundmc.story.ModAttachments.MOBILITY_STATE);
         state.equipped = payload.equipped();

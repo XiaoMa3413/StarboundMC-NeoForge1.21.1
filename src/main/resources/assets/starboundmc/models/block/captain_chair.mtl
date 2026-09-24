@@ -1,0 +1,46 @@
+# Blockbench materials; only the small instrument displays are emissive.
+
+newmtl chair_back_pad
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_back_pad
+
+newmtl chair_bolster
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_bolster
+
+newmtl chair_control
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_control
+
+newmtl chair_edge
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_edge
+
+newmtl chair_graphite
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_graphite
+
+newmtl chair_instruments
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/chair_instruments
+
+newmtl chair_seat_pad
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_seat_pad
+
+newmtl chair_titanium
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_titanium
+
+newmtl chair_upholstery
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/chair_upholstery

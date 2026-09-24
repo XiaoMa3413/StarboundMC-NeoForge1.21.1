@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.starboundmc.block.VoxelPrintingStationBlock;
 import com.starboundmc.block.entity.VoxelPrintingStationBlockEntity;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -13,8 +14,10 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -33,6 +36,8 @@ import java.util.List;
  */
 public final class VoxelPrintingStationRenderer
         implements BlockEntityRenderer<VoxelPrintingStationBlockEntity> {
+    public static final ModelResourceLocation HEAD_MODEL = ModelResourceLocation.standalone(
+            ResourceLocation.fromNamespaceAndPath("starboundmc", "block/voxel_printer_head"));
     private static final float ITEM_BOTTOM_Y = 0.34F;
     private static final float ITEM_HEIGHT = 0.32F;
     private static final float ITEM_CENTER_Y = ITEM_BOTTOM_Y + ITEM_HEIGHT * 0.5F;
@@ -85,7 +90,8 @@ public final class VoxelPrintingStationRenderer
         pose.mulPose(Axis.YP.rotationDegrees(facing.toYRot() + 180.0F));
         pose.translate(-0.5, -0.5, -0.5);
 
-        renderOverheadProbes(station, pose, buffers, scanY, activelyPrinting, partialTick);
+        renderOverheadProbes(station, pose, buffers, scanY, activelyPrinting, partialTick,
+                packedLight, packedOverlay);
         if (!result.isEmpty()) {
             renderHologramAndScan(station, pose, buffers, formation, scanY);
             renderFormingItem(station, result, pose, buffers, formation, packedOverlay);
@@ -95,7 +101,8 @@ public final class VoxelPrintingStationRenderer
 
     private void renderOverheadProbes(VoxelPrintingStationBlockEntity station, PoseStack pose,
                                       MultiBufferSource buffers, float scanY,
-                                      boolean activelyPrinting, float partialTick) {
+                                      boolean activelyPrinting, float partialTick,
+                                      int packedLight, int packedOverlay) {
         float sweepOffset = 0.0F;
         if (activelyPrinting) {
             float animationTime = station.getLevel().getGameTime() + partialTick;
@@ -113,13 +120,11 @@ public final class VoxelPrintingStationRenderer
         ProbeAim leftAim = createProbeAim(true, leftTargetX, targetY, targetZ);
         ProbeAim rightAim = createProbeAim(false, rightTargetX, targetY, targetZ);
 
-        VertexConsumer solids = buffers.getBuffer(RenderType.debugFilledBox());
-        renderProbeSolids(pose, solids, leftAim);
-        renderProbeSolids(pose, solids, rightAim);
+        VertexConsumer solids = buffers.getBuffer(RenderType.solid());
+        renderProbeModel(pose, solids, leftAim, packedLight, packedOverlay);
+        renderProbeModel(pose, solids, rightAim, packedLight, packedOverlay);
 
         VertexConsumer lines = buffers.getBuffer(RenderType.lines());
-        renderProbeOutlines(pose, lines, leftAim);
-        renderProbeOutlines(pose, lines, rightAim);
         if (activelyPrinting) {
             drawBeam(lines, pose,
                     leftAim.nozzleX(), leftAim.nozzleY(), leftAim.nozzleZ(),
@@ -145,49 +150,15 @@ public final class VoxelPrintingStationRenderer
                 directionZ * inverseLength);
     }
 
-    private static void renderProbeSolids(PoseStack pose, VertexConsumer solids, ProbeAim aim) {
-        // The mounting block stays attached to the underside of the top beam.
-        addFilledBox(pose, solids,
-                aim.pivotX() - 0.048, aim.pivotY() + 0.012, aim.pivotZ() - 0.0433,
-                aim.pivotX() + 0.048, 0.84, aim.pivotZ() + 0.0433,
-                0.67F, 0.70F, 0.68F, 1.0F);
-
+    private void renderProbeModel(PoseStack pose, VertexConsumer solids, ProbeAim aim,
+                                  int packedLight, int packedOverlay) {
+        // Mounting shoes and yokes are part of the static chassis. The mesh is
+        // authored relative to the original pivot and retains its 0.12-block tip.
         pose.pushPose();
         pose.translate(aim.pivotX(), aim.pivotY(), aim.pivotZ());
         pose.mulPose(probeRotation(aim));
-        addFilledBox(pose, solids,
-                -0.0387, -0.070, -0.0367,
-                0.0387, 0.012, 0.0367,
-                0.67F, 0.70F, 0.68F, 1.0F);
-        addFilledBox(pose, solids,
-                -0.0267, -0.100, -0.0267,
-                0.0267, -0.070, 0.0267,
-                0.10F, 0.16F, 0.19F, 1.0F);
-        addFilledBox(pose, solids,
-                -0.0227, -PROBE_NOZZLE_LENGTH, -0.0227,
-                0.0227, -0.100, 0.0227,
-                0.08F, 0.84F, 0.95F, 1.0F);
-        pose.popPose();
-    }
-
-    private static void renderProbeOutlines(PoseStack pose, VertexConsumer lines, ProbeAim aim) {
-        LevelRenderer.renderLineBox(pose, lines,
-                new AABB(
-                        aim.pivotX() - 0.048, aim.pivotY() + 0.012, aim.pivotZ() - 0.0433,
-                        aim.pivotX() + 0.048, 0.84, aim.pivotZ() + 0.0433),
-                0.11F, 0.17F, 0.19F, 0.9F);
-
-        pose.pushPose();
-        pose.translate(aim.pivotX(), aim.pivotY(), aim.pivotZ());
-        pose.mulPose(probeRotation(aim));
-        LevelRenderer.renderLineBox(pose, lines,
-                new AABB(-0.0387, -0.070, -0.0367,
-                        0.0387, 0.012, 0.0367),
-                0.11F, 0.17F, 0.19F, 0.9F);
-        LevelRenderer.renderLineBox(pose, lines,
-                new AABB(-0.0227, -PROBE_NOZZLE_LENGTH, -0.0227,
-                        0.0227, -0.100, 0.0227),
-                0.55F, 0.98F, 1.0F, 0.98F);
+        var model = Minecraft.getInstance().getModelManager().getModel(HEAD_MODEL);
+        itemRenderer.renderModelLists(model, ItemStack.EMPTY, packedLight, packedOverlay, pose, solids);
         pose.popPose();
     }
 
@@ -196,15 +167,6 @@ public final class VoxelPrintingStationRenderer
         return new Quaternionf(
                 -aim.directionZ(), 0.0F, aim.directionX(), 1.0F - aim.directionY())
                 .normalize();
-    }
-
-    private static void addFilledBox(PoseStack pose, VertexConsumer consumer,
-                                     double minX, double minY, double minZ,
-                                     double maxX, double maxY, double maxZ,
-                                     float red, float green, float blue, float alpha) {
-        LevelRenderer.addChainedFilledBoxVertices(
-                pose, consumer, minX, minY, minZ, maxX, maxY, maxZ,
-                red, green, blue, alpha);
     }
 
     private void renderHologramAndScan(VoxelPrintingStationBlockEntity station, PoseStack pose,

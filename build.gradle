@@ -69,6 +69,7 @@ sourceSets {
             include 'com/starboundmc/block/ShipEngineBlock.java'
             include 'com/starboundmc/block/ShipEngineUnitBlock.java'
             include 'com/starboundmc/block/Stage2Blocks.java'
+            include 'com/starboundmc/block/TransporterBlock.java'
             include 'com/starboundmc/block/StarmapTerminalBlock.java'
             include 'com/starboundmc/block/ShipAiTerminalBlock.java'
             include 'com/starboundmc/block/VoxelRefineryBlock.java'
@@ -221,6 +222,27 @@ if (project.hasProperty('hudVisorSmoke')) {
 if (project.hasProperty('hudWorldSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('thrusterSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('printerSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('lockerSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('chairSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('starmapConsoleSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('transporterSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
+if (project.hasProperty('fuelPanelSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -236,6 +258,41 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('printerSmoke')) {
+                gameDirectory = file('run-printer-smoke')
+                systemProperty 'starboundmc.debug.printerSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('lockerSmoke')) {
+                gameDirectory = file('run-locker-smoke')
+                systemProperty 'starboundmc.debug.lockerSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('chairSmoke')) {
+                gameDirectory = file('run-chair-smoke')
+                systemProperty 'starboundmc.debug.chairSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('starmapConsoleSmoke')) {
+                gameDirectory = file('run-starmap-console-smoke')
+                systemProperty 'starboundmc.debug.starmapConsoleSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('transporterSmoke')) {
+                gameDirectory = file('run-transporter-smoke')
+                systemProperty 'starboundmc.debug.transporterSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('fuelPanelSmoke')) {
+                gameDirectory = file('run-fuel-panel-smoke')
+                systemProperty 'starboundmc.debug.fuelPanelSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('thrusterSmoke')) {
+                gameDirectory = file('run-thruster-smoke')
+                systemProperty 'starboundmc.debug.thrusterSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
             if (project.hasProperty('hudVisorSmoke')) {
                 gameDirectory = file('run-hud-visor-smoke')
                 systemProperty 'starboundmc.debug.hudVisorSmoke', 'true'

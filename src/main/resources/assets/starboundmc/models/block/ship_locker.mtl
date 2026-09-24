@@ -1,0 +1,21 @@
+# Emissive optics supply surface brightness only, not world light.
+
+newmtl locker_hologram
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:effect/locker_hologram
+
+newmtl locker_hologram_frame
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:effect/locker_hologram_frame
+
+newmtl locker_optics
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/locker_optics
+
+newmtl locker_surface_atlas
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/locker_surface_atlas

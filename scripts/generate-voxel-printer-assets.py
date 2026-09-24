@@ -192,5 +192,7 @@ def make_model():
 
 
 if __name__ == '__main__':
+    if MODEL.exists() and json.loads(MODEL.read_text(encoding='utf-8')).get('loader') == 'neoforge:obj':
+        raise SystemExit('The printer now uses its Blockbench mesh. Run python tools/export_voxel_printer.py instead.')
     make_model()
     make_atlas()

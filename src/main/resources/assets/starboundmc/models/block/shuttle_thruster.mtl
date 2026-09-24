@@ -1,0 +1,31 @@
+# Authored in Blockbench; texture paths refer to the Minecraft block atlas.
+
+newmtl shuttle_mount_plate
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_mount_plate
+
+newmtl shuttle_nozzle_liner
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_nozzle_liner
+
+newmtl shuttle_nozzle_mount
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_nozzle_mount
+
+newmtl shuttle_nozzle_rim
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_nozzle_rim
+
+newmtl shuttle_nozzle_shell
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_nozzle_shell
+
+newmtl shuttle_nozzle_throat
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shuttle_nozzle_throat

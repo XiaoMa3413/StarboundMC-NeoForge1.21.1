@@ -50,8 +50,23 @@ public final class Stage2ClientRegistrar {
     }
 
     @SubscribeEvent
+    public static void registerThrusterShaders(net.neoforged.neoforge.client.event.RegisterShadersEvent event)
+            throws java.io.IOException {
+        ThrusterRenderTypes.registerShaders(event);
+    }
+
+    @SubscribeEvent
+    public static void registerPrinterModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event) {
+        event.register(VoxelPrintingStationRenderer.HEAD_MODEL);
+        event.register(ShipLockerRenderer.LEFT);
+        event.register(ShipLockerRenderer.RIGHT);
+    }
+
+    @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SEAT.get(), SeatRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SHIP_ENGINE.get(), ShipThrusterRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SHIP_CRATE.get(), ShipLockerRenderer::new);
         event.registerBlockEntityRenderer(
                 ModBlockEntities.VOXEL_PRINTING_STATION.get(), VoxelPrintingStationRenderer::new);
     }

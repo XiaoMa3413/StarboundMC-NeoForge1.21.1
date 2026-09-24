@@ -1,0 +1,1 @@
+Seven captures: four facings, shaped collision/selection, front clearance, no occlusion, right-click menu with authoritative offline/online snapshots, baked OBJ/chart, seven materials, item and resource reload passed.

@@ -1,5 +1,7 @@
 package com.starboundmc.world;
 
+import com.starboundmc.block.ModBlocks;
+import com.starboundmc.block.TransporterBlock;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.SyncStarStatePacket;
 import com.starboundmc.story.ShipStoryService;
@@ -45,13 +47,18 @@ public final class Stage6TravelService {
             return false;
         }
         ServerLevel ship = server.getLevel(SHIP_LEVEL);
+        var origin = TransporterEffects.origin(player);
         if (ship == null) {
             SurfaceLandingService.teleportToOverworldSpawn(player, false);
+            TransporterEffects.afterTravel(player, origin);
+        } else if (ship.getBlockState(ShipStructure.SHIP_TELEPORTER_POS).is(ModBlocks.TELEPORTER.get())) {
+            if (!TransporterBlock.teleportHere(player, ship, ShipStructure.SHIP_TELEPORTER_POS)) return false;
         } else {
             BlockPos destination = ShipDimensions.shipTeleporterDestination(ship);
             player.stopRiding();
             player.teleportTo(ship, destination.getX() + 0.5, destination.getY(), destination.getZ() + 0.5,
                     player.getYRot(), player.getXRot());
+            TransporterEffects.afterTravel(player, origin);
         }
         syncState(player);
         return true;
@@ -78,7 +85,9 @@ public final class Stage6TravelService {
             return false;
         }
 
-        if (!SurfaceLandingService.teleportToSurface(player, body)) {
+        var origin = TransporterEffects.origin(player);
+        if (!SurfaceLandingService.teleportToSurface(player, body)
+                || !player.level().dimension().location().equals(body.surface().orElseThrow().dimension())) {
             // The refusal table above already covers every input that makes this
             // fail, so reaching here would mean the two disagree. Refuse rather
             // than relocate, and say so with the same message.
@@ -88,6 +97,7 @@ public final class Stage6TravelService {
 
         // Mission progression and the personal tutorial are driven only after the
         // authoritative teleport has placed the player in a surface level.
+        TransporterEffects.afterTravel(player, origin);
         ShipStoryService.onPlanetSurfaceArrival(player);
         syncState(player);
         return true;

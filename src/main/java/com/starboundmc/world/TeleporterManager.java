@@ -1,6 +1,7 @@
 package com.starboundmc.world;
 
 import com.starboundmc.block.ModBlocks;
+import com.starboundmc.block.TransporterBlock;
 import com.starboundmc.story.ShipStoryService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -133,7 +134,7 @@ public class TeleporterManager extends SavedData
         return result;
     }
 
-    /** Teleport the player to a named teleporter, landing on top of its block. */
+    /** Teleport to the real standing disc after verifying the complete passenger bay. */
     public static boolean teleportToNamed(ServerPlayer player, String key)
     {
         MinecraftServer server = player.getServer();
@@ -152,11 +153,8 @@ public class TeleporterManager extends SavedData
         ServerLevel level = server.getLevel(entry.dimension());
         if (level == null)
             return false;
-        BlockPos dest = entry.pos().above();
-        player.stopRiding();
-        player.teleportTo(level, dest.getX() + 0.5, dest.getY(), dest.getZ() + 0.5,
-                player.getYRot(), player.getXRot());
-        level.playSound(null, dest, SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
+        if (!TransporterBlock.teleportHere(player, level, entry.pos())) return false;
+        level.playSound(null, entry.pos(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.BLOCKS, 1.0F, 1.0F);
         ShipStoryService.onPlanetSurfaceArrival(player);
         return true;
     }
@@ -185,7 +183,8 @@ public class TeleporterManager extends SavedData
         {
             return null;
         }
-        if (!level.getBlockState(pos).is(ModBlocks.TELEPORTER.get()))
+        if (!level.getBlockState(pos).is(ModBlocks.TELEPORTER.get())
+                || level.getBlockState(pos).getValue(TransporterBlock.PART) != 0)
             return null;
         return new TeleporterEntry(dim, pos, name);
     }
