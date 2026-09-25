@@ -27,10 +27,13 @@
         "atmosphere_green": 0.78,
         "atmosphere_peak": 0.23,
         "atmosphere_red": 0.55,
+        "fresnel_strength": 0.12,
         "night_floor": 0.14,
         "orientation_tilt": 32.0,
         "orientation_yaw": 125.0,
         "point_color": -7350273,
+        "roughness": 0.3,
+        "specular_strength": 0.34,
         "spin_rate": 0.00225,
         "terminator_width": 0.3,
         "texture": "starboundmc:textures/planet/frozen.png"

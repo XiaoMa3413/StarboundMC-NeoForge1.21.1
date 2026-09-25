@@ -38,6 +38,32 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(cold.bodies().size() == 1,
                 "sys2 should declare 1 body, found " + cold.bodies().size());
 
+        var frozen = cold.bodies().stream()
+                .filter(body -> body.entryId().equals("sys2:frozen")).findFirst().orElse(null);
+        helper.assertTrue(frozen != null, "sys2:frozen missing");
+        var frozenSpaceVisual = frozen.spaceVisual().orElse(null);
+        helper.assertTrue(frozenSpaceVisual != null, "sys2:frozen lost its space visual profile");
+        helper.assertTrue(Math.abs(frozenSpaceVisual.specularStrength() - 0.34F) < 1.0E-6F,
+                "frozen specular strength drifted through the registry: "
+                        + frozenSpaceVisual.specularStrength());
+        helper.assertTrue(Math.abs(frozenSpaceVisual.roughness() - 0.30F) < 1.0E-6F,
+                "frozen roughness drifted through the registry: " + frozenSpaceVisual.roughness());
+        helper.assertTrue(Math.abs(frozenSpaceVisual.fresnelStrength() - 0.12F) < 1.0E-6F,
+                "frozen fresnel strength drifted through the registry: "
+                        + frozenSpaceVisual.fresnelStrength());
+
+        var lushSpaceVisual = main.bodies().stream()
+                .filter(body -> body.entryId().equals("sys1:lush")).findFirst().orElseThrow()
+                .spaceVisual().orElseThrow();
+        helper.assertTrue(Math.abs(lushSpaceVisual.specularStrength() - 0.14F) < 1.0E-6F,
+                "lush specular strength drifted through the registry: "
+                        + lushSpaceVisual.specularStrength());
+        helper.assertTrue(Math.abs(lushSpaceVisual.roughness() - 0.56F) < 1.0E-6F,
+                "lush roughness drifted through the registry: " + lushSpaceVisual.roughness());
+        helper.assertTrue(Math.abs(lushSpaceVisual.fresnelStrength() - 0.05F) < 1.0E-6F,
+                "lush fresnel strength drifted through the registry: "
+                        + lushSpaceVisual.fresnelStrength());
+
         // Geometry read back through a codec must be bit-identical to the values
         // the generator wrote, or a docked ship would render off-position.
         var lush = main.bodies().stream()
