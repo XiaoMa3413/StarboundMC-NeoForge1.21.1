@@ -1,6 +1,7 @@
 #version 150
 
 uniform sampler2D Sampler0;
+uniform sampler2D Sampler1;
 uniform vec3 SunDirection;
 uniform vec3 CameraPositionMesh;
 uniform float TerminatorWidth;
@@ -8,6 +9,7 @@ uniform float NightFloor;
 uniform float SpecularStrength;
 uniform float Roughness;
 uniform float FresnelStrength;
+uniform float MaterialMaskEnabled;
 uniform float SurfaceAlpha;
 uniform float Brightness;
 
@@ -36,16 +38,22 @@ void main() {
     light.g += (0.55 - light.g) * terminator * 0.25;
     light.b += (0.25 - light.b) * terminator * 0.18;
 
-    float roughness = clamp(Roughness, 0.0, 1.0);
+    float materialMask = 1.0;
+    if (MaterialMaskEnabled > 0.5) {
+        // R is the specular/smooth-surface mask: black land, white ocean.
+        materialMask = clamp(texture(Sampler1, texCoord0).r, 0.0, 1.0);
+    }
+    float specularStrength = SpecularStrength * materialMask;
+    float roughness = mix(1.0, clamp(Roughness, 0.0, 1.0), materialMask);
     float specular = 0.0;
     float fresnel = 0.0;
-    if (SpecularStrength > 0.0 || FresnelStrength > 0.0) {
+    if (specularStrength > 0.0 || FresnelStrength > 0.0) {
         vec3 viewDirection = safeNormalize(CameraPositionMesh - meshPosition, normal);
-        if (SpecularStrength > 0.0 && dotNL > 0.0) {
+        if (specularStrength > 0.0 && dotNL > 0.0) {
             vec3 halfVector = safeNormalize(lightDirection + viewDirection, normal);
             float shininess = mix(96.0, 4.0, roughness);
             float roughnessEnergy = mix(1.0, 0.28, roughness);
-            specular = SpecularStrength * roughnessEnergy
+            specular = specularStrength * roughnessEnergy
                     * pow(max(dot(normal, halfVector), 0.0), shininess);
             specular = clamp(specular, 0.0, 0.18);
         }

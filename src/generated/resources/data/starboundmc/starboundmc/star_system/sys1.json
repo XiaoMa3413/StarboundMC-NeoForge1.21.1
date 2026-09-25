@@ -83,6 +83,7 @@
         "atmosphere_peak": 0.2,
         "atmosphere_red": 0.3,
         "fresnel_strength": 0.05,
+        "material_mask": "starboundmc:textures/planet/lush_material.png",
         "orientation_tilt": 23.0,
         "orientation_yaw": 15.0,
         "point_color": -9906550,

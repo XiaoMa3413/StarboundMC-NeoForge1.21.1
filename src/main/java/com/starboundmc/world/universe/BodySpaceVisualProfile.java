@@ -1,6 +1,7 @@
 package com.starboundmc.world.universe;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.Optional;
@@ -14,6 +15,10 @@ import java.util.Optional;
  * view-dependent surface response. The surface shader reads the material
  * controls here; the remaining values continue to mirror the renderer's
  * per-body configuration.</p>
+ *
+ * <p>An optional {@code materialMask} uses its red channel as the
+ * specular/smooth-surface mask: 0 is rough land and 1 is smooth, reflective
+ * surface. Other channels are currently unused.</p>
  *
  * <p>The atmosphere tint is stored as three floats rather than a packed colour
  * because that is how the renderer holds it. Rounding it into an int here would
@@ -30,6 +35,7 @@ import java.util.Optional;
  * clearance from drifting apart, so only the texture varies per body.</p>
  */
 public record BodySpaceVisualProfile(Optional<String> texture,
+                                     Optional<String> materialMask,
                                      float atmosphereRed,
                                      float atmosphereGreen,
                                      float atmosphereBlue,
@@ -46,10 +52,21 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float fresnelStrength,
                                      Optional<String> ringTexture)
 {
+    private record TextureFields(Optional<String> texture, Optional<String> materialMask)
+    {
+        private static final MapCodec<TextureFields> CODEC = RecordCodecBuilder.mapCodec(instance ->
+                instance.group(
+                        Codec.STRING.optionalFieldOf("texture")
+                                .forGetter(TextureFields::texture),
+                        Codec.STRING.optionalFieldOf("material_mask")
+                                .forGetter(TextureFields::materialMask)
+                ).apply(instance, TextureFields::new));
+    }
+
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.STRING.optionalFieldOf("texture")
-                            .forGetter(BodySpaceVisualProfile::texture),
+                    TextureFields.CODEC.forGetter(profile ->
+                            new TextureFields(profile.texture(), profile.materialMask())),
                     Codec.FLOAT.optionalFieldOf("atmosphere_red", 0.0F)
                             .forGetter(BodySpaceVisualProfile::atmosphereRed),
                     Codec.FLOAT.optionalFieldOf("atmosphere_green", 0.0F)
@@ -84,9 +101,57 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                             .forGetter(BodySpaceVisualProfile::ringTexture)
             ).apply(instance, BodySpaceVisualProfile::new));
 
+    private BodySpaceVisualProfile(TextureFields textures,
+                                   float atmosphereRed,
+                                   float atmosphereGreen,
+                                   float atmosphereBlue,
+                                   float atmospherePeak,
+                                   float orientationTilt,
+                                   float orientationYaw,
+                                   float orientationRoll,
+                                   int pointColor,
+                                   float terminatorWidth,
+                                   float spinRate,
+                                   float nightFloor,
+                                   float specularStrength,
+                                   float roughness,
+                                   float fresnelStrength,
+                                   Optional<String> ringTexture)
+    {
+        this(textures.texture(), textures.materialMask(), atmosphereRed, atmosphereGreen,
+                atmosphereBlue, atmospherePeak, orientationTilt, orientationYaw, orientationRoll,
+                pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
+                fresnelStrength, ringTexture);
+    }
+
+    /** Backward-compatible constructor for profiles without a material mask. */
+    public BodySpaceVisualProfile(Optional<String> texture,
+                                  float atmosphereRed,
+                                  float atmosphereGreen,
+                                  float atmosphereBlue,
+                                  float atmospherePeak,
+                                  float orientationTilt,
+                                  float orientationYaw,
+                                  float orientationRoll,
+                                  int pointColor,
+                                  float terminatorWidth,
+                                  float spinRate,
+                                  float nightFloor,
+                                  float specularStrength,
+                                  float roughness,
+                                  float fresnelStrength,
+                                  Optional<String> ringTexture)
+    {
+        this(texture, Optional.empty(), atmosphereRed, atmosphereGreen, atmosphereBlue,
+                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
+                terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
+                fresnelStrength, ringTexture);
+    }
+
     public BodySpaceVisualProfile
     {
         texture = texture == null ? Optional.empty() : texture;
+        materialMask = materialMask == null ? Optional.empty() : materialMask;
         ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);

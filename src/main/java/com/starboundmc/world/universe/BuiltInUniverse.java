@@ -125,7 +125,8 @@ public final class BuiltInUniverse
                                         0.30F, 0.60F, 1.0F, 0.20F,
                                         23.0F, 15.0F, 0.0F, 0xFF68D68A,
                                         0.24F, 0.00375F, 0.10F,
-                                        0.14F, 0.56F, 0.05F),
+                                        0.14F, 0.56F, 0.05F,
+                                        "starboundmc:textures/planet/lush_material.png", null),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
@@ -302,7 +303,7 @@ public final class BuiltInUniverse
     {
         return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
                 pointColor, terminatorWidth, spinRate, nightFloor,
-                specularStrength, roughness, fresnelStrength, null);
+                specularStrength, roughness, fresnelStrength, null, null);
     }
 
     /** Variant for a ringed body, which also supplies its ring texture. */
@@ -319,8 +320,29 @@ public final class BuiltInUniverse
                                                                 float fresnelStrength,
                                                                 String ringTexture)
     {
+        return spaceVisual(texture, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll,
+                pointColor, terminatorWidth, spinRate, nightFloor,
+                specularStrength, roughness, fresnelStrength, null, ringTexture);
+    }
+
+    /** Variant with an optional surface material mask and optional ring texture. */
+    private static Optional<BodySpaceVisualProfile> spaceVisual(String texture,
+                                                                float atmoRed, float atmoGreen,
+                                                                float atmoBlue, float atmoPeak,
+                                                                float tilt, float yaw, float roll,
+                                                                int pointColor,
+                                                                float terminatorWidth,
+                                                                float spinRate,
+                                                                float nightFloor,
+                                                                float specularStrength,
+                                                                float roughness,
+                                                                float fresnelStrength,
+                                                                String materialMask,
+                                                                String ringTexture)
+    {
         return Optional.of(new BodySpaceVisualProfile(
-                Optional.ofNullable(texture), atmoRed, atmoGreen, atmoBlue, atmoPeak,
+                Optional.ofNullable(texture), Optional.ofNullable(materialMask),
+                atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
                 specularStrength, roughness, fresnelStrength,
                 Optional.ofNullable(ringTexture)));

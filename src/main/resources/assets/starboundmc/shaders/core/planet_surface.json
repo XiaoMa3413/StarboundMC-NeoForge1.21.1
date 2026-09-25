@@ -2,7 +2,8 @@
   "vertex": "starboundmc:planet_surface",
   "fragment": "starboundmc:planet_surface",
   "samplers": [
-    { "name": "Sampler0" }
+    { "name": "Sampler0" },
+    { "name": "Sampler1" }
   ],
   "uniforms": [
     {
@@ -24,6 +25,7 @@
     { "name": "SpecularStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "Roughness", "type": "float", "count": 1, "values": [1.0] },
     { "name": "FresnelStrength", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "MaterialMaskEnabled", "type": "float", "count": 1, "values": [0.0] },
     { "name": "SurfaceAlpha", "type": "float", "count": 1, "values": [1.0] },
     { "name": "Brightness", "type": "float", "count": 1, "values": [1.0] }
   ]

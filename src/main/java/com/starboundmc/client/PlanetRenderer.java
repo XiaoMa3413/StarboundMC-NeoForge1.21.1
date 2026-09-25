@@ -555,8 +555,13 @@ public class PlanetRenderer
                                                   Vector3f worldSun, float brightness, float alpha,
                                                   float shipYaw, float shipPitch, float animationTicks)
     {
+        BodySpaceVisualProfile profile = visual(body);
+        ResourceLocation diffuseTexture = textureOf(body);
+        ResourceLocation materialMaskTexture = profile.materialMask()
+                .map(ResourceLocation::parse).orElse(diffuseTexture);
         ShaderInstance previousShader = RenderSystem.getShader();
-        int previousTexture = RenderSystem.getShaderTexture(0);
+        int previousDiffuseTexture = RenderSystem.getShaderTexture(0);
+        int previousMaterialMaskTexture = RenderSystem.getShaderTexture(1);
         FogRenderer.setupNoFog();
         try
         {
@@ -565,9 +570,11 @@ public class PlanetRenderer
             RenderSystem.enableDepthTest();
             RenderSystem.enableCull();
             RenderSystem.depthMask(false);
-            RenderSystem.setShaderTexture(0, textureOf(body));
+            RenderSystem.setShaderTexture(0, diffuseTexture);
+            // Bind a valid texture even for profiles without a mask; the shader's
+            // MaterialMaskEnabled uniform controls whether this sampler is read.
+            RenderSystem.setShaderTexture(1, materialMaskTexture);
 
-            BodySpaceVisualProfile profile = visual(body);
             float spinDegrees = animationTicks * spinRate(body);
             // Keep the sphere mesh shared and unrotated. Body orientation and spin
             // stay in the model matrix, while the matching inverse is applied to
@@ -590,7 +597,7 @@ public class PlanetRenderer
                 PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun, cameraPositionMesh,
                         terminatorWidth(body), nightFloor(body),
                         profile.specularStrength(), profile.roughness(), profile.fresnelStrength(),
-                        alpha, brightness);
+                        profile.materialMask().isPresent(), alpha, brightness);
             }
             else
             {
@@ -624,7 +631,8 @@ public class PlanetRenderer
         finally
         {
             RenderSystem.setShader(() -> previousShader);
-            RenderSystem.setShaderTexture(0, previousTexture);
+            RenderSystem.setShaderTexture(0, previousDiffuseTexture);
+            RenderSystem.setShaderTexture(1, previousMaterialMaskTexture);
             SpaceRenderPassState.restoreDefaults();
         }
     }
