@@ -17,8 +17,8 @@ import org.slf4j.Logger;
 final class AtmosphereShellRenderer
 {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int STACKS = 48;
-    private static final int SLICES = 96;
+    private static final int STACKS = 64;
+    private static final int SLICES = 128;
     private static final float OUTER_RADIUS = PlanetRenderer.PLANET_RADIUS;
     private static final float ATMOSPHERE_INNER_OVERLAP = 0.999F;
     private static VertexBuffer shellBuffer;

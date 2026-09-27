@@ -41,6 +41,17 @@ class AtmosphereOpticalDepthTest
     }
 
     @Test
+    void unitInnerRadiusScalePreservesTheExactShellRadii()
+    {
+        AtmosphereOpticalDepth.Radii exact =
+                AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, SHELL_SCALE);
+        AtmosphereOpticalDepth.Radii withoutBias =
+                AtmosphereOpticalDepth.forShellWithInnerOverlap(OUTER_MESH_RADIUS, SHELL_SCALE, 1.0F);
+
+        assertEquals(exact, withoutBias);
+    }
+
+    @Test
     void thinMediumAndThickProfilesUseTheirOwnShellRadii()
     {
         AtmosphereOpticalDepth.Radii thin = AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, 1.020F);

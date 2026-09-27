@@ -141,9 +141,9 @@ public class PlanetRenderer
     // of the warp while the ship swings back to face it. Package-visible so the
     // star map (ShipConsoleScreen) can sync its ship animation to the same timing.
 
-    // Cached UV-sphere geometry - 32×64 for 4k/8k textures, silky round (was 16×32, faceting visible at 38°)
-    private static final int SPHERE_STACKS = 32;
-    private static final int SPHERE_SLICES = 64;
+    // Cached UV-sphere geometry - 64×128 for smooth high-magnification views.
+    private static final int SPHERE_STACKS = 64;
+    private static final int SPHERE_SLICES = 128;
     static final float[] SPHERE_X;
     static final float[] SPHERE_Y;
     static final float[] SPHERE_Z;
