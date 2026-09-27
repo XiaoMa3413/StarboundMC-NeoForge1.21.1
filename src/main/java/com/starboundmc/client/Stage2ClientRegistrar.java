@@ -54,6 +54,7 @@ public final class Stage2ClientRegistrar {
             throws java.io.IOException {
         ThrusterRenderTypes.registerShaders(event);
         PlanetSurfaceShader.register(event);
+        AtmosphereShader.register(event);
     }
 
     @SubscribeEvent

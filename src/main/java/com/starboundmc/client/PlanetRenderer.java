@@ -150,15 +150,6 @@ public class PlanetRenderer
     static final float[] SPHERE_U;
     static final float[] SPHERE_V;
 
-    // The additive atmosphere is deliberately lower-detail than the textured
-    // surface: its soft alpha gradient hides the extra facets, while this cuts
-    // its per-frame CPU work to one quarter of the surface mesh.
-    private static final int HALO_STACKS = 16;
-    private static final int HALO_SLICES = 32;
-    private static final float[] HALO_X;
-    private static final float[] HALO_Y;
-    private static final float[] HALO_Z;
-
     static
     {
         int vertices = SPHERE_STACKS * SPHERE_SLICES * 4;
@@ -189,25 +180,6 @@ public class PlanetRenderer
             }
         }
 
-        int haloVertices = HALO_STACKS * HALO_SLICES * 4;
-        HALO_X = new float[haloVertices];
-        HALO_Y = new float[haloVertices];
-        HALO_Z = new float[haloVertices];
-        idx = 0;
-        for (int i = 0; i < HALO_STACKS; i++)
-        {
-            float phi0 = (float) (Math.PI * i / HALO_STACKS);
-            float phi1 = (float) (Math.PI * (i + 1) / HALO_STACKS);
-            for (int j = 0; j < HALO_SLICES; j++)
-            {
-                float theta0 = (float) (2.0 * Math.PI * j / HALO_SLICES);
-                float theta1 = (float) (2.0 * Math.PI * (j + 1) / HALO_SLICES);
-                putHaloVertex(idx++, phi0, theta0);
-                putHaloVertex(idx++, phi0, theta1);
-                putHaloVertex(idx++, phi1, theta1);
-                putHaloVertex(idx++, phi1, theta0);
-            }
-        }
     }
 
     private static void putSphereVertex(int idx, float phi, float theta, float u, float v)
@@ -218,14 +190,6 @@ public class PlanetRenderer
         SPHERE_Z[idx] = PLANET_RADIUS * sinPhi * (float) Math.sin(theta);
         SPHERE_U[idx] = u;
         SPHERE_V[idx] = v;
-    }
-
-    private static void putHaloVertex(int idx, float phi, float theta)
-    {
-        float sinPhi = (float) Math.sin(phi);
-        HALO_X[idx] = PLANET_RADIUS * sinPhi * (float) Math.cos(theta);
-        HALO_Y[idx] = PLANET_RADIUS * (float) Math.cos(phi);
-        HALO_Z[idx] = PLANET_RADIUS * sinPhi * (float) Math.sin(theta);
     }
 
     static void renderVisiblePlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
@@ -371,7 +335,7 @@ public class PlanetRenderer
         float cz = (float) bodyCenter.z;
         if (fullWeight > 0.002F && renderedRadius >= 0.45F)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
-                    cx, cy, cz);
+                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (reducedWeight + fullWeight > 0.002F)
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
@@ -379,92 +343,52 @@ public class PlanetRenderer
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
 
-    /**
-     * Additive limb glow drawn as a single sphere shell around the planet. Alpha
-     * is computed from the angular distance to the planet's projected limb: it is
-     * brightest at the limb and fades to zero at the outer edge of the shell, so
-     * the halo always hugs the planet and never has a bright outer rim.
-     */
+    /** Draws the independent GPU atmosphere shell before the planet surface. */
     private static void renderAtmosphereGlow(PoseStack pose, CelestialBodyDefinition body, float scale, float alpha,
-                                             float cx, float cy, float cz)
+                                             float cx, float cy, float cz, float shipYaw, float shipPitch,
+                                             float animationTicks)
     {
-        Matrix4f matrix = pose.last().pose();
         BodySpaceVisualProfile profile = visual(body);
-        Vector3f color = new Vector3f(profile.atmosphereRed(),
-                profile.atmosphereGreen(), profile.atmosphereBlue());
-        float peak = profile.atmospherePeak();
+        if (!profile.hasAtmosphere() || alpha <= 0.0F)
+            return;
 
-        float distC = (float) Math.sqrt(cx * cx + cy * cy + cz * cz);
-        float axisX = cx / distC;
-        float axisY = cy / distC;
-        float axisZ = cz / distC;
-
-        float planetRadius = PLANET_RADIUS * scale;
-        float outerFactor = 1.15F;
-        float outerRadius = planetRadius * outerFactor;
-        float limbAngle = (float) Math.asin(Math.min(1.0, planetRadius / distC));
-        float outerAngle = (float) Math.asin(Math.min(1.0, outerRadius / distC));
-        float angleRange = Math.max(0.0001F, outerAngle - limbAngle);
-        // Start the glow slightly inside the planet's projected limb so the halo
-        // visibly touches the surface instead of leaving a dark gap at the edge.
-        float innerAngle = Math.max(0.0F, limbAngle - 0.05F);
-        float innerRange = Math.max(0.0001F, limbAngle - innerAngle);
-
-        FogRenderer.setupNoFog();
-        try
-        {
-            RenderSystem.enableBlend();
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-            RenderSystem.disableCull();
-            RenderSystem.disableDepthTest();
-            RenderSystem.depthMask(false);
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-            BufferBuilder bb = Tesselator.getInstance().begin(
-                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            for (int i = 0; i < HALO_X.length; i++)
-            {
-                float wx = cx + HALO_X[i] * outerFactor * scale;
-                float wy = cy + HALO_Y[i] * outerFactor * scale;
-                float wz = cz + HALO_Z[i] * outerFactor * scale;
-
-                float len = (float) Math.sqrt(wx * wx + wy * wy + wz * wz);
-                float vx = wx / len;
-                float vy = wy / len;
-                float vz = wz / len;
-                float dot = axisX * vx + axisY * vy + axisZ * vz;
-                dot = Math.max(-1.0F, Math.min(1.0F, dot));
-                float angle = (float) Math.acos(dot);
-
-                float a = 0.0F;
-                if (angle >= innerAngle && angle <= limbAngle)
-                {
-                    // Ramp up from the inner edge to the limb so the glow overlaps
-                    // the planet's rim and appears glued to the surface.
-                    float t = (angle - innerAngle) / innerRange;
-                    a = peak * smoothstep(t) * alpha;
-                }
-                else if (angle > limbAngle && angle <= outerAngle)
-                {
-                    float t = (angle - limbAngle) / angleRange;
-                    float fade = (float) Math.pow(1.0F - t, 1.5);
-                    a = peak * fade * alpha;
-                }
-                vertexColor(bb, matrix, wx, wy, wz, color.x, color.y, color.z, a);
-            }
-            BufferUploader.drawWithShader(bb.buildOrThrow());
-        }
-        finally
-        {
-            SpaceRenderPassState.restoreDefaults();
-        }
+        float spinDegrees = animationTicks * spinRate(body);
+        Matrix4f model = shipSpacePlanetModel(pose.last().pose(), body, cx, cy, cz, scale,
+                shipYaw, shipPitch, spinDegrees).scale(1.15F);
+        Vector3f meshSpaceSun = meshSpaceSun(body, spinDegrees);
+        Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
+        Vector3f color = new Vector3f(profile.atmosphereRed(), profile.atmosphereGreen(),
+                profile.atmosphereBlue());
+        AtmosphereShellRenderer.render(model, meshSpaceSun, cameraPositionMesh,
+                color, profile.atmospherePeak(), alpha);
     }
 
     private static Vector3f fixedSunDirection(CelestialBodyDefinition body)
     {
         Vec3 sun = UniverseNavigation.sunDirection(body.entryId());
         return new Vector3f((float) sun.x, (float) sun.y, (float) sun.z);
+    }
+
+    private static Vector3f meshSpaceSun(CelestialBodyDefinition body, float spinDegrees)
+    {
+        BodySpaceVisualProfile profile = visual(body);
+        return PlanetSurfaceLighting.toMeshSpaceSun(fixedSunDirection(body), spinDegrees,
+                profile.orientationTilt(), profile.orientationYaw());
+    }
+
+    /** Applies the caller-owned full sky frame and the same orientation used by the surface pass. */
+    private static Matrix4f shipSpacePlanetModel(Matrix4f skyFrame, CelestialBodyDefinition body,
+                                                  float cx, float cy, float cz, float scale,
+                                                  float shipYaw, float shipPitch, float spinDegrees)
+    {
+        BodySpaceVisualProfile profile = visual(body);
+        Matrix4f model = new Matrix4f(skyFrame)
+                .translate(cx, cy, cz)
+                .rotateX((float) Math.toRadians(-shipPitch))
+                .rotateY((float) Math.toRadians(-shipYaw));
+        PlanetSurfaceLighting.appendBodyOrientation(model, spinDegrees,
+                profile.orientationTilt(), profile.orientationYaw());
+        return model.scale(scale);
     }
 
     private static float smoothstep(float t)
@@ -579,12 +503,8 @@ public class PlanetRenderer
             // Keep the sphere mesh shared and unrotated. Body orientation and spin
             // stay in the model matrix, while the matching inverse is applied to
             // the fixed virtual-space sun direction for per-fragment lighting.
-            Matrix4f model = new Matrix4f(matrix)
-                    .translate(cx, cy, cz)
-                    .rotateX((float) Math.toRadians(-shipPitch))
-                    .rotateY((float) Math.toRadians(-shipYaw));
-            PlanetSurfaceLighting.appendBodyOrientation(model, spinDegrees,
-                    profile.orientationTilt(), profile.orientationYaw()).scale(scale);
+            Matrix4f model = shipSpacePlanetModel(matrix, body, cx, cy, cz, scale,
+                    shipYaw, shipPitch, spinDegrees);
             Vector3f meshSpaceSun = PlanetSurfaceLighting.toMeshSpaceSun(worldSun, spinDegrees,
                     profile.orientationTilt(), profile.orientationYaw());
             VertexBuffer surface = getPlanetSurfaceBuffer();
