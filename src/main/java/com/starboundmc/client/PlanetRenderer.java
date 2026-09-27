@@ -354,7 +354,7 @@ public class PlanetRenderer
 
         float spinDegrees = animationTicks * spinRate(body);
         Matrix4f model = shipSpacePlanetModel(pose.last().pose(), body, cx, cy, cz, scale,
-                shipYaw, shipPitch, spinDegrees).scale(1.15F);
+                shipYaw, shipPitch, spinDegrees).scale(AtmosphereShellRenderer.ATMOSPHERE_SHELL_SCALE);
         Vector3f meshSpaceSun = meshSpaceSun(body, spinDegrees);
         Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
         Vector3f color = new Vector3f(profile.atmosphereRed(), profile.atmosphereGreen(),

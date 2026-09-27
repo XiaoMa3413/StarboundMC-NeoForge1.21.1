@@ -19,6 +19,6 @@
     { "name": "AtmosphereColor", "type": "float", "count": 3, "values": [0.5, 0.7, 1.0] },
     { "name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.2] },
     { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [1.0] },
-    { "name": "NightResidual", "type": "float", "count": 1, "values": [0.16] }
+    { "name": "NightResidual", "type": "float", "count": 1, "values": [0.08] }
   ]
 }

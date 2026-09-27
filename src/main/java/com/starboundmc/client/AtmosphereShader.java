@@ -58,7 +58,7 @@ final class AtmosphereShader
         target.safeGetUniform("AtmosphereColor").set(color.x, color.y, color.z);
         target.safeGetUniform("AtmosphereStrength").set(strength);
         target.safeGetUniform("GlobalAlpha").set(alpha);
-        target.safeGetUniform("NightResidual").set(0.16F);
+        target.safeGetUniform("NightResidual").set(0.08F);
     }
 
     static void disableAfterFailure(ShaderInstance failedShader, RuntimeException exception)

@@ -17,8 +17,9 @@ import org.slf4j.Logger;
 final class AtmosphereShellRenderer
 {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final int STACKS = 16;
-    private static final int SLICES = 32;
+    private static final int STACKS = 48;
+    private static final int SLICES = 96;
+    static final float ATMOSPHERE_SHELL_SCALE = 1.035F;
     private static final float OUTER_RADIUS = PlanetRenderer.PLANET_RADIUS;
     private static VertexBuffer shellBuffer;
     private static boolean bufferUnavailable;

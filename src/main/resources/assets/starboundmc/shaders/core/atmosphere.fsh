@@ -21,8 +21,11 @@ void main() {
     vec3 viewDirection = safeNormalize(CameraPositionMesh - meshPosition, normal);
     vec3 lightDirection = safeNormalize(SunDirection, normal);
 
-    float viewCosine = max(dot(normal, viewDirection), 0.0);
-    float limb = pow(1.0 - viewCosine, 2.0);
+    float viewCosine = clamp(dot(normal, viewDirection), 0.0, 1.0);
+    float grazing = 1.0 - viewCosine;
+    float innerRise = smoothstep(0.68, 0.82, grazing);
+    float outerFade = 1.0 - smoothstep(0.94, 1.0, grazing);
+    float limb = innerRise * outerFade;
     float daylight = smoothstep(-0.20, 0.20, dot(normal, lightDirection));
     float illumination = mix(clamp(NightResidual, 0.0, 1.0), 1.0, daylight);
     float alpha = clamp(limb * illumination * AtmosphereStrength * GlobalAlpha, 0.0, 1.0);
