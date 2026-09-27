@@ -51,8 +51,14 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float specularStrength,
                                      float roughness,
                                      float fresnelStrength,
-                                     Optional<String> ringTexture)
+                                     Optional<String> ringTexture,
+                                     float atmosphereShellScale,
+                                     float atmosphereNightFraction,
+                                     float atmosphereTwilightStrength)
 {
+    public static final float DEFAULT_ATMOSPHERE_SHELL_SCALE = 1.055F;
+    public static final float DEFAULT_ATMOSPHERE_NIGHT_FRACTION = 0.08F;
+
     private record TextureFields(Optional<String> texture, Optional<String> materialMask,
                                  float emissiveStrength)
     {
@@ -67,19 +73,38 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                 ).apply(instance, TextureFields::new));
     }
 
+    private record AtmosphereFields(float red, float green, float blue, float peak,
+                                    float shellScale, float nightFraction, float twilightStrength)
+    {
+        private static final MapCodec<AtmosphereFields> CODEC = RecordCodecBuilder.mapCodec(instance ->
+                instance.group(
+                        Codec.FLOAT.optionalFieldOf("atmosphere_red", 0.0F)
+                                .forGetter(AtmosphereFields::red),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_green", 0.0F)
+                                .forGetter(AtmosphereFields::green),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_blue", 0.0F)
+                                .forGetter(AtmosphereFields::blue),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_peak", 0.0F)
+                                .forGetter(AtmosphereFields::peak),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_shell_scale", DEFAULT_ATMOSPHERE_SHELL_SCALE)
+                                .forGetter(AtmosphereFields::shellScale),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_night_fraction", DEFAULT_ATMOSPHERE_NIGHT_FRACTION)
+                                .forGetter(AtmosphereFields::nightFraction),
+                        Codec.FLOAT.optionalFieldOf("atmosphere_twilight_strength", 0.0F)
+                                .forGetter(AtmosphereFields::twilightStrength)
+                ).apply(instance, AtmosphereFields::new));
+    }
+
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
                     TextureFields.CODEC.forGetter(profile ->
                             new TextureFields(profile.texture(), profile.materialMask(),
                                     profile.emissiveStrength())),
-                    Codec.FLOAT.optionalFieldOf("atmosphere_red", 0.0F)
-                            .forGetter(BodySpaceVisualProfile::atmosphereRed),
-                    Codec.FLOAT.optionalFieldOf("atmosphere_green", 0.0F)
-                            .forGetter(BodySpaceVisualProfile::atmosphereGreen),
-                    Codec.FLOAT.optionalFieldOf("atmosphere_blue", 0.0F)
-                            .forGetter(BodySpaceVisualProfile::atmosphereBlue),
-                    Codec.FLOAT.optionalFieldOf("atmosphere_peak", 0.0F)
-                            .forGetter(BodySpaceVisualProfile::atmospherePeak),
+                    AtmosphereFields.CODEC.forGetter(profile -> new AtmosphereFields(
+                            profile.atmosphereRed(), profile.atmosphereGreen(),
+                            profile.atmosphereBlue(), profile.atmospherePeak(),
+                            profile.atmosphereShellScale(), profile.atmosphereNightFraction(),
+                            profile.atmosphereTwilightStrength())),
                     Codec.FLOAT.optionalFieldOf("orientation_tilt", 0.0F)
                             .forGetter(BodySpaceVisualProfile::orientationTilt),
                     Codec.FLOAT.optionalFieldOf("orientation_yaw", 0.0F)
@@ -107,10 +132,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
             ).apply(instance, BodySpaceVisualProfile::new));
 
     private BodySpaceVisualProfile(TextureFields textures,
-                                   float atmosphereRed,
-                                   float atmosphereGreen,
-                                   float atmosphereBlue,
-                                   float atmospherePeak,
+                                   AtmosphereFields atmosphere,
                                    float orientationTilt,
                                    float orientationYaw,
                                    float orientationRoll,
@@ -124,10 +146,11 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                    Optional<String> ringTexture)
     {
         this(textures.texture(), textures.materialMask(), textures.emissiveStrength(),
-                atmosphereRed, atmosphereGreen,
-                atmosphereBlue, atmospherePeak, orientationTilt, orientationYaw, orientationRoll,
+                atmosphere.red(), atmosphere.green(), atmosphere.blue(), atmosphere.peak(),
+                orientationTilt, orientationYaw, orientationRoll,
                 pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
-                fresnelStrength, ringTexture);
+                fresnelStrength, ringTexture, atmosphere.shellScale(), atmosphere.nightFraction(),
+                atmosphere.twilightStrength());
     }
 
     /** Backward-compatible constructor for masked profiles without emissive response. */
@@ -152,7 +175,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         this(texture, materialMask, 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
                 atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
                 terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
-                fresnelStrength, ringTexture);
+                fresnelStrength, ringTexture, DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F);
     }
 
     /** Backward-compatible constructor for profiles without a material mask. */
@@ -176,7 +200,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         this(texture, Optional.empty(), 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
                 atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
                 terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
-                fresnelStrength, ringTexture);
+                fresnelStrength, ringTexture, DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F);
     }
 
     public BodySpaceVisualProfile
@@ -201,6 +226,13 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         requireUnitRange("specularStrength", specularStrength);
         requireUnitRange("roughness", roughness);
         requireUnitRange("fresnelStrength", fresnelStrength);
+        if (!Float.isFinite(atmosphereShellScale)
+                || atmosphereShellScale < 1.005F || atmosphereShellScale > 1.10F)
+            throw new IllegalArgumentException("atmosphereShellScale must be finite and within [1.005, 1.10]");
+        if (!Float.isFinite(atmosphereNightFraction)
+                || atmosphereNightFraction < 0.0F || atmosphereNightFraction > 0.25F)
+            throw new IllegalArgumentException("atmosphereNightFraction must be finite and within [0, 0.25]");
+        requireUnitRange("atmosphereTwilightStrength", atmosphereTwilightStrength);
     }
 
     /** The atmosphere tint as a vector, for renderers that work in float triples. */

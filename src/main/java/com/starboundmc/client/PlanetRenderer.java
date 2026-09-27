@@ -353,14 +353,16 @@ public class PlanetRenderer
             return;
 
         float spinDegrees = animationTicks * spinRate(body);
+        float atmosphereShellScale = profile.atmosphereShellScale();
         Matrix4f model = shipSpacePlanetModel(pose.last().pose(), body, cx, cy, cz, scale,
-                shipYaw, shipPitch, spinDegrees).scale(AtmosphereShellRenderer.ATMOSPHERE_SHELL_SCALE);
+                shipYaw, shipPitch, spinDegrees).scale(atmosphereShellScale);
         Vector3f meshSpaceSun = meshSpaceSun(body, spinDegrees);
         Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
         Vector3f color = new Vector3f(profile.atmosphereRed(), profile.atmosphereGreen(),
                 profile.atmosphereBlue());
         AtmosphereShellRenderer.render(model, meshSpaceSun, cameraPositionMesh,
-                color, profile.atmospherePeak(), alpha);
+                color, profile.atmospherePeak(), alpha, atmosphereShellScale,
+                profile.atmosphereNightFraction(), profile.atmosphereTwilightStrength());
     }
 
     private static Vector3f fixedSunDirection(CelestialBodyDefinition body)

@@ -19,10 +19,7 @@ final class AtmosphereShellRenderer
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int STACKS = 48;
     private static final int SLICES = 96;
-    static final float ATMOSPHERE_SHELL_SCALE = 1.055F;
-    private static final AtmosphereOpticalDepth.Radii SHELL_RADII =
-            AtmosphereOpticalDepth.forShell(PlanetRenderer.PLANET_RADIUS, ATMOSPHERE_SHELL_SCALE);
-    private static final float OUTER_RADIUS = SHELL_RADII.outerRadius();
+    private static final float OUTER_RADIUS = PlanetRenderer.PLANET_RADIUS;
     private static VertexBuffer shellBuffer;
     private static boolean bufferUnavailable;
 
@@ -31,7 +28,8 @@ final class AtmosphereShellRenderer
     }
 
     static void render(Matrix4f model, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
-                       Vector3f color, float strength, float alpha)
+                       Vector3f color, float strength, float alpha,
+                       float shellScale, float nightFraction, float twilightStrength)
     {
         ShaderInstance activeShader = AtmosphereShader.current();
         if (activeShader == null || strength <= 0.0F || alpha <= 0.0F)
@@ -55,8 +53,14 @@ final class AtmosphereShellRenderer
 
             try
             {
+                // Keep one shared sphere VBO. The profile scale only affects the
+                // model transform and the shell-space radii sent to the shader.
+                float innerRadius = OUTER_RADIUS / shellScale;
+                float opticalDepthMax = 2.0F * (float) Math.sqrt(Math.max(
+                        OUTER_RADIUS * OUTER_RADIUS - innerRadius * innerRadius, 0.0F));
                 AtmosphereShader.setLighting(activeShader, sunDirectionMesh, cameraPositionMesh,
-                        color, strength, alpha, SHELL_RADII);
+                        color, strength, alpha, innerRadius, OUTER_RADIUS, opticalDepthMax,
+                        nightFraction, twilightStrength);
                 shell.bind();
                 shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);
             }

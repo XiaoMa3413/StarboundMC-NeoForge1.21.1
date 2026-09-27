@@ -101,11 +101,13 @@ public final class BuiltInUniverse
                                 navigation(-5000.0, 102.0, -2000.0,
                                         -5002.668504563659, 102.8, -1994.1827254324958,
                                         4.0, 335.0),
-                                spaceVisual("starboundmc:textures/planet/barren.png",
+                                spaceVisualWithAtmosphere("starboundmc:textures/planet/barren.png",
                                         0.75F, 0.65F, 0.50F, 0.15F,
+                                        1.020F, 0.025F, 0.15F,
                                         12.0F, 285.0F, 0.0F, 0xFFD0B07A,
                                         0.18F, 0.00275F, 0.06F,
-                                        0.02F, 0.92F, 0.0F),
+                                        0.02F, 0.92F, 0.0F,
+                                        0.0F, null, null),
                                 surface("starboundmc:barren", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 0, 0, 0, 1.0F))),
 
@@ -121,12 +123,13 @@ public final class BuiltInUniverse
                                         .focusTexture("starboundmc:textures/gui/starmap/bodies/lush_focus.png")
                                         .build(),
                                 navigation(0.0, 102.0, 0.0, 0.06, 103.2, 9.6, 6.0, 0.0),
-                                spaceVisual("starboundmc:textures/planet/lush.png",
+                                spaceVisualWithAtmosphere("starboundmc:textures/planet/lush.png",
                                         0.30F, 0.60F, 1.0F, 0.20F,
+                                        1.050F, 0.045F, 0.55F,
                                         23.0F, 15.0F, 0.0F, 0xFF68D68A,
                                         0.24F, 0.00375F, 0.10F,
                                         0.14F, 0.56F, 0.05F,
-                                        "starboundmc:textures/planet/lush_material.png", null),
+                                        0.0F, "starboundmc:textures/planet/lush_material.png", null),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
@@ -145,8 +148,9 @@ public final class BuiltInUniverse
                                 navigation(-82.64625654611092, 98.87302452316077, -4.673526941779457,
                                         -83.94, 99.2, -2.4000000000000004,
                                         6.0 / 3.67, 330.0),
-                                spaceVisual("starboundmc:textures/planet/molten.png",
+                                spaceVisualWithAtmosphere("starboundmc:textures/planet/molten.png",
                                         1.0F, 0.45F, 0.20F, 0.26F,
+                                        1.030F, 0.04F, 0.30F,
                                         6.0F, 210.0F, 0.0F, 0xFFFF8A4C,
                                         0.16F, 0.0075F, 0.16F,
                                         0.025F, 0.78F, 0.0F, 0.50F,
@@ -172,12 +176,13 @@ public final class BuiltInUniverse
                                 // Saturn-like: 26.7-degree tilt, no hard day/night line,
                                 // a fast spin so the bands never rest, and a warm night
                                 // side. The ring texture is what makes it ringed.
-                                spaceVisual("starboundmc:textures/planet/gasgiant.png",
+                                spaceVisualWithAtmosphere("starboundmc:textures/planet/gasgiant.png",
                                         0.99F, 0.91F, 0.70F, 0.24F,
+                                        1.070F, 0.10F, 0.20F,
                                         GasGiantGeometry.AXIAL_TILT_DEGREES, GasGiantGeometry.BODY_YAW_DEGREES, 0.0F,
                                         0xFFE4C893, 0.42F, 0.009F, 0.22F,
                                         0.02F, 0.92F, 0.035F,
-                                        "starboundmc:textures/planet/gasgiant_ring.png"),
+                                        0.0F, null, "starboundmc:textures/planet/gasgiant_ring.png"),
                                 // Orbit-only: no surface definition, which is what the
                                 // landing button reads to refuse with "no solid surface".
                                 Optional.empty()),
@@ -237,17 +242,37 @@ public final class BuiltInUniverse
                                 navigation(32400.0, 102.0, 20550.0,
                                         32408.8, 103.1, 20549.945,
                                         5.5, 90.0),
-                                spaceVisual("starboundmc:textures/planet/frozen.png",
+                                spaceVisualWithAtmosphere("starboundmc:textures/planet/frozen.png",
                                         0.55F, 0.78F, 1.0F, 0.23F,
+                                        1.040F, 0.07F, 0.25F,
                                         32.0F, 125.0F, 0.0F, 0xFF8FD7FF,
                                         0.30F, 0.00225F, 0.14F,
-                                        0.34F, 0.30F, 0.12F),
+                                        0.34F, 0.30F, 0.12F,
+                                        0.0F, null, null),
                                 surface("starboundmc:frozen", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 1, 0, 0, 1.0F)))
                 ));
     }
 
     // --------------------------------------------------------------- builders
+
+    /** Variant with explicitly authored atmosphere thickness and day/night tuning. */
+    private static Optional<BodySpaceVisualProfile> spaceVisualWithAtmosphere(
+            String texture,
+            float atmoRed, float atmoGreen, float atmoBlue, float atmoPeak,
+            float atmosphereShellScale, float atmosphereNightFraction, float atmosphereTwilightStrength,
+            float tilt, float yaw, float roll, int pointColor,
+            float terminatorWidth, float spinRate, float nightFloor,
+            float specularStrength, float roughness, float fresnelStrength,
+            float emissiveStrength, String materialMask, String ringTexture)
+    {
+        return Optional.of(new BodySpaceVisualProfile(
+                Optional.ofNullable(texture), Optional.ofNullable(materialMask), emissiveStrength,
+                atmoRed, atmoGreen, atmoBlue, atmoPeak,
+                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
+                specularStrength, roughness, fresnelStrength, Optional.ofNullable(ringTexture),
+                atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength));
+    }
 
     private static CelestialBodyDefinition body(String entryId, String nameKey, String typeKey,
                                                 String descriptionKey, int threatLevel,
@@ -342,11 +367,12 @@ public final class BuiltInUniverse
                                                                 String ringTexture)
     {
         return Optional.of(new BodySpaceVisualProfile(
-                Optional.ofNullable(texture), Optional.ofNullable(materialMask),
+                Optional.ofNullable(texture), Optional.ofNullable(materialMask), 0.0F,
                 atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
                 specularStrength, roughness, fresnelStrength,
-                Optional.ofNullable(ringTexture)));
+                Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F));
     }
 
     /** Variant with a material mask, emissive response and optional ring texture. */
@@ -370,7 +396,8 @@ public final class BuiltInUniverse
                 atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
                 specularStrength, roughness, fresnelStrength,
-                Optional.ofNullable(ringTexture)));
+                Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F));
     }
 
     private static Optional<BodySurfaceDefinition> surface(String dimension,

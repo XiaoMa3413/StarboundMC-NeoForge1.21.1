@@ -1,5 +1,6 @@
 package com.starboundmc.client;
 
+import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -8,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AtmosphereOpticalDepthTest
 {
     private static final float OUTER_MESH_RADIUS = PlanetRenderer.PLANET_RADIUS;
-    private static final float SHELL_SCALE = AtmosphereShellRenderer.ATMOSPHERE_SHELL_SCALE;
+    private static final float SHELL_SCALE = BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE;
     private static final AtmosphereOpticalDepth.Radii RADII =
             AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, SHELL_SCALE);
 
@@ -21,6 +22,20 @@ class AtmosphereOpticalDepthTest
                 RADII.outerRadius() * RADII.outerRadius()
                         - RADII.innerRadius() * RADII.innerRadius()),
                 RADII.maxOpticalDepth(), 1.0E-5F);
+    }
+
+    @Test
+    void thinMediumAndThickProfilesUseTheirOwnShellRadii()
+    {
+        AtmosphereOpticalDepth.Radii thin = AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, 1.020F);
+        AtmosphereOpticalDepth.Radii medium = AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, 1.055F);
+        AtmosphereOpticalDepth.Radii thick = AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, 1.070F);
+
+        assertEquals(OUTER_MESH_RADIUS / 1.020F, thin.innerRadius(), 1.0E-5F);
+        assertEquals(OUTER_MESH_RADIUS / 1.055F, medium.innerRadius(), 1.0E-5F);
+        assertEquals(OUTER_MESH_RADIUS / 1.070F, thick.innerRadius(), 1.0E-5F);
+        assertTrue(thin.maxOpticalDepth() < medium.maxOpticalDepth());
+        assertTrue(medium.maxOpticalDepth() < thick.maxOpticalDepth());
     }
 
     @Test

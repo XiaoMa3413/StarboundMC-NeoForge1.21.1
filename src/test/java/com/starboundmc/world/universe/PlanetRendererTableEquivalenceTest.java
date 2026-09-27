@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -63,6 +64,14 @@ class PlanetRendererTableEquivalenceTest
             "sys1:rockymoon", new float[] {0.0F, 1.0F, 0.0F},
             "sys2:frozen", new float[] {0.34F, 0.30F, 0.12F},
             "sys1:barren", new float[] {0.02F, 0.92F, 0.0F});
+
+    /** Shell scale, atmosphere night fraction and terminator twilight strength. */
+    private static final Map<String, float[]> ATMOSPHERE_TUNING = Map.of(
+            "sys1:lush", new float[] {1.050F, 0.045F, 0.55F},
+            "sys1:molten", new float[] {1.030F, 0.04F, 0.30F},
+            "sys1:gasgiant", new float[] {1.070F, 0.10F, 0.20F},
+            "sys2:frozen", new float[] {1.040F, 0.07F, 0.25F},
+            "sys1:barren", new float[] {1.020F, 0.025F, 0.15F});
 
     /** The planet texture each body's sphere is drawn with. */
     private static final Map<String, String> TEXTURE = Map.of(
@@ -145,6 +154,28 @@ class PlanetRendererTableEquivalenceTest
     }
 
     @Test
+    void atmosphereTuningMatchesEachAuthoredBodyProfile()
+    {
+        for (var entry : ATMOSPHERE_TUNING.entrySet())
+        {
+            BodySpaceVisualProfile profile = visual(entry.getKey());
+            float[] expected = entry.getValue();
+            String id = entry.getKey();
+            assertEquals(expected[0], profile.atmosphereShellScale(), 0.0F, id + " shell scale");
+            assertEquals(expected[1], profile.atmosphereNightFraction(), 0.0F, id + " night fraction");
+            assertEquals(expected[2], profile.atmosphereTwilightStrength(), 0.0F,
+                    id + " twilight strength");
+        }
+
+        BodySpaceVisualProfile rockyMoon = visual("sys1:rockymoon");
+        assertEquals(BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                rockyMoon.atmosphereShellScale(), 0.0F);
+        assertEquals(BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION,
+                rockyMoon.atmosphereNightFraction(), 0.0F);
+        assertEquals(0.0F, rockyMoon.atmosphereTwilightStrength(), 0.0F);
+    }
+
+    @Test
     void legacyDatapackProfileDefaultsToNoMaterialResponse()
     {
         BodySpaceVisualProfile profile = BodySpaceVisualProfile.CODEC.parse(JsonOps.INSTANCE,
@@ -155,6 +186,11 @@ class PlanetRendererTableEquivalenceTest
         assertEquals(1.0F, profile.roughness(), 0.0F);
         assertEquals(0.0F, profile.fresnelStrength(), 0.0F);
         assertEquals(0.0F, profile.emissiveStrength(), 0.0F);
+        assertEquals(BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                profile.atmosphereShellScale(), 0.0F);
+        assertEquals(BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION,
+                profile.atmosphereNightFraction(), 0.0F);
+        assertEquals(0.0F, profile.atmosphereTwilightStrength(), 0.0F);
     }
 
     @Test
@@ -186,6 +222,43 @@ class PlanetRendererTableEquivalenceTest
 
         assertEquals(molten.materialMask(), decoded.materialMask());
         assertEquals(molten.emissiveStrength(), decoded.emissiveStrength(), 0.0F);
+    }
+
+    @Test
+    void atmosphereTuningSurvivesCodecRoundTrip()
+    {
+        for (String id : ATMOSPHERE_TUNING.keySet())
+        {
+            BodySpaceVisualProfile expected = visual(id);
+            var encoded = BodySpaceVisualProfile.CODEC.encodeStart(JsonOps.INSTANCE, expected).getOrThrow();
+            BodySpaceVisualProfile decoded = BodySpaceVisualProfile.CODEC.parse(JsonOps.INSTANCE, encoded)
+                    .getOrThrow();
+
+            assertEquals(expected.atmosphereShellScale(), decoded.atmosphereShellScale(), 0.0F, id);
+            assertEquals(expected.atmosphereNightFraction(), decoded.atmosphereNightFraction(), 0.0F, id);
+            assertEquals(expected.atmosphereTwilightStrength(), decoded.atmosphereTwilightStrength(), 0.0F, id);
+        }
+    }
+
+    @Test
+    void invalidAtmosphereTuningIsRejected()
+    {
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.004F, 0.08F, 0.0F));
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.101F, 0.08F, 0.0F));
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.055F, -0.01F, 0.0F));
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.055F, 0.251F, 0.0F));
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.055F, 0.08F, -0.01F));
+        assertThrows(IllegalArgumentException.class, () -> profileWithAtmosphereTuning(1.055F, 0.08F, 1.01F));
+    }
+
+    private static BodySpaceVisualProfile profileWithAtmosphereTuning(
+            float shellScale, float nightFraction, float twilightStrength)
+    {
+        return new BodySpaceVisualProfile(Optional.empty(), Optional.empty(), 0.0F,
+                0.0F, 0.0F, 0.0F, 0.0F,
+                0.0F, 0.0F, 0.0F, 0xFFFFFFFF,
+                0.20F, 0.00375F, 0.10F, 0.0F, 1.0F, 0.0F, Optional.empty(),
+                shellScale, nightFraction, twilightStrength);
     }
 
     @Test

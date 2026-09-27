@@ -51,6 +51,7 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(Math.abs(frozenSpaceVisual.fresnelStrength() - 0.12F) < 1.0E-6F,
                 "frozen fresnel strength drifted through the registry: "
                         + frozenSpaceVisual.fresnelStrength());
+        assertAtmosphereTuning(helper, frozenSpaceVisual, 1.040F, 0.07F, 0.25F, "sys2:frozen");
 
         var lushSpaceVisual = main.bodies().stream()
                 .filter(body -> body.entryId().equals("sys1:lush")).findFirst().orElseThrow()
@@ -63,6 +64,7 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(Math.abs(lushSpaceVisual.fresnelStrength() - 0.05F) < 1.0E-6F,
                 "lush fresnel strength drifted through the registry: "
                         + lushSpaceVisual.fresnelStrength());
+        assertAtmosphereTuning(helper, lushSpaceVisual, 1.050F, 0.045F, 0.55F, "sys1:lush");
 
         // Geometry read back through a codec must be bit-identical to the values
         // the generator wrote, or a docked ship would render off-position.
@@ -101,6 +103,7 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(Math.abs(moltenSpaceVisual.fresnelStrength()) < 1.0E-6F,
                 "molten fresnel strength changed through the registry: "
                         + moltenSpaceVisual.fresnelStrength());
+        assertAtmosphereTuning(helper, moltenSpaceVisual, 1.030F, 0.04F, 0.30F, "sys1:molten");
 
         // The gas giant is flyable but orbit-only, and ringed.
         var gasGiant = main.bodies().stream()
@@ -112,6 +115,13 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(gasGiant.isSpaceRendered(), "the gas giant is drawn in space");
         helper.assertTrue(gasGiant.spaceVisual().orElseThrow().hasRings(),
                 "the gas giant lost its ring through the registry");
+        assertAtmosphereTuning(helper, gasGiant.spaceVisual().orElseThrow(),
+                1.070F, 0.10F, 0.20F, "sys1:gasgiant");
+
+        var barren = main.bodies().stream()
+                .filter(body -> body.entryId().equals("sys1:barren")).findFirst().orElseThrow();
+        assertAtmosphereTuning(helper, barren.spaceVisual().orElseThrow(),
+                1.020F, 0.025F, 0.15F, "sys1:barren");
 
         // Its moon survives the round trip too, ring-free and landable.
         var rockyMoon = main.bodies().stream()
@@ -121,6 +131,9 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(rockyMoon.isLandable(), "the rocky moon must be landable");
         helper.assertTrue(rockyMoon.parentEntryId().orElse("").equals("sys1:gasgiant"),
                 "the rocky moon lost its parent link");
+        assertAtmosphereTuning(helper, rockyMoon.spaceVisual().orElseThrow(),
+                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
+                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F, "sys1:rockymoon");
         // The system's body-rendering field has to reach its outer berths, or the
         // giant and moon vanish from the sky exactly when the ship arrives.
         double moonBerth = Math.sqrt(rockyMoon.navigation().orElseThrow().dockPosition()
@@ -130,6 +143,21 @@ public final class UniverseRegistryGameTests
                         + (long) moonBerth + " > " + (long) main.planetFieldRadius());
 
         helper.succeed();
+    }
+
+    private static void assertAtmosphereTuning(GameTestHelper helper, BodySpaceVisualProfile visual,
+                                              float shellScale, float nightFraction,
+                                              float twilightStrength, String entryId)
+    {
+        helper.assertTrue(Math.abs(visual.atmosphereShellScale() - shellScale) < 1.0E-6F,
+                entryId + " atmosphere shell scale drifted through the registry: "
+                        + visual.atmosphereShellScale());
+        helper.assertTrue(Math.abs(visual.atmosphereNightFraction() - nightFraction) < 1.0E-6F,
+                entryId + " atmosphere night fraction drifted through the registry: "
+                        + visual.atmosphereNightFraction());
+        helper.assertTrue(Math.abs(visual.atmosphereTwilightStrength() - twilightStrength) < 1.0E-6F,
+                entryId + " atmosphere twilight strength drifted through the registry: "
+                        + visual.atmosphereTwilightStrength());
     }
 
     @GameTest(template = "shuttle_test_empty")

@@ -19,7 +19,8 @@
     { "name": "AtmosphereColor", "type": "float", "count": 3, "values": [0.5, 0.7, 1.0] },
     { "name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.2] },
     { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [1.0] },
-    { "name": "NightResidual", "type": "float", "count": 1, "values": [0.08] },
+    { "name": "NightFraction", "type": "float", "count": 1, "values": [0.08] },
+    { "name": "TwilightStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "InnerRadius", "type": "float", "count": 1, "values": [47.39336] },
     { "name": "OuterRadius", "type": "float", "count": 1, "values": [50.0] },
     { "name": "OpticalDepthMax", "type": "float", "count": 1, "values": [31.86653] }
