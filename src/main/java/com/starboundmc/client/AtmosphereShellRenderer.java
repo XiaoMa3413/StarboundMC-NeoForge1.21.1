@@ -20,6 +20,7 @@ final class AtmosphereShellRenderer
     private static final int STACKS = 48;
     private static final int SLICES = 96;
     private static final float OUTER_RADIUS = PlanetRenderer.PLANET_RADIUS;
+    private static final float ATMOSPHERE_INNER_OVERLAP = 0.999F;
     private static VertexBuffer shellBuffer;
     private static boolean bufferUnavailable;
 
@@ -55,11 +56,11 @@ final class AtmosphereShellRenderer
             {
                 // Keep one shared sphere VBO. The profile scale only affects the
                 // model transform and the shell-space radii sent to the shader.
-                float innerRadius = OUTER_RADIUS / shellScale;
-                float opticalDepthMax = 2.0F * (float) Math.sqrt(Math.max(
-                        OUTER_RADIUS * OUTER_RADIUS - innerRadius * innerRadius, 0.0F));
+                AtmosphereOpticalDepth.Radii radii = AtmosphereOpticalDepth.forShellWithInnerOverlap(
+                        OUTER_RADIUS, shellScale, ATMOSPHERE_INNER_OVERLAP);
                 AtmosphereShader.setLighting(activeShader, sunDirectionMesh, cameraPositionMesh,
-                        color, strength, alpha, innerRadius, OUTER_RADIUS, opticalDepthMax,
+                        color, strength, alpha, radii.innerRadius(), radii.outerRadius(),
+                        radii.maxOpticalDepth(),
                         nightFraction, twilightStrength);
                 shell.bind();
                 shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);

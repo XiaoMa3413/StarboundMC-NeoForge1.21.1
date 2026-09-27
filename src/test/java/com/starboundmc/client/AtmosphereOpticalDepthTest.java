@@ -25,6 +25,22 @@ class AtmosphereOpticalDepthTest
     }
 
     @Test
+    void inwardOverlapBiasAlsoDefinesTheOpticalDepthNormalization()
+    {
+        AtmosphereOpticalDepth.Radii exact =
+                AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, SHELL_SCALE);
+        AtmosphereOpticalDepth.Radii biased =
+                AtmosphereOpticalDepth.forShellWithInnerOverlap(OUTER_MESH_RADIUS, SHELL_SCALE, 0.999F);
+
+        assertTrue(biased.innerRadius() < exact.innerRadius());
+        float expectedMaxDepth = 2.0F * (float) Math.sqrt(
+                biased.outerRadius() * biased.outerRadius()
+                        - biased.innerRadius() * biased.innerRadius());
+        assertEquals(expectedMaxDepth, biased.maxOpticalDepth(), 1.0E-5F);
+        assertTrue(biased.maxOpticalDepth() > exact.maxOpticalDepth());
+    }
+
+    @Test
     void thinMediumAndThickProfilesUseTheirOwnShellRadii()
     {
         AtmosphereOpticalDepth.Radii thin = AtmosphereOpticalDepth.forShell(OUTER_MESH_RADIUS, 1.020F);

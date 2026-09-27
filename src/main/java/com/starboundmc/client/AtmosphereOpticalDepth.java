@@ -9,11 +9,19 @@ final class AtmosphereOpticalDepth
 
     static Radii forShell(float outerMeshRadius, float shellScale)
     {
+        return forShellWithInnerOverlap(outerMeshRadius, shellScale, 1.0F);
+    }
+
+    static Radii forShellWithInnerOverlap(float outerMeshRadius, float shellScale, float innerRadiusScale)
+    {
         if (!Float.isFinite(outerMeshRadius) || outerMeshRadius <= 0.0F
                 || !Float.isFinite(shellScale) || shellScale <= 1.0F)
             throw new IllegalArgumentException("Atmosphere shell radius and scale must be finite and positive");
+        if (!Float.isFinite(innerRadiusScale) || innerRadiusScale <= 0.0F || innerRadiusScale > 1.0F)
+            throw new IllegalArgumentException("Atmosphere inner-radius overlap must be finite and within (0, 1]");
 
-        float innerRadius = outerMeshRadius / shellScale;
+        float exactInnerRadius = outerMeshRadius / shellScale;
+        float innerRadius = exactInnerRadius * innerRadiusScale;
         float tangentPath = (float) Math.sqrt(Math.max(
                 outerMeshRadius * outerMeshRadius - innerRadius * innerRadius, 0.0F));
         return new Radii(innerRadius, outerMeshRadius, 2.0F * tangentPath);
