@@ -19,8 +19,10 @@ final class AtmosphereShellRenderer
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final int STACKS = 48;
     private static final int SLICES = 96;
-    static final float ATMOSPHERE_SHELL_SCALE = 1.035F;
-    private static final float OUTER_RADIUS = PlanetRenderer.PLANET_RADIUS;
+    static final float ATMOSPHERE_SHELL_SCALE = 1.055F;
+    private static final AtmosphereOpticalDepth.Radii SHELL_RADII =
+            AtmosphereOpticalDepth.forShell(PlanetRenderer.PLANET_RADIUS, ATMOSPHERE_SHELL_SCALE);
+    private static final float OUTER_RADIUS = SHELL_RADII.outerRadius();
     private static VertexBuffer shellBuffer;
     private static boolean bufferUnavailable;
 
@@ -54,7 +56,7 @@ final class AtmosphereShellRenderer
             try
             {
                 AtmosphereShader.setLighting(activeShader, sunDirectionMesh, cameraPositionMesh,
-                        color, strength, alpha);
+                        color, strength, alpha, SHELL_RADII);
                 shell.bind();
                 shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);
             }

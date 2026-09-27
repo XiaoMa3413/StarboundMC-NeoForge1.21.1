@@ -49,7 +49,8 @@ final class AtmosphereShader
     }
 
     static void setLighting(ShaderInstance target, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
-                            Vector3f color, float strength, float alpha)
+                            Vector3f color, float strength, float alpha,
+                            AtmosphereOpticalDepth.Radii radii)
     {
         target.safeGetUniform("SunDirection").set(
                 sunDirectionMesh.x, sunDirectionMesh.y, sunDirectionMesh.z);
@@ -59,6 +60,9 @@ final class AtmosphereShader
         target.safeGetUniform("AtmosphereStrength").set(strength);
         target.safeGetUniform("GlobalAlpha").set(alpha);
         target.safeGetUniform("NightResidual").set(0.08F);
+        target.safeGetUniform("InnerRadius").set(radii.innerRadius());
+        target.safeGetUniform("OuterRadius").set(radii.outerRadius());
+        target.safeGetUniform("OpticalDepthMax").set(radii.maxOpticalDepth());
     }
 
     static void disableAfterFailure(ShaderInstance failedShader, RuntimeException exception)
