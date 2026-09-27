@@ -26,6 +26,7 @@
     { "name": "Roughness", "type": "float", "count": 1, "values": [1.0] },
     { "name": "FresnelStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "MaterialMaskEnabled", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "EmissiveStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "SurfaceAlpha", "type": "float", "count": 1, "values": [1.0] },
     { "name": "Brightness", "type": "float", "count": 1, "values": [1.0] }
   ]

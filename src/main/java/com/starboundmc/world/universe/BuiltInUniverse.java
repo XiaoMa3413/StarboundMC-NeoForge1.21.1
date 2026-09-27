@@ -149,7 +149,8 @@ public final class BuiltInUniverse
                                         1.0F, 0.45F, 0.20F, 0.26F,
                                         6.0F, 210.0F, 0.0F, 0xFFFF8A4C,
                                         0.16F, 0.0075F, 0.16F,
-                                        0.025F, 0.78F, 0.0F),
+                                        0.025F, 0.78F, 0.0F, 0.50F,
+                                        "starboundmc:textures/planet/molten_material.png", null),
                                 surface("starboundmc:molten", BodySurfaceDefinition.LandingPolicy.SURFACE_SCAN,
                                         new PlanetEnvironmentProfile(true, 0, 1, 0, 1.0F))),
 
@@ -342,6 +343,30 @@ public final class BuiltInUniverse
     {
         return Optional.of(new BodySpaceVisualProfile(
                 Optional.ofNullable(texture), Optional.ofNullable(materialMask),
+                atmoRed, atmoGreen, atmoBlue, atmoPeak,
+                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
+                specularStrength, roughness, fresnelStrength,
+                Optional.ofNullable(ringTexture)));
+    }
+
+    /** Variant with a material mask, emissive response and optional ring texture. */
+    private static Optional<BodySpaceVisualProfile> spaceVisual(String texture,
+                                                                float atmoRed, float atmoGreen,
+                                                                float atmoBlue, float atmoPeak,
+                                                                float tilt, float yaw, float roll,
+                                                                int pointColor,
+                                                                float terminatorWidth,
+                                                                float spinRate,
+                                                                float nightFloor,
+                                                                float specularStrength,
+                                                                float roughness,
+                                                                float fresnelStrength,
+                                                                float emissiveStrength,
+                                                                String materialMask,
+                                                                String ringTexture)
+    {
+        return Optional.of(new BodySpaceVisualProfile(
+                Optional.ofNullable(texture), Optional.ofNullable(materialMask), emissiveStrength,
                 atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
                 specularStrength, roughness, fresnelStrength,

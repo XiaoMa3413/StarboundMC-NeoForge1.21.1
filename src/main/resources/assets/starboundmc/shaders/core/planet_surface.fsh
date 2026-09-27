@@ -10,6 +10,7 @@ uniform float SpecularStrength;
 uniform float Roughness;
 uniform float FresnelStrength;
 uniform float MaterialMaskEnabled;
+uniform float EmissiveStrength;
 uniform float SurfaceAlpha;
 uniform float Brightness;
 
@@ -39,9 +40,12 @@ void main() {
     light.b += (0.25 - light.b) * terminator * 0.18;
 
     float materialMask = 1.0;
+    float emissiveMask = 0.0;
     if (MaterialMaskEnabled > 0.5) {
-        // R is the specular/smooth-surface mask: black land, white ocean.
-        materialMask = clamp(texture(Sampler1, texCoord0).r, 0.0, 1.0);
+        // Packed material channels: R is smooth/specular and G is emissive.
+        vec4 materialSample = texture(Sampler1, texCoord0);
+        materialMask = clamp(materialSample.r, 0.0, 1.0);
+        emissiveMask = clamp(materialSample.g, 0.0, 1.0);
     }
     float specularStrength = SpecularStrength * materialMask;
     float roughness = mix(1.0, clamp(Roughness, 0.0, 1.0), materialMask);
@@ -65,5 +69,18 @@ void main() {
     vec3 materialLight = min(light + vec3(specular)
             + vec3(0.35, 0.55, 0.75) * fresnel, vec3(1.22));
 
-    fragColor = vec4(texel.rgb * materialLight * Brightness, texel.a * SurfaceAlpha);
+    vec3 baseColor = texel.rgb * materialLight * Brightness;
+    vec3 finalColor = baseColor;
+    float emissiveStrength = clamp(EmissiveStrength, 0.0, 1.0);
+    if (emissiveMask > 0.0 && emissiveStrength > 0.0) {
+        // Keep the diffuse texture's lava detail while shifting its glow toward
+        // a restrained, dark red instead of the previous bright amber.
+        // This contribution is independent of the day/night lighting above.
+        vec3 emissiveColor = texel.rgb * vec3(0.72, 0.10, 0.05)
+                * emissiveMask * emissiveStrength;
+        // Limit the addition before it reaches the ordinary LDR framebuffer.
+        finalColor = min(baseColor + emissiveColor, vec3(1.05));
+    }
+
+    fragColor = vec4(finalColor, texel.a * SurfaceAlpha);
 }

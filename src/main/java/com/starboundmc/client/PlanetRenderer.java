@@ -597,7 +597,8 @@ public class PlanetRenderer
                 PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun, cameraPositionMesh,
                         terminatorWidth(body), nightFloor(body),
                         profile.specularStrength(), profile.roughness(), profile.fresnelStrength(),
-                        profile.materialMask().isPresent(), alpha, brightness);
+                        profile.materialMask().isPresent(), profile.emissiveStrength(),
+                        alpha, brightness);
             }
             else
             {

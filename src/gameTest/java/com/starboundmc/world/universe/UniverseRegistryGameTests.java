@@ -83,6 +83,24 @@ public final class UniverseRegistryGameTests
         helper.assertTrue(molten != null, "sys1:molten missing");
         helper.assertTrue(molten.orbit().parentEntryId().orElse("").equals("sys1:lush"),
                 "molten lost its parent link");
+        var moltenSpaceVisual = molten.spaceVisual().orElse(null);
+        helper.assertTrue(moltenSpaceVisual != null, "sys1:molten lost its space visual profile");
+        helper.assertTrue(moltenSpaceVisual.materialMask().orElse("")
+                        .equals("starboundmc:textures/planet/molten_material.png"),
+                "molten material mask drifted through the registry: "
+                        + moltenSpaceVisual.materialMask());
+        helper.assertTrue(Math.abs(moltenSpaceVisual.emissiveStrength() - 0.50F) < 1.0E-6F,
+                "molten emissive strength drifted through the registry: "
+                        + moltenSpaceVisual.emissiveStrength());
+        helper.assertTrue(Math.abs(moltenSpaceVisual.specularStrength() - 0.025F) < 1.0E-6F,
+                "molten specular strength changed through the registry: "
+                        + moltenSpaceVisual.specularStrength());
+        helper.assertTrue(Math.abs(moltenSpaceVisual.roughness() - 0.78F) < 1.0E-6F,
+                "molten roughness changed through the registry: "
+                        + moltenSpaceVisual.roughness());
+        helper.assertTrue(Math.abs(moltenSpaceVisual.fresnelStrength()) < 1.0E-6F,
+                "molten fresnel strength changed through the registry: "
+                        + moltenSpaceVisual.fresnelStrength());
 
         // The gas giant is flyable but orbit-only, and ringed.
         var gasGiant = main.bodies().stream()

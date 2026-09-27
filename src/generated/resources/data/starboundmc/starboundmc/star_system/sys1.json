@@ -140,6 +140,8 @@
         "atmosphere_green": 0.45,
         "atmosphere_peak": 0.26,
         "atmosphere_red": 1.0,
+        "emissive_strength": 0.5,
+        "material_mask": "starboundmc:textures/planet/molten_material.png",
         "night_floor": 0.16,
         "orientation_tilt": 6.0,
         "orientation_yaw": 210.0,

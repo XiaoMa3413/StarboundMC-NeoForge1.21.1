@@ -45,7 +45,8 @@ final class PlanetSurfaceShader
     static void setLighting(ShaderInstance target, Vector3f sunDirection, Vector3f cameraPositionMesh,
                             float terminatorWidth, float nightFloor,
                             float specularStrength, float roughness, float fresnelStrength,
-                            boolean hasMaterialMask, float alpha, float brightness)
+                            boolean hasMaterialMask, float emissiveStrength,
+                            float alpha, float brightness)
     {
         target.safeGetUniform("SunDirection").set(sunDirection.x, sunDirection.y, sunDirection.z);
         target.safeGetUniform("CameraPositionMesh").set(
@@ -56,6 +57,7 @@ final class PlanetSurfaceShader
         target.safeGetUniform("Roughness").set(roughness);
         target.safeGetUniform("FresnelStrength").set(fresnelStrength);
         target.safeGetUniform("MaterialMaskEnabled").set(hasMaterialMask ? 1.0F : 0.0F);
+        target.safeGetUniform("EmissiveStrength").set(emissiveStrength);
         target.safeGetUniform("SurfaceAlpha").set(alpha);
         target.safeGetUniform("Brightness").set(brightness);
     }

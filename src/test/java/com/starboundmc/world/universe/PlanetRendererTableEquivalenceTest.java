@@ -5,6 +5,7 @@ import com.mojang.serialization.JsonOps;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -153,6 +154,38 @@ class PlanetRendererTableEquivalenceTest
         assertEquals(0.0F, profile.specularStrength(), 0.0F);
         assertEquals(1.0F, profile.roughness(), 0.0F);
         assertEquals(0.0F, profile.fresnelStrength(), 0.0F);
+        assertEquals(0.0F, profile.emissiveStrength(), 0.0F);
+    }
+
+    @Test
+    void moltenProfileUsesItsPackedEmissiveMaskWithoutChangingBaseMaterial()
+    {
+        BodySpaceVisualProfile molten = visual("sys1:molten");
+        assertEquals(Optional.of("starboundmc:textures/planet/molten_material.png"),
+                molten.materialMask());
+        assertEquals(0.50F, molten.emissiveStrength(), 0.0F);
+        assertEquals(0.025F, molten.specularStrength(), 0.0F);
+        assertEquals(0.78F, molten.roughness(), 0.0F);
+        assertEquals(0.0F, molten.fresnelStrength(), 0.0F);
+
+        for (String id : new String[] {"sys1:lush", "sys1:barren", "sys1:gasgiant",
+                "sys1:rockymoon", "sys2:frozen"})
+        {
+            assertEquals(0.0F, visual(id).emissiveStrength(), 0.0F,
+                    id + " must not gain emissive response");
+        }
+    }
+
+    @Test
+    void moltenEmissiveProfileSurvivesCodecRoundTrip()
+    {
+        BodySpaceVisualProfile molten = visual("sys1:molten");
+        var encoded = BodySpaceVisualProfile.CODEC.encodeStart(JsonOps.INSTANCE, molten).getOrThrow();
+        BodySpaceVisualProfile decoded = BodySpaceVisualProfile.CODEC.parse(JsonOps.INSTANCE, encoded)
+                .getOrThrow();
+
+        assertEquals(molten.materialMask(), decoded.materialMask());
+        assertEquals(molten.emissiveStrength(), decoded.emissiveStrength(), 0.0F);
     }
 
     @Test

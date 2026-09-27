@@ -17,8 +17,8 @@ import java.util.Optional;
  * per-body configuration.</p>
  *
  * <p>An optional {@code materialMask} uses its red channel as the
- * specular/smooth-surface mask: 0 is rough land and 1 is smooth, reflective
- * surface. Other channels are currently unused.</p>
+ * specular/smooth-surface mask (0 is rough, 1 is smooth) and its green channel
+ * as the emissive mask (0 is unlit, 1 is emissive). Blue and alpha are reserved.</p>
  *
  * <p>The atmosphere tint is stored as three floats rather than a packed colour
  * because that is how the renderer holds it. Rounding it into an int here would
@@ -36,6 +36,7 @@ import java.util.Optional;
  */
 public record BodySpaceVisualProfile(Optional<String> texture,
                                      Optional<String> materialMask,
+                                     float emissiveStrength,
                                      float atmosphereRed,
                                      float atmosphereGreen,
                                      float atmosphereBlue,
@@ -52,21 +53,25 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      float fresnelStrength,
                                      Optional<String> ringTexture)
 {
-    private record TextureFields(Optional<String> texture, Optional<String> materialMask)
+    private record TextureFields(Optional<String> texture, Optional<String> materialMask,
+                                 float emissiveStrength)
     {
         private static final MapCodec<TextureFields> CODEC = RecordCodecBuilder.mapCodec(instance ->
                 instance.group(
                         Codec.STRING.optionalFieldOf("texture")
                                 .forGetter(TextureFields::texture),
                         Codec.STRING.optionalFieldOf("material_mask")
-                                .forGetter(TextureFields::materialMask)
+                                .forGetter(TextureFields::materialMask),
+                        Codec.FLOAT.optionalFieldOf("emissive_strength", 0.0F)
+                                .forGetter(TextureFields::emissiveStrength)
                 ).apply(instance, TextureFields::new));
     }
 
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
                     TextureFields.CODEC.forGetter(profile ->
-                            new TextureFields(profile.texture(), profile.materialMask())),
+                            new TextureFields(profile.texture(), profile.materialMask(),
+                                    profile.emissiveStrength())),
                     Codec.FLOAT.optionalFieldOf("atmosphere_red", 0.0F)
                             .forGetter(BodySpaceVisualProfile::atmosphereRed),
                     Codec.FLOAT.optionalFieldOf("atmosphere_green", 0.0F)
@@ -118,9 +123,35 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                    float fresnelStrength,
                                    Optional<String> ringTexture)
     {
-        this(textures.texture(), textures.materialMask(), atmosphereRed, atmosphereGreen,
+        this(textures.texture(), textures.materialMask(), textures.emissiveStrength(),
+                atmosphereRed, atmosphereGreen,
                 atmosphereBlue, atmospherePeak, orientationTilt, orientationYaw, orientationRoll,
                 pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
+                fresnelStrength, ringTexture);
+    }
+
+    /** Backward-compatible constructor for masked profiles without emissive response. */
+    public BodySpaceVisualProfile(Optional<String> texture,
+                                  Optional<String> materialMask,
+                                  float atmosphereRed,
+                                  float atmosphereGreen,
+                                  float atmosphereBlue,
+                                  float atmospherePeak,
+                                  float orientationTilt,
+                                  float orientationYaw,
+                                  float orientationRoll,
+                                  int pointColor,
+                                  float terminatorWidth,
+                                  float spinRate,
+                                  float nightFloor,
+                                  float specularStrength,
+                                  float roughness,
+                                  float fresnelStrength,
+                                  Optional<String> ringTexture)
+    {
+        this(texture, materialMask, 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
+                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
+                terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
                 fresnelStrength, ringTexture);
     }
 
@@ -142,7 +173,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                   float fresnelStrength,
                                   Optional<String> ringTexture)
     {
-        this(texture, Optional.empty(), atmosphereRed, atmosphereGreen, atmosphereBlue,
+        this(texture, Optional.empty(), 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
                 atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
                 terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
                 fresnelStrength, ringTexture);
@@ -153,6 +184,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         texture = texture == null ? Optional.empty() : texture;
         materialMask = materialMask == null ? Optional.empty() : materialMask;
         ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
+        requireUnitRange("emissiveStrength", emissiveStrength);
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);
         requireUnitRange("atmosphereBlue", atmosphereBlue);
