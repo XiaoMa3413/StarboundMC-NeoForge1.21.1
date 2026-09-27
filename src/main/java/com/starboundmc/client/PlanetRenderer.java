@@ -338,6 +338,7 @@ public class PlanetRenderer
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (reducedWeight + fullWeight > 0.002F)
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
+                    alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (pointWeight > 0.002F)
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
@@ -456,9 +457,9 @@ public class PlanetRenderer
         }
     }
 
-    private static void renderPlanet(PoseStack pose, Camera cam, CelestialBodyDefinition body, float scale, float alpha,
-                                     float cx, float cy, float cz, float shipYaw, float shipPitch,
-                                     float animationTicks)
+    private static void renderPlanet(PoseStack pose, Camera cam, CelestialBodyDefinition body, float scale,
+                                     float alpha, float fullAlpha, float cx, float cy, float cz,
+                                     float shipYaw, float shipPitch, float animationTicks)
     {
         // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
         // AFTER_SKY frame, so it stays visible through the bridge window at all times.
@@ -470,6 +471,17 @@ public class PlanetRenderer
                     shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+        if (profile.hasClouds() && fullAlpha > 0.002F)
+        {
+            float bodySpin = animationTicks * profile.spinRate();
+            float cloudSpin = bodySpin + animationTicks * profile.cloudDriftRate();
+            Matrix4f cloudModel = shipSpacePlanetModel(pose.last().pose(), body, cx, cy, cz, scale,
+                    shipYaw, shipPitch, cloudSpin).scale(profile.cloudShellScale());
+            Vector3f cloudSun = PlanetSurfaceLighting.toMeshSpaceSun(fixedSunDirection(body), cloudSpin,
+                    profile.orientationTilt(), profile.orientationYaw());
+            CloudShellRenderer.render(cloudModel, profile.cloudTexture().orElseThrow(), cloudSun,
+                    profile.cloudOpacity(), fullAlpha);
+        }
         if (RingRenderer.hasRings(profile))
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
                     shipYaw, shipPitch, alpha, true);

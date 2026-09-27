@@ -55,6 +55,7 @@ public final class Stage2ClientRegistrar {
         ThrusterRenderTypes.registerShaders(event);
         PlanetSurfaceShader.register(event);
         AtmosphereShader.register(event);
+        CloudShader.register(event);
     }
 
     @SubscribeEvent

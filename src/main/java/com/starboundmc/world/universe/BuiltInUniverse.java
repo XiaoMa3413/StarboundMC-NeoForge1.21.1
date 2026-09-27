@@ -123,13 +123,15 @@ public final class BuiltInUniverse
                                         .focusTexture("starboundmc:textures/gui/starmap/bodies/lush_focus.png")
                                         .build(),
                                 navigation(0.0, 102.0, 0.0, 0.06, 103.2, 9.6, 6.0, 0.0),
-                                spaceVisualWithAtmosphere("starboundmc:textures/planet/lush.png",
+                                spaceVisualWithAtmosphereAndClouds("starboundmc:textures/planet/lush.png",
                                         0.30F, 0.60F, 1.0F, 0.20F,
                                         1.050F, 0.045F, 0.55F,
                                         23.0F, 15.0F, 0.0F, 0xFF68D68A,
                                         0.24F, 0.00375F, 0.10F,
                                         0.14F, 0.56F, 0.05F,
-                                        0.0F, "starboundmc:textures/planet/lush_material.png", null),
+                                        0.0F, "starboundmc:textures/planet/lush_material.png", null,
+                                        "starboundmc:textures/planet/lush_clouds.png",
+                                        1.008F, 0.82F, 0.0025F),
                                 // The lush world is the vanilla overworld and returns
                                 // the player to their respawn anchor.
                                 surface("minecraft:overworld", BodySurfaceDefinition.LandingPolicy.OVERWORLD_RESPAWN,
@@ -266,12 +268,32 @@ public final class BuiltInUniverse
             float specularStrength, float roughness, float fresnelStrength,
             float emissiveStrength, String materialMask, String ringTexture)
     {
+        return spaceVisualWithAtmosphereAndClouds(texture,
+                atmoRed, atmoGreen, atmoBlue, atmoPeak,
+                atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength,
+                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
+                specularStrength, roughness, fresnelStrength, emissiveStrength, materialMask,
+                ringTexture, null, BodySpaceVisualProfile.DEFAULT_CLOUD_SHELL_SCALE,
+                BodySpaceVisualProfile.DEFAULT_CLOUD_OPACITY, BodySpaceVisualProfile.DEFAULT_CLOUD_DRIFT_RATE);
+    }
+
+    private static Optional<BodySpaceVisualProfile> spaceVisualWithAtmosphereAndClouds(
+            String texture,
+            float atmoRed, float atmoGreen, float atmoBlue, float atmoPeak,
+            float atmosphereShellScale, float atmosphereNightFraction, float atmosphereTwilightStrength,
+            float tilt, float yaw, float roll, int pointColor,
+            float terminatorWidth, float spinRate, float nightFloor,
+            float specularStrength, float roughness, float fresnelStrength,
+            float emissiveStrength, String materialMask, String ringTexture,
+            String cloudTexture, float cloudShellScale, float cloudOpacity, float cloudDriftRate)
+    {
         return Optional.of(new BodySpaceVisualProfile(
                 Optional.ofNullable(texture), Optional.ofNullable(materialMask), emissiveStrength,
                 atmoRed, atmoGreen, atmoBlue, atmoPeak,
                 tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
                 specularStrength, roughness, fresnelStrength, Optional.ofNullable(ringTexture),
-                atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength));
+                atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength,
+                Optional.ofNullable(cloudTexture), cloudShellScale, cloudOpacity, cloudDriftRate));
     }
 
     private static CelestialBodyDefinition body(String entryId, String nameKey, String typeKey,

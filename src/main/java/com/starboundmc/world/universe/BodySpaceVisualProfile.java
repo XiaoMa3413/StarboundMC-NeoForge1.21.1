@@ -54,10 +54,17 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                                      Optional<String> ringTexture,
                                      float atmosphereShellScale,
                                      float atmosphereNightFraction,
-                                     float atmosphereTwilightStrength)
+                                     float atmosphereTwilightStrength,
+                                     Optional<String> cloudTexture,
+                                     float cloudShellScale,
+                                     float cloudOpacity,
+                                     float cloudDriftRate)
 {
     public static final float DEFAULT_ATMOSPHERE_SHELL_SCALE = 1.055F;
     public static final float DEFAULT_ATMOSPHERE_NIGHT_FRACTION = 0.08F;
+    public static final float DEFAULT_CLOUD_SHELL_SCALE = 1.008F;
+    public static final float DEFAULT_CLOUD_OPACITY = 1.0F;
+    public static final float DEFAULT_CLOUD_DRIFT_RATE = 0.0F;
 
     private record TextureFields(Optional<String> texture, Optional<String> materialMask,
                                  float emissiveStrength)
@@ -95,6 +102,22 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                 ).apply(instance, AtmosphereFields::new));
     }
 
+    private record CloudFields(Optional<String> texture, Optional<Float> shellScale,
+                               float opacity, float driftRate)
+    {
+        private static final MapCodec<CloudFields> CODEC = RecordCodecBuilder.mapCodec(instance ->
+                instance.group(
+                        Codec.STRING.optionalFieldOf("cloud_texture")
+                                .forGetter(CloudFields::texture),
+                        Codec.FLOAT.optionalFieldOf("cloud_shell_scale")
+                                .forGetter(CloudFields::shellScale),
+                        Codec.FLOAT.optionalFieldOf("cloud_opacity", DEFAULT_CLOUD_OPACITY)
+                                .forGetter(CloudFields::opacity),
+                        Codec.FLOAT.optionalFieldOf("cloud_drift_rate", DEFAULT_CLOUD_DRIFT_RATE)
+                                .forGetter(CloudFields::driftRate)
+                ).apply(instance, CloudFields::new));
+    }
+
     public static final Codec<BodySpaceVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
                     TextureFields.CODEC.forGetter(profile ->
@@ -105,6 +128,11 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                             profile.atmosphereBlue(), profile.atmospherePeak(),
                             profile.atmosphereShellScale(), profile.atmosphereNightFraction(),
                             profile.atmosphereTwilightStrength())),
+                    CloudFields.CODEC.forGetter(profile -> new CloudFields(
+                            profile.cloudTexture(), profile.cloudTexture().isPresent()
+                                    || Float.compare(profile.cloudShellScale(), DEFAULT_CLOUD_SHELL_SCALE) != 0
+                                    ? Optional.of(profile.cloudShellScale()) : Optional.empty(),
+                            profile.cloudOpacity(), profile.cloudDriftRate())),
                     Codec.FLOAT.optionalFieldOf("orientation_tilt", 0.0F)
                             .forGetter(BodySpaceVisualProfile::orientationTilt),
                     Codec.FLOAT.optionalFieldOf("orientation_yaw", 0.0F)
@@ -133,6 +161,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
 
     private BodySpaceVisualProfile(TextureFields textures,
                                    AtmosphereFields atmosphere,
+                                   CloudFields clouds,
                                    float orientationTilt,
                                    float orientationYaw,
                                    float orientationRoll,
@@ -150,7 +179,40 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                 orientationTilt, orientationYaw, orientationRoll,
                 pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
                 fresnelStrength, ringTexture, atmosphere.shellScale(), atmosphere.nightFraction(),
-                atmosphere.twilightStrength());
+                atmosphere.twilightStrength(), clouds.texture(),
+                clouds.shellScale().orElse(DEFAULT_CLOUD_SHELL_SCALE),
+                clouds.opacity(), clouds.driftRate());
+    }
+
+    /** Backward-compatible full constructor for profiles authored before cloud fields existed. */
+    public BodySpaceVisualProfile(Optional<String> texture,
+                                  Optional<String> materialMask,
+                                  float emissiveStrength,
+                                  float atmosphereRed,
+                                  float atmosphereGreen,
+                                  float atmosphereBlue,
+                                  float atmospherePeak,
+                                  float orientationTilt,
+                                  float orientationYaw,
+                                  float orientationRoll,
+                                  int pointColor,
+                                  float terminatorWidth,
+                                  float spinRate,
+                                  float nightFloor,
+                                  float specularStrength,
+                                  float roughness,
+                                  float fresnelStrength,
+                                  Optional<String> ringTexture,
+                                  float atmosphereShellScale,
+                                  float atmosphereNightFraction,
+                                  float atmosphereTwilightStrength)
+    {
+        this(texture, materialMask, emissiveStrength, atmosphereRed, atmosphereGreen, atmosphereBlue,
+                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
+                terminatorWidth, spinRate, nightFloor, specularStrength, roughness, fresnelStrength,
+                ringTexture, atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength,
+                Optional.empty(), DEFAULT_CLOUD_SHELL_SCALE, DEFAULT_CLOUD_OPACITY,
+                DEFAULT_CLOUD_DRIFT_RATE);
     }
 
     /** Backward-compatible constructor for masked profiles without emissive response. */
@@ -209,6 +271,7 @@ public record BodySpaceVisualProfile(Optional<String> texture,
         texture = texture == null ? Optional.empty() : texture;
         materialMask = materialMask == null ? Optional.empty() : materialMask;
         ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
+        cloudTexture = cloudTexture == null ? Optional.empty() : cloudTexture;
         requireUnitRange("emissiveStrength", emissiveStrength);
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);
@@ -233,6 +296,10 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                 || atmosphereNightFraction < 0.0F || atmosphereNightFraction > 0.25F)
             throw new IllegalArgumentException("atmosphereNightFraction must be finite and within [0, 0.25]");
         requireUnitRange("atmosphereTwilightStrength", atmosphereTwilightStrength);
+        if (!Float.isFinite(cloudShellScale) || cloudShellScale < 1.001F || cloudShellScale > 1.05F)
+            throw new IllegalArgumentException("cloudShellScale must be finite and within [1.001, 1.05]");
+        requireUnitRange("cloudOpacity", cloudOpacity);
+        requireFinite("cloudDriftRate", cloudDriftRate);
     }
 
     /** The atmosphere tint as a vector, for renderers that work in float triples. */
@@ -249,6 +316,12 @@ public record BodySpaceVisualProfile(Optional<String> texture,
     public boolean hasRings()
     {
         return ringTexture.isPresent();
+    }
+
+    /** Whether this body has an authored cloud shell texture. */
+    public boolean hasClouds()
+    {
+        return cloudTexture.isPresent();
     }
 
     private static void requireUnitRange(String name, float value)
