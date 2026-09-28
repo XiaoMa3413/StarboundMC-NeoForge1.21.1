@@ -333,7 +333,8 @@ public class PlanetRenderer
         float cx = (float) bodyCenter.x;
         float cy = (float) bodyCenter.y;
         float cz = (float) bodyCenter.z;
-        if (fullWeight > 0.002F && renderedRadius >= 0.45F)
+        if (StarfieldClientConfig.atmosphereEnabled()
+                && fullWeight > 0.002F && renderedRadius >= 0.45F)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (reducedWeight + fullWeight > 0.002F)
@@ -471,7 +472,7 @@ public class PlanetRenderer
                     shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
                 fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
-        if (profile.hasClouds() && fullAlpha > 0.002F)
+        if (profile.hasClouds() && StarfieldClientConfig.cloudsEnabled() && fullAlpha > 0.002F)
         {
             float bodySpin = animationTicks * profile.spinRate();
             float cloudSpin = bodySpin + animationTicks * profile.cloudDriftRate();

@@ -654,5 +654,9 @@
   "gui.starboundmc.epp.service.remove_ready": "取出第一个已安装模块，放回中间槽。",
   "gui.starboundmc.epp.service.upgrade_requirements": "Mk.I 需要 Mk.II 套件；Mk.II 需要 Mk.III 套件。请检查右侧升级槽。",
   "gui.starboundmc.epp.service.install_requirements": "需要兼容的单个模块，且 EPP 必须有空余模块槽。",
-  "gui.starboundmc.epp.service.remove_requirements": "EPP 必须装有模块，且中间槽必须为空。"
+  "gui.starboundmc.epp.service.remove_requirements": "EPP 必须装有模块，且中间槽必须为空。",
+  "starboundmc.config.space_visual_quality": "太空画质",
+  "starboundmc.config.clouds_enabled": "云层",
+  "starboundmc.config.atmosphere_enabled": "大气层",
+  "starboundmc.config.stellar_view_background_stars": "Stellar View 背景星场"
 }

@@ -24,7 +24,7 @@ public final class StellarViewStarfield
                                  SpaceRenderContext space, float brightness,
                                  float convergence, Vector3f convergenceForward)
     {
-        if (failedThisSession || !StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.get()
+        if (failedThisSession || !StarfieldClientConfig.stellarViewStarsEnabled()
                 || !ModList.get().isLoaded(MOD_ID))
             return false;
 
