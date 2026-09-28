@@ -3,7 +3,8 @@
   "fragment": "starboundmc:planet_surface",
   "samplers": [
     { "name": "Sampler0" },
-    { "name": "Sampler1" }
+    { "name": "Sampler1" },
+    { "name": "Sampler2" }
   ],
   "uniforms": [
     {
@@ -28,6 +29,13 @@
     { "name": "MaterialMaskEnabled", "type": "float", "count": 1, "values": [0.0] },
     { "name": "EmissiveStrength", "type": "float", "count": 1, "values": [0.0] },
     { "name": "SurfaceAlpha", "type": "float", "count": 1, "values": [1.0] },
-    { "name": "Brightness", "type": "float", "count": 1, "values": [1.0] }
+    { "name": "Brightness", "type": "float", "count": 1, "values": [1.0] },
+    { "name": "CloudShadowEnabled", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "CloudShellScale", "type": "float", "count": 1, "values": [1.008] },
+    { "name": "CloudOpacity", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "CloudShadowStrength", "type": "float", "count": 1, "values": [0.24] },
+    { "name": "CloudRelativeRotationX", "type": "float", "count": 3, "values": [1.0, 0.0, 0.0] },
+    { "name": "CloudRelativeRotationY", "type": "float", "count": 3, "values": [0.0, 1.0, 0.0] },
+    { "name": "CloudRelativeRotationZ", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] }
   ]
 }

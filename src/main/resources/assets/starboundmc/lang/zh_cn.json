@@ -657,6 +657,7 @@
   "gui.starboundmc.epp.service.remove_requirements": "EPP 必须装有模块，且中间槽必须为空。",
   "starboundmc.config.space_visual_quality": "太空画质",
   "starboundmc.config.clouds_enabled": "云层",
+  "starboundmc.config.cloud_shadows_enabled": "云层阴影",
   "starboundmc.config.atmosphere_enabled": "大气层",
   "starboundmc.config.stellar_view_background_stars": "Stellar View 背景星场"
 }

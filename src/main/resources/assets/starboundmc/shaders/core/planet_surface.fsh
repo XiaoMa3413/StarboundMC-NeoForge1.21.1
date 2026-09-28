@@ -2,6 +2,7 @@
 
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
+uniform sampler2D Sampler2;
 uniform vec3 SunDirection;
 uniform vec3 CameraPositionMesh;
 uniform float TerminatorWidth;
@@ -13,6 +14,13 @@ uniform float MaterialMaskEnabled;
 uniform float EmissiveStrength;
 uniform float SurfaceAlpha;
 uniform float Brightness;
+uniform float CloudShadowEnabled;
+uniform float CloudShellScale;
+uniform float CloudOpacity;
+uniform float CloudShadowStrength;
+uniform vec3 CloudRelativeRotationX;
+uniform vec3 CloudRelativeRotationY;
+uniform vec3 CloudRelativeRotationZ;
 
 in vec2 texCoord0;
 in vec3 surfaceNormal;
@@ -24,16 +32,63 @@ vec3 safeNormalize(vec3 value, vec3 fallbackValue) {
     return lengthSquared > 0.00000001 ? value * inversesqrt(lengthSquared) : fallbackValue;
 }
 
+vec3 surfaceToCloudFrame(vec3 point) {
+    return CloudRelativeRotationX * point.x
+            + CloudRelativeRotationY * point.y
+            + CloudRelativeRotationZ * point.z;
+}
+
+vec2 cloudShellUv(vec3 point) {
+    vec3 direction = safeNormalize(point, vec3(1.0, 0.0, 0.0));
+    const float PI = 3.14159265358979323846;
+    float longitude = dot(direction.xz, direction.xz) > 0.00000001
+            ? atan(direction.z, direction.x) : 0.0;
+    float u = fract(longitude / (2.0 * PI) + 1.0);
+    float v = acos(clamp(direction.y, -1.0, 1.0)) / PI;
+    return vec2(u, v);
+}
+
+float projectedCloudShadow(vec3 normal, vec3 lightDirection, float dotNL) {
+    if (CloudOpacity <= 0.0 || CloudShadowStrength <= 0.0 || dotNL <= 0.0) {
+        return 0.0;
+    }
+
+    // Work in unit-sphere mesh space. SunDirection already uses this frame,
+    // so the ray reaches the cloud shell at the physically projected location.
+    vec3 surfacePoint = safeNormalize(meshPosition, normal);
+    float surfaceLightDot = dot(surfacePoint, lightDirection);
+    if (surfaceLightDot <= 0.0) {
+        return 0.0;
+    }
+
+    float cloudRadius = max(CloudShellScale, 1.0001);
+    float discriminant = surfaceLightDot * surfaceLightDot
+            + cloudRadius * cloudRadius - 1.0;
+    float rayDistance = -surfaceLightDot + sqrt(max(discriminant, 0.0));
+    vec3 shellPointSurfaceFrame = surfacePoint + lightDirection * rayDistance;
+    vec3 shellPointCloudFrame = surfaceToCloudFrame(shellPointSurfaceFrame);
+    vec2 cloudUv = cloudShellUv(shellPointCloudFrame);
+    float cloudDensity = texture(Sampler2, cloudUv).a * CloudOpacity;
+    return clamp(cloudDensity * CloudShadowStrength, 0.0, 0.30);
+}
+
 void main() {
     vec4 texel = texture(Sampler0, texCoord0);
     vec3 normal = safeNormalize(surfaceNormal, vec3(0.0, 0.0, 1.0));
     vec3 lightDirection = safeNormalize(SunDirection, normal);
     float dotNL = clamp(dot(normal, lightDirection), -1.0, 1.0);
     float width = max(TerminatorWidth, 0.00001);
-    float shade = 1.0 - smoothstep(-width, width, dotNL);
+    float daylight = smoothstep(-width, width, dotNL);
+    float shade = 1.0 - daylight;
     shade *= 1.0 - NightFloor;
 
     vec3 light = mix(vec3(1.0), vec3(0.06, 0.08, 0.20), shade);
+    if (CloudShadowEnabled > 0.5) {
+        float cloudShadow = projectedCloudShadow(normal, lightDirection, dotNL);
+        float directDaylight = daylight * (1.0 - cloudShadow);
+        float sunlight = NightFloor + (1.0 - NightFloor) * directDaylight;
+        light = mix(vec3(0.06, 0.08, 0.20), vec3(1.0), sunlight);
+    }
     float terminator = max(0.0, 1.0 - abs(dotNL) / width);
     light.r += (0.90 - light.r) * terminator * 0.35;
     light.g += (0.55 - light.g) * terminator * 0.25;

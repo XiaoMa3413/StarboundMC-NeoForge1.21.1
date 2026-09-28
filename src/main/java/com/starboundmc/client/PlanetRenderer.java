@@ -31,6 +31,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -471,7 +472,7 @@ public class PlanetRenderer
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
                     shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
-                fixedSunDirection(body), 1.0F, alpha, shipYaw, shipPitch, animationTicks);
+                fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
         if (profile.hasClouds() && StarfieldClientConfig.cloudsEnabled() && fullAlpha > 0.002F)
         {
             float bodySpin = animationTicks * profile.spinRate();
@@ -492,15 +493,23 @@ public class PlanetRenderer
     private static void drawOrientedPlanetSphere(Matrix4f matrix, CelestialBodyDefinition body,
                                                   float cx, float cy, float cz, float scale,
                                                   Vector3f worldSun, float brightness, float alpha,
-                                                  float shipYaw, float shipPitch, float animationTicks)
+                                                  float cloudFade, float shipYaw, float shipPitch,
+                                                  float animationTicks)
     {
         BodySpaceVisualProfile profile = visual(body);
         ResourceLocation diffuseTexture = textureOf(body);
         ResourceLocation materialMaskTexture = profile.materialMask()
                 .map(ResourceLocation::parse).orElse(diffuseTexture);
+        boolean cloudShadowEnabled = cloudFade > 0.002F
+                && StarfieldClientConfig.cloudsEnabled()
+                && StarfieldClientConfig.cloudShadowsEnabled()
+                && profile.hasClouds();
+        ResourceLocation cloudTexture = cloudShadowEnabled ? parseCloudTexture(profile) : null;
+        cloudShadowEnabled = cloudShadowEnabled && cloudTexture != null;
         ShaderInstance previousShader = RenderSystem.getShader();
         int previousDiffuseTexture = RenderSystem.getShaderTexture(0);
         int previousMaterialMaskTexture = RenderSystem.getShaderTexture(1);
+        int previousCloudTexture = RenderSystem.getShaderTexture(2);
         FogRenderer.setupNoFog();
         try
         {
@@ -526,6 +535,8 @@ public class PlanetRenderer
             ShaderInstance surfaceShader = PlanetSurfaceShader.current();
             if (surfaceShader != null)
             {
+                if (cloudShadowEnabled)
+                    RenderSystem.setShaderTexture(2, cloudTexture);
                 RenderSystem.setShader(() -> surfaceShader);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
@@ -534,6 +545,14 @@ public class PlanetRenderer
                         profile.specularStrength(), profile.roughness(), profile.fresnelStrength(),
                         profile.materialMask().isPresent(), profile.emissiveStrength(),
                         alpha, brightness);
+                float cloudDelta = animationTicks * profile.cloudDriftRate();
+                Matrix3f surfaceToCloudRotation = cloudShadowEnabled
+                        ? PlanetSurfaceLighting.surfaceToCloudRelativeRotation(cloudDelta,
+                                profile.orientationTilt(), profile.orientationYaw())
+                        : new Matrix3f();
+                PlanetSurfaceShader.setCloudShadow(surfaceShader, cloudShadowEnabled,
+                        profile.cloudShellScale(), profile.cloudOpacity(), cloudFade,
+                        surfaceToCloudRotation);
             }
             else
             {
@@ -569,7 +588,20 @@ public class PlanetRenderer
             RenderSystem.setShader(() -> previousShader);
             RenderSystem.setShaderTexture(0, previousDiffuseTexture);
             RenderSystem.setShaderTexture(1, previousMaterialMaskTexture);
+            RenderSystem.setShaderTexture(2, previousCloudTexture);
             SpaceRenderPassState.restoreDefaults();
+        }
+    }
+
+    private static ResourceLocation parseCloudTexture(BodySpaceVisualProfile profile)
+    {
+        try
+        {
+            return ResourceLocation.parse(profile.cloudTexture().orElseThrow());
+        }
+        catch (RuntimeException invalidTexture)
+        {
+            return null;
         }
     }
 

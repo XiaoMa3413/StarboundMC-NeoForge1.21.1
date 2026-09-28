@@ -1,5 +1,6 @@
 package com.starboundmc.client;
 
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,45 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PlanetSurfaceLightingTest
 {
+    @Test
+    void cloudRelativeRotationMapsSurfacePointsIntoTheInverseCloudFrame()
+    {
+        Random random = new Random(20260928L);
+        for (int sample = 0; sample < 320; sample++)
+        {
+            float bodySpin = random.nextFloat() * 1440.0F - 720.0F;
+            float cloudDelta = random.nextFloat() * 720.0F - 360.0F;
+            float tilt = random.nextFloat() * 160.0F - 80.0F;
+            float yaw = random.nextFloat() * 720.0F - 360.0F;
+            Vector3f surfacePoint = randomUnitVector(random);
+
+            Matrix4f surfaceFrame = PlanetSurfaceLighting.appendBodyOrientation(
+                    new Matrix4f(), bodySpin, tilt, yaw);
+            Matrix4f cloudFrame = PlanetSurfaceLighting.appendBodyOrientation(
+                    new Matrix4f(), bodySpin + cloudDelta, tilt, yaw);
+            Vector3f expected = cloudFrame.invert().transformDirection(
+                    surfaceFrame.transformDirection(new Vector3f(surfacePoint)));
+            Vector3f actual = PlanetSurfaceLighting.surfaceToCloudRelativeRotation(
+                    cloudDelta, tilt, yaw).transform(new Vector3f(surfacePoint));
+
+            assertEquals(expected.x, actual.x, 2.0E-4F, "cloud-local x, sample " + sample);
+            assertEquals(expected.y, actual.y, 2.0E-4F, "cloud-local y, sample " + sample);
+            assertEquals(expected.z, actual.z, 2.0E-4F, "cloud-local z, sample " + sample);
+        }
+    }
+
+    @Test
+    void positiveCloudSpinUsesTheInverseUvLongitudeDirection()
+    {
+        Vector3f surfaceLongitudeZero = new Vector3f(1.0F, 0.0F, 0.0F);
+        Vector3f cloudLocal = PlanetSurfaceLighting.surfaceToCloudRelativeRotation(
+                90.0F, 0.0F, 0.0F).transform(surfaceLongitudeZero);
+
+        assertEquals(0.0F, cloudLocal.x, 1.0E-5F);
+        assertEquals(0.0F, cloudLocal.y, 1.0E-5F);
+        assertEquals(1.0F, cloudLocal.z, 1.0E-5F);
+    }
+
     @Test
     void meshCameraAndSurfaceViewDirectionMatchTheFullModelViewFrame()
     {

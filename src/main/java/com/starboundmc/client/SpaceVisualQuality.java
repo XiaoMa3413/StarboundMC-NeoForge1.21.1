@@ -37,4 +37,14 @@ public enum SpaceVisualQuality
             case CUSTOM -> customValue;
         };
     }
+
+    public boolean cloudShadowsEnabled(boolean customValue)
+    {
+        return switch (this)
+        {
+            case PERFORMANCE, BALANCED -> false;
+            case HIGH, ULTRA -> true;
+            case CUSTOM -> customValue;
+        };
+    }
 }

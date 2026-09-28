@@ -9,7 +9,7 @@ public final class StarfieldClientConfig
 
     public static final ModConfigSpec.EnumValue<SpaceVisualQuality> SPACE_VISUAL_QUALITY = BUILDER
             .comment("Space visual quality preset. Performance disables clouds and Stellar View background stars.",
-                    "Balanced, High, and Ultra currently enable all available space effects. Custom uses the toggles below.")
+                    "Balanced disables cloud shadows; High and Ultra enable them. Custom uses the toggles below.")
             .translation("starboundmc.config.space_visual_quality")
             .defineEnum("spaceVisualQuality", SpaceVisualQuality.BALANCED);
 
@@ -17,6 +17,11 @@ public final class StarfieldClientConfig
             .comment("Enable cloud shells when spaceVisualQuality is Custom.")
             .translation("starboundmc.config.clouds_enabled")
             .define("cloudsEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue CLOUD_SHADOWS_ENABLED = BUILDER
+            .comment("Enable projected cloud shadows when spaceVisualQuality is Custom.")
+            .translation("starboundmc.config.cloud_shadows_enabled")
+            .define("cloudShadowsEnabled", true);
 
     public static final ModConfigSpec.BooleanValue ATMOSPHERE_ENABLED = BUILDER
             .comment("Enable atmosphere shells when spaceVisualQuality is Custom.")
@@ -34,6 +39,11 @@ public final class StarfieldClientConfig
     public static boolean cloudsEnabled()
     {
         return SPACE_VISUAL_QUALITY.get().cloudsEnabled(CLOUDS_ENABLED.get());
+    }
+
+    public static boolean cloudShadowsEnabled()
+    {
+        return SPACE_VISUAL_QUALITY.get().cloudShadowsEnabled(CLOUD_SHADOWS_ENABLED.get());
     }
 
     public static boolean atmosphereEnabled()

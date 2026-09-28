@@ -5,6 +5,7 @@ import com.starboundmc.StarboundMC;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import org.joml.Matrix3f;
 import org.joml.Vector3f;
 import org.slf4j.Logger;
 
@@ -13,6 +14,7 @@ import java.io.IOException;
 /** Minimal day/night lighting for the shared ship-space planet mesh. */
 final class PlanetSurfaceShader
 {
+    static final float CLOUD_SHADOW_STRENGTH = 0.24F;
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final ResourceLocation SHADER_ID =
             ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "planet_surface");
@@ -60,6 +62,24 @@ final class PlanetSurfaceShader
         target.safeGetUniform("EmissiveStrength").set(emissiveStrength);
         target.safeGetUniform("SurfaceAlpha").set(alpha);
         target.safeGetUniform("Brightness").set(brightness);
+    }
+
+    static void setCloudShadow(ShaderInstance target, boolean enabled, float cloudShellScale,
+                               float cloudOpacity, float cloudFade, Matrix3f surfaceToCloudRotation)
+    {
+        target.safeGetUniform("CloudShadowEnabled").set(enabled ? 1.0F : 0.0F);
+        target.safeGetUniform("CloudShellScale").set(cloudShellScale);
+        target.safeGetUniform("CloudOpacity").set(cloudOpacity * cloudFade);
+        target.safeGetUniform("CloudShadowStrength").set(CLOUD_SHADOW_STRENGTH);
+        if (enabled)
+        {
+            Vector3f xAxis = surfaceToCloudRotation.transform(new Vector3f(1.0F, 0.0F, 0.0F));
+            Vector3f yAxis = surfaceToCloudRotation.transform(new Vector3f(0.0F, 1.0F, 0.0F));
+            Vector3f zAxis = surfaceToCloudRotation.transform(new Vector3f(0.0F, 0.0F, 1.0F));
+            target.safeGetUniform("CloudRelativeRotationX").set(xAxis.x, xAxis.y, xAxis.z);
+            target.safeGetUniform("CloudRelativeRotationY").set(yAxis.x, yAxis.y, yAxis.z);
+            target.safeGetUniform("CloudRelativeRotationZ").set(zAxis.x, zAxis.y, zAxis.z);
+        }
     }
 
     static void disableAfterFailure(ShaderInstance failedShader, RuntimeException exception)

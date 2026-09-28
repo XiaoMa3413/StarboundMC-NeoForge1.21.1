@@ -1,5 +1,6 @@
 package com.starboundmc.client;
 
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -33,6 +34,23 @@ final class PlanetSurfaceLighting
                 .rotateY((float) Math.toRadians(-spinDegrees))
                 .rotateX((float) Math.toRadians(-orientationTiltDegrees))
                 .rotateY((float) Math.toRadians(-orientationYawDegrees));
+    }
+
+    /**
+     * Maps a point in the surface mesh frame into the cloud mesh frame.
+     * Cloud spin is applied before the same fixed body orientation, so the relative
+     * transform is B^-1 * Ry(-cloudDelta) * B, where B is tilt followed by body yaw.
+     */
+    static Matrix3f surfaceToCloudRelativeRotation(float cloudDeltaDegrees,
+                                                    float orientationTiltDegrees,
+                                                    float orientationYawDegrees)
+    {
+        return new Matrix3f()
+                .rotateY((float) Math.toRadians(-orientationYawDegrees))
+                .rotateX((float) Math.toRadians(-orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(-cloudDeltaDegrees))
+                .rotateX((float) Math.toRadians(orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(orientationYawDegrees));
     }
 
     /** Camera origin transformed into the unrotated sphere mesh frame. */
