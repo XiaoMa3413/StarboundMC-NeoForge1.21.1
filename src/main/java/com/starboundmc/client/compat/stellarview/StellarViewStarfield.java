@@ -16,6 +16,8 @@ public final class StellarViewStarfield
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String MOD_ID = "stellarview";
     private static boolean failedThisSession;
+    private static boolean hasObservedEnabledSetting;
+    private static boolean lastEnabledSetting;
 
     private StellarViewStarfield() {}
 
@@ -24,8 +26,13 @@ public final class StellarViewStarfield
                                  SpaceRenderContext space, float brightness,
                                  float convergence, Vector3f convergenceForward)
     {
-        if (failedThisSession || !StarfieldClientConfig.stellarViewStarsEnabled()
-                || !ModList.get().isLoaded(MOD_ID))
+        boolean enabled = StarfieldClientConfig.stellarViewStarsEnabled();
+        if (hasObservedEnabledSetting && enabled != lastEnabledSetting)
+            resetBackend();
+        hasObservedEnabledSetting = true;
+        lastEnabledSetting = enabled;
+
+        if (failedThisSession || !enabled || !ModList.get().isLoaded(MOD_ID))
             return false;
 
         try
@@ -43,6 +50,13 @@ public final class StellarViewStarfield
 
     public static void resetSession()
     {
+        resetBackend();
+        hasObservedEnabledSetting = false;
+        failedThisSession = false;
+    }
+
+    private static void resetBackend()
+    {
         try
         {
             if (ModList.get().isLoaded(MOD_ID))
@@ -52,6 +66,5 @@ public final class StellarViewStarfield
         {
             LOGGER.warn("Could not reset the Stellar View starfield cleanly", error);
         }
-        failedThisSession = false;
     }
 }

@@ -278,12 +278,12 @@ public final class SpaceBackgroundRenderer
         vertexColor(bb, matrix, x4, y4, z4, domeColor(y4));
     }
 
-    /** Slightly blue at the top, near-black at the bottom. */
+    /** Muted near-black backdrop with a subtle, mostly neutral vertical falloff. */
     private static float[] domeColor(float y)
     {
         float t = Math.max(0.0F, Math.min(1.0F, (y + 430.0F) / 860.0F));
-        return new float[] { lerp(0.010F, 0.028F, t), lerp(0.014F, 0.038F, t),
-                lerp(0.035F, 0.095F, t), 1.0F };
+        return new float[] { lerp(0.005F, 0.011F, t), lerp(0.006F, 0.012F, t),
+                lerp(0.009F, 0.016F, t), 1.0F };
     }
 
     private static float smoothstep(float t)
