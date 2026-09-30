@@ -10,7 +10,9 @@ in vec2 screenPosition;
 out vec4 fragColor;
 void main() {
     vec4 ray = InverseViewProjection * vec4(screenPosition, 1.0, 1.0);
-    vec3 color = spaceBackgroundRadiance(normalize(ray.xyz), TintColor, TintAmount, FieldDetail);
+    vec3 direction = normalize(ray.xyz);
+    float footprint = max(length(dFdx(direction)),length(dFdy(direction)));
+    vec3 color = spaceBackgroundRadiance(direction,TintColor,TintAmount,FieldDetail,footprint);
     if (LinearColor < .5) color = spaceToDisplay(color);
     fragColor = vec4(color, 1.0);
 }

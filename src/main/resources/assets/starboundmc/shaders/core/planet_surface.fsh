@@ -2,6 +2,7 @@
 #moj_import <starboundmc:space_common.glsl>
 #moj_import <starboundmc:space_texture.glsl>
 #moj_import <starboundmc:space_atmosphere.glsl>
+#moj_import <starboundmc:space_cloud_optics.glsl>
 uniform float AtmosphereGroundRadius;
 uniform float AtmosphereTopRadius;
 uniform vec3 AtmosphereColor;
@@ -78,8 +79,12 @@ float projectedCloudShadow(vec3 normal, vec3 lightDirection, float dotNL) {
     vec3 shellPointSurfaceFrame = surfacePoint + lightDirection * rayDistance;
     vec3 shellPointCloudFrame = surfaceToCloudFrame(shellPointSurfaceFrame);
     vec2 cloudUv = cloudShellUv(shellPointCloudFrame);
-    float cloudDensity = (DistanceScale > 0.0 ? spaceBilinear(Sampler2,cloudUv,false).a
-            : texture(Sampler2,cloudUv).a) * CloudOpacity;
+    float coverage = DistanceScale > 0.0 ? spaceBilinear(Sampler2,cloudUv,false).a
+            : texture(Sampler2,cloudUv).a;
+    float cloudDensity = DistanceScale > 0.0
+            ? 1.0-spaceCloudTransmission(spaceCloudOpticalDepth(coverage,CloudOpacity),
+                dot(normalize(shellPointSurfaceFrame),lightDirection))
+            : coverage*CloudOpacity;
     return clamp(cloudDensity * CloudShadowStrength, 0.0, 0.30);
 }
 

@@ -21,6 +21,7 @@
       "values": [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
     },
     { "name": "SunDirection", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] },
+    { "name": "CameraPositionMesh", "type": "float", "count": 3, "values": [0.0, 0.0, 200.0] },
     { "name": "CloudOpacity", "type": "float", "count": 1, "values": [1.0] },
     { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [1.0] },
     {"name": "AtmosphereGroundRadius", "type": "float", "count": 1, "values": [50.0]},

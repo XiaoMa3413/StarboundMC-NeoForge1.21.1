@@ -48,6 +48,7 @@ public final class SpaceRenderSmoke {
     private static boolean started, finished;
     private static long start, stageStart, previousFrame;
     private static int stage, samples;
+    private static float fixtureYaw, fixturePitch;
     private static CompletableFuture<?> setup;
     private static CompletableFuture<Void> reload;
 
@@ -95,7 +96,8 @@ public final class SpaceRenderSmoke {
                 var player = server.getPlayerList().getPlayers().getFirst();
                 for (int x = 997; x <= 1003; x++) for (int z = 997; z <= 1003; z++)
                     level.setBlockAndUpdate(new BlockPos(x, 188, z), Blocks.SEA_LANTERN.defaultBlockState());
-                player.teleportTo(level, 1000.5, 192, 1000.5, Set.of(), 0, 0);
+                // Keep the fixture's support platform below the galaxy camera's field of view.
+                player.teleportTo(level, 1000.5, 200, 1000.5, Set.of(), 0, 0);
                 player.getAbilities().flying = true;
                 player.onUpdateAbilities();
             });
@@ -109,6 +111,12 @@ public final class SpaceRenderSmoke {
             reload.join();
         }
         if (stageStart == 0) selectView(mc);
+        // Initial server teleport packets can otherwise overwrite the first
+        // camera pose after selectView, producing a mislabeled reference image.
+        mc.player.setYRot(fixtureYaw);
+        mc.player.setXRot(fixturePitch);
+        mc.player.yRotO = fixtureYaw;
+        mc.player.xRotO = fixturePitch;
         long now = System.nanoTime();
         if (previousFrame != 0 && samples < FRAME_MS.length)
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
@@ -129,6 +137,7 @@ public final class SpaceRenderSmoke {
                 + "samples=" + samples + " p50_ms=" + sorted[samples / 2]
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
+                + "cameraYaw=" + fixtureYaw + " cameraPitch=" + fixturePitch + "\n"
                 + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
                 + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
                 + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
@@ -158,6 +167,12 @@ public final class SpaceRenderSmoke {
             position = star.add(new UniverseDelta(0, 0, 1700));
             delta = position.deltaTo(star);
         } else if ("@galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
+        else if ("@galaxy-outer".equals(view)) delta = new UniverseDelta(-.87,.24,0);
+        else if ("@galaxy-side".equals(view)) {
+            var direction = new org.joml.Vector3f(.24F,.87F,.43F)
+                    .cross(new org.joml.Vector3f(.87F,-.24F,0)).normalize();
+            delta = new UniverseDelta(direction.x,direction.y,direction.z);
+        }
         else if ("@atmosphere".equals(view)) {
             body = "sys1:lush";
             var sun = UniverseNavigation.sunDirection(body).normalize();
@@ -212,6 +227,8 @@ public final class SpaceRenderSmoke {
         }
         float yaw = (float) Math.toDegrees(Math.atan2(-delta.x(), delta.z()));
         float pitch = (float) -Math.toDegrees(Math.atan2(delta.y(), Math.hypot(delta.x(), delta.z())));
+        fixtureYaw = yaw;
+        fixturePitch = pitch;
         mc.player.setYRot(yaw);
         mc.player.setXRot(pitch);
         mc.player.yRotO = yaw;

@@ -82,6 +82,8 @@ final class SpaceDepthSmoke {
                 SpaceSceneTarget.finish();
             }
             verifyAtmosphereQuality(report);
+            verifyBackgroundField(report);
+            verifyCloudOptics(quad,report);
         } finally {
             SpaceSceneTarget.abort();
             sphere.close(); quad.close(); VertexBuffer.unbind();
@@ -143,6 +145,116 @@ final class SpaceDepthSmoke {
         RenderSystem.depthMask(true); RenderSystem.clearDepth(depth);
         RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, false);
         RenderSystem.disableScissor();
+    }
+
+    private static void verifyBackgroundField(StringBuilder report) {
+        var previous = StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();
+        try {
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.HIGH);
+            Vector3f centre = new Vector3f(.87F,-.24F,0).normalize();
+            Vector3f axis = new Vector3f(.24F,.87F,.43F).normalize();
+            Vector3f tangent = new Vector3f(axis).cross(centre).normalize();
+            Vector3f coreDirection = new Vector3f(centre).add(new Vector3f(axis).mul(.09F)).normalize();
+            float[] core = backgroundMean(coreDirection,1);
+            float[] outer = backgroundMean(new Vector3f(tangent).add(new Vector3f(axis).mul(.09F)).normalize(),1);
+            float[] reduced = backgroundMean(coreDirection,2);
+            float[] seamLeft = backgroundMean(new Vector3f(centre).negate().add(new Vector3f(tangent).mul(.00001F)),1);
+            float[] seamRight = backgroundMean(new Vector3f(centre).negate().sub(new Vector3f(tangent).mul(.00001F)),1);
+            float[] pole = backgroundMean(axis,1);
+            for (int i=0;i<3;i++) {
+                if (core[i] < outer[i]*1.8F)
+                    throw new IllegalStateException("Galactic bulge has no stellar-density contrast");
+                if (Math.abs(core[i]-reduced[i]) > core[i]*.08F+.0001F)
+                    throw new IllegalStateException("Subpixel galaxy radiance changed under minification");
+                if (Math.abs(seamLeft[i]-seamRight[i]) > seamLeft[i]*.03F+.00003F)
+                    throw new IllegalStateException("Galactic longitude has a visible seam");
+                if (pole[i] > .001F)
+                    throw new IllegalStateException("Galactic pole did not preserve deep-space black level");
+            }
+            report.append("galaxy core=").append(Arrays.toString(core)).append(" outer=")
+                    .append(Arrays.toString(outer)).append(" halfResolution=").append(Arrays.toString(reduced))
+                    .append(" finite/contrast/filtered/seamContinuous/poleBlack/depthPreserved\n");
+        } finally { StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(previous); }
+    }
+
+    private static float[] backgroundMean(Vector3f direction, int divisor) {
+        if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing background field target");
+        int w=width()/divisor,h=height()/divisor;
+        RenderSystem.viewport(0,0,w,h);
+        float depth = readDepth();
+        Vector3f up = Math.abs(new Vector3f(direction).normalize().dot(new Vector3f(.24F,.87F,.43F).normalize())) > .95F
+                ? new Vector3f(0,0,1) : new Vector3f(.24F,.87F,.43F);
+        Matrix4f view = new Matrix4f().lookAt(new Vector3f(),direction,up);
+        Matrix4f projection = new Matrix4f().perspective((float)Math.toRadians(70),(float)w/h,.05F,1000F);
+        if (!GpuSpaceBackground.renderBackground(view,projection,
+                com.starboundmc.client.space.StarSystemResolver.latestEnvironment()))
+            throw new IllegalStateException("Background field shader failed to draw");
+        int side=64/divisor;
+        float[] pixels=new float[side*side*4],mean=new float[3];
+        GL11.glReadPixels(w/2-side/2,h/2-side/2,side,side,GL11.GL_RGBA,GL11.GL_FLOAT,pixels);
+        for (int p=0;p<pixels.length;p+=4) for (int i=0;i<3;i++) {
+            if (!Float.isFinite(pixels[p+i]) || pixels[p+i] < 0 || pixels[p+i] > 2F)
+                throw new IllegalStateException("Galaxy produced unbounded radiance");
+            mean[i]+=pixels[p+i]/(side*side);
+        }
+        if (Float.compare(depth,readDepth()) != 0)
+            throw new IllegalStateException("Background field modified celestial depth");
+        SpaceSceneTarget.finish();
+        return mean;
+    }
+
+    private static void verifyCloudOptics(VertexBuffer star, StringBuilder report) {
+        if (CloudShader.current() == null) throw new IllegalStateException("Cloud shader did not load");
+        var textures = net.minecraft.client.Minecraft.getInstance().getTextureManager();
+        var id = ResourceLocation.fromNamespaceAndPath("starboundmc","render_test_half_cloud");
+        var image = new com.mojang.blaze3d.platform.NativeImage(1,1,false);
+        image.setPixelRGBA(0,0,0x80FFFFFF);
+        textures.register(id,new net.minecraft.client.renderer.texture.DynamicTexture(image));
+        var profile = StarmapUniverse.body("sys1:lush").spaceVisual().orElseThrow();
+        float[] alpha = new float[2];
+        float[] cloudContribution = null;
+        try {
+            for (int i=0;i<2;i++) {
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing cloud optical target");
+                float depth=readDepth();
+                CloudShellRenderer.render(new Matrix4f().translate(i==0 ? 0F : 63F,0,-280).scale(1.4F),
+                        id.toString(),new Vector3f(0,0,1),1F,1F,profile);
+                float[] color=readColor();
+                if (i==0) cloudContribution=color;
+                alpha[i]=color[3];
+                for (float value : color) if (!Float.isFinite(value) || value < 0 || value > 7F)
+                    throw new IllegalStateException("Cloud produced nonfinite/unbounded radiance");
+                if (Float.compare(depth,readDepth()) != 0)
+                    throw new IllegalStateException("Cloud modified opaque celestial depth");
+                SpaceSceneTarget.finish();
+            }
+            if (Math.abs(alpha[0]-.5F) > .015F || alpha[1] < alpha[0]+.1F || alpha[1] > 1F)
+                throw new IllegalStateException("Cloud grazing path did not preserve normal coverage: "+Arrays.toString(alpha));
+            for (boolean foreground : new boolean[] {true,false}) {
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing cloud occlusion target");
+                drawStar(star,foreground ? 180 : 480);
+                float depth=readDepth();
+                float[] before=readColor();
+                CloudShellRenderer.render(new Matrix4f().translate(0,0,-280).scale(1.4F),
+                        id.toString(),new Vector3f(0,0,1),1F,1F,profile);
+                float[] after=readColor();
+                if (Float.compare(depth,readDepth()) != 0)
+                    throw new IllegalStateException("Cloud replaced star depth");
+                if (foreground) {
+                    for (int i=0;i<3;i++) if (Math.abs(before[i]-after[i]) > .001F)
+                        throw new IllegalStateException("Cloud attenuated a foreground star");
+                } else if (after[0] >= before[0]-.1F)
+                    throw new IllegalStateException("Cloud did not attenuate a background star");
+                else for (int i=0;i<3;i++) {
+                    float expected=before[i]*(1F-alpha[0])+cloudContribution[i];
+                    if (Math.abs(after[i]-expected) > .01F)
+                        throw new IllegalStateException("Cloud compositing did not preserve linear transmission");
+                }
+                SpaceSceneTarget.finish();
+            }
+            report.append("cloud normalAlpha=").append(alpha[0]).append(" grazingAlpha=").append(alpha[1])
+                    .append(" finite/slantPath/linearComposite/foregroundPreserved/backgroundAttenuated/depthPreserved\n");
+        } finally { textures.release(id); }
     }
 
     private static String stateSignature() {

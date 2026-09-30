@@ -86,6 +86,8 @@ final class CloudShellRenderer
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(() -> activeShader);
             CloudShader.setLighting(activeShader, sunDirectionMesh, cloudOpacity, globalAlpha);
+            Vector3f camera = PlanetSurfaceLighting.cameraPositionMesh(model);
+            activeShader.safeGetUniform("CameraPositionMesh").set(camera.x,camera.y,camera.z);
             AtmosphereShader.setSurfaceLighting(activeShader, profile, profile.cloudShellScale());
             SpaceSceneTarget.configure(activeShader);
 

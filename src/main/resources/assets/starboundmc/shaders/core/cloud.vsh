@@ -10,6 +10,7 @@ uniform float DistanceScale;
 
 out vec2 texCoord0;
 out vec3 cloudNormal;
+out vec3 meshPosition;
 out vec3 viewPosition;
 
 void main() {
@@ -18,4 +19,5 @@ void main() {
     if (DistanceScale > 0.0) gl_Position.z = 0.0;
     texCoord0 = UV0;
     cloudNormal = Normal;
+    meshPosition = Position;
 }
