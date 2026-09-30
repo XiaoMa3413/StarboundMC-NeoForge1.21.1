@@ -91,6 +91,7 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 - PNG 为实际客户端图像；TXT 包含分辨率、GPU/驱动、样本数、CPU/GPU P50/P95 和资源计数。
 - `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查大气对前/后景辐射的衰减、波长衰减顺序、各档掠射晨昏线的收敛、不透明天体深度、世界深度哨兵和事件状态恢复。
 - 同一 GPU 检查还覆盖银河银心/外围亮度、半分辨率平均辐射、经度接缝、极区黑位，以及云层法向/掠射覆盖、前后景衰减和不透明深度保持。
+- 光学表上传检查使用真实 `NativeImage` 子区域上传留下的行跨度/偏移、外部字节交换布局及已绑定的像素上传缓冲区，逐项回读全部 65,536 个 float，验证释放后重建、缓存复用和调用者上传/纹理状态恢复；Direct 也执行此项检查。
 - `complete.txt` 只在本轮所有捕获和深度检查成功后写入。
 - GPU 时间用异步 timestamp 成对查询，只读取已完成结果，不使用 `glFinish`。`TOTAL` 包含事件入口状态保存和最终颜色合成；单个 pass 计时不能相加替代它。
 - 生产测量可使用 JVM 参数 `-Dstarboundmc.debug.spaceProfile=true`，每 10 秒把统计写入客户端日志；默认不建立计时 query。
@@ -173,3 +174,23 @@ Performance 的 Bloom 分配/绘制均为零。旧版 StellarView 记录显示�
 RTX 3060 Laptop / OpenGL 4.6 / NVIDIA 610.47 的 256 样本短捕获：1920×1080 Ultra 银河方向背景 GPU P50 / P95 为 0.9984 / 1.6343 ms，TOTAL 为 1.3517 / 2.1729 ms；1280×720 原生 High 背景为 0.7700 / 0.8991 ms。记录用于定位新增背景成本，不作不同预设的速度排名或持续帧率承诺。本轮没有新增 GPU 纹理/目标或第三方依赖。
 
 普通生产 `test build` 成功：149 套件、725 项测试，零失败/错误/跳过。生产 JAR 含新云光学 include 和银河方向场，不含三个渲染夹具；shader JSON 解析与源码空白检查通过。截图和运行日志只保留在本地。仍需专项验证运动中的星点稳定性、其他 GPU / shaderpack，以及多个透明天体交叠；云内体积、多次散射、海面和近景资产仍未完成。
+
+## 大气光学表上传原生崩溃修复（2026-10-01）
+
+用户报告的 `hs_err_pid37796.log` 将 NVIDIA `nvoglv64.dll` 的访问违例定位在 `AtmosphereSolarLut.bind → glTexImage2D(FloatBuffer)`。原上传仅恢复纹理绑定，未设置 CPU 数据布局。Minecraft 1.21.1 的 `NativeImage._upload` 会留下 `UNPACK_ROW_LENGTH`、`UNPACK_SKIP_PIXELS` 和 `UNPACK_SKIP_ROWS`；这些状态可能使驱动读取超出 256 KiB 光学表缓冲区。原始 `hs_err` 未记录这些状态的具体值，不能据此还原当次完整布局。[OpenGL 像素存储规范](https://registry.khronos.org/OpenGL/specs/gl/glspec30.pdf)说明纹理上传按全局 unpack 状态解释 CPU 地址；绑定像素上传缓冲区时地址另作缓冲区偏移解释。
+
+光学表现在仅在创建/重载时保存 unpack 布局与缓冲区绑定，设置紧密排列、零行跨度/偏移及关闭字节交换，暂时解绑像素上传缓冲区，上传后在 `finally` 恢复全部修改过的状态与纹理绑定。GPU 句柄在创建完成后才加入缓存，异常路径释放未完成的纹理。缓存绘制没有新增 OpenGL 状态查询，光学表格式、尺寸和视觉算法保持原值。
+
+新增实际 GPU 回归覆盖三种输入状态：
+
+| 条件 | Alignment / Row length / Skip pixels / Skip rows / Swap bytes | PBO |
+| --- | --- | --- |
+| 真实 NativeImage 子区域上传 | 4 / 1024 / 3 / 2 / 0 | 未绑定 |
+| 外部 CPU 布局 | 8 / 2048 / 11 / 7 / 1 | 未绑定 |
+| 外部像素上传缓冲区 | 8 / 2048 / 11 / 7 / 1 | 绑定仅 64 字节的测试缓冲区 |
+
+每项先释放再重建光学表，通过 shader 的真实 sampler 读取 RG32F 纹理，逐项与 CPU 参考比较全部 65,536 个 float；同时检查调用者布局、缓冲区及纹理绑定恢复、再次绑定不上传、纹理尺寸/格式正确且无 OpenGL 错误。此项覆盖之前固定视点矩阵未覆盖的上传状态。
+
+实际客户端使用与用户崩溃相同的 Oracle Java 21.0.8+12-LTS-250，RTX 3060 Laptop / NVIDIA 610.47。Ultra + HDR2 StellarView 捕获 4 个视点（行星、壳内大气、缩放、资源重载），移除 StellarView 的 Performance 捕获 3 个视点（行星、缩放、资源重载）；两组均正常退出，三个上传条件逐项精确匹配，既有大气/云/银河/深度及事件状态检查通过。目录为 `run-space-smoke/screenshots/{crash-fix-oracle-ultra,crash-fix-oracle-native-performance}`。
+
+普通生产 `test build` 成功：149 套件、725 项测试，零失败/错误/跳过。生产 JAR 包含修正的 unpack 状态管理，不含三个渲染夹具。验证使用新建夹具世界，未打开用户存档；用户原始世界与其他 GPU 的实际运行仍不在本轮验证范围内。

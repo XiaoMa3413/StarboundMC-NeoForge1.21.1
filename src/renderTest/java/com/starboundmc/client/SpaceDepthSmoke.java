@@ -1,13 +1,20 @@
 package com.starboundmc.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.*;
 import com.starboundmc.client.space.CelestialDepth;
+import com.starboundmc.client.space.AtmosphereSolarOptics;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
+import org.lwjgl.system.MemoryUtil;
 import java.util.Arrays;
 
 /** Real shader/target checks, with draw order reversed as well as distance ordering. */
@@ -15,8 +22,10 @@ final class SpaceDepthSmoke {
     private SpaceDepthSmoke() {}
 
     static String verify() {
+        StringBuilder report = new StringBuilder();
+        verifySolarLutUpload(report);
         if (StarfieldClientConfig.SPACE_PIPELINE_MODE.get() != StarfieldClientConfig.PipelineMode.ISOLATED)
-            return "Depth integration checks skipped for direct pipeline.\n";
+            return report.append("Depth integration checks skipped for direct pipeline.\n").toString();
         var state = SpaceRenderPassState.capture();
         String stateBefore = stateSignature();
         Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
@@ -26,7 +35,6 @@ final class SpaceDepthSmoke {
         writeDepthSentinel(.37);
         float mainDepthBefore = readDepth();
         VertexBuffer sphere = buildSphere(), quad = buildQuad();
-        StringBuilder report = new StringBuilder();
         try {
             RenderSystem.setProjectionMatrix(new Matrix4f().perspective((float) Math.toRadians(70), 1280F / 720, .05F, 1000),
                     VertexSorting.DISTANCE_TO_ORIGIN);
@@ -101,6 +109,93 @@ final class SpaceDepthSmoke {
         report.append("World depth sentinel preserved: ").append(mainDepthAfter)
                 .append("\nRender event state restored.\n");
         return report.toString();
+    }
+
+    private static void verifySolarLutUpload(StringBuilder report) {
+        var shader = AtmosphereShader.scattering();
+        if (shader == null) throw new IllegalStateException("Solar LUT shader did not load");
+        var state = SpaceRenderPassState.capture();
+        int[] unpackQueries = {GL11.GL_UNPACK_ALIGNMENT, GL11.GL_UNPACK_ROW_LENGTH,
+                GL11.GL_UNPACK_SKIP_PIXELS, GL11.GL_UNPACK_SKIP_ROWS, GL11.GL_UNPACK_SWAP_BYTES};
+        int[] packQueries = {GL11.GL_PACK_ALIGNMENT, GL11.GL_PACK_ROW_LENGTH,
+                GL11.GL_PACK_SKIP_PIXELS, GL11.GL_PACK_SKIP_ROWS, GL11.GL_PACK_SWAP_BYTES};
+        int[] unpackBefore = pixelStoreValues(unpackQueries), packBefore = pixelStoreValues(packQueries);
+        int unpackBuffer = GL11.glGetInteger(GL21.GL_PIXEL_UNPACK_BUFFER_BINDING);
+        int packBuffer = GL11.glGetInteger(GL21.GL_PIXEL_PACK_BUFFER_BINDING);
+        int pbo = GL15.glGenBuffers();
+        float[] expected = AtmosphereSolarOptics.generate();
+        var actual = MemoryUtil.memAllocFloat(expected.length);
+        try {
+            // Readback is also a CPU transfer and must not inherit Minecraft's pack layout.
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, 0);
+            setPixelStore(packQueries, new int[] {4,0,0,0,0});
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, 0);
+            setPixelStore(unpackQueries, new int[] {4,0,0,0,0});
+            try (var partial = new net.minecraft.client.renderer.texture.DynamicTexture(
+                    new com.mojang.blaze3d.platform.NativeImage(1024,4,true))) {
+                for (String condition : new String[] {"nativeImageSubregion", "foreignCpuLayout", "foreignUnpackPbo"}) {
+                    partial.bind();
+                    if (condition.equals("nativeImageSubregion")) {
+                        // The same global state left by a real atlas subregion upload.
+                        partial.getPixels().upload(0,0,0,3,2,5,1,false,false,false,false);
+                    } else {
+                        setPixelStore(unpackQueries, new int[] {8,2048,11,7,1});
+                        if (condition.equals("foreignUnpackPbo")) {
+                            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, pbo);
+                            GL15.glBufferData(GL21.GL_PIXEL_UNPACK_BUFFER, 64L, GL15.GL_STREAM_DRAW);
+                        }
+                    }
+                    int[] before = pixelStoreValues(unpackQueries);
+                    int bufferBefore = GL11.glGetInteger(GL21.GL_PIXEL_UNPACK_BUFFER_BINDING);
+                    int textureBefore = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D);
+                    AtmosphereSolarLut.release();
+                    AtmosphereSolarLut.bind(shader);
+                    String uploaded = AtmosphereSolarLut.diagnostics();
+                    AtmosphereSolarLut.bind(shader); // Cached use must neither upload nor modify GL state.
+                    if (!uploaded.equals(AtmosphereSolarLut.diagnostics())
+                            || !Arrays.equals(before, pixelStoreValues(unpackQueries))
+                            || bufferBefore != GL11.glGetInteger(GL21.GL_PIXEL_UNPACK_BUFFER_BINDING)
+                            || textureBefore != GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D))
+                        throw new IllegalStateException("Solar LUT changed caller transfer/texture state: "+condition);
+                    shader.apply();
+                    int sampler = GL20.glGetUniformLocation(shader.getId(), "SolarOpticalDepth");
+                    if (sampler < 0) throw new IllegalStateException("Missing solar LUT sampler");
+                    GlStateManager._activeTexture(GL13.GL_TEXTURE0 + GL20.glGetUniformi(shader.getId(), sampler));
+                    if (GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D,0,GL11.GL_TEXTURE_WIDTH) != AtmosphereSolarOptics.WIDTH
+                            || GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D,0,GL11.GL_TEXTURE_HEIGHT) != AtmosphereSolarOptics.HEIGHT
+                            || GL11.glGetTexLevelParameteri(GL11.GL_TEXTURE_2D,0,GL11.GL_TEXTURE_INTERNAL_FORMAT) != GL30.GL_RG32F)
+                        throw new IllegalStateException("Invalid solar LUT allocation: "+condition);
+                    actual.clear();
+                    GL11.glGetTexImage(GL11.GL_TEXTURE_2D,0,GL30.GL_RG,GL11.GL_FLOAT,actual);
+                    for (int i=0;i<expected.length;i++) if (Float.compare(expected[i],actual.get(i)) != 0)
+                        throw new IllegalStateException("Solar LUT transfer corrupted texel "+i+" under "+condition);
+                    shader.clear();
+                    int error = GL11.glGetError();
+                    if (error != GL11.GL_NO_ERROR)
+                        throw new IllegalStateException("Solar LUT OpenGL error "+error+" under "+condition);
+                    report.append("solarLutUpload=").append(condition).append(" unpack=")
+                            .append(Arrays.toString(before)).append(" pboBound=").append(bufferBefore != 0)
+                            .append(" all65536FloatsExact/stateRestored/cachedBindStable/recreated\n");
+                }
+            }
+        } finally {
+            shader.clear();
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_UNPACK_BUFFER, unpackBuffer);
+            GlStateManager._glBindBuffer(GL21.GL_PIXEL_PACK_BUFFER, packBuffer);
+            GL15.glDeleteBuffers(pbo);
+            setPixelStore(unpackQueries, unpackBefore);
+            setPixelStore(packQueries, packBefore);
+            MemoryUtil.memFree(actual);
+            state.restore();
+        }
+    }
+
+    private static int[] pixelStoreValues(int[] queries) {
+        return Arrays.stream(queries).map(GL11::glGetInteger).toArray();
+    }
+
+    private static void setPixelStore(int[] queries, int[] values) {
+        for (int i=0;i<queries.length;i++) GlStateManager._pixelStore(queries[i],values[i]);
     }
 
     private static void verifyAtmosphereQuality(StringBuilder report) {
