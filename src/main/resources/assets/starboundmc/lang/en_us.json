@@ -662,5 +662,6 @@
   "starboundmc.config.clouds_enabled": "Clouds",
   "starboundmc.config.cloud_shadows_enabled": "Cloud Shadows",
   "starboundmc.config.atmosphere_enabled": "Atmosphere",
-  "starboundmc.config.stellar_view_background_stars": "Stellar View Background Stars"
+  "starboundmc.config.stellar_view_background_stars": "Stellar View Background Stars",
+  "starboundmc.config.space_bloom_strength": "Space Bloom Strength"
 }

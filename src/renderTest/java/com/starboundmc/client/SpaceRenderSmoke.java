@@ -33,9 +33,14 @@ import java.util.concurrent.CompletableFuture;
 /** Opt-in isolated world fixture; no user save or server flight state is changed. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public final class SpaceRenderSmoke {
-    private static final String[] BODIES = {"sys1:lush", "sys1:barren", "sys1:molten",
+    private static final String[] BASE_VIEWS = {"sys1:lush", "sys1:barren", "sys1:molten",
             "sys2:frozen", "sys1:gasgiant", "sys1:rockymoon", null, "@stellar", "@galaxy",
-            "@window", "@resize", "@reload"};
+            "@atmosphere", "@window", "@resize", "@reload"};
+    private static final String[] BODIES = Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")
+            ? java.util.stream.Stream.concat(Arrays.stream(BASE_VIEWS),java.util.stream.Stream.of(
+                    "@stellar-mode-textured-instanced", "@stellar-mode-textured-regular",
+                    "@stellar-mode-plain-instanced", "@stellar-mode-plain-regular")).toArray(String[]::new)
+            : BASE_VIEWS;
     private static final double[] FRAME_MS = new double[180];
     private static boolean started, finished;
     private static long start, stageStart, previousFrame;
@@ -59,7 +64,8 @@ public final class SpaceRenderSmoke {
             mc.options.hideGui = true;
             mc.options.renderDistance().set(4);
             mc.options.fov().set(70);
-            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.CUSTOM);
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
+                    System.getProperty("starboundmc.debug.spaceSmokeQuality", "custom").toUpperCase(java.util.Locale.ROOT)));
             StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView"));
             StarfieldClientConfig.SPACE_PIPELINE_MODE.set(
                     "direct".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokePipeline"))
@@ -105,6 +111,7 @@ public final class SpaceRenderSmoke {
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
         previousFrame = now;
         if ((now - stageStart) / 1e9 < 3 || samples == 0) return;
+        if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.verifyRestoration();
         var output = mc.gameDirectory.toPath().resolve("screenshots")
                 .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture"));
         Files.createDirectories(output);
@@ -120,10 +127,13 @@ public final class SpaceRenderSmoke {
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
                 + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
+                + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
+                + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
                 + SpaceRenderProfiler.report());
         if (++stage == BODIES.length) {
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             SpaceRenderState.resetPoseProvider();
+            if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
             Files.writeString(output.resolve("complete.txt"), "Completed " + BODIES.length + " fixed space views.\n");
             finished = true;
             mc.stop();
@@ -145,6 +155,21 @@ public final class SpaceRenderSmoke {
             position = star.add(new UniverseDelta(0, 0, 1700));
             delta = position.deltaTo(star);
         } else if ("@galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
+        else if ("@atmosphere".equals(view)) {
+            body = "sys1:lush";
+            var sun = UniverseNavigation.sunDirection(body).normalize();
+            var tangent = sun.cross(Math.abs(sun.y) < .95
+                    ? new net.minecraft.world.phys.Vec3(0,1,0) : new net.minecraft.world.phys.Vec3(1,0,0)).normalize();
+            double distance = UniverseNavigation.radius(body)*1.015;
+            position = UniverseNavigation.universeBodyPosition(body).add(
+                    new UniverseDelta(sun.x*distance,sun.y*distance,sun.z*distance));
+            var direction = tangent.scale(.98).subtract(sun.scale(.2));
+            delta = new UniverseDelta(direction.x,direction.y,direction.z);
+        }
+        else if (view != null && view.startsWith("@stellar-mode-")) {
+            StellarShaderSmoke.configure(view.contains("textured"),view.endsWith("instanced"));
+            delta = new UniverseDelta(.87,-.24,0);
+        }
         if ("@resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
         if ("@window".equals(view)) {
             mc.getSingleplayerServer().submit(() -> {

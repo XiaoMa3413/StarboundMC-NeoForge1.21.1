@@ -4,9 +4,13 @@
   "samplers": [
     {
       "name": "Sampler0"
+    },
+    {
+      "name": "Sampler1"
     }
   ],
   "uniforms": [
+    {"name": "BloomStrength", "type": "float", "count": 1, "values": [0]},
     {
       "name": "LinearColor",
       "type": "float",

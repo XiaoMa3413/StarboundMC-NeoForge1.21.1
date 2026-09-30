@@ -10,7 +10,7 @@ import java.util.Locale;
 
 /** Opt-in asynchronous timestamp pairs; never waits for an unfinished GPU query. */
 final class SpaceRenderProfiler {
-    enum Pass { TOTAL, BACKGROUND, STARFIELD, SYSTEM_STARS, CORONA, PLANETS, WARP, COMPOSITE }
+    enum Pass { TOTAL, BACKGROUND, STARFIELD, SYSTEM_STARS, CORONA, PLANETS, ATMOSPHERES, BLOOM, WARP, COMPOSITE }
     private static final boolean ENABLED = Boolean.getBoolean("starboundmc.debug.spaceSmoke")
             || Boolean.getBoolean("starboundmc.debug.spaceProfile");
     private static final int CAPACITY = 256;

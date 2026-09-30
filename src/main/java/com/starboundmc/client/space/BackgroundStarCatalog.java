@@ -11,7 +11,7 @@ public final class BackgroundStarCatalog {
                        float red, float green, float blue, float brightness) {}
 
     public static Star[] generate(int count) {
-        if (count <= 0 || count > 16000) throw new IllegalArgumentException("Star budget must be 1..16000");
+        if (count <= 0 || count > 32000) throw new IllegalArgumentException("Star budget must be 1..32000");
         Random random = new Random(SEED);
         Star[] stars = new Star[count];
         double nLength = Math.sqrt(.24 * .24 + .87 * .87 + .43 * .43);

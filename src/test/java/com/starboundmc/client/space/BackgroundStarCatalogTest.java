@@ -15,7 +15,7 @@ class BackgroundStarCatalogTest {
 
     @Test
     void largestBudgetHasFiniteUnitDirectionsAndBoundedVisuals() {
-        for (var star : BackgroundStarCatalog.generate(16000)) {
+        for (var star : BackgroundStarCatalog.generate(32000)) {
             double length = Math.sqrt(star.x() * star.x() + star.y() * star.y() + star.z() * star.z());
             assertEquals(1, length, 2e-7);
             assertTrue(star.size() > 0 && star.size() < .5);
@@ -23,7 +23,7 @@ class BackgroundStarCatalogTest {
             assertTrue(star.phase() >= 0 && star.phase() < Math.PI * 2);
         }
         assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(0));
-        assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(16001));
+        assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(32001));
     }
 
     @Test

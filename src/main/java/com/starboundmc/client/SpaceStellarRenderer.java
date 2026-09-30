@@ -60,7 +60,10 @@ final class SpaceStellarRenderer {
             shader.safeGetUniform("ViewToWorld").set(new Matrix4f(skyView)
                     .rotateX((float) Math.toRadians(-space.pitch()))
                     .rotateY((float) Math.toRadians(-space.yaw())).invert());
-            shader.safeGetUniform("TimePhase").set((space.animationTicks() % 2400) / 2400F * (float) (Math.PI * 2));
+            var level = net.minecraft.client.Minecraft.getInstance().level;
+            shader.safeGetUniform("TimePhase").set(level == null ? 0F
+                    : com.starboundmc.client.space.SpaceRenderClock.twinklePhase(level.getGameTime(),
+                    net.minecraft.client.Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false)));
             Vector3d view = new Vector3d();
             for (int i = 0; i < stars.count(); i++) {
                 var star = stars.star(i);

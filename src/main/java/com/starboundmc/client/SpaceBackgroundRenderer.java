@@ -128,12 +128,13 @@ public final class SpaceBackgroundRenderer
             // Match the established star orientation: stable camera + visual roll,
             // then inverse ship pitch/yaw. The coordinate provider independently
             // anchors the field to the virtual ship position, never the player.
-            boolean externalTarget = SpaceSceneTarget.beginExternalStars();
+            boolean linearExternal = SpaceSceneTarget.linear() && StellarViewStarfield.linearRadianceAvailable();
+            boolean externalTarget = !linearExternal && SpaceSceneTarget.beginExternalStars();
             boolean rendered;
             try {
                 rendered = StellarViewStarfield.render(level, camera, partialTick, starModelView,
                         RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
-                        frame.backgroundForwardDirection(new Vector3f()));
+                        frame.backgroundForwardDirection(new Vector3f()), linearExternal);
             } finally {
                 if (externalTarget) SpaceSceneTarget.finishExternalStars();
             }

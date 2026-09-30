@@ -1,0 +1,163 @@
+{
+  "vertex": "starboundmc:atmosphere",
+  "fragment": "starboundmc:atmosphere_scatter",
+  "uniforms": [
+    {
+      "name": "DistanceScale",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.0
+      ]
+    },
+    {
+      "name": "ModelViewMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "ProjMat",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "SunDirection",
+      "type": "float",
+      "count": 3,
+      "values": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    {
+      "name": "CameraPositionMesh",
+      "type": "float",
+      "count": 3,
+      "values": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "AtmosphereColor",
+      "type": "float",
+      "count": 3,
+      "values": [
+        0.5,
+        0.7,
+        1.0
+      ]
+    },
+    {
+      "name": "AtmosphereStrength",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.2
+      ]
+    },
+    {
+      "name": "GlobalAlpha",
+      "type": "float",
+      "count": 1,
+      "values": [
+        1.0
+      ]
+    },
+    {
+      "name": "InnerRadius",
+      "type": "float",
+      "count": 1,
+      "values": [
+        47.39336
+      ]
+    },
+    {
+      "name": "OuterRadius",
+      "type": "float",
+      "count": 1,
+      "values": [
+        50.0
+      ]
+    },
+    {
+      "name": "ViewportSize",
+      "type": "float",
+      "count": 2,
+      "values": [
+        1,
+        1
+      ]
+    },
+    {
+      "name": "MeshToUniverse",
+      "type": "float",
+      "count": 1,
+      "values": [
+        1
+      ]
+    },
+    {
+      "name": "ViewSamples",
+      "type": "int",
+      "count": 1,
+      "values": [
+        12
+      ]
+    },
+    {
+      "name": "LightSamples",
+      "type": "int",
+      "count": 1,
+      "values": [
+        4
+      ]
+    }
+  ],
+  "samplers": [
+    {
+      "name": "SceneColor"
+    },
+    {
+      "name": "SceneDepth"
+    }
+  ]
+}

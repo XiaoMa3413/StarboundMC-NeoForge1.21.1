@@ -9,12 +9,34 @@ public enum SpaceVisualQuality
     ULTRA,
     CUSTOM;
 
+    public int bloomLevels() {
+        return switch (this) {
+            case PERFORMANCE -> 0;
+            case BALANCED -> 3;
+            case HIGH, CUSTOM -> 4;
+            case ULTRA -> 5;
+        };
+    }
+
+    public int bloomDownsample() { return this == BALANCED ? 4 : 2; }
+
+    public int atmosphereSamples() {
+        return switch (this) {
+            case PERFORMANCE -> 6;
+            case BALANCED -> 12;
+            case HIGH, CUSTOM -> 20;
+            case ULTRA -> 28;
+        };
+    }
+
+    public int atmosphereLightSamples() { return this == ULTRA ? 8 : this == HIGH || this == CUSTOM ? 6 : 4; }
+
     public int backgroundStarBudget() {
         return switch (this) {
             case PERFORMANCE -> 2000;
             case BALANCED -> 6000;
-            case HIGH, CUSTOM -> 10000;
-            case ULTRA -> 16000;
+            case HIGH, CUSTOM -> 20000;
+            case ULTRA -> 32000;
         };
     }
 

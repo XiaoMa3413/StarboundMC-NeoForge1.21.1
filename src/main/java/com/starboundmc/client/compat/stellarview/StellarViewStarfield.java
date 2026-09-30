@@ -18,13 +18,14 @@ public final class StellarViewStarfield
     private static boolean failedThisSession;
     private static boolean hasObservedEnabledSetting;
     private static boolean lastEnabledSetting;
+    private static long linearDraws, displayDraws;
 
     private StellarViewStarfield() {}
 
     public static boolean render(ClientLevel level, Camera camera, float partialTick,
                                  Matrix4f modelView, Matrix4f projection,
                                  SpaceRenderContext space, float brightness,
-                                 float convergence, Vector3f convergenceForward)
+                                 float convergence, Vector3f convergenceForward, boolean linear)
     {
         boolean enabled = StarfieldClientConfig.stellarViewStarsEnabled();
         if (hasObservedEnabledSetting && enabled != lastEnabledSetting)
@@ -37,8 +38,10 @@ public final class StellarViewStarfield
 
         try
         {
-            return StellarViewBackend.render(level, camera, partialTick, modelView, projection,
-                    space, brightness, convergence, convergenceForward);
+            boolean rendered = StellarViewBackend.render(level, camera, partialTick, modelView, projection,
+                    space, brightness, convergence, convergenceForward, linear);
+            if (rendered) { if (linear) linearDraws++; else displayDraws++; }
+            return rendered;
         }
         catch (LinkageError | RuntimeException error)
         {
@@ -46,6 +49,18 @@ public final class StellarViewStarfield
             LOGGER.warn("Stellar View background stars failed; using StarboundMC stars for this session", error);
             return false;
         }
+    }
+
+    public static boolean linearRadianceAvailable() {
+        if (failedThisSession || !StarfieldClientConfig.stellarViewStarsEnabled()
+                || !ModList.get().isLoaded(MOD_ID)) return false;
+        try { return StellarViewBackend.supportsLinear(); }
+        catch (LinkageError | RuntimeException unavailable) { return false; }
+    }
+
+    public static String diagnostics() {
+        return "stellarViewLinearDraws=" + linearDraws + " stellarViewDisplayDraws=" + displayDraws
+                + " stellarViewFailed=" + failedThisSession;
     }
 
     public static void resetSession()

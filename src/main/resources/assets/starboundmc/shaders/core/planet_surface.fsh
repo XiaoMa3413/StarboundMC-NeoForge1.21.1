@@ -1,5 +1,6 @@
 #version 150
 #moj_import <starboundmc:space_common.glsl>
+#moj_import <starboundmc:space_texture.glsl>
 uniform float DistanceScale;
 uniform float LinearColor;
 
@@ -72,22 +73,23 @@ float projectedCloudShadow(vec3 normal, vec3 lightDirection, float dotNL) {
     vec3 shellPointSurfaceFrame = surfacePoint + lightDirection * rayDistance;
     vec3 shellPointCloudFrame = surfaceToCloudFrame(shellPointSurfaceFrame);
     vec2 cloudUv = cloudShellUv(shellPointCloudFrame);
-    float cloudDensity = texture(Sampler2, cloudUv).a * CloudOpacity;
+    float cloudDensity = (DistanceScale > 0.0 ? spaceBilinear(Sampler2,cloudUv,false).a
+            : texture(Sampler2,cloudUv).a) * CloudOpacity;
     return clamp(cloudDensity * CloudShadowStrength, 0.0, 0.30);
 }
 
 void main() {
-    vec4 texel = texture(Sampler0, texCoord0);
+    vec4 texel = DistanceScale > 0.0 ? spaceBilinear(Sampler0,texCoord0,true) : texture(Sampler0, texCoord0);
     vec3 normal = safeNormalize(surfaceNormal, vec3(0.0, 0.0, 1.0));
     vec3 lightDirection = safeNormalize(SunDirection, normal);
     float dotNL = clamp(dot(normal, lightDirection), -1.0, 1.0);
     gl_FragDepth = DistanceScale > 0.0
             ? celestialDepth(length(viewPosition) * DistanceScale) : gl_FragCoord.z;
     if (DistanceScale > 0.0) {
-        vec3 albedo = spaceToLinear(texel.rgb);
+        vec3 albedo = texel.rgb;
         vec3 view = safeNormalize(CameraPositionMesh - meshPosition, normal);
         float nl = max(dotNL, 0.0), nv = max(dot(normal, view), 0.001);
-        vec2 material = MaterialMaskEnabled > .5 ? texture(Sampler1, texCoord0).rg : vec2(1, 0);
+        vec2 material = MaterialMaskEnabled > .5 ? spaceBilinear(Sampler1,texCoord0,false).rg : vec2(1, 0);
         float shadow = CloudShadowEnabled > .5 ? projectedCloudShadow(normal, lightDirection, dotNL) : 0.0;
         vec3 ambient = vec3(.45, .65, 1.0) * clamp(NightFloor * .04, .001, .015);
         vec3 radiance = albedo * (ambient + vec3(2.2 * nl * (1.0 - shadow)));

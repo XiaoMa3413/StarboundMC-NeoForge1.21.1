@@ -1,0 +1,541 @@
+diff --git a/gradle.properties b/gradle.properties
+index 0090b8bc6a0f6175af75322c234cb3dcc6f8bf9a..b6f8af5df19f87cf0cfd39c0115af905b16bbcf9 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -36,7 +36,7 @@ mod_name=Stellar View
+ # The license of the mod. Review your options at https://choosealicense.com/. All Rights Reserved is the default.
+ mod_license=MIT License
+ # The mod version. See https://semver.org/
+-mod_version=0.5.4-alpha-externalview2
++mod_version=0.5.4-alpha-starbound-hdr1
+ # The group ID for the mod. It is only important when publishing as an artifact to a Maven repository.
+ # This should match the base package used for the mod sources.
+ # See https://maven.apache.org/guides/mini/guide-naming-conventions.html
+diff --git a/src/main/java/net/povstalec/stellarview/api/client/ExternalStarField.java b/src/main/java/net/povstalec/stellarview/api/client/ExternalStarField.java
+index d39344596ee7b71b3269853443803becda0dafa1..494a06c732c6199fa581dd97faf43572c57c2734 100644
+--- a/src/main/java/net/povstalec/stellarview/api/client/ExternalStarField.java
++++ b/src/main/java/net/povstalec/stellarview/api/client/ExternalStarField.java
+@@ -52,6 +52,57 @@ public final class ExternalStarField
+ 				0.0F, DEFAULT_CONVERGENCE_FORWARD);
+ 	}
+ 
++	/**
++	 * Opt-in linear HDR radiance for a caller-owned floating point sky target.
++	 * Ordinary dimension skies retain their original color and blending. The caller
++	 * owns exposure and tone mapping; radianceScale is independent of visibility.
++	 */
++	public boolean renderLinear(ClientLevel level, Camera camera, float partialTicks,
++			Matrix4f modelView, Matrix4f projection, float brightness,
++			float convergence, Vector3f convergenceForward, float radianceScale)
++	{
++		if(!Float.isFinite(radianceScale) || radianceScale <= 0.0F)
++			throw new IllegalArgumentException("radianceScale must be finite and positive");
++		var shaders = new net.povstalec.stellarview.client.render.shader.CelestialShaderInstance[] {
++				StellarViewShaders.starShader(), StellarViewShaders.instancedStarShader(),
++				StellarViewShaders.starTexShader(), StellarViewShaders.instancedStarTexShader()};
++		int first = GeneralConfig.textured_stars.get() ? 2 : 0;
++		for(int i = first; i < first + 2; i++)
++			if(shaders[i] == null || shaders[i].EXTERNAL_RADIANCE == null
++					|| shaders[i].getUniform("ExternalViewport") == null) return false;
++		int[] viewport = new int[4];
++		org.lwjgl.opengl.GL11.glGetIntegerv(org.lwjgl.opengl.GL11.GL_VIEWPORT, viewport);
++		float[] previous = new float[shaders.length];
++		float[] previousViewport = new float[shaders.length * 2];
++		try
++		{
++			for(int i = 0; i < shaders.length; i++)
++				if(shaders[i] != null && shaders[i].EXTERNAL_RADIANCE != null)
++				{
++					previous[i] = shaders[i].EXTERNAL_RADIANCE.getFloatBuffer().get(0);
++					shaders[i].EXTERNAL_RADIANCE.set(radianceScale);
++					var dimensions = shaders[i].getUniform("ExternalViewport");
++					if(dimensions != null) {
++						previousViewport[2*i] = dimensions.getFloatBuffer().get(0);
++						previousViewport[2*i+1] = dimensions.getFloatBuffer().get(1);
++						dimensions.set((float) viewport[2], (float) viewport[3]);
++					}
++				}
++			return render(level, camera, partialTicks, modelView, projection, brightness,
++					convergence, convergenceForward);
++		}
++		finally
++		{
++			for(int i = 0; i < shaders.length; i++)
++				if(shaders[i] != null && shaders[i].EXTERNAL_RADIANCE != null)
++				{
++					shaders[i].EXTERNAL_RADIANCE.set(previous[i]);
++					var dimensions = shaders[i].getUniform("ExternalViewport");
++					if(dimensions != null) dimensions.set(previousViewport[2*i],previousViewport[2*i+1]);
++				}
++		}
++	}
++
+ 	/** Render with a caller-provided, field-space convergence axis and strength. */
+ 	public boolean render(ClientLevel level, Camera camera, float partialTicks,
+ 			Matrix4f modelView, Matrix4f projection, float brightness,
+@@ -71,6 +122,7 @@ public final class ExternalStarField
+ 		RenderSystem.disableCull();
+ 		RenderSystem.disableDepthTest();
+ 		RenderSystem.depthMask(false);
++		int previousLoadBudget = net.povstalec.stellarview.client.render.SpaceRenderer.beginExternalStarLoading();
+ 		try
+ 		{
+ 			renderer.render(viewCenter, level, partialTicks, modelView, camera,
+@@ -80,6 +132,7 @@ public final class ExternalStarField
+ 		}
+ 		finally
+ 		{
++			net.povstalec.stellarview.client.render.SpaceRenderer.endExternalStarLoading(previousLoadBudget);
+ 			RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+ 			RenderSystem.enableDepthTest();
+ 			RenderSystem.depthMask(true);
+diff --git a/src/main/java/net/povstalec/stellarview/client/render/SpaceRenderer.java b/src/main/java/net/povstalec/stellarview/client/render/SpaceRenderer.java
+index b181be8aa0cd8c85af699887248ef34041444480..83dfc9649b18e9c955a2333393168f3365938308 100644
+--- a/src/main/java/net/povstalec/stellarview/client/render/SpaceRenderer.java
++++ b/src/main/java/net/povstalec/stellarview/client/render/SpaceRenderer.java
+@@ -66,6 +66,19 @@ public final class SpaceRenderer
+ 	{
+ 		starsPerTick += starCount;
+ 	}
++
++	/** Standalone skies do not pass through render(), which normally resets this per-frame budget. */
++	public static int beginExternalStarLoading()
++	{
++		int previous = starsPerTick;
++		starsPerTick = 0;
++		return previous;
++	}
++
++	public static void endExternalStarLoading(int previous)
++	{
++		starsPerTick = previous;
++	}
+ 	
+ 	public static boolean loadNewDustClouds()
+ 	{
+diff --git a/src/main/java/net/povstalec/stellarview/client/render/shader/CelestialShaderInstance.java b/src/main/java/net/povstalec/stellarview/client/render/shader/CelestialShaderInstance.java
+index 11ff848f0be13fc3c606a963c66a62ed0ef57b77..bb101c1652899918b8141353c2b180f25b891ec1 100644
+--- a/src/main/java/net/povstalec/stellarview/client/render/shader/CelestialShaderInstance.java
++++ b/src/main/java/net/povstalec/stellarview/client/render/shader/CelestialShaderInstance.java
+@@ -11,6 +11,8 @@ import java.io.IOException;
+ 
+ public class CelestialShaderInstance extends ShaderInstance
+ {
++	@Nullable
++	public final Uniform EXTERNAL_RADIANCE;
+ 	@Nullable
+ 	public final Uniform RELATIVE_SPACE_LY;
+ 	@Nullable
+@@ -31,6 +33,7 @@ public class CelestialShaderInstance extends ShaderInstance
+ 			throws IOException
+ 	{
+ 		super(provider, shaderLocation, format);
++		this.EXTERNAL_RADIANCE = this.getUniform("ExternalRadiance");
+ 		this.RELATIVE_SPACE_LY = this.getUniform("RelativeSpaceLy");
+ 		this.RELATIVE_SPACE_KM = this.getUniform("RelativeSpaceKm");
+ 		this.STAR_CONVERGENCE = this.getUniform("StarConvergence");
+diff --git a/src/main/java/net/povstalec/stellarview/client/util/CelestialBuffer.java b/src/main/java/net/povstalec/stellarview/client/util/CelestialBuffer.java
+index 1a04568436164f5d8f72fee6571c5fecea62856b..7efa0db98a616a0e66c99e27ce2e5d132cbbc0d2 100644
+--- a/src/main/java/net/povstalec/stellarview/client/util/CelestialBuffer.java
++++ b/src/main/java/net/povstalec/stellarview/client/util/CelestialBuffer.java
+@@ -216,6 +216,14 @@ public class CelestialBuffer implements AutoCloseable
+ 		
+ 		RenderSystem.setupShaderLights(shaderInstance);
+ 		shaderInstance.apply();
++		if(shaderInstance instanceof CelestialShaderInstance celestial
++				&& celestial.EXTERNAL_RADIANCE != null
++				&& celestial.EXTERNAL_RADIANCE.getFloatBuffer().get(0) > 0.0F)
++		{
++			RenderSystem.enableBlend();
++			RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA,
++					com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
++		}
+ 		this.draw();
+ 		shaderInstance.clear();
+ 	}
+diff --git a/src/main/java/net/povstalec/stellarview/client/util/CelestialInstancedBuffer.java b/src/main/java/net/povstalec/stellarview/client/util/CelestialInstancedBuffer.java
+index 6f91936fa4fa4fbbdcdb7d1654a3da03e0a8cfd7..d24fd0b930ab033ba3e6e7f70ece674f22deb5d0 100644
+--- a/src/main/java/net/povstalec/stellarview/client/util/CelestialInstancedBuffer.java
++++ b/src/main/java/net/povstalec/stellarview/client/util/CelestialInstancedBuffer.java
+@@ -213,6 +213,13 @@ public class CelestialInstancedBuffer implements AutoCloseable
+ 		
+ 		RenderSystem.setupShaderLights(shaderInstance);
+ 		shaderInstance.apply();
++		if(shaderInstance.EXTERNAL_RADIANCE != null
++				&& shaderInstance.EXTERNAL_RADIANCE.getFloatBuffer().get(0) > 0.0F)
++		{
++			RenderSystem.enableBlend();
++			RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA,
++					com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
++		}
+ 		this.draw(instances);
+ 		shaderInstance.clear();
+ 	}
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
+index d7da70e81cb93a40fabe075fe57b9f74dee08da9..ca437a6ff08cd4429da5a0cce66d1a7bcada3db2 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
+@@ -3,6 +3,11 @@
+ in vec4 vertexColor;
+ 
+ uniform vec4 ColorModulator;
++uniform float ExternalRadiance;
++in vec2 externalUv;
++vec3 toLinear(vec3 value) {
++    return mix(value / 12.92, pow((value + .055) / 1.055, vec3(2.4)), step(vec3(.04045), value));
++}
+ 
+ out vec4 fragColor;
+ 
+@@ -12,4 +17,9 @@ void main() {
+         discard;
+     }
+     fragColor = color * ColorModulator;
++    if (ExternalRadiance > 0.0) {
++        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
++        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
++        fragColor.a *= profile;
++    }
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.json b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.json
+index ad04be31abe7bc24362a79ba79a65c25566558bd..95f47a5cd4bc4795b9b035c371d17e9eb24780a6 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.json
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.json
+@@ -24,6 +24,8 @@
+ 	
+         { "name": "LensingMat", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+         { "name": "LensingMatInv", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+-        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] }
++        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] },
++        { "name": "ExternalRadiance", "type": "float", "count": 1, "values": [0.0] },
++        { "name": "ExternalViewport", "type": "float", "count": 2, "values": [1.0,1.0] }
+     ]
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
+index be59179f9e5f3f979f5ddb6cceef3067f6901394..945da048a10b11137e956cb0d853779aaa501797 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
+@@ -6,6 +6,8 @@ in vec4 HeightWidthSizeDistance;
+ 
+ uniform mat4 ModelViewMat;
+ uniform mat4 ProjMat;
++uniform float ExternalRadiance;
++uniform vec2 ExternalViewport;
+ uniform vec3 RelativeSpaceLy;
+ uniform vec3 RelativeSpaceKm;
+ uniform float StarConvergence;
+@@ -21,6 +23,7 @@ const float MIN_STAR_SIZE = 0.02;
+ const float KM_PER_LY = 9460730472581.2;
+ 
+ out vec4 vertexColor;
++out vec2 externalUv;
+ 
+ float clampStar(float starSize, float distance)
+ {
+@@ -48,6 +51,7 @@ float clampAlpha(float alpha, float distance)
+ 
+ void main()
+ {
++    externalUv = HeightWidthSizeDistance.xy;
+ 	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
+ 	
+ 	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
+@@ -62,6 +66,14 @@ void main()
+ 		float starSize = clampStar(HeightWidthSizeDistance.z, distance);
+ 		float alpha = clampAlpha(Color.w, distance);
+ 		
++        // Broaden subpixel sprites while conserving their integrated energy.
++        if (ExternalRadiance > 0.0) {
++            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
++            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
++            float radius = max(pixels,.85);
++            alpha *= min(1.0,pixels*pixels/(radius*radius));
++            starSize *= radius/max(pixels,.0001);
++        }
+ 		// Normalize
+ 		xyz /= distance;
+ 		if(StarConvergence > 0.0)
+@@ -137,6 +149,7 @@ void main()
+ 			pos = LensingMatInv * pos;
+ 		
+ 		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
++        if (ExternalRadiance > 0.0) gl_Position.z = gl_Position.w;
+ 		vertexColor = vec4(Color.x, Color.y, Color.z, alpha);
+ 	}
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
+index 64fab367f3880f0455f8dbaf4797f9980e826e25..1377352ed64af68c7fa614adf970cc41eb944b3f 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
+@@ -3,6 +3,11 @@
+ in vec4 vertexColor;
+ 
+ uniform vec4 ColorModulator;
++uniform float ExternalRadiance;
++in vec2 externalUv;
++vec3 toLinear(vec3 value) {
++    return mix(value / 12.92, pow((value + .055) / 1.055, vec3(2.4)), step(vec3(.04045), value));
++}
+ 
+ out vec4 fragColor;
+ 
+@@ -12,4 +17,9 @@ void main() {
+         discard;
+     }
+     fragColor = color * ColorModulator;
++    if (ExternalRadiance > 0.0) {
++        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
++        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
++        fragColor.a *= profile;
++    }
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.json b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.json
+index 1f261f466f1b14b5848060ede6f700073f92363e..6222f6352327782c0731e9d0f3d7d1ae95696cae 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.json
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.json
+@@ -23,6 +23,8 @@
+ 	
+         { "name": "LensingMat", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+         { "name": "LensingMatInv", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+-        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] }
++        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] },
++        { "name": "ExternalRadiance", "type": "float", "count": 1, "values": [0.0] },
++        { "name": "ExternalViewport", "type": "float", "count": 2, "values": [1.0,1.0] }
+     ]
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
+index 7a8fffa4d11d4f10c88f693ba1a3006383c83c4f..9da8c7cec388e544c866b3462b3fb1d36d0e9d92 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
+@@ -11,6 +11,8 @@ layout (location = 5) in float MaxDistance;
+ 
+ uniform mat4 ModelViewMat;
+ uniform mat4 ProjMat;
++uniform float ExternalRadiance;
++uniform vec2 ExternalViewport;
+ 
+ uniform vec3 RelativeSpaceLy;
+ uniform vec3 RelativeSpaceKm;
+@@ -28,6 +30,7 @@ const float KM_PER_LY = 9460730472581.2;
+ 
+ out vec2 texCoord0;
+ out vec4 vertexColor;
++out vec2 externalUv;
+ 
+ float clampStar(float starSize, float distance)
+ {
+@@ -55,6 +58,7 @@ float clampAlpha(float alpha, float distance)
+ 
+ void main()
+ {
++    externalUv = Position.xy;
+ 	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
+ 	
+ 	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
+@@ -69,6 +73,14 @@ void main()
+ 		float starSize = clampStar(Size, distance);
+ 		float alpha = clampAlpha(Color.w, distance);
+ 		
++        // Broaden subpixel sprites while conserving their integrated energy.
++        if (ExternalRadiance > 0.0) {
++            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
++            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
++            float radius = max(pixels,.85);
++            alpha *= min(1.0,pixels*pixels/(radius*radius));
++            starSize *= radius/max(pixels,.0001);
++        }
+ 		// Normalize
+ 		xyz /= distance;
+ 		if(StarConvergence > 0.0)
+@@ -146,6 +158,7 @@ void main()
+ 			pos = LensingMatInv * pos;
+ 		
+ 		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
++        if (ExternalRadiance > 0.0) gl_Position.z = gl_Position.w;
+ 		vertexColor = vec4(Color.x, Color.y, Color.z, alpha);
+ 	}
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
+index 99a2dd3bc840ba602e8a5128e0e19906df1cbf47..18ef7ecfa423caf08106064fdbca8d21214f0fe7 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
+@@ -3,6 +3,11 @@
+ uniform sampler2D Sampler0;
+ 
+ uniform vec4 ColorModulator;
++uniform float ExternalRadiance;
++in vec2 externalUv;
++vec3 toLinear(vec3 value) {
++    return mix(value / 12.92, pow((value + .055) / 1.055, vec3(2.4)), step(vec3(.04045), value));
++}
+ 
+ in vec4 vertexColor;
+ in vec2 texCoord0;
+@@ -15,4 +20,9 @@ void main() {
+         discard;
+     }
+     fragColor = color * ColorModulator;
++    if (ExternalRadiance > 0.0) {
++        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
++        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
++        fragColor.a *= profile;
++    }
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.json b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.json
+index 1dc3eefc429e388461cb6bb739ffd95114d9386d..67f63e46bdb77e2fce0f6315aa1314aa66f1c2fd 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.json
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.json
+@@ -26,6 +26,8 @@
+ 	
+         { "name": "LensingMat", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+         { "name": "LensingMatInv", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+-        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] }
++        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] },
++        { "name": "ExternalRadiance", "type": "float", "count": 1, "values": [0.0] },
++        { "name": "ExternalViewport", "type": "float", "count": 2, "values": [1.0,1.0] }
+     ]
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
+index cf7f1610f2d51753dcd413ec690ebc36978b36d9..bc528e425ce40800c42980cee3d45f90cc7a448d 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
+@@ -7,6 +7,8 @@ in vec2 UV0;
+ 
+ uniform mat4 ModelViewMat;
+ uniform mat4 ProjMat;
++uniform float ExternalRadiance;
++uniform vec2 ExternalViewport;
+ uniform vec3 RelativeSpaceLy;
+ uniform vec3 RelativeSpaceKm;
+ uniform float StarConvergence;
+@@ -22,6 +24,7 @@ const float MIN_STAR_SIZE = 0.08;
+ const float KM_PER_LY = 9460730472581.2;
+ 
+ out vec4 vertexColor;
++out vec2 externalUv;
+ out vec2 texCoord0;
+ 
+ float clampStar(float starSize, float distance)
+@@ -50,6 +53,7 @@ float clampAlpha(float alpha, float distance)
+ 
+ void main()
+ {
++    externalUv = HeightWidthSizeDistance.xy;
+ 	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
+ 	
+ 	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
+@@ -65,6 +69,14 @@ void main()
+ 		float starSize = clampStar(HeightWidthSizeDistance.z, distance);
+ 		float alpha = clampAlpha(Color.w, distance);
+ 		
++        // Broaden subpixel sprites while conserving their integrated energy.
++        if (ExternalRadiance > 0.0) {
++            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
++            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
++            float radius = max(pixels,.85);
++            alpha *= min(1.0,pixels*pixels/(radius*radius));
++            starSize *= radius/max(pixels,.0001);
++        }
+ 		// Normalize
+ 		xyz /= distance;
+ 		if(StarConvergence > 0.0)
+@@ -140,6 +152,7 @@ void main()
+ 			pos = LensingMatInv * pos;
+ 		
+ 		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
++        if (ExternalRadiance > 0.0) gl_Position.z = gl_Position.w;
+ 		vertexColor = vec4(Color.x, Color.y, Color.z, alpha);
+ 		texCoord0 = UV0;
+ 	}
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
+index c9026b4473979b793f0b2c3f4785e1c4b4457612..07e7697b3e2ba8f3936d8b13e163423b2800cc2e 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
+@@ -3,6 +3,11 @@
+ uniform sampler2D Sampler0;
+ 
+ uniform vec4 ColorModulator;
++uniform float ExternalRadiance;
++in vec2 externalUv;
++vec3 toLinear(vec3 value) {
++    return mix(value / 12.92, pow((value + .055) / 1.055, vec3(2.4)), step(vec3(.04045), value));
++}
+ 
+ in vec4 vertexColor;
+ in vec2 texCoord0;
+@@ -15,4 +20,9 @@ void main() {
+         discard;
+     }
+     fragColor = color * ColorModulator;
++    if (ExternalRadiance > 0.0) {
++        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
++        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
++        fragColor.a *= profile;
++    }
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.json b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.json
+index 603100b35f8962db7f9ce50a51c5b944555b624b..96b4f52112ee20cd696a5bcdb1439630c43859e4 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.json
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.json
+@@ -25,6 +25,8 @@
+ 	
+         { "name": "LensingMat", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+         { "name": "LensingMatInv", "type": "matrix3x3", "count": 9, "values": [ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 ] },
+-        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] }
++        { "name": "LensingIntensity", "type": "float", "count": 1, "values": [ 0.0 ] },
++        { "name": "ExternalRadiance", "type": "float", "count": 1, "values": [0.0] },
++        { "name": "ExternalViewport", "type": "float", "count": 2, "values": [1.0,1.0] }
+     ]
+ }
+diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
+index 1c56e01c4d87b4cd226c29085885c849de56d30a..efeacafff4cb1cf28401652003cb3a2fa8560670 100644
+--- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
++++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
+@@ -12,6 +12,8 @@ layout (location = 6) in float MaxDistance;
+ 
+ uniform mat4 ModelViewMat;
+ uniform mat4 ProjMat;
++uniform float ExternalRadiance;
++uniform vec2 ExternalViewport;
+ 
+ uniform vec3 RelativeSpaceLy;
+ uniform vec3 RelativeSpaceKm;
+@@ -29,6 +31,7 @@ const float KM_PER_LY = 9460730472581.2;
+ 
+ out vec2 texCoord0;
+ out vec4 vertexColor;
++out vec2 externalUv;
+ 
+ float clampStar(float starSize, float distance)
+ {
+@@ -56,6 +59,7 @@ float clampAlpha(float alpha, float distance)
+ 
+ void main()
+ {
++    externalUv = Position.xy;
+ 	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
+ 	
+ 	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
+@@ -71,6 +75,14 @@ void main()
+ 		float starSize = clampStar(Size, distance);
+ 		float alpha = clampAlpha(Color.w, distance);
+ 		
++        // Broaden subpixel sprites while conserving their integrated energy.
++        if (ExternalRadiance > 0.0) {
++            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
++            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
++            float radius = max(pixels,.85);
++            alpha *= min(1.0,pixels*pixels/(radius*radius));
++            starSize *= radius/max(pixels,.0001);
++        }
+ 		// Normalize
+ 		xyz /= distance;
+ 		if(StarConvergence > 0.0)
+@@ -148,6 +160,7 @@ void main()
+ 			pos = LensingMatInv * pos;
+ 		
+ 		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
++        if (ExternalRadiance > 0.0) gl_Position.z = gl_Position.w;
+ 		vertexColor = vec4(Color.x, Color.y, Color.z, alpha);
+ 		texCoord0 = UV0;
+ 	}

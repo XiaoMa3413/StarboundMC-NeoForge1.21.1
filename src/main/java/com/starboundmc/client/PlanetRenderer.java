@@ -53,6 +53,8 @@ public class PlanetRenderer
      */
     private static CelestialBodyDefinition[] drawOrder = new CelestialBodyDefinition[0];
     private static double[] drawDistanceSq = new double[0];
+    private static float[] frameDetails = new float[0];
+    private enum BodyPass { ALL, OPAQUE, TRANSPARENT }
     /**
      * Distance-driven body quality with a temporal blend to avoid popping.
      *
@@ -68,6 +70,7 @@ public class PlanetRenderer
     {
         drawOrder = new CelestialBodyDefinition[0];
         drawDistanceSq = new double[0];
+        frameDetails = new float[0];
         drawOrderCatalog = null;
         planetLodTransitions = null;
     }
@@ -107,6 +110,7 @@ public class PlanetRenderer
 
         drawOrder = bodies.toArray(CelestialBodyDefinition[]::new);
         drawDistanceSq = new double[drawOrder.length];
+        frameDetails = new float[drawOrder.length];
         planetLodTransitions = new CelestialLodTransitions(drawOrder.length * 2);
         drawOrderCatalog = catalog;
     }
@@ -235,8 +239,10 @@ public class PlanetRenderer
             drawDistanceSq[j] = distance;
         }
 
-        for (CelestialBodyDefinition body : drawOrder)
+        java.util.Arrays.fill(frameDetails, 0);
+        for (int bodyIndex = 0; bodyIndex < drawOrder.length; bodyIndex++)
         {
+            CelestialBodyDefinition body = drawOrder[bodyIndex];
             StarSystemDefinition system = StarmapUniverse.systemOf(body.entryId());
             float systemVisibility = stellarVisibility(stars, system);
             boolean departingSystemBody = space.warping() && longRoute
@@ -277,9 +283,20 @@ public class PlanetRenderer
             // the body itself is no longer faded in. Distance LOD blending is
             // the only visual transition, so an approaching planet cannot
             // appear, disappear, and then restart a second fade.
+            frameDetails[bodyIndex] = detail;
             if (detail > 0.001F)
-                renderVirtualPlanet(pose, camera, body, space, coordinateFrame, 1.0F, detail);
+                renderVirtualPlanet(pose, camera, body, space, coordinateFrame, 1.0F, detail,
+                        SpaceSceneTarget.active() ? BodyPass.OPAQUE : BodyPass.ALL);
         }
+    }
+
+    /** Reuses this frame's selection and LOD; transparent geometry follows all opaque bodies and coronas. */
+    static void renderTransparentPlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
+                                         SpaceCoordinateFrame coordinateFrame) {
+        for (int i = 0; i < drawOrder.length; i++)
+            if (frameDetails[i] > .001F)
+                renderVirtualPlanet(pose, camera, drawOrder[i], space, coordinateFrame, 1F,
+                        frameDetails[i], BodyPass.TRANSPARENT);
     }
 
     private static float updatePlanetLod(CelestialBodyDefinition body, CelestialLod requested, float animationTicks)
@@ -312,7 +329,7 @@ public class PlanetRenderer
     /** Draw one body at true near distance or angularly projected on the sky shell. */
     private static void renderVirtualPlanet(PoseStack pose, Camera camera, CelestialBodyDefinition body,
                                             SpaceRenderContext space, SpaceCoordinateFrame coordinateFrame,
-                                            float alpha, float lodDetail)
+                                            float alpha, float lodDetail, BodyPass pass)
     {
         Vec3 bodyCenter = coordinateFrame.toView(
                 UniverseNavigation.universeBodyPosition(body.entryId()));
@@ -336,7 +353,7 @@ public class PlanetRenderer
             // smaller than the minimum sphere radius. Keep one marker alive
             // during that transition instead of fading the point out before a
             // reduced sphere can become visible.
-            if (bodyWeight > 0.002F)
+            if (pass != BodyPass.TRANSPARENT && bodyWeight > 0.002F)
                 renderPlanetPoint(pose, body, alpha * bodyWeight, (float) bodyCenter.x,
                         (float) bodyCenter.y, (float) bodyCenter.z, renderedRadius);
             return;
@@ -344,19 +361,23 @@ public class PlanetRenderer
         float cx = (float) bodyCenter.x;
         float cy = (float) bodyCenter.y;
         float cz = (float) bodyCenter.z;
-        if (StarfieldClientConfig.atmosphereEnabled()
-                && fullWeight > 0.002F && renderedRadius >= 0.45F)
+        boolean atmosphere = StarfieldClientConfig.atmosphereEnabled()
+                && fullWeight > 0.002F && renderedRadius >= 0.45F;
+        if (pass == BodyPass.ALL && atmosphere)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (reducedWeight + fullWeight > 0.002F)
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
                     alpha * fullWeight,
+                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks(), pass);
+        if (pass == BodyPass.TRANSPARENT && atmosphere)
+            renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
-        if (pointWeight > 0.002F)
+        if (pass != BodyPass.TRANSPARENT && pointWeight > 0.002F)
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
 
-    /** Draws the independent GPU atmosphere shell before the planet surface. */
+    /** Direct glow precedes the surface; native scattering composes transmission after transparent geometry. */
     private static void renderAtmosphereGlow(PoseStack pose, CelestialBodyDefinition body, float scale, float alpha,
                                              float cx, float cy, float cz, float shipYaw, float shipPitch,
                                              float animationTicks)
@@ -475,7 +496,7 @@ public class PlanetRenderer
 
     private static void renderPlanet(PoseStack pose, Camera cam, CelestialBodyDefinition body, float scale,
                                      float alpha, float fullAlpha, float cx, float cy, float cz,
-                                     float shipYaw, float shipPitch, float animationTicks)
+                                     float shipYaw, float shipPitch, float animationTicks, BodyPass pass)
     {
         // Safe local projection keeps float coordinates small. The isolated path reconstructs
         // universe distance per fragment; only the direct fallback splits rings into two halves.
@@ -483,8 +504,10 @@ public class PlanetRenderer
         if (RingRenderer.hasRings(profile) && !SpaceSceneTarget.active())
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
                     shipYaw, shipPitch, alpha, false);
-        drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
-                fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
+        if (pass != BodyPass.TRANSPARENT)
+            drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
+                    fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
+        if (pass == BodyPass.OPAQUE) return;
         if (profile.hasClouds() && StarfieldClientConfig.cloudsEnabled() && fullAlpha > 0.002F)
         {
             float bodySpin = animationTicks * profile.spinRate();

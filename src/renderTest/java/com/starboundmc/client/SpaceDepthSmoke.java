@@ -52,6 +52,32 @@ final class SpaceDepthSmoke {
                         .append(" expectedDistance=").append(expected).append(" actualDistance=").append(decoded).append('\n');
                 SpaceSceneTarget.finish();
             }
+            if (AtmosphereShader.scattering() == null)
+                throw new IllegalStateException("Scattering shader did not load");
+            // This limb ray crosses only gas, without an opaque sphere on its path.
+            for (boolean foreground : new boolean[] {true,false}) {
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Isolated target did not activate");
+                drawStar(quad,foreground ? 180 : 480);
+                float depthBefore = readDepth();
+                float[] before = readColor();
+                SpaceSceneTarget.distanceScale(1F);
+                Matrix4f model = new Matrix4f().translate(68,0,-280).scale(1.4F);
+                AtmosphereShellRenderer.render(model,new Vector3f(1,0,0),
+                        PlanetSurfaceLighting.cameraPositionMesh(model),new Vector3f(.3F,.6F,1),
+                        .5F,1F,1.1F,0,0);
+                float[] after = readColor();
+                if (Float.compare(depthBefore,readDepth()) != 0)
+                    throw new IllegalStateException("Atmosphere modified opaque celestial depth");
+                if (foreground) {
+                    for (int i=0;i<3;i++) if (Math.abs(before[i]-after[i]) > .001F)
+                        throw new IllegalStateException("Atmosphere attenuated a foreground star");
+                } else if (!(after[2] < before[2]-.01F))
+                    throw new IllegalStateException("Atmosphere did not transmit/attenuate background radiance");
+                report.append("atmosphereForeground=").append(foreground)
+                        .append(" before=").append(Arrays.toString(before))
+                        .append(" after=").append(Arrays.toString(after)).append(" opaqueDepthPreserved\n");
+                SpaceSceneTarget.finish();
+            }
         } finally {
             SpaceSceneTarget.abort();
             sphere.close(); quad.close(); VertexBuffer.unbind();
@@ -105,6 +131,12 @@ final class SpaceDepthSmoke {
         float[] value = new float[1];
         GL11.glReadPixels(width() / 2, height() / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, value);
         return value[0];
+    }
+
+    private static float[] readColor() {
+        float[] value = new float[4];
+        GL11.glReadPixels(width()/2,height()/2,1,1,GL11.GL_RGBA,GL11.GL_FLOAT,value);
+        return value;
     }
 
     private static void drawStar(VertexBuffer quad, double distance) {

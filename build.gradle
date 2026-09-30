@@ -276,7 +276,12 @@ neoForge {
                         (project.findProperty('spaceSmokePipeline') ?: 'isolated').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeStellarView',
                         (project.findProperty('spaceSmokeStellarView') ?: 'false').toString()
-                programArguments.addAll '--width', '1280', '--height', '720'
+                systemProperty 'starboundmc.debug.spaceSmokeQuality',
+                        (project.findProperty('spaceSmokeQuality') ?: 'custom').toString()
+                systemProperty 'starboundmc.debug.spaceSmokeStellarMatrix',
+                        (project.findProperty('spaceSmokeStellarMatrix') ?: 'false').toString()
+                programArguments.addAll '--width', (project.findProperty('spaceSmokeWidth') ?: '1280').toString(),
+                        '--height', (project.findProperty('spaceSmokeHeight') ?: '720').toString()
             }
             if (project.hasProperty('printerSmoke')) {
                 gameDirectory = file('run-printer-smoke')
@@ -401,6 +406,9 @@ repositories {
 dependencies {
     implementation "com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all"
     implementation "net.povstalec.stellarview:StellarView:${stellarview_version}"
+    if (project.hasProperty('spaceSmoke') && project.hasProperty('spaceSmokeWithoutStellarView')) {
+        configurations.runtimeClasspath.exclude group: 'net.povstalec.stellarview', module: 'StellarView'
+    }
     testImplementation platform('org.junit:junit-bom:5.13.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -10,6 +10,11 @@ public final class StarfieldClientConfig
     public enum BackgroundMode { PROCEDURAL, LEGACY }
     public enum PipelineMode { ISOLATED, DIRECT }
 
+    public static final ModConfigSpec.DoubleValue SPACE_BLOOM_STRENGTH = BUILDER
+            .comment("HDR optical bloom strength. Performance and Direct disable bloom; zero disables it in all presets.")
+            .translation("starboundmc.config.space_bloom_strength")
+            .defineInRange("spaceBloomStrength", .32, 0.0, 1.5);
+
     public static final ModConfigSpec.EnumValue<PipelineMode> SPACE_PIPELINE_MODE = BUILDER
             .comment("Isolated uses a private astronomical depth/color target; Direct restores the original pass path.")
             .translation("starboundmc.config.space_pipeline_mode")

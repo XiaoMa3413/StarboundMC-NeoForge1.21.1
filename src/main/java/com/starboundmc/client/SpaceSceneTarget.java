@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 final class SpaceSceneTarget {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static TextureTarget target;
+    private static TextureTarget atmosphereInput;
     private static TextureTarget externalStars;
     private static ShaderInstance composite;
     private static ShaderInstance externalCopy;
@@ -33,6 +34,7 @@ final class SpaceSceneTarget {
 
     static void register(RegisterShadersEvent event) {
         release();
+        SpaceBloom.register(event);
         composite = externalCopy = null;
         failed = false;
         try {
@@ -63,7 +65,8 @@ final class SpaceSceneTarget {
         // The external backend renders into a display-space target and is decoded on import.
         linear = StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
                 && GpuSpaceBackground.ready()
-                && (externalCopy != null || !externalRequested());
+                && (externalCopy != null || !externalRequested()
+                || com.starboundmc.client.compat.stellarview.StellarViewStarfield.linearRadianceAvailable());
         try {
             if (target == null || target.width != viewport[2] || target.height != viewport[3]) {
                 if (target != null) target.destroyBuffers();
@@ -102,11 +105,37 @@ final class SpaceSceneTarget {
 
     static boolean active() { return active; }
     static boolean linear() { return active && linear; }
+    static int width() { return active ? target.width : net.minecraft.client.Minecraft.getInstance().getWindow().getWidth(); }
+    static int height() { return active ? target.height : net.minecraft.client.Minecraft.getInstance().getWindow().getHeight(); }
     static void distanceScale(float scale) { distanceScale = scale; }
 
     static void configure(ShaderInstance shader) {
         shader.safeGetUniform("DistanceScale").set(active ? distanceScale : 0);
         shader.safeGetUniform("LinearColor").set(linear() ? 1F : 0F);
+    }
+
+    /** Freeze both inputs before a volume pass; neither sampled texture is an output attachment. */
+    static void prepareAtmosphere(ShaderInstance shader) {
+        if (atmosphereInput == null || atmosphereInput.width != target.width || atmosphereInput.height != target.height) {
+            if (atmosphereInput != null) atmosphereInput.destroyBuffers();
+            atmosphereInput = new TextureTarget(target.width, target.height, true, false);
+            GlStateManager._bindTexture(atmosphereInput.getColorTextureId());
+            GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_RGBA16F, target.width, target.height,
+                    0, GL11.GL_RGBA, GL11.GL_FLOAT, null);
+            GlStateManager._bindTexture(atmosphereInput.getDepthTextureId());
+            GlStateManager._texImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_DEPTH_COMPONENT32F,
+                    target.width, target.height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, null);
+            GlStateManager._bindTexture(0);
+            allocations++;
+        }
+        GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, target.frameBufferId);
+        GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, atmosphereInput.frameBufferId);
+        GL30.glBlitFramebuffer(0, 0, target.width, target.height, 0, 0, target.width, target.height,
+                GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT, GL11.GL_NEAREST);
+        target.bindWrite(true);
+        shader.setSampler("SceneColor", atmosphereInput.getColorTextureId());
+        shader.setSampler("SceneDepth", atmosphereInput.getDepthTextureId());
+        shader.safeGetUniform("ViewportSize").set((float) target.width, (float) target.height);
     }
 
     private static boolean externalRequested() {
@@ -132,7 +161,7 @@ final class SpaceSceneTarget {
         externalCopies++;
     }
 
-    private static void drawFullscreen(ShaderInstance shader, int texture, boolean additive) {
+    static void drawFullscreen(ShaderInstance shader, int texture, boolean additive) {
         if (triangle == null || triangle.isInvalid()) {
             if (triangle != null) triangle.close();
             BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES,
@@ -163,9 +192,16 @@ final class SpaceSceneTarget {
     static void finish() {
         if (!active) return;
         try {
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.BLOOM);
+            int bloom;
+            try { bloom = linear ? SpaceBloom.render(target) : 0; }
+            finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.BLOOM); }
             restoreDestination();
             composite.safeGetUniform("LinearColor").set(linear ? 1F : 0F);
             composite.safeGetUniform("Exposure").set(StarfieldClientConfig.SPACE_EXPOSURE.get().floatValue());
+            composite.setSampler("Sampler1", bloom == 0 ? target.getColorTextureId() : bloom);
+            composite.safeGetUniform("BloomStrength").set(bloom == 0 ? 0F
+                    : StarfieldClientConfig.SPACE_BLOOM_STRENGTH.get().floatValue());
             drawFullscreen(composite, target.getColorTextureId(), false);
             composites++;
         } finally {
@@ -182,8 +218,11 @@ final class SpaceSceneTarget {
 
     static void release() {
         active = false;
+        SpaceBloom.release();
         if (target != null) target.destroyBuffers();
         target = null;
+        if (atmosphereInput != null) atmosphereInput.destroyBuffers();
+        atmosphereInput = null;
         if (externalStars != null) externalStars.destroyBuffers();
         externalStars = null;
         if (triangle != null) triangle.close();
@@ -201,6 +240,6 @@ final class SpaceSceneTarget {
     static String diagnostics() {
         return "sceneTarget=" + (target != null) + " linearHDR=" + linear + " targetFailed=" + failed
                 + " targetAllocations=" + allocations + " composites=" + composites
-                + " externalCopies=" + externalCopies;
+                + " externalCopies=" + externalCopies + " " + SpaceBloom.diagnostics();
     }
 }

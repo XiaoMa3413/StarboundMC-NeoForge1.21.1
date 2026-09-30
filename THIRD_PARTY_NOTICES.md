@@ -32,6 +32,15 @@ StarboundMC MPL-2.0 的授权对象；使用本项目时请单独满足这些依
 
 跃迁和传送使用 Minecraft 原版 `SoundEvents`，本项目不重新分发对应的 Minecraft 音频文件。
 
+## StellarView 定制补丁
+
+可选 StellarView 依赖的原作者为 Povstalec（Copyright 2024），采用 MIT 许可。源码来源为
+[Povstalec/StellarView](https://github.com/Povstalec/StellarView)，本项目基于
+[XiaoMa3413/StellarView](https://github.com/XiaoMa3413/StellarView) 的 external-view-center 分支定制。
+`patches/stellarview/starbound-hdr.patch` 保存新增 HDR 输出、像素尺寸补偿及星点过滤的源码改动，
+原版权与许可文本保留在 `patches/stellarview/LICENSE.txt`。构建基线、版本及修改说明见
+[定制说明](patches/stellarview/README.md)。补丁及其第三方上下文继续按 MIT 处理。
+
 ## 新增素材规则
 
 任何新的第三方代码、纹理、字体、音频、模型或其他资源，在合并前都必须确认许可证允许当前

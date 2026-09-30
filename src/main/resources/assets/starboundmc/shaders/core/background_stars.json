@@ -3,6 +3,7 @@
   "fragment": "starboundmc:background_stars",
   "samplers": [],
   "uniforms": [
+    { "name": "ViewportSize", "type": "float", "count": 2, "values": [1280,720] },
     { "name": "LinearColor", "type": "float", "count": 1, "values": [0.0] },
     {
       "name": "ModelViewMat",

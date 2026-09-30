@@ -97,6 +97,9 @@ public final class SpaceRenderer
                 SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.CORONA);
                 try { SpaceStellarRenderer.render(skyModelView, space, coordinateFrame, stars, true); }
                 finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.CORONA); }
+                SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.ATMOSPHERES);
+                try { PlanetRenderer.renderTransparentPlanets(skyPose, event.getCamera(), space, coordinateFrame); }
+                finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.ATMOSPHERES); }
                 SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.COMPOSITE);
                 try { SpaceSceneTarget.finish(); }
                 finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.COMPOSITE); }

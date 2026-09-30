@@ -23,6 +23,7 @@ final class AtmosphereShader
             .add("Normal", VertexFormatElement.NORMAL)
             .build();
     private static ShaderInstance shader;
+    private static ShaderInstance scatter;
 
     private AtmosphereShader()
     {
@@ -32,6 +33,7 @@ final class AtmosphereShader
     {
         AtmosphereShellRenderer.release();
         shader = null;
+        scatter = null;
         try
         {
             event.registerShader(new ShaderInstance(event.getResourceProvider(), SHADER_ID,
@@ -42,6 +44,20 @@ final class AtmosphereShader
             LOGGER.warn("Could not load the ship-space atmosphere shader; atmosphere rendering is disabled",
                     exception);
         }
+        try {
+            event.registerShader(new ShaderInstance(event.getResourceProvider(),
+                    ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "atmosphere_scatter"),
+                    VERTEX_FORMAT), registered -> scatter = registered);
+        } catch (IOException | RuntimeException exception) {
+            LOGGER.warn("Atmosphere scattering unavailable; retaining glow shells", exception);
+        }
+    }
+
+    static ShaderInstance scattering() { return scatter; }
+
+    static void disableScattering(RuntimeException failure) {
+        scatter = null;
+        LOGGER.warn("Atmosphere scattering failed; retaining glow shells until reload", failure);
     }
 
     static ShaderInstance current()

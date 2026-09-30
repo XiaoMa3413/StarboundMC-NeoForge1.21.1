@@ -9,11 +9,13 @@
 ```mermaid
 flowchart LR
     A[帧状态与相对坐标] --> B[方向深空背景]
-    B --> C[原生 GPU 星场 / StellarView 颜色导入]
+    B --> C[原生 GPU 星场 / StellarView HDR]
     C --> D[恒星光球写入天体深度]
-    D --> E[行星表面 / 大气 / 云 / 环]
+    D --> E[全部行星表面写入深度]
     E --> F[日冕读取天体深度]
-    F --> G[曝光与颜色输出]
+    F --> T[按远近提交云 / 环 / 大气透射]
+    T --> L[HDR 辉光金字塔]
+    L --> G[曝光与颜色输出]
     G --> H[原有跃迁效果]
 ```
 
@@ -30,15 +32,19 @@ flowchart LR
 
 ## 颜色与材质
 
-原生路径使用 `RGBA16F` 颜色目标。PNG 漫反射颜色按 sRGB 解码；材质 mask 的 R（光滑/高光权重）、G（自发光）和云 alpha 按线性数据读取。
+原生路径使用 `RGBA16F` 颜色目标。PNG 漫反射颜色按 sRGB 解码后进行局部双线性插值，不修改 Minecraft 的全局纹理过滤；材质 mask 的 R（光滑/高光权重）、G（自发光）和云 alpha 按线性数据读取。
 
 行星新路径使用随受光角变化的漫反射、GGX 高光和独立自发光。背景辐射、云与恒星能量在合成前保持线性；最终按固定曝光和白点曲线转换到显示颜色。曝光只影响太空背景，不影响方块、实体或 GUI。
 
-StellarView 继续负责可选背景星场。其显示颜色先绘入独立 LDR 目标，再解码并加到线性空间；不要求该模组理解新材质或修改其 API。其内部已截断的亮度无法由本项目恢复。
+StellarView 的可选星场具有两条导入路径：定制版本 `0.5.4-alpha-starbound-hdr1` 通过可选 `renderLinear` API 直接写入 HDR；旧 `externalview2` 版本仍绘入独立 LDR 目标，再解码并叠加。能力查找只做一次；缺失模组或不兼容 shader 回到原生星场。定制 API 的输出模式/viewport uniform 在调用后恢复，普通维度继续使用原版输出。源码补丁与重建方法见 [StellarView 定制说明](../patches/stellarview/README.md)。
 
 若旧背景或颜色适配 shader 不可用，保留显示颜色兼容模式；独立天体深度仍可工作。资源失败导致核心 shader 缺失时切到 `DIRECT` 路径，资源重载后重新尝试。
 
-当前大气仍是经过深度适配的旧光晕模型；还没有透射/完整单次散射。云和环之间的透明合成，以及日冕与透明环之间的能量衰减仍需专项改进。不要把此阶段当作最终体积管线。
+大气已使用指数高度密度、Rayleigh / Henyey–Greenstein 相函数与单次散射，按 `背景 × 透射 + 入射散射` 组合。地面截断和太阳地影采用解析交点；按采样段覆盖率积分地影，避免晨昏线的离散条纹。散射前 blit 一份独立 HDR 颜色/深度，禁止采样正在写入的颜色附件。大气不写天体深度，并在前景不透明天体处截断；摄像机在壳内也可渲染。系数是沿用各行星美术 profile 的艺术化近似，没有物理单位标定、多次散射或 LUT。
+
+Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降采样/上采样后参与曝光合成；只处理太空目标。银河通过方向场中的分形结构和吸收尘带塑形，保持深空黑位。原生与定制星场采用最小像素半径及面积能量补偿，减少小于像素的星点突然消失。
+
+透明层按天体中心距离从远到近提交，单一天体内仍是云、环、大气。相交的云/环/不同大气层尚无完整逐片元排序；环在大气前方时可能被额外衰减。近地表纹理虽已过滤，仍受现有 4K 资产、球体网格和云壳模型限制。
 
 ## 配置与回退
 
@@ -49,11 +55,21 @@ StellarView 继续负责可选背景星场。其显示颜色先绘入独立 LDR 
 | `spacePipelineMode` | `ISOLATED`；`DIRECT` 返回原有天体绘制路径 |
 | `spaceBackgroundMode` | `PROCEDURAL`；`LEGACY` 返回旧天空与 CPU 原生星点 |
 | `spaceExposure` | `1.0`；原生线性颜色模式范围 0.25–4 |
-| `spaceVisualQuality` | `BALANCED`；保留现有云、云影、大气、可选星场组合 |
+| `spaceVisualQuality` | `BALANCED`；控制星数、大气采样、Bloom 预算及现有功能组合 |
+| `spaceBloomStrength` | `0.32`；范围 0–1.5，0 关闭辉光；Performance / Direct 不启用 |
 
-原生背景星预算分别为 2,000 / 6,000 / 10,000 / 16,000；Custom 为 10,000。目录使用固定种子且低档是高档的稳定前缀，切画质时已有星点保持位置。目录只在资源重载或首次使用对应预算时上传。
+| 画质 | 背景星预算 | 大气观察 / 光线采样 | Bloom 层数 / 首层尺寸 |
+| --- | ---: | ---: | --- |
+| Performance | 2,000（原生） | 6 / 4 | 关闭 |
+| Balanced | 6,000 | 12 / 4 | 3 层，宽高各 1/4 |
+| High / Custom | 20,000 | 20 / 6 | 4 层，宽高各 1/2 |
+| Ultra | 32,000 | 28 / 8 | 5 层，宽高各 1/2 |
 
-完整视觉回退组合为 `spacePipelineMode = "DIRECT"` 和 `spaceBackgroundMode = "LEGACY"`。本地提交 `eae609c` 是独立深度迁移前的检查点。各阶段只修改本工作树，无远程推送或玩法数据迁移。
+原生目录固定种子，低档是高档的稳定前缀；首次使用预算或资源重载时上传。StellarView 也按画质重建目录，但其内部分类顺序不承诺与原生一样的前缀稳定。Performance 保留大气、关闭云及可选星场；Balanced 关闭云影；Custom 保留独立功能开关。
+
+太空颜色/深度及大气输入副本共约 24 字节/像素。1920×1080 时约 47.5 MiB，Ultra 辉光额外约 5.3 MiB；不含资产、Minecraft 原有目标及驱动开销。大气副本按需建立；尺寸变化和资源重载后重建，退出会释放。
+
+完整视觉回退组合为 `spacePipelineMode = "DIRECT"` 和 `spaceBackgroundMode = "LEGACY"`。本地提交 `eae609c` 是独立深度迁移前的检查点。本轮另在独立 StellarView 工作树的 `feat/starbound-hdr-stars` 分支修改其渲染源码；无远程推送或玩法数据迁移。`8eab25d` 是本轮扩大视觉预算前的主项目检查点。
 
 ## 运行验证
 
@@ -68,13 +84,15 @@ StellarView 继续负责可选背景星场。其显示颜色先绘入独立 LDR 
 
 `spaceSmoke` 显式加入 `src/renderTest/java`，普通生产构建不包含夹具。夹具创建新测试世界，运行在 `run-space-smoke`，不打开用户存档。隐藏窗口但保持渲染。
 
-12 个视点覆盖六种行星/卫星、深空、恒星近景、银河方向、玻璃舷窗、960×540 缩放及资源重载。结果写入 `run-space-smoke/screenshots/<label>`：
+13 个视点覆盖六种行星/卫星、深空、恒星近景、银河方向、壳内近大气视点、玻璃舷窗、960×540 缩放及资源重载。结果写入 `run-space-smoke/screenshots/<label>`：
 
 - PNG 为实际客户端图像；TXT 包含分辨率、GPU/驱动、样本数、CPU/GPU P50/P95 和资源计数。
-- `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查世界深度哨兵和事件状态恢复。
+- `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查大气对前/后景辐射的衰减、不透明天体深度、世界深度哨兵和事件状态恢复。
 - `complete.txt` 只在本轮所有捕获和深度检查成功后写入。
 - GPU 时间用异步 timestamp 成对查询，只读取已完成结果，不使用 `glFinish`。`TOTAL` 包含事件入口状态保存和最终颜色合成；单个 pass 计时不能相加替代它。
 - 生产测量可使用 JVM 参数 `-Dstarboundmc.debug.spaceProfile=true`，每 10 秒把统计写入客户端日志；默认不建立计时 query。
+
+夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（仅从运行 classpath 排除可选模组）。四种 StellarView shader 的矩阵可使用 `-PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点，并检查 uniform/普通天空上传计数恢复。旧 API 可用 `-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge` 构建/运行。预设启用 StellarView 时，`spaceSmokeStellarView` 仅作为 Custom 的功能开关；其他档位遵循产品配置。
 
 捕获固定原生动画时间。全客户端帧时间包含限帧、世界加载和后台调度；短测试的 GPU P95 会受功耗/调度影响，不可用作跨硬件性能结论。
 
@@ -82,6 +100,27 @@ StellarView 继续负责可选背景星场。其显示颜色先绘入独立 LDR 
 
 已执行矩阵是 Minecraft 1.21.1、NeoForge 21.1.248、Windows、NVIDIA RTX 3060 Laptop 和当前工作树的 StellarView 构建。尚未覆盖 AMD、Intel、macOS、Iris/Oculus shaderpack、复杂多人航行与多个透明天体交叠。`DIRECT` 是明确可用的兼容回退。
 
-新背景闪烁按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度与屏幕亚像素星点稳定性将在时间/像素预算迁移时继续处理。
+原生背景闪烁与恒星自转按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度、运动中星点稳定性、近大气网格/纹理表现继续专项处理。
 
-接下来先拆分不透明天体与透明体积的提交，替换亮边大气为透射/散射，并加入低分辨率 Bloom、行星与环的食影。随后进行像素 LOD、网格/采样预算与跨硬件测量。黑洞使用方向背景、统一天体距离和线性颜色作为基础，曲线光线采样、背景星环境贴图及自旋解算仍是后续专项。
+接下来完善透明交叠、环光照与食影、恒星磁活动结构、近景资产/网格及大气 LUT 优化，并补充跨硬件测量。黑洞使用方向背景、统一天体距离和线性颜色作为基础，曲线光线采样、背景星环境贴图及自旋解算仍是后续专项。
+
+## 本轮实测记录（2026-09-30）
+
+最终矩阵包括原生 High（StellarView 从 runtime 移除）、Performance（无可选模组）、旧 externalview2 / Balanced、完整 Direct + Legacy，以及定制 HDR / Ultra 的四种星 shader。普通夹具 13 视点，Ultra 矩阵 17 视点；全部覆盖资源重载与缩放。
+
+| 场景 / 后端 | 分辨率 | TOTAL GPU P50 / P95（ms） | CPU P50（ms） |
+| --- | --- | --- | --- |
+| 近 Lush / Ultra HDR StellarView | 1920×1080 | 2.3828 / 2.7412 | 0.5863 |
+| 气态巨行星 / Ultra HDR StellarView | 1920×1080 | 2.5416 / 3.1181 | 0.3856 |
+| 壳内大气 / Ultra HDR StellarView | 1920×1080 | 3.8328 / 4.1185 | 0.3376 |
+| 近 Lush / High 原生 | 1280×720 | 1.7285 / 2.5928 | 0.5530 |
+| 近 Lush / Performance 原生 | 1280×720 | 1.3435 / 2.3808 | 0.4273 |
+| 近 Lush / Balanced 旧版 StellarView | 1280×720 | 0.9421 / 2.8774 | 0.5612 |
+
+硬件为 RTX 3060 Laptop，驱动报告 OpenGL 4.6 / NVIDIA 610.47；每个上述 GPU/CPU 分位数来自 256 样本的短捕获。不同运行的功耗与调度状态不同，表格用于定位成本，不用于断言预设速度排名。壳内视点是本轮最高的稳定成本之一。
+
+GPU 大气检查记录：前景恒星颜色 `[4.9961,3.9355,2.2383]` 完全保持；背景恒星经夜侧气体透射为 `[4.9414,3.8047,2.0391]`。不透明天体深度、世界深度哨兵 0.37 与事件状态均保持。四种 StellarView shader 的 uniform 恢复检查通过；外部星场在普通天空上传计数已耗尽时仍能重建，且退出后保留该计数。Performance 报告 Bloom 分配/绘制均为零，旧版 StellarView 报告 LDR 导入次数大于零，定制版本报告直接 HDR 绘制且无 LDR 拷贝。
+
+截图与完整计时文件位于本地 `run-space-smoke/screenshots/{native-high-final,performance,stellar-legacy-balanced,direct-final,ultra-final}`；运行日志与截图不提交到仓库。
+
+最终普通生产 `test build` 成功：148 个测试套件、721 项测试，零失败/错误/跳过。生产 JAR 包含 Bloom 与散射 shader，不含三个渲染夹具 `SpaceRenderSmoke`、`SpaceDepthSmoke`、`StellarShaderSmoke`。定制 StellarView 的 `build publishToMavenLocal` 成功（原仓库没有单元测试）；源码补丁在最终 fork 上通过反向应用检查。

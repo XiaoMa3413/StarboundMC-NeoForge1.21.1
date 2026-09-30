@@ -38,7 +38,8 @@ final class AtmosphereShellRenderer
                        Vector3f color, float strength, float alpha,
                        float shellScale, float nightFraction, float twilightStrength)
     {
-        ShaderInstance activeShader = AtmosphereShader.current();
+        boolean scattering = SpaceSceneTarget.linear() && AtmosphereShader.scattering() != null;
+        ShaderInstance activeShader = scattering ? AtmosphereShader.scattering() : AtmosphereShader.current();
         if (activeShader == null || strength <= 0.0F || alpha <= 0.0F)
             return;
 
@@ -50,10 +51,18 @@ final class AtmosphereShellRenderer
         try
         {
             FogRenderer.setupNoFog();
-            RenderSystem.enableBlend();
-            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-            RenderSystem.enableDepthTest();
-            RenderSystem.enableCull();
+            if (scattering) {
+                SpaceSceneTarget.prepareAtmosphere(activeShader);
+                RenderSystem.disableBlend(); RenderSystem.disableDepthTest();
+                // Exterior observers need only the front shell. Inside observers see the exit face.
+                if (cameraPositionMesh.lengthSquared() < OUTER_RADIUS * OUTER_RADIUS)
+                    RenderSystem.disableCull();
+                else RenderSystem.enableCull();
+            } else {
+                RenderSystem.enableBlend();
+                RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+                RenderSystem.enableDepthTest(); RenderSystem.enableCull();
+            }
             RenderSystem.depthMask(false);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.setShader(() -> activeShader);
@@ -69,12 +78,20 @@ final class AtmosphereShellRenderer
                         radii.maxOpticalDepth(),
                         nightFraction, twilightStrength);
                 SpaceSceneTarget.configure(activeShader);
+                if (scattering) {
+                    Vector3f scale = model.getScale(new Vector3f());
+                    activeShader.safeGetUniform("MeshToUniverse").set(scale.x);
+                    SpaceVisualQuality quality = StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();
+                    activeShader.safeGetUniform("ViewSamples").set(quality.atmosphereSamples());
+                    activeShader.safeGetUniform("LightSamples").set(quality.atmosphereLightSamples());
+                }
                 shell.bind();
                 shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);
             }
             catch (RuntimeException shaderFailure)
             {
-                AtmosphereShader.disableAfterFailure(activeShader, shaderFailure);
+                if (scattering) AtmosphereShader.disableScattering(shaderFailure);
+                else AtmosphereShader.disableAfterFailure(activeShader, shaderFailure);
             }
             finally
             {
