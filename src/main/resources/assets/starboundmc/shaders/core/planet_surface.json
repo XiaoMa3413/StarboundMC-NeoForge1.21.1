@@ -4,7 +4,8 @@
   "samplers": [
     { "name": "Sampler0" },
     { "name": "Sampler1" },
-    { "name": "Sampler2" }
+    { "name": "Sampler2" },
+    { "name": "SolarOpticalDepth" }
   ],
   "uniforms": [
     { "name": "DistanceScale", "type": "float", "count": 1, "values": [0.0] },
@@ -38,6 +39,10 @@
     { "name": "CloudShadowStrength", "type": "float", "count": 1, "values": [0.24] },
     { "name": "CloudRelativeRotationX", "type": "float", "count": 3, "values": [1.0, 0.0, 0.0] },
     { "name": "CloudRelativeRotationY", "type": "float", "count": 3, "values": [0.0, 1.0, 0.0] },
-    { "name": "CloudRelativeRotationZ", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] }
+    { "name": "CloudRelativeRotationZ", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] },
+    {"name": "AtmosphereGroundRadius", "type": "float", "count": 1, "values": [50.0]},
+    {"name": "AtmosphereTopRadius", "type": "float", "count": 1, "values": [52.5]},
+    {"name": "AtmosphereColor", "type": "float", "count": 3, "values": [0.3, 0.6, 1.0]},
+    {"name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.0]}
   ]
 }

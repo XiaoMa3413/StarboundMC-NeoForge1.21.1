@@ -19,11 +19,20 @@ class BackgroundStarCatalogTest {
             double length = Math.sqrt(star.x() * star.x() + star.y() * star.y() + star.z() * star.z());
             assertEquals(1, length, 2e-7);
             assertTrue(star.size() > 0 && star.size() < .5);
-            assertTrue(star.brightness() >= .22F && star.brightness() <= 1);
+            assertTrue(star.brightness() >= .006F && star.brightness() <= 1);
             assertTrue(star.phase() >= 0 && star.phase() < Math.PI * 2);
         }
         assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(0));
         assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(32001));
+    }
+
+    @Test
+    void faintPopulationAndRareHighlightsRemainDistinct() {
+        var stars = BackgroundStarCatalog.generate(32000);
+        long faint = Arrays.stream(stars).filter(star -> star.brightness() < .1).count();
+        long bright = Arrays.stream(stars).filter(star -> star.brightness() > .8).count();
+        assertTrue(faint > stars.length * .75 && faint < stars.length * .9);
+        assertTrue(bright > stars.length * .01 && bright < stars.length * .025);
     }
 
     @Test

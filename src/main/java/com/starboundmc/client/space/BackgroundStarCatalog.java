@@ -35,13 +35,14 @@ public final class BackgroundStarCatalog {
             }
             double length = Math.sqrt(x * x + y * y + z * z);
             float magnitude = random.nextFloat();
-            float brightness = .22F + .78F * (float) Math.pow(magnitude, 3);
-            float size = .07F + brightness * .17F;
+            // Most stars are faint; rare bright sources establish the visual hierarchy.
+            float brightness = .006F + .994F * (float) Math.pow(magnitude, 12);
+            float size = .055F + (float) Math.sqrt(brightness) * .11F;
             if (magnitude > .995F) size *= 1.7F;
             float color = random.nextFloat();
-            float r = color < .18F ? 1 : color > .80F ? .68F : .92F;
-            float g = color < .18F ? .76F : color > .80F ? .82F : .94F;
-            float b = color < .18F ? .55F : 1;
+            float r = color < .18F ? 1 : color > .80F ? .82F : .98F;
+            float g = color < .18F ? .88F : color > .80F ? .9F : .98F;
+            float b = color < .18F ? .76F : 1;
             stars[i] = new Star((float) (x / length), (float) (y / length), (float) (z / length),
                     size, random.nextFloat() * (float) (Math.PI * 2), r, g, b, brightness);
         }

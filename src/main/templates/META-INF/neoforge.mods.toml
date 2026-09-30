@@ -38,6 +38,6 @@ side="CLIENT"
 [[dependencies.${mod_id}]]
 modId="stellarview"
 type="optional"
-versionRange="[0.5.4-alpha-externalview2,0.5.4-alpha-starbound-hdr1]"
+versionRange="[0.5.4-alpha-externalview2,0.5.4-alpha-starbound-hdr2]"
 ordering="AFTER"
 side="CLIENT"

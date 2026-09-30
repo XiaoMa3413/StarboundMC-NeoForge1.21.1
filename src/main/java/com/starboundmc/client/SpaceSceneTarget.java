@@ -219,6 +219,7 @@ final class SpaceSceneTarget {
     static void release() {
         active = false;
         SpaceBloom.release();
+        AtmosphereSolarLut.release();
         if (target != null) target.destroyBuffers();
         target = null;
         if (atmosphereInput != null) atmosphereInput.destroyBuffers();
@@ -240,6 +241,7 @@ final class SpaceSceneTarget {
     static String diagnostics() {
         return "sceneTarget=" + (target != null) + " linearHDR=" + linear + " targetFailed=" + failed
                 + " targetAllocations=" + allocations + " composites=" + composites
-                + " externalCopies=" + externalCopies + " " + SpaceBloom.diagnostics();
+                + " externalCopies=" + externalCopies + " " + SpaceBloom.diagnostics()
+                + " " + AtmosphereSolarLut.diagnostics();
     }
 }

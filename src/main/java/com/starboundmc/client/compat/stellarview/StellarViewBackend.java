@@ -44,7 +44,8 @@ final class StellarViewBackend
                     Optional.empty(), Either.left(new SpaceCoords()), AxisRotation.NONE,
                     0, Optional.empty(), StarField.DEFAULT_DUST_CLOUD_TEXTURE,
                     false, StarField.Stretch.DEFAULT_STRETCH,
-                    budget, Optional.empty(), StarField.DEFAULT_STAR_TEXTURE,
+                    budget, Optional.of(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(
+                            "starboundmc", "cinematic_stars")), StarField.DEFAULT_STAR_TEXTURE,
                     false, StarField.Stretch.DEFAULT_STRETCH,
                     FIELD_SEED, FIELD_DIAMETER_LY, List.of()), position);
         }
@@ -53,7 +54,7 @@ final class StellarViewBackend
             if (!supportsLinear()) return false;
             try {
                 return (boolean) linearMethod.invoke(stars, level, camera, partialTick, modelView, projection,
-                        brightness, convergence, convergenceForward, 2.5F);
+                        brightness, convergence, convergenceForward, .7F);
             } catch (ReflectiveOperationException failure) {
                 throw new IllegalStateException("Stellar View linear radiance failed", failure);
             }

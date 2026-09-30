@@ -517,7 +517,7 @@ public class PlanetRenderer
             Vector3f cloudSun = PlanetSurfaceLighting.toMeshSpaceSun(fixedSunDirection(body), cloudSpin,
                     profile.orientationTilt(), profile.orientationYaw());
             CloudShellRenderer.render(cloudModel, profile.cloudTexture().orElseThrow(), cloudSun,
-                    profile.cloudOpacity(), fullAlpha);
+                    profile.cloudOpacity(), fullAlpha, profile);
         }
         if (RingRenderer.hasRings(profile))
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
@@ -574,6 +574,7 @@ public class PlanetRenderer
                     RenderSystem.setShaderTexture(2, cloudTexture);
                 RenderSystem.setShader(() -> surfaceShader);
                 SpaceSceneTarget.configure(surfaceShader);
+                AtmosphereShader.setSurfaceLighting(surfaceShader, profile, 1F);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
                 PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun, cameraPositionMesh,

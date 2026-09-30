@@ -2,7 +2,8 @@
   "vertex": "starboundmc:cloud",
   "fragment": "starboundmc:cloud",
   "samplers": [
-    { "name": "Sampler0" }
+    { "name": "Sampler0" },
+    { "name": "SolarOpticalDepth" }
   ],
   "uniforms": [
     { "name": "DistanceScale", "type": "float", "count": 1, "values": [0.0] },
@@ -21,6 +22,10 @@
     },
     { "name": "SunDirection", "type": "float", "count": 3, "values": [0.0, 0.0, 1.0] },
     { "name": "CloudOpacity", "type": "float", "count": 1, "values": [1.0] },
-    { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [1.0] }
+    { "name": "GlobalAlpha", "type": "float", "count": 1, "values": [1.0] },
+    {"name": "AtmosphereGroundRadius", "type": "float", "count": 1, "values": [50.0]},
+    {"name": "AtmosphereTopRadius", "type": "float", "count": 1, "values": [52.5]},
+    {"name": "AtmosphereColor", "type": "float", "count": 3, "values": [0.3, 0.6, 1.0]},
+    {"name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.0]}
   ]
 }

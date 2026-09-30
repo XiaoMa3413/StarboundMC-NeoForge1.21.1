@@ -37,6 +37,7 @@
 
 - [宇宙系统总设计](StarboundMC%20宇宙系统总设计.md)：当前数据驱动宇宙架构的说明，不是施工清单。
 - [太空渲染管线与验证](space-render-pipeline.md)：当前独立天体深度、HDR/材质、StellarView HDR/旧版颜色适配、大气/Bloom 预算、配置回退和客户端验证方法。
+- [太空渲染美术方向](space-render-art-direction.md)：一眼惊艳的电影镜头目标、星等层次、大气晨昏线与验收视点。
 - [太空渲染架构改进提案](space-render-architecture-proposal.md)：基于接手前 `2ff090d` 的审查；实现进展以新版路线及管线文档为准。
 
 ## 已知问题

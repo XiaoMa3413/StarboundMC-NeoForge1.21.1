@@ -61,7 +61,8 @@ final class SpaceDepthSmoke {
                 float depthBefore = readDepth();
                 float[] before = readColor();
                 SpaceSceneTarget.distanceScale(1F);
-                Matrix4f model = new Matrix4f().translate(68,0,-280).scale(1.4F);
+                // Pass one scale height above ground; the upper shell is now nearly vacuum.
+                Matrix4f model = new Matrix4f().translate(63.85F,0,-280).scale(1.4F);
                 AtmosphereShellRenderer.render(model,new Vector3f(1,0,0),
                         PlanetSurfaceLighting.cameraPositionMesh(model),new Vector3f(.3F,.6F,1),
                         .5F,1F,1.1F,0,0);
@@ -73,11 +74,14 @@ final class SpaceDepthSmoke {
                         throw new IllegalStateException("Atmosphere attenuated a foreground star");
                 } else if (!(after[2] < before[2]-.01F))
                     throw new IllegalStateException("Atmosphere did not transmit/attenuate background radiance");
+                else if (!(after[2]/before[2] < after[0]/before[0]))
+                    throw new IllegalStateException("Atmosphere extinction did not preserve wavelength ordering");
                 report.append("atmosphereForeground=").append(foreground)
                         .append(" before=").append(Arrays.toString(before))
                         .append(" after=").append(Arrays.toString(after)).append(" opaqueDepthPreserved\n");
                 SpaceSceneTarget.finish();
             }
+            verifyAtmosphereQuality(report);
         } finally {
             SpaceSceneTarget.abort();
             sphere.close(); quad.close(); VertexBuffer.unbind();
@@ -95,6 +99,43 @@ final class SpaceDepthSmoke {
         report.append("World depth sentinel preserved: ").append(mainDepthAfter)
                 .append("\nRender event state restored.\n");
         return report.toString();
+    }
+
+    private static void verifyAtmosphereQuality(StringBuilder report) {
+        var previous = StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();
+        var qualities = new SpaceVisualQuality[] {SpaceVisualQuality.ULTRA,SpaceVisualQuality.HIGH,
+                SpaceVisualQuality.BALANCED,SpaceVisualQuality.PERFORMANCE};
+        float[] reference = null;
+        try {
+            for (var quality : qualities) {
+                StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(quality);
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing atmosphere quality target");
+                SpaceSceneTarget.distanceScale(1F);
+                Matrix4f model = new Matrix4f().translate(63.85F,0,-280).scale(1.4F);
+                AtmosphereShellRenderer.render(model,new Vector3f(.16F,0,.98F).normalize(),
+                        PlanetSurfaceLighting.cameraPositionMesh(model),new Vector3f(.3F,.6F,1),
+                        .5F,1F,1.1F,0,0);
+                float[] color = readColor();
+                for (int i=0;i<3;i++) {
+                    if (!Float.isFinite(color[i]) || color[i] < 0 || color[i] > 6.92F)
+                        throw new IllegalStateException("Atmosphere violated finite radiance bounds: "+Arrays.toString(color));
+                    if (reference != null) {
+                        float tolerance = switch (quality) {
+                            case HIGH -> .0008F+reference[i]*.08F;
+                            case BALANCED -> .001F+reference[i]*.16F;
+                            default -> .004F+reference[i]*.35F;
+                        };
+                        if (Math.abs(color[i]-reference[i]) > tolerance)
+                            throw new IllegalStateException("Atmosphere quadrature failed convergence for "+quality
+                                    +": "+Arrays.toString(color)+" vs "+Arrays.toString(reference));
+                    }
+                }
+                if (reference == null) reference = color;
+                report.append("atmosphereQuality=").append(quality).append(" grazingTwilight=")
+                        .append(Arrays.toString(color)).append(" bounded/converged\n");
+                SpaceSceneTarget.finish();
+            }
+        } finally { StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(previous); }
     }
 
     private static void writeDepthSentinel(double depth) {
@@ -162,6 +203,7 @@ final class SpaceDepthSmoke {
         var shader = PlanetSurfaceShader.current();
         Matrix4f model = new Matrix4f().translate(0, 0, -280).scale(1.4F);
         var profile = StarmapUniverse.body("sys1:barren").spaceVisual().orElseThrow();
+        AtmosphereShader.setSurfaceLighting(shader,profile,1F);
         RenderSystem.disableBlend(); RenderSystem.disableCull(); RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true); RenderSystem.depthFunc(GL11.GL_LEQUAL);
         RenderSystem.setShader(() -> shader);

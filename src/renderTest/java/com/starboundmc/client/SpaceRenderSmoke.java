@@ -35,8 +35,11 @@ import java.util.concurrent.CompletableFuture;
 public final class SpaceRenderSmoke {
     private static final String[] BASE_VIEWS = {"sys1:lush", "sys1:barren", "sys1:molten",
             "sys2:frozen", "sys1:gasgiant", "sys1:rockymoon", null, "@stellar", "@galaxy",
-            "@atmosphere", "@window", "@resize", "@reload"};
-    private static final String[] BODIES = Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")
+            "@atmosphere", "@phase-day", "@phase-half", "@phase-crescent",
+            "@terminator-close", "@twilight-atmosphere", "@phase-night", "@window", "@resize", "@reload"};
+    private static final String[] BODIES = System.getProperty("starboundmc.debug.spaceSmokeViews") != null
+            ? System.getProperty("starboundmc.debug.spaceSmokeViews").split(",")
+            : Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")
             ? java.util.stream.Stream.concat(Arrays.stream(BASE_VIEWS),java.util.stream.Stream.of(
                     "@stellar-mode-textured-instanced", "@stellar-mode-textured-regular",
                     "@stellar-mode-plain-instanced", "@stellar-mode-plain-regular")).toArray(String[]::new)
@@ -165,6 +168,28 @@ public final class SpaceRenderSmoke {
                     new UniverseDelta(sun.x*distance,sun.y*distance,sun.z*distance));
             var direction = tangent.scale(.98).subtract(sun.scale(.2));
             delta = new UniverseDelta(direction.x,direction.y,direction.z);
+        }
+        else if (view != null && (view.startsWith("@phase-") || view.equals("@terminator-close")
+                || view.equals("@twilight-atmosphere"))) {
+            body = "sys1:lush";
+            var sun = UniverseNavigation.sunDirection(body).normalize();
+            var tangent = sun.cross(Math.abs(sun.y) < .95
+                    ? new net.minecraft.world.phys.Vec3(0,1,0) : new net.minecraft.world.phys.Vec3(1,0,0)).normalize();
+            var up = switch (view) {
+                case "@phase-day" -> sun;
+                case "@phase-night" -> sun.scale(-1);
+                case "@phase-crescent" -> tangent.scale(.48).subtract(sun.scale(.877)).normalize();
+                case "@twilight-atmosphere" -> tangent.subtract(sun.scale(.015)).normalize();
+                default -> tangent;
+            };
+            double distance = UniverseNavigation.radius(body) * (view.equals("@terminator-close") ? 1.12
+                    : view.equals("@twilight-atmosphere") ? 1.003 : 2.8);
+            position = UniverseNavigation.universeBodyPosition(body).add(new UniverseDelta(up.x*distance,up.y*distance,up.z*distance));
+            delta = position.deltaTo(UniverseNavigation.universeBodyPosition(body));
+            if (view.equals("@twilight-atmosphere")) {
+                var direction = sun.subtract(up.scale(sun.dot(up)+.07)).normalize();
+                delta = new UniverseDelta(direction.x,direction.y,direction.z);
+            }
         }
         else if (view != null && view.startsWith("@stellar-mode-")) {
             StellarShaderSmoke.configure(view.contains("textured"),view.endsWith("instanced"));

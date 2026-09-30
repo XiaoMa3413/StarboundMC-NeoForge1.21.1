@@ -43,7 +43,8 @@ final class CloudShellRenderer
     }
 
     static void render(Matrix4f model, String textureId, Vector3f sunDirectionMesh,
-                       float cloudOpacity, float globalAlpha)
+                       float cloudOpacity, float globalAlpha,
+                       com.starboundmc.world.universe.BodySpaceVisualProfile profile)
     {
         if (textureId == null || textureId.isBlank() || cloudOpacity <= 0.0F || globalAlpha <= 0.0F)
             return;
@@ -85,6 +86,7 @@ final class CloudShellRenderer
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(() -> activeShader);
             CloudShader.setLighting(activeShader, sunDirectionMesh, cloudOpacity, globalAlpha);
+            AtmosphereShader.setSurfaceLighting(activeShader, profile, profile.cloudShellScale());
             SpaceSceneTarget.configure(activeShader);
 
             shell.bind();

@@ -53,6 +53,7 @@ final class AtmosphereShellRenderer
             FogRenderer.setupNoFog();
             if (scattering) {
                 SpaceSceneTarget.prepareAtmosphere(activeShader);
+                AtmosphereSolarLut.bind(activeShader);
                 RenderSystem.disableBlend(); RenderSystem.disableDepthTest();
                 // Exterior observers need only the front shell. Inside observers see the exit face.
                 if (cameraPositionMesh.lengthSquared() < OUTER_RADIUS * OUTER_RADIUS)
@@ -72,7 +73,7 @@ final class AtmosphereShellRenderer
                 // Keep one shared sphere VBO. The profile scale only affects the
                 // model transform and the shell-space radii sent to the shader.
                 AtmosphereOpticalDepth.Radii radii = AtmosphereOpticalDepth.forShellWithInnerOverlap(
-                        OUTER_RADIUS, shellScale, ATMOSPHERE_INNER_OVERLAP);
+                        OUTER_RADIUS, shellScale, scattering ? 1F : ATMOSPHERE_INNER_OVERLAP);
                 AtmosphereShader.setLighting(activeShader, sunDirectionMesh, cameraPositionMesh,
                         color, strength, alpha, radii.innerRadius(), radii.outerRadius(),
                         radii.maxOpticalDepth(),

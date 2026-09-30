@@ -28,13 +28,13 @@ void main() {
     float size = UV0.x * (1.0 + Convergence * front * 0.65);
     vec4 centerClip = ProjMat * ModelViewMat * vec4(direction * 200.0, 1.0);
     float pixels = size * abs(ProjMat[1][1]) * ViewportSize.y / max(2.0 * abs(centerClip.w), .001);
-    float expanded = max(pixels, .85);
+    float expanded = max(pixels, .7);
     float energy = min(1.0, pixels * pixels / (expanded * expanded));
     size *= expanded / max(pixels, .0001);
     vec3 point = direction * 200.0 + (right * starUv.x + up * starUv.y) * size;
     gl_Position = ProjMat * ModelViewMat * vec4(point, 1.0);
     gl_Position.z = gl_Position.w;
-    float twinkle = 0.975 + 0.025 * sin(TimePhase * float(2 + (gl_VertexID / 4) % 4) + UV0.y);
+    float twinkle = 1.0 + Convergence*.025 * sin(TimePhase * float(2 + (gl_VertexID / 4) % 4) + UV0.y);
     starColor = vec4(mix(Color.rgb, TintColor, clamp(TintAmount, 0.0, 1.0)),
                      Color.a * energy * StarAlpha * twinkle * (1.0 + Convergence * front * 1.15));
 }

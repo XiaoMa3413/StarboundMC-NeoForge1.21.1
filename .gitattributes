@@ -5,3 +5,5 @@ src/generated/**/.cache/* text eol=lf
 src/generated/**/*.json text eol=lf
 # Preserve intentional Markdown hard breaks in the read-only legacy snapshot.
 docs/legacy-forge/** whitespace=-blank-at-eol
+# Unified diff context prefixes intentionally precede the source indentation.
+patches/stellarview/*.patch text eol=lf whitespace=-blank-at-eol,-space-before-tab

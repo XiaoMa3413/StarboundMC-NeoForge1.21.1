@@ -36,13 +36,13 @@ flowchart LR
 
 行星新路径使用随受光角变化的漫反射、GGX 高光和独立自发光。背景辐射、云与恒星能量在合成前保持线性；最终按固定曝光和白点曲线转换到显示颜色。曝光只影响太空背景，不影响方块、实体或 GUI。
 
-StellarView 的可选星场具有两条导入路径：定制版本 `0.5.4-alpha-starbound-hdr1` 通过可选 `renderLinear` API 直接写入 HDR；旧 `externalview2` 版本仍绘入独立 LDR 目标，再解码并叠加。能力查找只做一次；缺失模组或不兼容 shader 回到原生星场。定制 API 的输出模式/viewport uniform 在调用后恢复，普通维度继续使用原版输出。源码补丁与重建方法见 [StellarView 定制说明](../patches/stellarview/README.md)。
+StellarView 的可选星场具有两条导入路径：定制版本 `0.5.4-alpha-starbound-hdr2` 通过可选 `renderLinear` API 直接写入 HDR；旧 `externalview2` 版本仍绘入独立 LDR 目标，再解码并叠加。能力查找只做一次；缺失模组或不兼容 shader 回到原生星场。定制 API 的输出模式/viewport uniform 在调用后恢复，普通维度继续使用原版输出。源码补丁与重建方法见 [StellarView 定制说明](../patches/stellarview/README.md)。
 
 若旧背景或颜色适配 shader 不可用，保留显示颜色兼容模式；独立天体深度仍可工作。资源失败导致核心 shader 缺失时切到 `DIRECT` 路径，资源重载后重新尝试。
 
-大气已使用指数高度密度、Rayleigh / Henyey–Greenstein 相函数与单次散射，按 `背景 × 透射 + 入射散射` 组合。地面截断和太阳地影采用解析交点；按采样段覆盖率积分地影，避免晨昏线的离散条纹。散射前 blit 一份独立 HDR 颜色/深度，禁止采样正在写入的颜色附件。大气不写天体深度，并在前景不透明天体处截断；摄像机在壳内也可渲染。系数是沿用各行星美术 profile 的艺术化近似，没有物理单位标定、多次散射或 LUT。
+大气已使用指数高度密度、Rayleigh / Henyey–Greenstein 相函数与单次散射，按 `背景 × 透射 + 入射散射` 组合。地面截断和太阳地影采用解析交点；在地影边界分段、向高密度区域集中采样，并用有限太阳视盘可见度连接晨昏线。地表、云顶与散射共享太阳衰减。散射前 blit 一份独立 HDR 颜色/深度，禁止采样正在写入的颜色附件。大气不写天体深度，并在前景不透明天体处截断；摄像机在壳内也可渲染。系数是沿用各行星美术 profile 的艺术化近似，尚无真实单位标定和多次散射。太阳光学深度已有共享 LUT（256×128 RG32F，额外 256 KiB）；表与颜色/强度无关，CPU 数据首次使用生成并缓存，GPU 纹理在重载/退出后释放重建，极薄的自定义壳仍使用数值积分。
 
-Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降采样/上采样后参与曝光合成；只处理太空目标。银河通过方向场中的分形结构和吸收尘带塑形，保持深空黑位。原生与定制星场采用最小像素半径及面积能量补偿，减少小于像素的星点突然消失。
+Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降采样/上采样后参与曝光合成；只处理太空目标。银河通过方向场中的分形结构和吸收尘带塑形，保持深空黑位。原生与定制星场采用最小像素半径及面积能量补偿，减少小于像素的星点突然消失。星型与辉光层次遵循 [电影美术方向](space-render-art-direction.md)，保持大量暗星、少量高亮星；HDR2 去除像素星贴图产生的菱形轮廓。
 
 透明层按天体中心距离从远到近提交，单一天体内仍是云、环、大气。相交的云/环/不同大气层尚无完整逐片元排序；环在大气前方时可能被额外衰减。近地表纹理虽已过滤，仍受现有 4K 资产、球体网格和云壳模型限制。
 
@@ -60,10 +60,10 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 
 | 画质 | 背景星预算 | 大气观察 / 光线采样 | Bloom 层数 / 首层尺寸 |
 | --- | ---: | ---: | --- |
-| Performance | 2,000（原生） | 6 / 4 | 关闭 |
-| Balanced | 6,000 | 12 / 4 | 3 层，宽高各 1/4 |
-| High / Custom | 20,000 | 20 / 6 | 4 层，宽高各 1/2 |
-| Ultra | 32,000 | 28 / 8 | 5 层，宽高各 1/2 |
+| Performance | 2,000（原生） | 12 / LUT（极薄壳 4） | 关闭 |
+| Balanced | 6,000 | 16 / LUT（极薄壳 4） | 3 层，宽高各 1/4 |
+| High / Custom | 20,000 | 20 / LUT（极薄壳 6） | 4 层，宽高各 1/2 |
+| Ultra | 32,000 | 28 / LUT（极薄壳 8） | 5 层，宽高各 1/2 |
 
 原生目录固定种子，低档是高档的稳定前缀；首次使用预算或资源重载时上传。StellarView 也按画质重建目录，但其内部分类顺序不承诺与原生一样的前缀稳定。Performance 保留大气、关闭云及可选星场；Balanced 关闭云影；Custom 保留独立功能开关。
 
@@ -84,15 +84,15 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 
 `spaceSmoke` 显式加入 `src/renderTest/java`，普通生产构建不包含夹具。夹具创建新测试世界，运行在 `run-space-smoke`，不打开用户存档。隐藏窗口但保持渲染。
 
-13 个视点覆盖六种行星/卫星、深空、恒星近景、银河方向、壳内近大气视点、玻璃舷窗、960×540 缩放及资源重载。结果写入 `run-space-smoke/screenshots/<label>`：
+19 个视点覆盖六种行星/卫星、深空、恒星近景、银河方向、壳内近大气视点、日面/半亮面/弯月/近晨昏线/日落/夜面、玻璃舷窗、960×540 缩放及资源重载。结果写入 `run-space-smoke/screenshots/<label>`：
 
 - PNG 为实际客户端图像；TXT 包含分辨率、GPU/驱动、样本数、CPU/GPU P50/P95 和资源计数。
-- `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查大气对前/后景辐射的衰减、不透明天体深度、世界深度哨兵和事件状态恢复。
+- `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查大气对前/后景辐射的衰减、波长衰减顺序、各档掠射晨昏线的收敛、不透明天体深度、世界深度哨兵和事件状态恢复。
 - `complete.txt` 只在本轮所有捕获和深度检查成功后写入。
 - GPU 时间用异步 timestamp 成对查询，只读取已完成结果，不使用 `glFinish`。`TOTAL` 包含事件入口状态保存和最终颜色合成；单个 pass 计时不能相加替代它。
 - 生产测量可使用 JVM 参数 `-Dstarboundmc.debug.spaceProfile=true`，每 10 秒把统计写入客户端日志；默认不建立计时 query。
 
-夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（仅从运行 classpath 排除可选模组）。四种 StellarView shader 的矩阵可使用 `-PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点，并检查 uniform/普通天空上传计数恢复。旧 API 可用 `-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge` 构建/运行。预设启用 StellarView 时，`spaceSmokeStellarView` 仅作为 Custom 的功能开关；其他档位遵循产品配置。
+夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（仅从运行 classpath 排除可选模组）。四种 StellarView shader 的矩阵可使用 `-PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点（总计 23），并检查 uniform/普通天空上传计数恢复。PowerShell 定点检查可使用 `'-PspaceSmokeViews=sys1:lush,@phase-half,@phase-crescent,@terminator-close'`；仍执行 GPU 检查，天体 ID 使用冒号。旧 API 可用 `'-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 构建/运行。预设启用 StellarView 时，`spaceSmokeStellarView` 仅作为 Custom 的功能开关；其他档位遵循产品配置。
 
 捕获固定原生动画时间。全客户端帧时间包含限帧、世界加载和后台调度；短测试的 GPU P95 会受功耗/调度影响，不可用作跨硬件性能结论。
 
@@ -100,11 +100,11 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 
 已执行矩阵是 Minecraft 1.21.1、NeoForge 21.1.248、Windows、NVIDIA RTX 3060 Laptop 和当前工作树的 StellarView 构建。尚未覆盖 AMD、Intel、macOS、Iris/Oculus shaderpack、复杂多人航行与多个透明天体交叠。`DIRECT` 是明确可用的兼容回退。
 
-原生背景闪烁与恒星自转按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度、运动中星点稳定性、近大气网格/纹理表现继续专项处理。
+原生背景在普通太空保持稳定，跃迁时才启用轻微闪烁；恒星自转按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度、运动中星点稳定性、近大气网格/纹理表现继续专项处理。
 
-接下来完善透明交叠、环光照与食影、恒星磁活动结构、近景资产/网格及大气 LUT 优化，并补充跨硬件测量。黑洞使用方向背景、统一天体距离和线性颜色作为基础，曲线光线采样、背景星环境贴图及自旋解算仍是后续专项。
+接下来完善透明交叠、环光照与食影、恒星磁活动结构、近景资产/网格及多次散射优化，并补充跨硬件测量。黑洞使用方向背景、统一天体距离和线性颜色作为基础，曲线光线采样、背景星环境贴图及自旋解算仍是后续专项。
 
-## 本轮实测记录（2026-09-30）
+## 扩大预算检查点实测记录（5116f07，2026-09-30）
 
 最终矩阵包括原生 High（StellarView 从 runtime 移除）、Performance（无可选模组）、旧 externalview2 / Balanced、完整 Direct + Legacy，以及定制 HDR / Ultra 的四种星 shader。普通夹具 13 视点，Ultra 矩阵 17 视点；全部覆盖资源重载与缩放。
 
@@ -124,3 +124,25 @@ GPU 大气检查记录：前景恒星颜色 `[4.9961,3.9355,2.2383]` 完全保�
 截图与完整计时文件位于本地 `run-space-smoke/screenshots/{native-high-final,performance,stellar-legacy-balanced,direct-final,ultra-final}`；运行日志与截图不提交到仓库。
 
 最终普通生产 `test build` 成功：148 个测试套件、721 项测试，零失败/错误/跳过。生产 JAR 包含 Bloom 与散射 shader，不含三个渲染夹具 `SpaceRenderSmoke`、`SpaceDepthSmoke`、`StellarShaderSmoke`。定制 StellarView 的 `build publishToMavenLocal` 成功（原仓库没有单元测试）；源码补丁在最终 fork 上通过反向应用检查。
+
+## 电影感修正验证（2026-10-01）
+
+本轮从 `5116f07` 出发，视觉方向与近似边界见 [美术方向](space-render-art-direction.md)。最终固定视点矩阵：
+
+| 路径 / 预设 | 实际捕获 | 分辨率 | 本地目录 |
+| --- | --- | --- | --- |
+| StellarView HDR2 / Ultra，含四种星 shader | 23 | 1920×1080；缩放后 960×540 | `film-final-ultra` |
+| 原生 / High，可选模组从 runtime 移除 | 19 | 1280×720；缩放后 960×540 | `film-final-native` |
+| 原生 / Performance | 7 | 1280×720；缩放后 960×540 | `film-final-performance` |
+| 旧 externalview2 / Balanced | 5 | 1280×720；缩放后 960×540 | `film-final-legacy-stellar` |
+| Direct + Legacy / Custom | 4 | 1280×720；缩放后 960×540 | `film-final-direct` |
+
+合计 58 张截图；每组均成功退出并生成 `complete.txt`。表中目录位于 `run-space-smoke/screenshots`，截图和日志不提交。Direct 路径跳过独立管线的深度检查，其余四组执行实际 GPU 遮挡、气体透射、各档掠射晨昏线收敛与状态恢复检查。
+
+Ultra 最终 GPU 质量检查的 RGB 为 `[0.03879,0.05319,0.06689]`，High 为 `[0.03937,0.05453,0.06940]`，Balanced 为 `[0.04010,0.05682,0.07001]`，Performance 为 `[0.04153,0.06116,0.08020]`，均在夹具规定的误差内。前景恒星 HDR 辐射保持不变；背景穿过掠射薄层后为 `[1.41699,0.31348,0.00652]`，波长衰减次序正确。不透明深度、Minecraft 世界深度哨兵 0.37 与事件状态保持。
+
+Performance 的 Bloom 分配/绘制均为零。旧版 StellarView 记录显示颜色导入与非零拷贝；HDR2 保持直接线性绘制并通过四 shader 的 uniform/普通天空计数恢复检查。太阳光学表按需上传，资源重载后释放并在再次需要大气时重建。
+
+普通生产 `test build` 成功：149 套件、725 项测试，零失败/错误/跳过。生产 JAR 检查确认新大气 include、光学深度实现及 `cinematic_stars.json` 存在，三个渲染夹具不存在。StellarView `f55e85f` 的 `build publishToMavenLocal` 成功，主项目保存的完整源码补丁通过反向应用检查。
+
+本次 RTX 3060 Laptop 捕获时另有程序持续占用 GPU，功耗/频率状态与上一检查点不同；不据此发布当前成本改善或帧率排名。上一节毫秒数据仍只对应 `5116f07`。跨 GPU、shaderpack、运动稳定性和复杂透明交叠尚需后续验收。

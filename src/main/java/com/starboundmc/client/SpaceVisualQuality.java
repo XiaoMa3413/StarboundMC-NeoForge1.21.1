@@ -22,8 +22,8 @@ public enum SpaceVisualQuality
 
     public int atmosphereSamples() {
         return switch (this) {
-            case PERFORMANCE -> 6;
-            case BALANCED -> 12;
+            case PERFORMANCE -> 12;
+            case BALANCED -> 16;
             case HIGH, CUSTOM -> 20;
             case ULTRA -> 28;
         };

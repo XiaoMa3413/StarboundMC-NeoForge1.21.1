@@ -1,5 +1,5 @@
 diff --git a/gradle.properties b/gradle.properties
-index 0090b8bc6a0f6175af75322c234cb3dcc6f8bf9a..b6f8af5df19f87cf0cfd39c0115af905b16bbcf9 100644
+index 0090b8bc6a0f6175af75322c234cb3dcc6f8bf9a..db32bcef6e37e70c5add0db22f52644877a068d5 100644
 --- a/gradle.properties
 +++ b/gradle.properties
 @@ -36,7 +36,7 @@ mod_name=Stellar View
@@ -7,7 +7,7 @@ index 0090b8bc6a0f6175af75322c234cb3dcc6f8bf9a..b6f8af5df19f87cf0cfd39c0115af905
  mod_license=MIT License
  # The mod version. See https://semver.org/
 -mod_version=0.5.4-alpha-externalview2
-+mod_version=0.5.4-alpha-starbound-hdr1
++mod_version=0.5.4-alpha-starbound-hdr2
  # The group ID for the mod. It is only important when publishing as an artifact to a Maven repository.
  # This should match the base package used for the mod sources.
  # See https://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -172,7 +172,7 @@ index 6f91936fa4fa4fbbdcdb7d1654a3da03e0a8cfd7..d24fd0b930ab033ba3e6e7f70ece674f
  		shaderInstance.clear();
  	}
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
-index d7da70e81cb93a40fabe075fe57b9f74dee08da9..ca437a6ff08cd4429da5a0cce66d1a7bcada3db2 100644
+index d7da70e81cb93a40fabe075fe57b9f74dee08da9..7e85a820d013e806b8e8bdfe23ad627f8fc9bc04 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.fsh
 @@ -3,6 +3,11 @@
@@ -187,11 +187,12 @@ index d7da70e81cb93a40fabe075fe57b9f74dee08da9..ca437a6ff08cd4429da5a0cce66d1a7b
  
  out vec4 fragColor;
  
-@@ -12,4 +17,9 @@ void main() {
+@@ -12,4 +17,10 @@ void main() {
          discard;
      }
      fragColor = color * ColorModulator;
 +    if (ExternalRadiance > 0.0) {
++        fragColor = vertexColor * ColorModulator;
 +        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
 +        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
 +        fragColor.a *= profile;
@@ -212,7 +213,7 @@ index ad04be31abe7bc24362a79ba79a65c25566558bd..95f47a5cd4bc4795b9b035c371d17e9e
      ]
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
-index be59179f9e5f3f979f5ddb6cceef3067f6901394..945da048a10b11137e956cb0d853779aaa501797 100644
+index be59179f9e5f3f979f5ddb6cceef3067f6901394..b773afde64e06d93555f8d65f90ba757868f167c 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star.vsh
 @@ -6,6 +6,8 @@ in vec4 HeightWidthSizeDistance;
@@ -240,22 +241,27 @@ index be59179f9e5f3f979f5ddb6cceef3067f6901394..945da048a10b11137e956cb0d853779a
  	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
  	
  	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
-@@ -62,6 +66,14 @@ void main()
+@@ -61,7 +65,19 @@ void main()
+ 	{
  		float starSize = clampStar(HeightWidthSizeDistance.z, distance);
  		float alpha = clampAlpha(Color.w, distance);
++        if (ExternalRadiance > 0.0) {
++            alpha = Color.w;
++            starSize = max(HeightWidthSizeDistance.z*(1.0-distance/1000000.0),.01);
++        }
  		
 +        // Broaden subpixel sprites while conserving their integrated energy.
 +        if (ExternalRadiance > 0.0) {
 +            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
 +            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
-+            float radius = max(pixels,.85);
++            float radius = max(pixels,.7);
 +            alpha *= min(1.0,pixels*pixels/(radius*radius));
 +            starSize *= radius/max(pixels,.0001);
 +        }
  		// Normalize
  		xyz /= distance;
  		if(StarConvergence > 0.0)
-@@ -137,6 +149,7 @@ void main()
+@@ -137,6 +153,7 @@ void main()
  			pos = LensingMatInv * pos;
  		
  		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
@@ -264,7 +270,7 @@ index be59179f9e5f3f979f5ddb6cceef3067f6901394..945da048a10b11137e956cb0d853779a
  	}
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
-index 64fab367f3880f0455f8dbaf4797f9980e826e25..1377352ed64af68c7fa614adf970cc41eb944b3f 100644
+index 64fab367f3880f0455f8dbaf4797f9980e826e25..78bd7d615cfe6408a6a398b953e7c2bd7ab3ce86 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.fsh
 @@ -3,6 +3,11 @@
@@ -279,11 +285,12 @@ index 64fab367f3880f0455f8dbaf4797f9980e826e25..1377352ed64af68c7fa614adf970cc41
  
  out vec4 fragColor;
  
-@@ -12,4 +17,9 @@ void main() {
+@@ -12,4 +17,10 @@ void main() {
          discard;
      }
      fragColor = color * ColorModulator;
 +    if (ExternalRadiance > 0.0) {
++        fragColor = vertexColor * ColorModulator;
 +        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
 +        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
 +        fragColor.a *= profile;
@@ -304,7 +311,7 @@ index 1f261f466f1b14b5848060ede6f700073f92363e..6222f6352327782c0731e9d0f3d7d1ae
      ]
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
-index 7a8fffa4d11d4f10c88f693ba1a3006383c83c4f..9da8c7cec388e544c866b3462b3fb1d36d0e9d92 100644
+index 7a8fffa4d11d4f10c88f693ba1a3006383c83c4f..ad6b807dec7192375ebf788011abb57a1ce94b07 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_instanced.vsh
 @@ -11,6 +11,8 @@ layout (location = 5) in float MaxDistance;
@@ -332,22 +339,27 @@ index 7a8fffa4d11d4f10c88f693ba1a3006383c83c4f..9da8c7cec388e544c866b3462b3fb1d3
  	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
  	
  	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
-@@ -69,6 +73,14 @@ void main()
+@@ -68,7 +72,19 @@ void main()
+ 	{
  		float starSize = clampStar(Size, distance);
  		float alpha = clampAlpha(Color.w, distance);
++        if (ExternalRadiance > 0.0) {
++            alpha = Color.w;
++            starSize = max(Size*(1.0-distance/1000000.0),.01);
++        }
  		
 +        // Broaden subpixel sprites while conserving their integrated energy.
 +        if (ExternalRadiance > 0.0) {
 +            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
 +            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
-+            float radius = max(pixels,.85);
++            float radius = max(pixels,.7);
 +            alpha *= min(1.0,pixels*pixels/(radius*radius));
 +            starSize *= radius/max(pixels,.0001);
 +        }
  		// Normalize
  		xyz /= distance;
  		if(StarConvergence > 0.0)
-@@ -146,6 +158,7 @@ void main()
+@@ -146,6 +162,7 @@ void main()
  			pos = LensingMatInv * pos;
  		
  		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
@@ -356,7 +368,7 @@ index 7a8fffa4d11d4f10c88f693ba1a3006383c83c4f..9da8c7cec388e544c866b3462b3fb1d3
  	}
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
-index 99a2dd3bc840ba602e8a5128e0e19906df1cbf47..18ef7ecfa423caf08106064fdbca8d21214f0fe7 100644
+index 99a2dd3bc840ba602e8a5128e0e19906df1cbf47..b52fb3b1a211ebb3cce7e17cae276d13494ed68c 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.fsh
 @@ -3,6 +3,11 @@
@@ -371,11 +383,12 @@ index 99a2dd3bc840ba602e8a5128e0e19906df1cbf47..18ef7ecfa423caf08106064fdbca8d21
  
  in vec4 vertexColor;
  in vec2 texCoord0;
-@@ -15,4 +20,9 @@ void main() {
+@@ -15,4 +20,10 @@ void main() {
          discard;
      }
      fragColor = color * ColorModulator;
 +    if (ExternalRadiance > 0.0) {
++        fragColor = vertexColor * ColorModulator;
 +        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
 +        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
 +        fragColor.a *= profile;
@@ -396,7 +409,7 @@ index 1dc3eefc429e388461cb6bb739ffd95114d9386d..67f63e46bdb77e2fce0f6315aa1314aa
      ]
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
-index cf7f1610f2d51753dcd413ec690ebc36978b36d9..bc528e425ce40800c42980cee3d45f90cc7a448d 100644
+index cf7f1610f2d51753dcd413ec690ebc36978b36d9..54a77f12c5ab9b620404e54401060c8d72087aa6 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex.vsh
 @@ -7,6 +7,8 @@ in vec2 UV0;
@@ -424,22 +437,27 @@ index cf7f1610f2d51753dcd413ec690ebc36978b36d9..bc528e425ce40800c42980cee3d45f90
  	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
  	
  	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
-@@ -65,6 +69,14 @@ void main()
+@@ -64,7 +68,19 @@ void main()
+ 	{
  		float starSize = clampStar(HeightWidthSizeDistance.z, distance);
  		float alpha = clampAlpha(Color.w, distance);
++        if (ExternalRadiance > 0.0) {
++            alpha = Color.w;
++            starSize = max(HeightWidthSizeDistance.z*(1.0-distance/1000000.0),.01);
++        }
  		
 +        // Broaden subpixel sprites while conserving their integrated energy.
 +        if (ExternalRadiance > 0.0) {
 +            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
 +            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
-+            float radius = max(pixels,.85);
++            float radius = max(pixels,.7);
 +            alpha *= min(1.0,pixels*pixels/(radius*radius));
 +            starSize *= radius/max(pixels,.0001);
 +        }
  		// Normalize
  		xyz /= distance;
  		if(StarConvergence > 0.0)
-@@ -140,6 +152,7 @@ void main()
+@@ -140,6 +156,7 @@ void main()
  			pos = LensingMatInv * pos;
  		
  		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);
@@ -448,7 +466,7 @@ index cf7f1610f2d51753dcd413ec690ebc36978b36d9..bc528e425ce40800c42980cee3d45f90
  		texCoord0 = UV0;
  	}
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
-index c9026b4473979b793f0b2c3f4785e1c4b4457612..07e7697b3e2ba8f3936d8b13e163423b2800cc2e 100644
+index c9026b4473979b793f0b2c3f4785e1c4b4457612..124979e80e87c65174637a61fd22c42dfa00040c 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.fsh
 @@ -3,6 +3,11 @@
@@ -463,11 +481,12 @@ index c9026b4473979b793f0b2c3f4785e1c4b4457612..07e7697b3e2ba8f3936d8b13e163423b
  
  in vec4 vertexColor;
  in vec2 texCoord0;
-@@ -15,4 +20,9 @@ void main() {
+@@ -15,4 +20,10 @@ void main() {
          discard;
      }
      fragColor = color * ColorModulator;
 +    if (ExternalRadiance > 0.0) {
++        fragColor = vertexColor * ColorModulator;
 +        fragColor.rgb = toLinear(fragColor.rgb) * (ExternalRadiance*6.4);
 +        float profile = max(0.0,(exp(-5.0*dot(externalUv,externalUv))-exp(-5.0))/(1.0-exp(-5.0)));
 +        fragColor.a *= profile;
@@ -488,7 +507,7 @@ index 603100b35f8962db7f9ce50a51c5b944555b624b..96b4f52112ee20cd696a5bcdb1439630
      ]
  }
 diff --git a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
-index 1c56e01c4d87b4cd226c29085885c849de56d30a..efeacafff4cb1cf28401652003cb3a2fa8560670 100644
+index 1c56e01c4d87b4cd226c29085885c849de56d30a..581f7ea40fee2668e37e97b7595b611f84d5ba6d 100644
 --- a/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
 +++ b/src/main/resources/assets/stellarview/shaders/core/rendertype_star_tex_instanced.vsh
 @@ -12,6 +12,8 @@ layout (location = 6) in float MaxDistance;
@@ -516,22 +535,27 @@ index 1c56e01c4d87b4cd226c29085885c849de56d30a..efeacafff4cb1cf28401652003cb3a2f
  	vec3 xyz = vec3(StarPos.x - RelativeSpaceLy.x - RelativeSpaceKm.x / KM_PER_LY, StarPos.y - RelativeSpaceLy.y - RelativeSpaceKm.y / KM_PER_LY, StarPos.z - RelativeSpaceLy.z - RelativeSpaceKm.z / KM_PER_LY);
  	
  	float distance = sqrt(xyz.x * xyz.x + xyz.y * xyz.y + xyz.z * xyz.z);
-@@ -71,6 +75,14 @@ void main()
+@@ -70,7 +74,19 @@ void main()
+ 	{
  		float starSize = clampStar(Size, distance);
  		float alpha = clampAlpha(Color.w, distance);
++        if (ExternalRadiance > 0.0) {
++            alpha = Color.w;
++            starSize = max(Size*(1.0-distance/1000000.0),.01);
++        }
  		
 +        // Broaden subpixel sprites while conserving their integrated energy.
 +        if (ExternalRadiance > 0.0) {
 +            vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*DEFAULT_DISTANCE,1.0);
 +            float pixels = starSize*abs(ProjMat[1][1])*ExternalViewport.y / max(2.0*abs(clip.w),.001);
-+            float radius = max(pixels,.85);
++            float radius = max(pixels,.7);
 +            alpha *= min(1.0,pixels*pixels/(radius*radius));
 +            starSize *= radius/max(pixels,.0001);
 +        }
  		// Normalize
  		xyz /= distance;
  		if(StarConvergence > 0.0)
-@@ -148,6 +160,7 @@ void main()
+@@ -148,6 +164,7 @@ void main()
  			pos = LensingMatInv * pos;
  		
  		gl_Position = ProjMat * ModelViewMat * vec4(pos, 1.0);

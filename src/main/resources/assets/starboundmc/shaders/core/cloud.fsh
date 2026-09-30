@@ -1,6 +1,11 @@
 #version 150
 #moj_import <starboundmc:space_common.glsl>
 #moj_import <starboundmc:space_texture.glsl>
+#moj_import <starboundmc:space_atmosphere.glsl>
+uniform float AtmosphereGroundRadius;
+uniform float AtmosphereTopRadius;
+uniform vec3 AtmosphereColor;
+uniform float AtmosphereStrength;
 uniform float DistanceScale;
 uniform float LinearColor;
 
@@ -29,7 +34,9 @@ void main() {
     vec3 nightCloud = cloud.rgb * vec3(0.10, 0.13, 0.18);
     vec3 cloudColor = mix(nightCloud, cloud.rgb, daylight);
     if (DistanceScale > 0.0) {
-        cloudColor = cloud.rgb * (.006 + max(sunDot, 0.0) * 2.2);
+        vec3 sunlight = spaceSurfaceSun(normal*50.0,lightDirection,AtmosphereGroundRadius,
+                AtmosphereTopRadius,AtmosphereColor,AtmosphereStrength);
+        cloudColor = cloud.rgb * (vec3(.0015) + sunlight * max(sunDot, 0.0) * 2.2);
         if (LinearColor < .5) cloudColor = spaceToDisplay(cloudColor * (1.0 + cloudColor / 16.0) / (1.0 + cloudColor));
     }
     float alpha = cloud.a * CloudOpacity * GlobalAlpha;

@@ -32,6 +32,7 @@ final class AtmosphereShader
     static void register(RegisterShadersEvent event)
     {
         AtmosphereShellRenderer.release();
+        AtmosphereSolarLut.release();
         shader = null;
         scatter = null;
         try
@@ -63,6 +64,17 @@ final class AtmosphereShader
     static ShaderInstance current()
     {
         return shader;
+    }
+
+    static void setSurfaceLighting(ShaderInstance target,
+                                  com.starboundmc.world.universe.BodySpaceVisualProfile profile,
+                                  float shellScale) {
+        if (SpaceSceneTarget.active()) AtmosphereSolarLut.bind(target);
+        float ground = PlanetRenderer.PLANET_RADIUS / shellScale;
+        target.safeGetUniform("AtmosphereGroundRadius").set(ground);
+        target.safeGetUniform("AtmosphereTopRadius").set(ground * profile.atmosphereShellScale());
+        target.safeGetUniform("AtmosphereColor").set(profile.atmosphereRed(), profile.atmosphereGreen(), profile.atmosphereBlue());
+        target.safeGetUniform("AtmosphereStrength").set(StarfieldClientConfig.atmosphereEnabled() ? profile.atmospherePeak() : 0F);
     }
 
     static void setLighting(ShaderInstance target, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
