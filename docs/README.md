@@ -12,6 +12,7 @@
 
 ## 当前活动计划
 
+- [太空渲染新版技术路线](space-render-roadmap.md)：`refactor/space-render-v2` 的现行执行路线与验证记录，覆盖深空、独立天体深度、HDR、材质、大气、恒星和后续黑洞；取代该分支旧 PR 顺序。
 - [EPP 环境生存实施计划](epp-implementation-plan.md)：Lush 基础电路板与 Mk.I 制造、独立装备槽、
   氧气、补给站、月球补给与 NOVA 引导；本轮确认范围和实际验证结果以此计划为准。
 - [亚光速引擎维修闭环](sublight-engine-repair-plan.md)：核心打印、独立飞船引擎模块槽安装、服务端
@@ -36,6 +37,7 @@
 ## 架构参考
 
 - [宇宙系统总设计](StarboundMC%20宇宙系统总设计.md)：当前数据驱动宇宙架构的说明，不是施工清单。
+- [太空渲染架构改进提案](space-render-architecture-proposal.md)：基于 `refactor/space-render-v2` / `2ff090d` 的技术审查，提出独立天体深度、线性 HDR、大气散射、近景恒星和实施顺序；属于架构提案，尚未实现或验收。
 
 ## 已知问题
 

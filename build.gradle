@@ -245,6 +245,9 @@ if (project.hasProperty('transporterSmoke')) {
 if (project.hasProperty('fuelPanelSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('spaceSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -260,6 +263,17 @@ neoForge {
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('spaceSmoke')) {
+                gameDirectory = file('run-space-smoke')
+                systemProperty 'starboundmc.debug.spaceSmoke', 'true'
+                systemProperty 'starboundmc.debug.spaceSmokeLabel',
+                        (project.findProperty('spaceSmokeLabel') ?: 'capture').toString()
+                systemProperty 'starboundmc.debug.spaceSmokeHidden', 'true'
+                systemProperty 'starboundmc.debug.spaceSmokeBackground',
+                        (project.findProperty('spaceSmokeBackground') ?: 'procedural').toString()
+                systemProperty 'starboundmc.debug.spaceTimeTicks', '600'
+                programArguments.addAll '--width', '1280', '--height', '720'
+            }
             if (project.hasProperty('printerSmoke')) {
                 gameDirectory = file('run-printer-smoke')
                 systemProperty 'starboundmc.debug.printerSmoke', 'true'

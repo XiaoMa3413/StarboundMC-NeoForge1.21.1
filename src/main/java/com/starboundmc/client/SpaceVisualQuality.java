@@ -9,6 +9,15 @@ public enum SpaceVisualQuality
     ULTRA,
     CUSTOM;
 
+    public int backgroundStarBudget() {
+        return switch (this) {
+            case PERFORMANCE -> 2000;
+            case BALANCED -> 6000;
+            case HIGH, CUSTOM -> 10000;
+            case ULTRA -> 16000;
+        };
+    }
+
     public boolean cloudsEnabled(boolean customValue)
     {
         return switch (this)

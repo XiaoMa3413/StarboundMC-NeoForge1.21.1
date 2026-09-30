@@ -8,6 +8,7 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.SpaceRenderState;
+import com.starboundmc.client.space.SpaceRenderClock;
 import com.starboundmc.client.space.StarSystemResolver;
 import com.starboundmc.client.space.StellarLod;
 import com.starboundmc.world.ShipDimensions;
@@ -44,7 +45,8 @@ public final class SpaceRenderer
             return;
 
         float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
-        SpaceRenderContext space = SpaceRenderState.capture(level.getGameTime() + partialTick);
+        SpaceRenderContext space = SpaceRenderState.capture(
+                SpaceRenderClock.animationTicks(level.getGameTime(), partialTick));
         SpaceCoordinateFrame coordinateFrame = new SpaceCoordinateFrame(space);
 
         // Every ship-space pass consumes this complete, bobbing-free frame.
@@ -65,17 +67,28 @@ public final class SpaceRenderer
 
             PoseStack skyPose = coordinateFrame.stableCameraPose(event.getCamera());
             Matrix4f skyModelView = skyPose.last().pose();
-            SpaceBackgroundRenderer.renderSpaceDome(skyPose);
             StarSystemResolver.ResolvedStarField stars = StarSystemResolver.resolve(space);
-            SpaceBackgroundRenderer.renderStarField(skyPose, level, event.getCamera(), partialTick,
-                    space, coordinateFrame, stars.environment());
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.BACKGROUND);
+            try { SpaceBackgroundRenderer.renderSpaceDome(skyPose, space, stars.environment()); }
+            finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.BACKGROUND); }
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.STARFIELD);
+            try {
+                SpaceBackgroundRenderer.renderStarField(skyPose, level, event.getCamera(), partialTick,
+                        space, coordinateFrame, stars.environment());
+            } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.STARFIELD); }
 
             // Stellar points and discs precede planets so planetary discs occlude
             // aligned stars in the same way as the existing render path.
-            renderSystemStars(skyPose, skyModelView, space, coordinateFrame, stars);
-            PlanetRenderer.renderVisiblePlanets(skyPose, event.getCamera(), space,
-                    coordinateFrame, stars);
-            WarpRenderer.render(skyPose, event.getCamera(), partialTick, space);
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.SYSTEM_STARS);
+            try { renderSystemStars(skyPose, skyModelView, space, coordinateFrame, stars); }
+            finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.SYSTEM_STARS); }
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.PLANETS);
+            try {
+                PlanetRenderer.renderVisiblePlanets(skyPose, event.getCamera(), space, coordinateFrame, stars);
+            } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.PLANETS); }
+            SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.WARP);
+            try { WarpRenderer.render(skyPose, event.getCamera(), partialTick, space); }
+            finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.WARP); }
         }
         finally
         {

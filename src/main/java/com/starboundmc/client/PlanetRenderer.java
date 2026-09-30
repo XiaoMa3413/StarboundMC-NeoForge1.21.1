@@ -62,6 +62,15 @@ public class PlanetRenderer
     private static CelestialLodTransitions planetLodTransitions;
     /** The catalog the arrays above were built from, so a rebuild is detectable. */
     private static Object drawOrderCatalog;
+
+    /** Session/view reset: transitions may not carry across unrelated universe poses. */
+    static void resetSceneState()
+    {
+        drawOrder = new CelestialBodyDefinition[0];
+        drawDistanceSq = new double[0];
+        drawOrderCatalog = null;
+        planetLodTransitions = null;
+    }
     private static final float PLANET_SKY_DISTANCE = 280.0F;
     private static final float MIN_PLANET_SKY_RADIUS = 0.12F;
     /** One shared, unlit mesh; per-body lighting is supplied as shader uniforms. */

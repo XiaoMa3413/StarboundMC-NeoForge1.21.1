@@ -12,6 +12,7 @@ import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
+import com.starboundmc.client.space.SpaceRenderClock;
 import com.starboundmc.warp.ShipFlightController;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -22,7 +23,7 @@ import org.joml.Vector3f;
 
 import java.util.Random;
 
-/** Draws the existing space dome and deterministic 2,000-star background shell. */
+/** Chooses ship-space backends while preserving world-sky and legacy paths. */
 public final class SpaceBackgroundRenderer
 {
     private static final int STAR_COUNT = 2000;
@@ -119,22 +120,41 @@ public final class SpaceBackgroundRenderer
             float shellFade = enter * (1.0F - exit);
             starAlpha = 1.0F - 0.88F * shellFade;
         }
+        Matrix4f starModelView = new Matrix4f(pose.last().pose())
+                .rotateX((float) Math.toRadians(-space.pitch()))
+                .rotateY((float) Math.toRadians(-space.yaw()));
         if (starAlpha > 0.01F)
         {
             // Match the established star orientation: stable camera + visual roll,
             // then inverse ship pitch/yaw. The coordinate provider independently
             // anchors the field to the virtual ship position, never the player.
-            Matrix4f starModelView = new Matrix4f(pose.last().pose())
-                    .rotateX((float) Math.toRadians(-space.pitch()))
-                    .rotateY((float) Math.toRadians(-space.yaw()));
             if (StellarViewStarfield.render(level, camera, partialTick, starModelView,
                     RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
                     frame.backgroundForwardDirection(new Vector3f())))
                 return;
         }
 
+        if (StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
+                && GpuSpaceBackground.renderStars(starModelView, RenderSystem.getProjectionMatrix(),
+                frame.backgroundForwardDirection(new Vector3f()), starAlpha, starConvergence,
+                environment.skyTintColor(), environment.skyTintAmount(),
+                SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick)))
+            return;
+
         renderStarField(pose, frame, starAlpha, starConvergence,
-                environment.skyTintColor(), environment.skyTintAmount());
+                environment.skyTintColor(), environment.skyTintAmount(),
+                SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick));
+    }
+
+    static void renderSpaceDome(PoseStack pose, SpaceRenderContext space, GalaxyEnvironmentBlend environment)
+    {
+        Matrix4f modelView = new Matrix4f(pose.last().pose())
+                .rotateX((float) Math.toRadians(-space.pitch()))
+                .rotateY((float) Math.toRadians(-space.yaw()));
+        if (StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
+                && GpuSpaceBackground.renderBackground(modelView, RenderSystem.getProjectionMatrix(), environment))
+            return;
+        renderSpaceDome(pose);
     }
 
     static void renderSpaceDome(PoseStack pose)
@@ -173,13 +193,12 @@ public final class SpaceBackgroundRenderer
 
     static void renderStarField(PoseStack pose, SpaceCoordinateFrame frame,
                                 float alpha, float convergence,
-                                int tintColor, float tintAmount)
+                                int tintColor, float tintAmount, float twinklePhase)
     {
         if (alpha <= 0.01F)
             return;
 
         Matrix4f matrix = pose.last().pose();
-        long now = System.currentTimeMillis();
         float tintR = ((tintColor >> 16) & 0xFF) / 255.0F;
         float tintG = ((tintColor >> 8) & 0xFF) / 255.0F;
         float tintB = (tintColor & 0xFF) / 255.0F;
@@ -246,7 +265,8 @@ public final class SpaceBackgroundRenderer
                 float uz = bx * y2;
 
                 float s = STAR_SIZE[i] * (1.0F + convergence * frontWeight * 0.65F);
-                float twinkle = 0.85F + 0.15F * (float) Math.sin(now * 0.003 + STAR_TWINKLE[i]);
+                float twinkle = 0.85F + 0.15F * (float) Math.sin(
+                        twinklePhase * (2 + i % 4) + STAR_TWINKLE[i]);
                 float focusBrightness = 1.0F + convergence * frontWeight * 1.15F;
                 float a = Math.min(1.0F, STAR_BRIGHT[i] * alpha * twinkle * focusBrightness);
 

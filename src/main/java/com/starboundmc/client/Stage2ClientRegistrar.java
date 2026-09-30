@@ -56,6 +56,7 @@ public final class Stage2ClientRegistrar {
         PlanetSurfaceShader.register(event);
         AtmosphereShader.register(event);
         CloudShader.register(event);
+        GpuSpaceBackground.register(event);
     }
 
     @SubscribeEvent

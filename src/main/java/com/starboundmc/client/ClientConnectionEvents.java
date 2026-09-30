@@ -47,6 +47,8 @@ public final class ClientConnectionEvents {
     }
 
     private static void resetConnectionState() {
+        PlanetRenderer.resetSceneState();
+        SpaceRenderProfiler.release();
         StellarViewStarfield.resetSession();
         ClientNetworkState.resetConnectionState();
         com.starboundmc.client.space.RelayClientState.reset();

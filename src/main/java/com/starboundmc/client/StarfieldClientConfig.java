@@ -7,6 +7,14 @@ public final class StarfieldClientConfig
 {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    public enum BackgroundMode { PROCEDURAL, LEGACY }
+
+    public static final ModConfigSpec.EnumValue<BackgroundMode> SPACE_BACKGROUND_MODE = BUILDER
+            .comment("Procedural uses a direction-based deep-space field and GPU fallback stars.",
+                    "Legacy restores the original sky dome and CPU fallback stars.")
+            .translation("starboundmc.config.space_background_mode")
+            .defineEnum("spaceBackgroundMode", BackgroundMode.PROCEDURAL);
+
     public static final ModConfigSpec.EnumValue<SpaceVisualQuality> SPACE_VISUAL_QUALITY = BUILDER
             .comment("Space visual quality preset. Performance disables clouds and Stellar View background stars.",
                     "Balanced disables cloud shadows; High and Ultra enable them. Custom uses the toggles below.")

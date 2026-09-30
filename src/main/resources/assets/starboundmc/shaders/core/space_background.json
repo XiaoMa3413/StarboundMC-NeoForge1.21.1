@@ -1,0 +1,48 @@
+{
+  "vertex": "starboundmc:space_background",
+  "fragment": "starboundmc:space_background",
+  "samplers": [],
+  "uniforms": [
+    {
+      "name": "InverseViewProjection",
+      "type": "matrix4x4",
+      "count": 16,
+      "values": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "TintColor",
+      "type": "float",
+      "count": 3,
+      "values": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "TintAmount",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0
+      ]
+    }
+  ]
+}

@@ -96,7 +96,8 @@ public class RockyMoonSkyRenderer
         // Fixed world-anchored stars: the yaw/pitch parameters rotate the shell
         // with the ship heading, which the moon surface has none of.
         SpaceBackgroundRenderer.renderStarField(pose, SpaceCoordinateFrame.identity(),
-                1.0F, 0.0F, 0xFFFFFF, 0.0F);
+                1.0F, 0.0F, 0xFFFFFF, 0.0F,
+                com.starboundmc.client.space.SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick));
         renderSunAndGiant(pose, level, partialTick);
     }
 
