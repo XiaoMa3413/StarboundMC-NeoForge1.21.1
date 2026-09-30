@@ -28,6 +28,12 @@ final class AtmosphereShellRenderer
     {
     }
 
+    static void release() {
+        if (shellBuffer != null) shellBuffer.close();
+        shellBuffer = null;
+        bufferUnavailable = false;
+    }
+
     static void render(Matrix4f model, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
                        Vector3f color, float strength, float alpha,
                        float shellScale, float nightFraction, float twilightStrength)
@@ -62,6 +68,7 @@ final class AtmosphereShellRenderer
                         color, strength, alpha, radii.innerRadius(), radii.outerRadius(),
                         radii.maxOpticalDepth(),
                         nightFraction, twilightStrength);
+                SpaceSceneTarget.configure(activeShader);
                 shell.bind();
                 shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);
             }

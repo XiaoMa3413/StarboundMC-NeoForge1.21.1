@@ -26,6 +26,8 @@ final class CloudShader
 
     static void register(RegisterShadersEvent event)
     {
+        CloudShellRenderer.release();
+        loadFailureLogged = false;
         shader = null;
         try
         {

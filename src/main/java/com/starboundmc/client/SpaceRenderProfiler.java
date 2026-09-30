@@ -10,12 +10,13 @@ import java.util.Locale;
 
 /** Opt-in asynchronous timestamp pairs; never waits for an unfinished GPU query. */
 final class SpaceRenderProfiler {
-    enum Pass { BACKGROUND, STARFIELD, SYSTEM_STARS, PLANETS, WARP, COMPOSITE }
+    enum Pass { TOTAL, BACKGROUND, STARFIELD, SYSTEM_STARS, CORONA, PLANETS, WARP, COMPOSITE }
     private static final boolean ENABLED = Boolean.getBoolean("starboundmc.debug.spaceSmoke")
             || Boolean.getBoolean("starboundmc.debug.spaceProfile");
     private static final int CAPACITY = 256;
     private static final Timer[] TIMERS = new Timer[Pass.values().length];
     private static boolean initialized, gpuSupported;
+    private static long lastLog;
 
     private SpaceRenderProfiler() {}
 
@@ -30,7 +31,15 @@ final class SpaceRenderProfiler {
     }
 
     static void end(Pass pass) {
-        if (ENABLED && initialized) TIMERS[pass.ordinal()].end();
+        if (!ENABLED || !initialized) return;
+        TIMERS[pass.ordinal()].end();
+        if (pass == Pass.TOTAL && !Boolean.getBoolean("starboundmc.debug.spaceSmoke")) {
+            long now = System.nanoTime();
+            if (now - lastLog > 10_000_000_000L) {
+                lastLog = now;
+                com.mojang.logging.LogUtils.getLogger().info("Space render profile\n{}", report());
+            }
+        }
     }
 
     static void resetSamples() {

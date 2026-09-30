@@ -43,11 +43,13 @@ public final class SpaceRenderer
             return;
         if (!level.dimension().equals(ShipDimensions.SHIP_LEVEL))
             return;
+        SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.TOTAL);
 
         float partialTick = event.getPartialTick().getGameTimeDeltaPartialTick(false);
         SpaceRenderContext space = SpaceRenderState.capture(
                 SpaceRenderClock.animationTicks(level.getGameTime(), partialTick));
         SpaceCoordinateFrame coordinateFrame = new SpaceCoordinateFrame(space);
+        SpaceRenderPassState.Snapshot incomingState = SpaceRenderPassState.capture();
 
         // Every ship-space pass consumes this complete, bobbing-free frame.
         // Minecraft applies walking bob to the projection matrix, so remove that
@@ -56,9 +58,11 @@ public final class SpaceRenderer
         // BufferUploader applies it after vertices were transformed by skyPose.
         var modelViewStack = RenderSystem.getModelViewStack();
         Matrix4f originalProjection = new Matrix4f(RenderSystem.getProjectionMatrix());
+        VertexSorting originalSorting = RenderSystem.getVertexSorting();
         Matrix4f skyProjection = removeViewBobbing(event.getProjectionMatrix(), mc,
                 event.getCamera());
         modelViewStack.pushMatrix();
+        boolean isolated = false;
         try
         {
             modelViewStack.identity();
@@ -68,6 +72,7 @@ public final class SpaceRenderer
             PoseStack skyPose = coordinateFrame.stableCameraPose(event.getCamera());
             Matrix4f skyModelView = skyPose.last().pose();
             StarSystemResolver.ResolvedStarField stars = StarSystemResolver.resolve(space);
+            isolated = SpaceSceneTarget.begin();
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.BACKGROUND);
             try { SpaceBackgroundRenderer.renderSpaceDome(skyPose, space, stars.environment()); }
             finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.BACKGROUND); }
@@ -77,24 +82,42 @@ public final class SpaceRenderer
                         space, coordinateFrame, stars.environment());
             } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.STARFIELD); }
 
-            // Stellar points and discs precede planets so planetary discs occlude
-            // aligned stars in the same way as the existing render path.
+            // Isolated photospheres write universe distance; coronas resolve after opaque bodies.
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.SYSTEM_STARS);
-            try { renderSystemStars(skyPose, skyModelView, space, coordinateFrame, stars); }
+            try {
+                if (isolated) SpaceStellarRenderer.render(skyModelView, space, coordinateFrame, stars, false);
+                else renderSystemStars(skyPose, skyModelView, space, coordinateFrame, stars);
+            }
             finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.SYSTEM_STARS); }
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.PLANETS);
             try {
                 PlanetRenderer.renderVisiblePlanets(skyPose, event.getCamera(), space, coordinateFrame, stars);
             } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.PLANETS); }
+            if (isolated) {
+                SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.CORONA);
+                try { SpaceStellarRenderer.render(skyModelView, space, coordinateFrame, stars, true); }
+                finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.CORONA); }
+                SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.COMPOSITE);
+                try { SpaceSceneTarget.finish(); }
+                finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.COMPOSITE); }
+            }
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.WARP);
             try { WarpRenderer.render(skyPose, event.getCamera(), partialTick, space); }
             finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.WARP); }
         }
+        catch (RuntimeException failure)
+        {
+            if (!isolated) throw failure;
+            SpaceSceneTarget.disableAfterFailure(failure);
+        }
         finally
         {
-            RenderSystem.setProjectionMatrix(originalProjection, VertexSorting.DISTANCE_TO_ORIGIN);
+            SpaceSceneTarget.abort();
+            RenderSystem.setProjectionMatrix(originalProjection, originalSorting);
             modelViewStack.popMatrix();
             RenderSystem.applyModelViewMatrix();
+            incomingState.restore();
+            SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.TOTAL);
         }
     }
 

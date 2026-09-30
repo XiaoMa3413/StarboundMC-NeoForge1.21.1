@@ -318,6 +318,7 @@ public class PlanetRenderer
                 UniverseNavigation.universeBodyPosition(body.entryId()));
         float bodyScale = (float) (UniverseNavigation.radius(body.entryId()) / PLANET_RADIUS);
         double distance = bodyCenter.length();
+        SpaceSceneTarget.distanceScale((float) Math.max(1, distance / PLANET_SKY_DISTANCE));
         if (distance > PLANET_SKY_DISTANCE)
         {
             float projectionScale = (float) (PLANET_SKY_DISTANCE / distance);
@@ -438,9 +439,13 @@ public class PlanetRenderer
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
             RenderSystem.disableCull();
-            RenderSystem.disableDepthTest();
+            if (SpaceSceneTarget.active()) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
             RenderSystem.depthMask(false);
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            if (SpaceSceneTarget.active()) {
+                var shader = SpaceRingShader.point();
+                RenderSystem.setShader(() -> shader);
+                SpaceSceneTarget.configure(shader);
+            } else RenderSystem.setShader(GameRenderer::getPositionColorShader);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             Matrix4f matrix = pose.last().pose();
@@ -472,12 +477,10 @@ public class PlanetRenderer
                                      float alpha, float fullAlpha, float cx, float cy, float cz,
                                      float shipYaw, float shipPitch, float animationTicks)
     {
-        // Skybox-style: the planet is drawn at a fixed offset in the rotation-only
-        // AFTER_SKY frame, so it stays visible through the bridge window at all times.
-        // The ring writes no depth either, so its far half is drawn first, the disk
-        // second, and the near half last to read as orbiting the body.
+        // Safe local projection keeps float coordinates small. The isolated path reconstructs
+        // universe distance per fragment; only the direct fallback splits rings into two halves.
         BodySpaceVisualProfile profile = visual(body);
-        if (RingRenderer.hasRings(profile))
+        if (RingRenderer.hasRings(profile) && !SpaceSceneTarget.active())
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
                     shipYaw, shipPitch, alpha, false);
         drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
@@ -526,7 +529,7 @@ public class PlanetRenderer
             RenderSystem.defaultBlendFunc();
             RenderSystem.enableDepthTest();
             RenderSystem.enableCull();
-            RenderSystem.depthMask(false);
+            RenderSystem.depthMask(SpaceSceneTarget.active());
             RenderSystem.setShaderTexture(0, diffuseTexture);
             // Bind a valid texture even for profiles without a mask; the shader's
             // MaterialMaskEnabled uniform controls whether this sampler is read.
@@ -547,6 +550,7 @@ public class PlanetRenderer
                 if (cloudShadowEnabled)
                     RenderSystem.setShaderTexture(2, cloudTexture);
                 RenderSystem.setShader(() -> surfaceShader);
+                SpaceSceneTarget.configure(surfaceShader);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
                 Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
                 PlanetSurfaceShader.setLighting(surfaceShader, meshSpaceSun, cameraPositionMesh,

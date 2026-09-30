@@ -34,12 +34,14 @@ import java.util.concurrent.CompletableFuture;
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public final class SpaceRenderSmoke {
     private static final String[] BODIES = {"sys1:lush", "sys1:barren", "sys1:molten",
-            "sys2:frozen", "sys1:gasgiant", "sys1:rockymoon", null};
+            "sys2:frozen", "sys1:gasgiant", "sys1:rockymoon", null, "@stellar", "@galaxy",
+            "@window", "@resize", "@reload"};
     private static final double[] FRAME_MS = new double[180];
     private static boolean started, finished;
     private static long start, stageStart, previousFrame;
     private static int stage, samples;
     private static CompletableFuture<?> setup;
+    private static CompletableFuture<Void> reload;
 
     @SubscribeEvent
     public static void frame(RenderFrameEvent.Post event) throws Exception {
@@ -48,6 +50,8 @@ public final class SpaceRenderSmoke {
         if (!started) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             started = true;
+            Files.deleteIfExists(mc.gameDirectory.toPath().resolve("screenshots")
+                    .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture")).resolve("complete.txt"));
             start = System.nanoTime();
             if (Boolean.getBoolean("starboundmc.debug.spaceSmokeHidden"))
                 GLFW.glfwHideWindow(mc.getWindow().getWindow());
@@ -56,7 +60,10 @@ public final class SpaceRenderSmoke {
             mc.options.renderDistance().set(4);
             mc.options.fov().set(70);
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.CUSTOM);
-            StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.set(false);
+            StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView"));
+            StarfieldClientConfig.SPACE_PIPELINE_MODE.set(
+                    "direct".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokePipeline"))
+                    ? StarfieldClientConfig.PipelineMode.DIRECT : StarfieldClientConfig.PipelineMode.ISOLATED);
             StarfieldClientConfig.SPACE_BACKGROUND_MODE.set(
                     "legacy".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokeBackground"))
                     ? StarfieldClientConfig.BackgroundMode.LEGACY : StarfieldClientConfig.BackgroundMode.PROCEDURAL);
@@ -87,6 +94,11 @@ public final class SpaceRenderSmoke {
         }
         if (!setup.isDone() || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)) return;
         setup.join();
+        if ("@reload".equals(BODIES[stage])) {
+            if (reload == null) { reload = mc.reloadResourcePacks(); return; }
+            if (!reload.isDone()) return;
+            reload.join();
+        }
         if (stageStart == 0) selectView(mc);
         long now = System.nanoTime();
         if (previousFrame != 0 && samples < FRAME_MS.length)
@@ -96,7 +108,7 @@ public final class SpaceRenderSmoke {
         var output = mc.gameDirectory.toPath().resolve("screenshots")
                 .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture"));
         Files.createDirectories(output);
-        String view = BODIES[stage] == null ? "deep-space" : BODIES[stage].replace(':', '-');
+        String view = BODIES[stage] == null ? "deep-space" : BODIES[stage].replace(':', '-').replace("@", "");
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(output.resolve(view + ".png"));
         }
@@ -107,10 +119,12 @@ public final class SpaceRenderSmoke {
                 + "samples=" + samples + " p50_ms=" + sorted[samples / 2]
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
-                + GpuSpaceBackground.diagnostics() + "\n" + SpaceRenderProfiler.report());
+                + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
+                + SpaceRenderProfiler.report());
         if (++stage == BODIES.length) {
+            Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             SpaceRenderState.resetPoseProvider();
-            Files.writeString(output.resolve("complete.txt"), "Completed seven fixed space views.\n");
+            Files.writeString(output.resolve("complete.txt"), "Completed " + BODIES.length + " fixed space views.\n");
             finished = true;
             mc.stop();
         } else {
@@ -120,31 +134,53 @@ public final class SpaceRenderSmoke {
     }
 
     private static void selectView(Minecraft mc) {
-        String body = BODIES[stage];
+        String view = BODIES[stage];
+        String body = view != null && !view.startsWith("@") ? view : null;
         UniversePosition position = body == null ? UniversePosition.of(20000, 3000, -10000)
                 : UniverseNavigation.universeDock(body);
         var delta = body == null ? new UniverseDelta(0, 0, 1)
                 : position.deltaTo(UniverseNavigation.universeBodyPosition(body));
+        if ("@stellar".equals(view) || "@window".equals(view)) {
+            var star = StarmapUniverse.systemOf("sys1:lush").stellarVisual().getUniversePosition();
+            position = star.add(new UniverseDelta(0, 0, 1700));
+            delta = position.deltaTo(star);
+        } else if ("@galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
+        if ("@resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
+        if ("@window".equals(view)) {
+            mc.getSingleplayerServer().submit(() -> {
+                var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();
+                var level = player.serverLevel();
+                int px = player.blockPosition().getX(), py = (int) Math.floor(player.getEyeY()),
+                        pz = player.blockPosition().getZ() - 4;
+                for (int x = -3; x <= 3; x++) for (int y = -3; y <= 3; y++) {
+                    boolean border = Math.abs(x) == 3 || Math.abs(y) == 3;
+                    level.setBlockAndUpdate(new BlockPos(px+x, py+y, pz),
+                            (border ? Blocks.POLISHED_DEEPSLATE : Blocks.GLASS).defaultBlockState());
+                }
+                level.setBlockAndUpdate(new BlockPos(px+1, py, pz), Blocks.SEA_LANTERN.defaultBlockState());
+            });
+        }
         float yaw = (float) Math.toDegrees(Math.atan2(-delta.x(), delta.z()));
         float pitch = (float) -Math.toDegrees(Math.atan2(delta.y(), Math.hypot(delta.x(), delta.z())));
         mc.player.setYRot(yaw);
         mc.player.setXRot(pitch);
         mc.player.yRotO = yaw;
         mc.player.xRotO = pitch;
-        SpaceRenderState.setPoseProvider(new FixturePose(position, body));
+        SpaceRenderState.setPoseProvider(new FixturePose(position, body,
+                "@stellar".equals(view) || "@window".equals(view) ? "sys1" : null));
         PlanetRenderer.resetSceneState();
         SpaceRenderProfiler.resetSamples();
         stageStart = System.nanoTime();
     }
 
-    private record FixturePose(UniversePosition universePosition, String currentBodyId)
+    private record FixturePose(UniversePosition universePosition, String currentBodyId, String hint)
             implements FreeFlightPoseProvider {
         public UniverseDelta universeVelocity() { return new UniverseDelta(0, 0, 0); }
         public double yaw() { return 0; }
         public double pitch() { return 0; }
         public double roll() { return 0; }
         public String currentSystemHint() {
-            return currentBodyId == null ? null : StarmapUniverse.systemIdOfEntry(currentBodyId);
+            return hint != null ? hint : currentBodyId == null ? null : StarmapUniverse.systemIdOfEntry(currentBodyId);
         }
     }
 }

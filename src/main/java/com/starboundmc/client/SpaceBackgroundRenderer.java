@@ -128,10 +128,16 @@ public final class SpaceBackgroundRenderer
             // Match the established star orientation: stable camera + visual roll,
             // then inverse ship pitch/yaw. The coordinate provider independently
             // anchors the field to the virtual ship position, never the player.
-            if (StellarViewStarfield.render(level, camera, partialTick, starModelView,
-                    RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
-                    frame.backgroundForwardDirection(new Vector3f())))
-                return;
+            boolean externalTarget = SpaceSceneTarget.beginExternalStars();
+            boolean rendered;
+            try {
+                rendered = StellarViewStarfield.render(level, camera, partialTick, starModelView,
+                        RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
+                        frame.backgroundForwardDirection(new Vector3f()));
+            } finally {
+                if (externalTarget) SpaceSceneTarget.finishExternalStars();
+            }
+            if (rendered) return;
         }
 
         if (StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL

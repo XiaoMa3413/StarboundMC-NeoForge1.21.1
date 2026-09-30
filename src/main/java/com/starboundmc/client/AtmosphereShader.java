@@ -30,6 +30,7 @@ final class AtmosphereShader
 
     static void register(RegisterShadersEvent event)
     {
+        AtmosphereShellRenderer.release();
         shader = null;
         try
         {

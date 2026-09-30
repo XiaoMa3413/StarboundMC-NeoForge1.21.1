@@ -272,6 +272,10 @@ neoForge {
                 systemProperty 'starboundmc.debug.spaceSmokeBackground',
                         (project.findProperty('spaceSmokeBackground') ?: 'procedural').toString()
                 systemProperty 'starboundmc.debug.spaceTimeTicks', '600'
+                systemProperty 'starboundmc.debug.spaceSmokePipeline',
+                        (project.findProperty('spaceSmokePipeline') ?: 'isolated').toString()
+                systemProperty 'starboundmc.debug.spaceSmokeStellarView',
+                        (project.findProperty('spaceSmokeStellarView') ?: 'false').toString()
                 programArguments.addAll '--width', '1280', '--height', '720'
             }
             if (project.hasProperty('printerSmoke')) {

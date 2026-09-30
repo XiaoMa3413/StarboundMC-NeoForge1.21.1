@@ -1,4 +1,7 @@
 #version 150
+#moj_import <starboundmc:space_common.glsl>
+uniform float DistanceScale;
+uniform float LinearColor;
 
 uniform sampler2D Sampler0;
 uniform sampler2D Sampler1;
@@ -25,6 +28,7 @@ uniform vec3 CloudRelativeRotationZ;
 in vec2 texCoord0;
 in vec3 surfaceNormal;
 in vec3 meshPosition;
+in vec3 viewPosition;
 out vec4 fragColor;
 
 vec3 safeNormalize(vec3 value, vec3 fallbackValue) {
@@ -77,6 +81,37 @@ void main() {
     vec3 normal = safeNormalize(surfaceNormal, vec3(0.0, 0.0, 1.0));
     vec3 lightDirection = safeNormalize(SunDirection, normal);
     float dotNL = clamp(dot(normal, lightDirection), -1.0, 1.0);
+    gl_FragDepth = DistanceScale > 0.0
+            ? celestialDepth(length(viewPosition) * DistanceScale) : gl_FragCoord.z;
+    if (DistanceScale > 0.0) {
+        vec3 albedo = spaceToLinear(texel.rgb);
+        vec3 view = safeNormalize(CameraPositionMesh - meshPosition, normal);
+        float nl = max(dotNL, 0.0), nv = max(dot(normal, view), 0.001);
+        vec2 material = MaterialMaskEnabled > .5 ? texture(Sampler1, texCoord0).rg : vec2(1, 0);
+        float shadow = CloudShadowEnabled > .5 ? projectedCloudShadow(normal, lightDirection, dotNL) : 0.0;
+        vec3 ambient = vec3(.45, .65, 1.0) * clamp(NightFloor * .04, .001, .015);
+        vec3 radiance = albedo * (ambient + vec3(2.2 * nl * (1.0 - shadow)));
+        if (nl > 0.0 && SpecularStrength > 0.0) {
+            vec3 halfVector = safeNormalize(lightDirection + view, normal);
+            float nh = max(dot(normal, halfVector), 0.0);
+            float vh = max(dot(view, halfVector), 0.0);
+            float roughness = max(mix(1.0, Roughness, material.r), .08);
+            float a2 = pow(roughness, 4.0);
+            float denom = nh * nh * (a2 - 1.0) + 1.0;
+            float distribution = a2 / max(3.14159265 * denom * denom, .00001);
+            float k = pow(roughness + 1.0, 2.0) / 8.0;
+            float geometry = nl / (nl * (1.0 - k) + k) * nv / (nv * (1.0 - k) + k);
+            float fresnel = .04 + .96 * pow(1.0 - vh, 5.0);
+            float specular = distribution * geometry * fresnel / max(4.0 * nl * nv, .001);
+            radiance += vec3(specular * SpecularStrength * material.r * 2.2 * nl * (1.0 - shadow));
+        }
+        // G remains a linear emission mask; diffuse color supplies the authored lava hue.
+        radiance += albedo * material.g * max(EmissiveStrength, 0.0) * 6.0;
+        radiance *= Brightness;
+        if (LinearColor < .5) radiance = spaceToDisplay(radiance * (1.0 + radiance / 16.0) / (1.0 + radiance));
+        fragColor = vec4(radiance, texel.a * SurfaceAlpha);
+        return;
+    }
     float width = max(TerminatorWidth, 0.00001);
     float daylight = smoothstep(-width, width, dotNL);
     float shade = 1.0 - daylight;

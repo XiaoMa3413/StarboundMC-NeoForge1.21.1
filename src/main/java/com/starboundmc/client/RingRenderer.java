@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.starboundmc.world.GasGiantGeometry;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import net.minecraft.client.renderer.FogRenderer;
@@ -16,7 +17,7 @@ import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-/** Renders the existing gas-giant ring geometry and its far/near passes. */
+/** Static ring geometry with astronomical depth, plus the direct-path far/near fallback. */
 public final class RingRenderer
 {
     private static final int RING_SEGMENTS = 144;
@@ -33,6 +34,7 @@ public final class RingRenderer
     private static final float[] RING_MID_X = new float[RING_SEGMENTS];
     private static final float[] RING_MID_Y = new float[RING_SEGMENTS];
     private static final float[] RING_MID_Z = new float[RING_SEGMENTS];
+    private static VertexBuffer ringBuffer;
 
     static
     {
@@ -114,11 +116,31 @@ public final class RingRenderer
             RenderSystem.enableDepthTest();
             RenderSystem.disableCull();
             RenderSystem.depthMask(false);
-            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            if (SpaceSceneTarget.active()) {
+                var shader = SpaceRingShader.current();
+                RenderSystem.setShader(() -> shader);
+                SpaceSceneTarget.configure(shader);
+            } else RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha * RING_ALPHA);
 
             Matrix4f full = new Matrix4f(pose.last().pose()).mul(model);
+            if (SpaceSceneTarget.active()) {
+                if (ringBuffer == null || ringBuffer.isInvalid()) {
+                    if (ringBuffer != null) ringBuffer.close();
+                    BufferBuilder builder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,
+                            DefaultVertexFormat.POSITION_TEX_COLOR);
+                    for (int i = 0; i < RING_VX.length; i++)
+                        builder.addVertex(RING_VX[i], RING_VY[i], RING_VZ[i])
+                                .setUv(RING_VU[i], .5F).setColor(RING_TINT_R, RING_TINT_G, RING_TINT_B, 1F);
+                    ringBuffer = new VertexBuffer(VertexBuffer.Usage.STATIC);
+                    ringBuffer.bind(); ringBuffer.upload(builder.buildOrThrow());
+                }
+                ringBuffer.bind();
+                try { ringBuffer.drawWithShader(full, RenderSystem.getProjectionMatrix(), SpaceRingShader.current()); }
+                finally { VertexBuffer.unbind(); }
+                return;
+            }
             Vector3f centre = full.transformPosition(new Vector3f());
             Vector3f centroid = new Vector3f();
             BufferBuilder bb = Tesselator.getInstance().begin(
@@ -146,6 +168,11 @@ public final class RingRenderer
         {
             SpaceRenderPassState.restoreDefaults();
         }
+    }
+
+    static void release() {
+        if (ringBuffer != null) ringBuffer.close();
+        ringBuffer = null;
     }
 
     /** Shared body orientation, composed identically by the surface and ring. */

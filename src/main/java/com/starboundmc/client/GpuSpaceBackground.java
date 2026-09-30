@@ -29,6 +29,10 @@ final class GpuSpaceBackground {
 
     private GpuSpaceBackground() {}
 
+    static boolean ready() {
+        return backgroundShader != null && starShader != null && !backgroundFailed && !starsFailed;
+    }
+
     static void register(RegisterShadersEvent event) {
         releaseGeometry();
         backgroundShader = starShader = null;
@@ -72,6 +76,7 @@ final class GpuSpaceBackground {
             backgroundShader.safeGetUniform("InverseViewProjection").set(
                     new Matrix4f(projection).mul(skyModelView).invert());
             setTint(backgroundShader, environment.skyTintColor(), environment.skyTintAmount());
+            backgroundShader.safeGetUniform("LinearColor").set(SpaceSceneTarget.linear() ? 1F : 0F);
             triangle.bind();
             triangle.drawWithShader(new Matrix4f(), new Matrix4f(), backgroundShader);
             backgroundDraws++;
@@ -115,6 +120,7 @@ final class GpuSpaceBackground {
             starShader.safeGetUniform("StarAlpha").set(alpha);
             starShader.safeGetUniform("TimePhase").set(phase);
             setTint(starShader, tint, tintAmount);
+            starShader.safeGetUniform("LinearColor").set(SpaceSceneTarget.linear() ? 1F : 0F);
             stars.bind();
             stars.drawWithShader(modelView, projection, starShader);
             starDraws++;

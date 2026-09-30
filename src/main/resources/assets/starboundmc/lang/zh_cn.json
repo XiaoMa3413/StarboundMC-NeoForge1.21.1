@@ -1,4 +1,6 @@
 {
+  "starboundmc.config.space_pipeline_mode": "太空渲染管线",
+  "starboundmc.config.space_exposure": "太空曝光",
   "hud.starboundmc.capability.restore": "个人视觉接口",
   "hud.starboundmc.capability.restore.detail": "正在恢复本地显示",
   "hud.starboundmc.capability.navigation": "视觉系统已恢复",

@@ -1,4 +1,7 @@
 #version 150
+#moj_import <starboundmc:space_common.glsl>
+uniform float DistanceScale;
+uniform float LinearColor;
 
 uniform vec3 SunDirection;
 uniform vec3 CameraPositionMesh;
@@ -13,6 +16,7 @@ uniform float OpticalDepthMax;
 
 in vec3 shellNormal;
 in vec3 meshPosition;
+in vec3 viewPosition;
 out vec4 fragColor;
 
 const vec3 TWILIGHT_TINT = vec3(1.0, 0.32, 0.10);
@@ -57,4 +61,7 @@ void main() {
     float alpha = clamp(optical01 * illumination * AtmosphereStrength * GlobalAlpha, 0.0, 1.0);
 
     fragColor = vec4(scatterColor, alpha);
+    if (LinearColor > .5) fragColor.rgb = spaceToLinear(scatterColor);
+    gl_FragDepth = DistanceScale > 0.0
+            ? celestialDepth(length(viewPosition) * DistanceScale) : gl_FragCoord.z;
 }

@@ -8,6 +8,17 @@ public final class StarfieldClientConfig
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public enum BackgroundMode { PROCEDURAL, LEGACY }
+    public enum PipelineMode { ISOLATED, DIRECT }
+
+    public static final ModConfigSpec.EnumValue<PipelineMode> SPACE_PIPELINE_MODE = BUILDER
+            .comment("Isolated uses a private astronomical depth/color target; Direct restores the original pass path.")
+            .translation("starboundmc.config.space_pipeline_mode")
+            .defineEnum("spacePipelineMode", PipelineMode.ISOLATED);
+
+    public static final ModConfigSpec.DoubleValue SPACE_EXPOSURE = BUILDER
+            .comment("Fixed exposure for the native linear HDR space pipeline. Does not affect world blocks or GUIs.")
+            .translation("starboundmc.config.space_exposure")
+            .defineInRange("spaceExposure", 1.0, .25, 4.0);
 
     public static final ModConfigSpec.EnumValue<BackgroundMode> SPACE_BACKGROUND_MODE = BUILDER
             .comment("Procedural uses a direction-based deep-space field and GPU fallback stars.",

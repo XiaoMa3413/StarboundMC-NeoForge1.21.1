@@ -1,4 +1,6 @@
 {
+  "starboundmc.config.space_pipeline_mode": "Space Render Pipeline",
+  "starboundmc.config.space_exposure": "Space Exposure",
   "hud.starboundmc.capability.restore": "VISUAL INTERFACE",
   "hud.starboundmc.capability.restore.detail": "RESTORING LOCAL DISPLAY",
   "hud.starboundmc.capability.navigation": "VISUAL SYSTEM RESTORED",

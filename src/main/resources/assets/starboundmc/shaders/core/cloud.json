@@ -5,6 +5,8 @@
     { "name": "Sampler0" }
   ],
   "uniforms": [
+    { "name": "DistanceScale", "type": "float", "count": 1, "values": [0.0] },
+    { "name": "LinearColor", "type": "float", "count": 1, "values": [0.0] },
     {
       "name": "ModelViewMat",
       "type": "matrix4x4",

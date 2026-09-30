@@ -36,6 +36,12 @@ final class CloudShellRenderer
     {
     }
 
+    static void release() {
+        if (shellBuffer != null) shellBuffer.close();
+        shellBuffer = null;
+        bufferUnavailable = invalidTextureLogged = false;
+    }
+
     static void render(Matrix4f model, String textureId, Vector3f sunDirectionMesh,
                        float cloudOpacity, float globalAlpha)
     {
@@ -79,6 +85,7 @@ final class CloudShellRenderer
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(() -> activeShader);
             CloudShader.setLighting(activeShader, sunDirectionMesh, cloudOpacity, globalAlpha);
+            SpaceSceneTarget.configure(activeShader);
 
             shell.bind();
             shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);

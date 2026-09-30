@@ -1,9 +1,12 @@
 {
-  "vertex": "starboundmc:background_stars",
-  "fragment": "starboundmc:background_stars",
-  "samplers": [],
+  "vertex": "starboundmc:space_ring",
+  "fragment": "starboundmc:space_ring",
+  "samplers": [
+    {
+      "name": "Sampler0"
+    }
+  ],
   "uniforms": [
-    { "name": "LinearColor", "type": "float", "count": 1, "values": [0.0] },
     {
       "name": "ModelViewMat",
       "type": "matrix4x4",
@@ -51,25 +54,7 @@
       ]
     },
     {
-      "name": "ConvergenceAxis",
-      "type": "float",
-      "count": 3,
-      "values": [
-        0,
-        0,
-        1
-      ]
-    },
-    {
-      "name": "Convergence",
-      "type": "float",
-      "count": 1,
-      "values": [
-        0
-      ]
-    },
-    {
-      "name": "StarAlpha",
+      "name": "DistanceScale",
       "type": "float",
       "count": 1,
       "values": [
@@ -77,7 +62,7 @@
       ]
     },
     {
-      "name": "TimePhase",
+      "name": "LinearColor",
       "type": "float",
       "count": 1,
       "values": [
@@ -85,21 +70,14 @@
       ]
     },
     {
-      "name": "TintColor",
+      "name": "ColorModulator",
       "type": "float",
-      "count": 3,
+      "count": 4,
       "values": [
         1,
         1,
+        1,
         1
-      ]
-    },
-    {
-      "name": "TintAmount",
-      "type": "float",
-      "count": 1,
-      "values": [
-        0
       ]
     }
   ]
