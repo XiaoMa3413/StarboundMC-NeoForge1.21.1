@@ -3,6 +3,7 @@ package com.starboundmc.client;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.FreeFlightPoseProvider;
 import com.starboundmc.client.space.SpaceRenderState;
+import com.starboundmc.client.space.BackgroundStarCatalog;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.UniverseNavigation;
@@ -12,6 +13,9 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -106,7 +110,7 @@ public final class SpaceRenderSmoke {
         }
         if (!setup.isDone() || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)) return;
         setup.join();
-        if ("@reload".equals(BODIES[stage])) {
+        if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])) {
             if (reload == null) { reload = mc.reloadResourcePacks(); return; }
             if (!reload.isDone()) return;
             reload.join();
@@ -123,6 +127,8 @@ public final class SpaceRenderSmoke {
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
         previousFrame = now;
         if ((now - stageStart) / 1e9 < 3 || samples == 0) return;
+        if (BODIES[stage] != null && BODIES[stage].startsWith("@spyglass-")
+                && !mc.player.isScoping()) throw new IllegalStateException("Spyglass fixture did not start using the real item");
         if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.verifyRestoration();
         var output = mc.gameDirectory.toPath().resolve("screenshots")
                 .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture"));
@@ -139,11 +145,14 @@ public final class SpaceRenderSmoke {
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
                 + "cameraYaw=" + fixtureYaw + " cameraPitch=" + fixturePitch + "\n"
+                + "scoping=" + mc.player.isScoping() + " ordinaryFov=" + mc.options.fov().get() + "\n"
                 + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
                 + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
                 + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
                 + SpaceRenderProfiler.report());
         if (++stage == BODIES.length) {
+            mc.options.keyUse.setDown(false);
+            if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             SpaceRenderState.resetPoseProvider();
             if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
@@ -158,6 +167,18 @@ public final class SpaceRenderSmoke {
 
     private static void selectView(Minecraft mc) {
         String view = BODIES[stage];
+        mc.options.hideGui=!"@spyglass-overlay".equals(view);
+        mc.options.keyUse.setDown(false);
+        if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
+        if (view != null && view.startsWith("@spyglass-")) {
+            // Equip through the ordinary creative inventory packet and hold use;
+            // GameRenderer then supplies the real interpolated spyglass projection.
+            mc.player.getInventory().selected=0;
+            var spyglass=new ItemStack(Items.SPYGLASS);
+            mc.player.setItemInHand(InteractionHand.MAIN_HAND,spyglass);
+            mc.gameMode.handleCreativeModeItemAdd(spyglass,36);
+            mc.options.keyUse.setDown(true);
+        }
         String body = view != null && !view.startsWith("@") ? view : null;
         UniversePosition position = body == null ? UniversePosition.of(20000, 3000, -10000)
                 : UniverseNavigation.universeDock(body);
@@ -167,7 +188,14 @@ public final class SpaceRenderSmoke {
             var star = StarmapUniverse.systemOf("sys1:lush").stellarVisual().getUniversePosition();
             position = star.add(new UniverseDelta(0, 0, 1700));
             delta = position.deltaTo(star);
-        } else if ("@galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
+        } else if ("@star-wide".equals(view) || "@star-return".equals(view)
+                || view != null && view.startsWith("@spyglass-")
+                && !"@spyglass-galaxy".equals(view)) {
+            var star=Arrays.stream(BackgroundStarCatalog.generate(2000))
+                    .filter(s -> s.dustFraction() == 0 && Math.abs(s.x()*.24+s.y()*.87+s.z()*.43) > .2)
+                    .max(java.util.Comparator.comparingDouble(BackgroundStarCatalog.Star::flux)).orElseThrow();
+            delta=new UniverseDelta(star.x(),star.y(),star.z());
+        } else if ("@galaxy".equals(view) || "@spyglass-galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
         else if ("@galaxy-outer".equals(view)) delta = new UniverseDelta(-.87,.24,0);
         else if ("@galaxy-side".equals(view)) {
             var direction = new org.joml.Vector3f(.24F,.87F,.43F)
@@ -216,7 +244,7 @@ public final class SpaceRenderSmoke {
                     view.substring("@quality-".length()).toUpperCase(java.util.Locale.ROOT)));
             delta = new UniverseDelta(.87,-.24,0);
         }
-        if ("@resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
+        if ("@resize".equals(view) || "@spyglass-resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
         if ("@window".equals(view)) {
             mc.getSingleplayerServer().submit(() -> {
                 var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();

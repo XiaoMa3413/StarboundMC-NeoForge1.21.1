@@ -7,7 +7,9 @@ import com.mojang.logging.LogUtils;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.BackgroundStarCatalog;
 import com.starboundmc.client.space.StarPhotometry;
+import com.starboundmc.client.space.StarfieldOptics;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
@@ -27,6 +29,7 @@ final class GpuSpaceBackground {
     private static VertexBuffer triangle;
     private static boolean backgroundFailed, starsFailed;
     private static long uploads, backgroundDraws, starDraws;
+    private static float opticalZoom = 1;
 
     private GpuSpaceBackground() {}
 
@@ -129,6 +132,8 @@ final class GpuSpaceBackground {
             starShader.safeGetUniform("FieldDetail").set(
                     StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() == SpaceVisualQuality.PERFORMANCE ? 0F : 1F);
             starShader.safeGetUniform("ViewportSize").set((float) SpaceSceneTarget.width(), (float) SpaceSceneTarget.height());
+            opticalZoom = StarfieldOptics.magnification(projection, Minecraft.getInstance().options.fov().get());
+            starShader.safeGetUniform("OpticalZoom").set(opticalZoom);
             stars.bind();
             stars.drawWithShader(modelView, projection, starShader);
             starDraws++;
@@ -172,6 +177,7 @@ final class GpuSpaceBackground {
         return "backgroundShader=" + (backgroundShader != null) + " starShader=" + (starShader != null)
                 + " backgroundFailed=" + backgroundFailed + " starsFailed=" + starsFailed
                 + " uploads=" + uploads + " backgroundDraws=" + backgroundDraws
-                + " starDraws=" + starDraws + " cachedStarBudgets=" + STAR_BUFFERS.keySet();
+                + " starDraws=" + starDraws + " cachedStarBudgets=" + STAR_BUFFERS.keySet()
+                + " opticalZoom=" + opticalZoom;
     }
 }

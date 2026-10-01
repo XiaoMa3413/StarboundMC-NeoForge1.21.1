@@ -14,6 +14,14 @@ float spaceStarGaussianPixel(vec2 offset, float sigma) {
 
 float spaceStarWing(float flux) { return .035*smoothstep(.15,3.0,flux); }
 
-float spaceStarPixelFlux(vec2 offset, float sigma, float flux) {
-    return flux*mix(spaceStarGaussianPixel(offset,sigma),spaceStarGaussianPixel(offset,1.35),spaceStarWing(flux));
+// Unresolved stars enlarge more slowly than the scene, retaining a focused core.
+float spaceStarImageScale(float magnification) { return sqrt(max(1.0,magnification)); }
+
+float spaceStarPixelFlux(vec2 offset, float sigma, float flux, float magnification) {
+    // Magnify the optical image, retaining its radiance instead of spreading a
+    // fixed flux into a larger, progressively darker disc. Pixel integration
+    // still operates on the actual output pixel footprint.
+    float scale=spaceStarImageScale(magnification);
+    return flux*scale*scale*mix(spaceStarGaussianPixel(offset,sigma*scale),
+            spaceStarGaussianPixel(offset,1.35*scale),spaceStarWing(flux));
 }

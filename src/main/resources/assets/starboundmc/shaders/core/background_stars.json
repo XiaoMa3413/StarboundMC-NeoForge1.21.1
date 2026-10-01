@@ -4,6 +4,12 @@
   "samplers": [],
   "uniforms": [
     {
+      "name": "OpticalZoom",
+      "type": "float",
+      "count": 1,
+      "values": [1]
+    },
+    {
       "name": "FieldDetail",
       "type": "float",
       "count": 1,

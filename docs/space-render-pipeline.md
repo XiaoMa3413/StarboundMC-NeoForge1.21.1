@@ -46,6 +46,8 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 
 原生独立星点将相对星等转换为浮点总通量，通过 UV 属性上传，避免 8-bit alpha 抹去暗星层次。色温来自预计算的连续黑体光谱调色板，着色器按亮度归一化。屏幕对齐的星点使用解析像素面积积分 Gaussian，稀少亮星才带弱光学翼；亚像素位移分配能量而不让整颗星忽明忽暗。星点与银河共用方向尘埃透射，前景族群不受全部尘埃遮挡；高档主要增加更暗的星。仍使用一个静态目录 VBO，不新增纹理或 framebuffer。StellarView HDR2 保留其最小像素半径与面积补偿实现。星型与辉光层次遵循 [电影美术方向](space-render-art-direction.md)。
 
+望远镜的星点轮廓按活动投影的焦距比例放大，参照用户当前普通 FOV。焦距比例从投影纵向行向量的长度求出，避免受伤相机旋转被当作缩放；随原版 FOV 插值连续变化，放下望远镜后恢复。场景位置遵循完整倍率，未解析的背景星点轮廓按倍率平方根扩大，以保留清晰星心；通量按轮廓面积补偿，保持色温和单位面积亮度。倍率限制为 1–32，普通视角和更宽的运动 FOV 不缩小原有星点；此上限约束第三方极端投影的填充开销。仍用原有目录/目标，Direct + Procedural 也使用同一轮廓。该处理是观感设计，不表示解析了真实恒星表面或新增了物理望远镜孔径。
+
 云壳把纹理覆盖率转换为法向光学深度，并按视线斜角计算透射；掠射路径采用有限曲率近似。薄云有受太阳透射、行星地影和云自身光学深度约束的前向散射，地表云影使用同一光学深度和太阳路径。现有 cloud opacity、漂移和资产编码保留；Direct 路径保留旧云光照。此实现不等于完整体积云或多次散射。
 
 透明层按天体中心距离从远到近提交，单一天体内仍是云、环、大气。相交的云/环/不同大气层尚无完整逐片元排序；环在大气前方时可能被额外衰减。近地表纹理虽已过滤，仍受现有 4K 资产、球体网格和云壳模型限制。
@@ -105,6 +107,8 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（从运行 classpath 排除可选模组，默认已经不加入）。四种 StellarView shader 的矩阵使用 `-PwithStellarView -PspaceSmokeStellarView=true -PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点（总计 23），并检查 uniform/普通天空上传计数恢复。PowerShell 定点检查可使用 `'-PspaceSmokeViews=sys1:lush,@phase-half,@phase-crescent,@terminator-close'`；仍执行 GPU 检查，天体 ID 使用冒号。旧 API 使用 `-PwithStellarView '-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 运行。`spaceSmokeStellarView=true` 对应显式后端选择，除 Performance 外所有档位均尊重该选择；不安装可选模组时仍回到原生。
 
 同一次客户端的动态画质检查可使用 `'-PspaceSmokeViews=@quality-performance,@quality-balanced,@quality-high,@quality-ultra,@resize,@reload,sys1:lush'`；四个质量视点保持相同银河方向，随后验证目标重建与资源释放。
+
+望远镜专项使用 `'-PspaceSmokeViews=@star-wide,@spyglass-star,@spyglass-overlay,@spyglass-galaxy,@spyglass-resize,@spyglass-reload,@star-return'`。夹具通过常规创造物品包装备原版望远镜并保持使用键，不伪造投影；TXT 记录真实 `scoping` 状态与原生 `opticalZoom`。`@spyglass-overlay` 同时显示原版望远镜遮罩，其余视点隐藏 GUI 便于比较；`@star-return` 验证放下后恢复。三档数值 FOV（70° / 35° / 7°）在完整与半分辨率下各验证六个亚像素位置，包括轮廓半径、通量、有限值与深度保持。
 
 捕获固定原生动画时间。全客户端帧时间包含限帧、世界加载和后台调度；短测试的 GPU P95 会受功耗/调度影响，不可用作跨硬件性能结论。
 
@@ -227,3 +231,15 @@ RTX 3060 Laptop / OpenGL 4.6 / NVIDIA 610.47 的 256 样本短捕获：1920×108
 最终普通生产 `test build` 不加入 StellarView，成功通过 150 套件、728 项测试，零失败/错误/跳过。生产 JAR 包含原生光度模型与星点光学 include，不包含三个渲染夹具。连续色温、暗星总通量及高画质目录稳定前缀由纯 Java 测试覆盖；公开 API 反射兼容由实际客户端矩阵覆盖。
 
 当前默认路径已独立，StellarView fork 本阶段没有修改。完整相机运动、其他 GPU / shaderpack、透明交叠仍需专项验收；黑洞背景星目录查询与曲线光线积分尚未实现。
+
+## 望远镜星点观感验证（2026-10-01）
+
+基线为 `6e7d9a7`。修正原生星场固定屏幕像素轮廓，保留普通视角，缩窄视野时放大清晰星心与弱光学翼；单位面积亮度保持。目录、色温、尘埃与天体位置不变，不新增 GPU 目标、纹理或星目录上传。
+
+最终客户端矩阵为 Ultra（1920×1080，缩放至 960×540）8 视点、Performance 3 视点、Direct + Procedural / Custom 3 视点，共 14 张实际截图；三个运行均成功退出并生成完成标记。目录为 `run-space-smoke/screenshots/{spyglass-native-final,spyglass-performance,spyglass-direct}`。夹具实际使用原版望远镜，普通与放下后记录 `scoping=false / opticalZoom=1`，使用中记录 `scoping=true / opticalZoom=11.448291`；缩放、重载和既有望远镜遮罩均已捕获。Performance 保持 2,000 星及零 Bloom 分配/绘制，Direct 未分配独立目标。
+
+Ultra / Performance 各通过 36 个星点 GPU 数值条件：两种分辨率 × 三档 FOV × 六个亚像素位置。70° 单点 RMS 半径约 `0.828 px`，7° 为 `2.394 px`；轮廓扩展倍率为 `sqrt(11.448292) = 3.383532`，RMS 还包含像素积分足迹。7° 总通量为 `22.889304–22.892776`，亚像素位置变化约 0.015%；普通视角仍得到此前的 `1.999174–1.999804`。所有值有限，天体深度和世界深度哨兵 `0.37000003` 保持，事件状态恢复；既有银河、云、大气和 unpack 上传回归通过。Direct 按设计只执行上传回归。
+
+最终普通生产 `test build` 成功：151 套件、731 项测试，零失败/错误/跳过。生产 JAR 包含焦距比例 helper 和 `OpticalZoom` uniform，不包含三个渲染夹具。纯 Java 检查覆盖普通 FOV 选择、宽视野、望远镜过渡、受伤相机旋转以及极端/无效投影。
+
+本轮只验证原生后端，StellarView 代码没有改动，也没有重复其兼容矩阵。运行受其他程序与调度影响，短截图计时不作为性能改善结论；当前硬件仍为 Windows / RTX 3060 Laptop，其他 GPU 与缩放模组的实际运行尚未覆盖。
