@@ -46,6 +46,32 @@ float spaceBackgroundStellarGrain(float longitude, float latitude, float footpri
     return mix(1.0,radiance/MEAN,fade);
 }
 
+// Shared foreground extinction for the unresolved galaxy and distant resolved stars.
+vec3 spaceBackgroundTransmission(vec3 direction, float detailLevel) {
+    vec3 axis = normalize(vec3(.24,.87,.43));
+    vec3 centre = normalize(vec3(.87,-.24,0));
+    vec3 tangent = normalize(cross(axis,centre));
+    float latitude = asin(clamp(dot(direction,axis),-1.0,1.0));
+    float inner = pow(max(dot(direction,centre),0.0),5.0);
+    float broad = spaceBackgroundNoise(direction*8.0+vec3(17.2,4.1,9.7));
+    float middle = spaceBackgroundNoise(direction*31.0+vec3(7.3,19.1,3.5));
+    // Extinction has a varying width and regional gaps. A separate offset
+    // branch prevents the old continuous, mechanically straight black slit.
+    vec3 dustPoint = direction*22.0;
+    float dustShape = detailLevel > .5 ? spaceBackgroundDustDetail(dustPoint+vec3(21.7,5.3,9.1))
+            : spaceBackgroundNoise(dustPoint+vec3(21.7,5.3,9.1));
+    float meander = (broad-.5)*.070 + (middle-.5)*.018;
+    float laneWidth = .012 + .040*dustShape + .010*inner;
+    float lane = exp(-pow((latitude-meander)/laneWidth,2.0));
+    float region = smoothstep(.40,.68,spaceBackgroundNoise(direction*5.7+vec3(4.8,25.7,11.3)));
+    float branchCentre = meander + .035 + .045*(middle-.5);
+    float branch = exp(-pow((latitude-branchCentre)/(.014+.018*broad),2.0));
+    float fray = spaceBackgroundNoise(dustPoint*2.1+vec3(53.1,11.5,7.9));
+    float opticalDepth = (lane*(.40+region*3.0) + branch*smoothstep(.38,.65,fray)*1.3)
+            * (.25+1.3*dustShape) * (.6+.8*fray);
+    return exp(-opticalDepth*vec3(.85,1.10,1.50));
+}
+
 vec3 spaceBackgroundRadiance(vec3 direction, vec3 tintColor, float tintAmount,
                              float detailLevel, float angularFootprint) {
     vec3 axis = normalize(vec3(.24,.87,.43));
@@ -61,30 +87,13 @@ vec3 spaceBackgroundRadiance(vec3 direction, vec3 tintColor, float tintAmount,
     vec3 black = vec3(.00025,.00032,.00042);
     if (max(disk,bulge) < .0005)
         return mix(black,black*(.75+tintColor*.25),clamp(tintAmount,0.0,1.0));
-
-    // Uneven star clouds, with a broader warm bulge toward the galactic centre.
     float broad = spaceBackgroundNoise(direction*8.0+vec3(17.2,4.1,9.7));
     float middle = spaceBackgroundNoise(direction*31.0+vec3(7.3,19.1,3.5));
     float structure = mix(broad,middle,.45);
     if (detailLevel > .5)
         structure = structure*.75 + spaceBackgroundNoise(direction*83.0+vec3(3.7,19.0,4.1))*.25;
     float starCloud = .22 + 1.8*structure*structure;
-
-    // Extinction has a varying width and regional gaps. A separate offset
-    // branch prevents the old continuous, mechanically straight black slit.
-    vec3 dustPoint = direction*22.0;
-    float dustShape = detailLevel > .5 ? spaceBackgroundDustDetail(dustPoint+vec3(21.7,5.3,9.1))
-            : spaceBackgroundNoise(dustPoint+vec3(21.7,5.3,9.1));
-    float meander = (broad-.5)*.070 + (middle-.5)*.018;
-    float laneWidth = .012 + .040*dustShape + .010*inner;
-    float lane = exp(-pow((latitude-meander)/laneWidth,2.0));
-    float region = smoothstep(.40,.68,spaceBackgroundNoise(direction*5.7+vec3(4.8,25.7,11.3)));
-    float branchCentre = meander + .035 + .045*(middle-.5);
-    float branch = exp(-pow((latitude-branchCentre)/(.014+.018*broad),2.0));
-    float fray = spaceBackgroundNoise(dustPoint*2.1+vec3(53.1,11.5,7.9));
-    float opticalDepth = (lane*(.40+region*3.0) + branch*smoothstep(.38,.65,fray)*1.3)
-            * (.25+1.3*dustShape) * (.6+.8*fray);
-    vec3 transmission = exp(-opticalDepth*vec3(.85,1.10,1.50));
+    vec3 transmission = spaceBackgroundTransmission(direction,detailLevel);
     vec3 population = mix(vec3(.82,.88,1.0),vec3(1.0,.88,.72),inner*.65);
     vec3 stellarLight = population * (disk*.020*starCloud + bulge*.028*(.45+.8*structure));
     if (detailLevel > .5)

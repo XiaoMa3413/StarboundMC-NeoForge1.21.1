@@ -90,6 +90,7 @@ final class SpaceDepthSmoke {
                 SpaceSceneTarget.finish();
             }
             verifyAtmosphereQuality(report);
+            verifyNativeStarMotion(report);
             verifyBackgroundField(report);
             verifyCloudOptics(quad,report);
         } finally {
@@ -192,6 +193,56 @@ final class SpaceDepthSmoke {
 
     private static int[] pixelStoreValues(int[] queries) {
         return Arrays.stream(queries).map(GL11::glGetInteger).toArray();
+    }
+
+    private static void verifyNativeStarMotion(StringBuilder report) {
+        var shader=GpuSpaceBackground.starShader();
+        if (shader == null) throw new IllegalStateException("Native star shader did not load");
+        var builder=Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,DefaultVertexFormat.POSITION_TEX_COLOR);
+        for (int i=0;i<4;i++) builder.addVertex(0,0,-1).setUv(.45F,2F).setColor(1F,1F,1F,0F);
+        try (var point=upload(builder)) {
+            for (int divisor:new int[] {1,2}) {
+                double reference=0;
+                for (float offset:new float[] {0,.125F,.25F,.5F,.75F,1F}) {
+                    if (!SpaceSceneTarget.begin() || !SpaceSceneTarget.linear())
+                        throw new IllegalStateException("Native motion test requires linear HDR");
+                    int w=width()/divisor,h=height()/divisor;
+                    RenderSystem.viewport(0,0,w,h);
+                    float depth=readDepth();
+                    RenderSystem.disableCull(); RenderSystem.disableDepthTest(); RenderSystem.depthMask(false);
+                    RenderSystem.enableBlend();
+                    RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA,
+                            com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
+                    shader.safeGetUniform("ViewportSize").set((float)w,(float)h);
+                    shader.safeGetUniform("LinearColor").set(1F);
+                    shader.safeGetUniform("FieldDetail").set(1F);
+                    shader.safeGetUniform("ConvergenceAxis").set(0F,0F,1F);
+                    shader.safeGetUniform("Convergence").set(0F);
+                    shader.safeGetUniform("StarAlpha").set(1F);
+                    shader.safeGetUniform("TintAmount").set(0F);
+                    Matrix4f projection=new Matrix4f().perspective((float)Math.toRadians(70),(float)w/h,.05F,1000F);
+                    // Move the point by a fraction of a pixel; no temporal history or screen noise.
+                    projection.m20(-2F*offset/w); projection.m21(-2F*offset/h);
+                    point.bind(); point.drawWithShader(new Matrix4f(),projection,shader); VertexBuffer.unbind();
+                    float[] pixels=new float[32*32*4];
+                    GL11.glReadPixels(w/2-16,h/2-16,32,32,GL11.GL_RGBA,GL11.GL_FLOAT,pixels);
+                    double energy=0; float peak=0;
+                    for (int i=0;i<pixels.length;i+=4) {
+                        if (!Float.isFinite(pixels[i]) || pixels[i] < 0)
+                            throw new IllegalStateException("Native point spread has invalid radiance");
+                        energy+=pixels[i]; peak=Math.max(peak,pixels[i]);
+                    }
+                    if (Math.abs(energy-2) > .006 || reference != 0 && Math.abs(energy-reference) > .003)
+                        throw new IllegalStateException("Native star flux changed with subpixel motion: "+energy+" vs "+reference);
+                    if (Float.compare(depth,readDepth()) != 0) throw new IllegalStateException("Native star modified depth");
+                    if (reference == 0) reference=energy;
+                    report.append("nativeStarMotion divisor=").append(divisor).append(" pixelOffset=").append(offset)
+                            .append(" integratedFlux=").append(energy).append(" peak=").append(peak)
+                            .append(" finite/fluxPreserved/depthPreserved\n");
+                    SpaceSceneTarget.finish();
+                }
+            }
+        }
     }
 
     private static void setPixelStore(int[] queries, int[] values) {

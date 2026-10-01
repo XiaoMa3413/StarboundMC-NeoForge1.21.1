@@ -70,7 +70,8 @@ public final class SpaceRenderSmoke {
             mc.options.fov().set(70);
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
                     System.getProperty("starboundmc.debug.spaceSmokeQuality", "custom").toUpperCase(java.util.Locale.ROOT)));
-            StarfieldClientConfig.STELLAR_VIEW_BACKGROUND_STARS.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView"));
+            StarfieldClientConfig.SPACE_STARFIELD_BACKEND.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView")
+                    ? StarfieldClientConfig.StarfieldBackend.STELLAR_VIEW : StarfieldClientConfig.StarfieldBackend.NATIVE);
             StarfieldClientConfig.SPACE_PIPELINE_MODE.set(
                     "direct".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokePipeline"))
                     ? StarfieldClientConfig.PipelineMode.DIRECT : StarfieldClientConfig.PipelineMode.ISOLATED);
@@ -208,6 +209,11 @@ public final class SpaceRenderSmoke {
         }
         else if (view != null && view.startsWith("@stellar-mode-")) {
             StellarShaderSmoke.configure(view.contains("textured"),view.endsWith("instanced"));
+            delta = new UniverseDelta(.87,-.24,0);
+        }
+        else if (view != null && view.startsWith("@quality-")) {
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
+                    view.substring("@quality-".length()).toUpperCase(java.util.Locale.ROOT)));
             delta = new UniverseDelta(.87,-.24,0);
         }
         if ("@resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);

@@ -3,40 +3,43 @@ package com.starboundmc.client.compat.stellarview;
 import java.util.Objects;
 
 import com.starboundmc.space.UniversePosition;
-import net.minecraft.client.Camera;
-import net.minecraft.client.multiplayer.ClientLevel;
-import net.povstalec.stellarview.api.client.ExternalViewCenterCoords;
-import net.povstalec.stellarview.common.util.SpaceCoords;
 
-/** Maps the ship simulation's sector/local coordinates without using the player's world position. */
-public final class StellarViewPositionAdapter implements ExternalViewCenterCoords
+/** Pure coordinate conversion; optional-mod types are created only inside the runtime bridge. */
+public final class StellarViewPositionAdapter
 {
-    private UniversePosition position = UniversePosition.of(0.0, 0.0, 0.0);
+    public static final double KM_PER_LY = 9_460_730_472_581.2;
+    private UniversePosition position = UniversePosition.of(0, 0, 0);
+
+    public record Coordinates(long xLy, long yLy, long zLy, double xKm, double yKm, double zKm) {}
 
     public void setPosition(UniversePosition position)
     {
         this.position = Objects.requireNonNull(position, "position");
     }
 
-    @Override
-    public SpaceCoords sample(ClientLevel level, Camera camera, float partialTicks)
+    public Coordinates sample()
     {
         return toSpaceCoords(position);
     }
 
-    /** One SBMC virtual unit maps to one Stellar View light year. */
-    public static SpaceCoords toSpaceCoords(UniversePosition position)
+    /** One virtual unit maps to one external light year; keep fractions before scaling. */
+    public static Coordinates toSpaceCoords(UniversePosition position)
     {
         Objects.requireNonNull(position, "position");
         long x = (long) Math.floor(position.localX());
         long y = (long) Math.floor(position.localY());
         long z = (long) Math.floor(position.localZ());
-        return new SpaceCoords(
-                Math.addExact(Math.multiplyExact(position.sector().x(), (long) UniversePosition.SECTOR_SIZE), x),
-                Math.addExact(Math.multiplyExact(position.sector().y(), (long) UniversePosition.SECTOR_SIZE), y),
-                Math.addExact(Math.multiplyExact(position.sector().z(), (long) UniversePosition.SECTOR_SIZE), z),
-                (position.localX() - x) * SpaceCoords.KM_PER_LY,
-                (position.localY() - y) * SpaceCoords.KM_PER_LY,
-                (position.localZ() - z) * SpaceCoords.KM_PER_LY);
+        return new Coordinates(
+                axis(position.sector().x(), x),
+                axis(position.sector().y(), y),
+                axis(position.sector().z(), z),
+                (position.localX() - x) * KM_PER_LY,
+                (position.localY() - y) * KM_PER_LY,
+                (position.localZ() - z) * KM_PER_LY);
+    }
+
+    private static long axis(long sector, long local)
+    {
+        return Math.addExact(Math.multiplyExact(sector, (long) UniversePosition.SECTOR_SIZE), local);
     }
 }

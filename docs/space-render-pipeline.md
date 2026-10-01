@@ -36,13 +36,15 @@ flowchart LR
 
 行星新路径使用随受光角变化的漫反射、GGX 高光和独立自发光。背景辐射、云与恒星能量在合成前保持线性；最终按固定曝光和白点曲线转换到显示颜色。曝光只影响太空背景，不影响方块、实体或 GUI。
 
-StellarView 的可选星场具有两条导入路径：定制版本 `0.5.4-alpha-starbound-hdr2` 通过可选 `renderLinear` API 直接写入 HDR；旧 `externalview2` 版本仍绘入独立 LDR 目标，再解码并叠加。能力查找只做一次；缺失模组或不兼容 shader 回到原生星场。定制 API 的输出模式/viewport uniform 在调用后恢复，普通维度继续使用原版输出。源码补丁与重建方法见 [StellarView 定制说明](../patches/stellarview/README.md)。
+原生星场是所有画质档的默认后端。StellarView 保留为可选星场，具有两条导入路径：定制版本 `0.5.4-alpha-starbound-hdr2` 通过可选 `renderLinear` API 直接写入 HDR；旧 `externalview2` 版本仍绘入独立 LDR 目标，再解码并叠加。适配器仅通过公开 API 反射连接，签名查找只做一次，主项目及测试没有 StellarView 编译依赖。缺失模组或不兼容 shader 回到原生星场。定制 API 的输出模式/viewport uniform 在调用后恢复，普通维度继续使用原版输出。源码补丁与重建方法见 [StellarView 定制说明](../patches/stellarview/README.md)。
 
 若旧背景或颜色适配 shader 不可用，保留显示颜色兼容模式；独立天体深度仍可工作。资源失败导致核心 shader 缺失时切到 `DIRECT` 路径，资源重载后重新尝试。
 
 大气已使用指数高度密度、Rayleigh / Henyey–Greenstein 相函数与单次散射，按 `背景 × 透射 + 入射散射` 组合。地面截断和太阳地影采用解析交点；在地影边界分段、向高密度区域集中采样，并用有限太阳视盘可见度连接晨昏线。地表、云顶与散射共享太阳衰减。散射前 blit 一份独立 HDR 颜色/深度，禁止采样正在写入的颜色附件。大气不写天体深度，并在前景不透明天体处截断；摄像机在壳内也可渲染。系数是沿用各行星美术 profile 的艺术化近似，尚无真实单位标定和多次散射。太阳光学深度已有共享 LUT（256×128 RG32F，额外 256 KiB）；表与颜色/强度无关，CPU 数据首次使用生成并缓存，GPU 纹理在重载/退出后释放重建，极薄的自定义壳仍使用数值积分。
 
-Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降采样/上采样后参与曝光合成；只处理太空目标。银河方向场区分银心隆起、盘面星云和分支尘埃吸收，保持深空黑位。细星群使用固定球面随机位置和经过像素足迹过滤的 Gaussian；经度随机种子周期连续，极区避开未定义的 `atan(0,0)`。`spaceBackgroundRadiance` 显式接收角足迹，后续曲线光线采样也需提供有效足迹。Performance 不执行细星群循环。原生与定制亮星仍采用最小像素半径及面积能量补偿。星型与辉光层次遵循 [电影美术方向](space-render-art-direction.md)，保持大量暗星、少量高亮星；HDR2 去除像素星贴图产生的菱形轮廓。
+Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降采样/上采样后参与曝光合成；只处理太空目标。银河方向场区分银心隆起、盘面星云和分支尘埃吸收，保持深空黑位。细星群使用固定球面随机位置和经过像素足迹过滤的 Gaussian；经度随机种子周期连续，极区避开未定义的 `atan(0,0)`。`spaceBackgroundRadiance` 显式接收角足迹，后续曲线光线采样也需提供有效足迹。Performance 不执行细星群循环。
+
+原生独立星点将相对星等转换为浮点总通量，通过 UV 属性上传，避免 8-bit alpha 抹去暗星层次。色温来自预计算的连续黑体光谱调色板，着色器按亮度归一化。屏幕对齐的星点使用解析像素面积积分 Gaussian，稀少亮星才带弱光学翼；亚像素位移分配能量而不让整颗星忽明忽暗。星点与银河共用方向尘埃透射，前景族群不受全部尘埃遮挡；高档主要增加更暗的星。仍使用一个静态目录 VBO，不新增纹理或 framebuffer。StellarView HDR2 保留其最小像素半径与面积补偿实现。星型与辉光层次遵循 [电影美术方向](space-render-art-direction.md)。
 
 云壳把纹理覆盖率转换为法向光学深度，并按视线斜角计算透射；掠射路径采用有限曲率近似。薄云有受太阳透射、行星地影和云自身光学深度约束的前向散射，地表云影使用同一光学深度和太阳路径。现有 cloud opacity、漂移和资产编码保留；Direct 路径保留旧云光照。此实现不等于完整体积云或多次散射。
 
@@ -56,6 +58,7 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 | --- | --- |
 | `spacePipelineMode` | `ISOLATED`；`DIRECT` 返回原有天体绘制路径 |
 | `spaceBackgroundMode` | `PROCEDURAL`；`LEGACY` 返回旧天空与 CPU 原生星点 |
+| `spaceStarfieldBackend` | `NATIVE`；`STELLAR_VIEW` 请求已安装的可选 StellarView 星场，失败时回到原生；Performance 始终原生 |
 | `spaceExposure` | `1.0`；原生线性颜色模式范围 0.25–4 |
 | `spaceVisualQuality` | `BALANCED`；控制星数、大气采样、Bloom 预算及现有功能组合 |
 | `spaceBloomStrength` | `0.32`；范围 0–1.5，0 关闭辉光；Performance / Direct 不启用 |
@@ -67,36 +70,41 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 | High / Custom | 20,000 | 20 / LUT（极薄壳 6） | 4 层，宽高各 1/2 |
 | Ultra | 32,000 | 28 / LUT（极薄壳 8） | 5 层，宽高各 1/2 |
 
-原生目录固定种子，低档是高档的稳定前缀；首次使用预算或资源重载时上传。StellarView 也按画质重建目录，但其内部分类顺序不承诺与原生一样的前缀稳定。Performance 保留大气、关闭云及可选星场；Balanced 关闭云影；Custom 保留独立功能开关。
+原生目录固定种子，低档是高档的稳定前缀；首次使用预算或资源重载时上传。StellarView 也按画质重建目录，但其内部分类顺序不承诺与原生一样的前缀稳定。Performance 保留大气、关闭云及可选星场；Balanced 关闭云影；Custom 保留独立功能开关。后端选择与画质分开，Balanced / High / Ultra / Custom 均尊重显式选择；原来的 `stellarViewBackgroundStars` 布尔配置由新枚举替代，已有配置首次校正后使用原生默认值。
 
 太空颜色/深度及大气输入副本共约 24 字节/像素。1920×1080 时约 47.5 MiB，Ultra 辉光额外约 5.3 MiB；不含资产、Minecraft 原有目标及驱动开销。大气副本按需建立；尺寸变化和资源重载后重建，退出会释放。
 
-完整视觉回退组合为 `spacePipelineMode = "DIRECT"` 和 `spaceBackgroundMode = "LEGACY"`。本地提交 `eae609c` 是独立深度迁移前的检查点。本轮另在独立 StellarView 工作树的 `feat/starbound-hdr-stars` 分支修改其渲染源码；无远程推送或玩法数据迁移。`8eab25d` 是本轮扩大视觉预算前的主项目检查点。
+完整视觉回退组合为 `spacePipelineMode = "DIRECT"` 和 `spaceBackgroundMode = "LEGACY"`。`eae609c` 是独立深度迁移前的检查点，`8eab25d` 是扩大视觉预算前的检查点，`9034d46` 是原生星场默认迁移前、已修复光学表上传崩溃的检查点。既有主项目检查点已推送 GitHub；定制 StellarView 源码保存在独立工作树的 `feat/starbound-hdr-stars` 分支和本仓库源码补丁中。本次迁移没有玩法数据改动。
 
 ## 运行验证
 
-要求 Java 21；本机安装路径 `E:/Develop/Program Files/Android Studio/jbr`。共享 Gradle 缓存含当前 NeoForge 和可选依赖，示例为 PowerShell：
+要求 Java 21；本轮实机验证使用 `D:/JAVA RE/jdk21`。共享 Gradle 缓存含当前 NeoForge 和可选依赖，示例为 PowerShell（自行替换 Java 路径）：
 
 ```powershell
-.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=E:/Develop/Program Files/Android Studio/jbr' test build
-.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=E:/Develop/Program Files/Android Studio/jbr' -PspaceSmoke -PspaceSmokeLabel=isolated runClient
-.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=E:/Develop/Program Files/Android Studio/jbr' -PspaceSmoke -PspaceSmokeLabel=stellarview -PspaceSmokeStellarView=true runClient
-.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=E:/Develop/Program Files/Android Studio/jbr' -PspaceSmoke -PspaceSmokeLabel=direct -PspaceSmokePipeline=direct -PspaceSmokeBackground=legacy runClient
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' test build
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' -PspaceSmoke -PspaceSmokeLabel=isolated runClient
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' -PwithStellarView -PspaceSmoke -PspaceSmokeLabel=stellarview -PspaceSmokeStellarView=true runClient
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' -PspaceSmoke -PspaceSmokeLabel=direct -PspaceSmokePipeline=direct -PspaceSmokeBackground=legacy runClient
 ```
 
 `spaceSmoke` 显式加入 `src/renderTest/java`，普通生产构建不包含夹具。夹具创建新测试世界，运行在 `run-space-smoke`，不打开用户存档。隐藏窗口但保持渲染。
+
+普通 `test build` / `runClient` 不解析或下载 StellarView。开发环境加 `-PwithStellarView` 才把 `gradle.properties` 指定版本放到 runtime；该定制版本尚未发布远程 Maven，仅可选验证需要先按补丁说明构建并安装到本地 Maven。玩家安装模组仍通过常规 mods 目录；客户端配置设为 `spaceStarfieldBackend = "STELLAR_VIEW"` 才请求该后端。
 
 19 个视点覆盖六种行星/卫星、深空、恒星近景、银河方向、壳内近大气视点、日面/半亮面/弯月/近晨昏线/日落/夜面、玻璃舷窗、960×540 缩放及资源重载。结果写入 `run-space-smoke/screenshots/<label>`：
 
 - PNG 为实际客户端图像；TXT 包含分辨率、GPU/驱动、样本数、CPU/GPU P50/P95 和资源计数。
 - `depth-checks.txt` 使用实际 GPU shader 验证恒星在前/行星在前，分别交换绘制顺序，并检查大气对前/后景辐射的衰减、波长衰减顺序、各档掠射晨昏线的收敛、不透明天体深度、世界深度哨兵和事件状态恢复。
 - 同一 GPU 检查还覆盖银河银心/外围亮度、半分辨率平均辐射、经度接缝、极区黑位，以及云层法向/掠射覆盖、前后景衰减和不透明深度保持。
+- 原生星点检查直接调用生产 shader，在完整/半分辨率下分别偏移 0、0.125、0.25、0.5、0.75、1 像素，验证总通量、有限值和不透明深度保持；它不替代完整相机运动或其他 GPU 验收。
 - 光学表上传检查使用真实 `NativeImage` 子区域上传留下的行跨度/偏移、外部字节交换布局及已绑定的像素上传缓冲区，逐项回读全部 65,536 个 float，验证释放后重建、缓存复用和调用者上传/纹理状态恢复；Direct 也执行此项检查。
 - `complete.txt` 只在本轮所有捕获和深度检查成功后写入。
 - GPU 时间用异步 timestamp 成对查询，只读取已完成结果，不使用 `glFinish`。`TOTAL` 包含事件入口状态保存和最终颜色合成；单个 pass 计时不能相加替代它。
 - 生产测量可使用 JVM 参数 `-Dstarboundmc.debug.spaceProfile=true`，每 10 秒把统计写入客户端日志；默认不建立计时 query。
 
-夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（仅从运行 classpath 排除可选模组）。四种 StellarView shader 的矩阵可使用 `-PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点（总计 23），并检查 uniform/普通天空上传计数恢复。PowerShell 定点检查可使用 `'-PspaceSmokeViews=sys1:lush,@phase-half,@phase-crescent,@terminator-close'`；仍执行 GPU 检查，天体 ID 使用冒号。旧 API 可用 `'-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 构建/运行。预设启用 StellarView 时，`spaceSmokeStellarView` 仅作为 Custom 的功能开关；其他档位遵循产品配置。
+夹具额外参数：`-PspaceSmokeQuality=performance|balanced|high|ultra|custom`、`-PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080`、`-PspaceSmokeWithoutStellarView`（从运行 classpath 排除可选模组，默认已经不加入）。四种 StellarView shader 的矩阵使用 `-PwithStellarView -PspaceSmokeStellarView=true -PspaceSmokeStellarMatrix=true`，额外捕获 4 个视点（总计 23），并检查 uniform/普通天空上传计数恢复。PowerShell 定点检查可使用 `'-PspaceSmokeViews=sys1:lush,@phase-half,@phase-crescent,@terminator-close'`；仍执行 GPU 检查，天体 ID 使用冒号。旧 API 使用 `-PwithStellarView '-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 运行。`spaceSmokeStellarView=true` 对应显式后端选择，除 Performance 外所有档位均尊重该选择；不安装可选模组时仍回到原生。
+
+同一次客户端的动态画质检查可使用 `'-PspaceSmokeViews=@quality-performance,@quality-balanced,@quality-high,@quality-ultra,@resize,@reload,sys1:lush'`；四个质量视点保持相同银河方向，随后验证目标重建与资源释放。
 
 捕获固定原生动画时间。全客户端帧时间包含限帧、世界加载和后台调度；短测试的 GPU P95 会受功耗/调度影响，不可用作跨硬件性能结论。
 
@@ -106,7 +114,7 @@ Bloom 使用低分辨率 `RGBA16F` 金字塔，软阈值提取高光，逐级降
 
 已执行矩阵是 Minecraft 1.21.1、NeoForge 21.1.248、Windows、NVIDIA RTX 3060 Laptop 和当前工作树的 StellarView 构建。尚未覆盖 AMD、Intel、macOS、Iris/Oculus shaderpack、复杂多人航行与多个透明天体交叠。`DIRECT` 是明确可用的兼容回退。
 
-原生背景在普通太空保持稳定，跃迁时才启用轻微闪烁；恒星自转按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度、运动中星点稳定性、近大气网格/纹理表现继续专项处理。
+程序银河与原生 GPU 星点在普通太空不闪烁；跃迁时保留方向收束及原有跃迁效果，Legacy 保留旧实现。恒星自转按长 tick 取模后生成相位。旧行星自转和 LOD 仍共享 float 动画 tick；长存档精度、完整相机运动、近大气网格/纹理表现继续专项处理。
 
 接下来完善透明交叠、环光照与食影、恒星磁活动结构、近景资产/网格及多次散射优化，并补充跨硬件测量。黑洞使用方向背景、统一天体距离和线性颜色作为基础，曲线光线采样、背景星环境贴图及自旋解算仍是后续专项。
 
@@ -194,3 +202,28 @@ RTX 3060 Laptop / OpenGL 4.6 / NVIDIA 610.47 的 256 样本短捕获：1920×108
 实际客户端使用与用户崩溃相同的 Oracle Java 21.0.8+12-LTS-250，RTX 3060 Laptop / NVIDIA 610.47。Ultra + HDR2 StellarView 捕获 4 个视点（行星、壳内大气、缩放、资源重载），移除 StellarView 的 Performance 捕获 3 个视点（行星、缩放、资源重载）；两组均正常退出，三个上传条件逐项精确匹配，既有大气/云/银河/深度及事件状态检查通过。目录为 `run-space-smoke/screenshots/{crash-fix-oracle-ultra,crash-fix-oracle-native-performance}`。
 
 普通生产 `test build` 成功：149 套件、725 项测试，零失败/错误/跳过。生产 JAR 包含修正的 unpack 状态管理，不含三个渲染夹具。验证使用新建夹具世界，未打开用户存档；用户原始世界与其他 GPU 的实际运行仍不在本轮验证范围内。
+
+## 原生星场默认与依赖解耦验证（2026-10-01）
+
+本阶段从 `9034d46` 推进，采用用户确认的原生主导路线。生产 shader 的最终矩阵如下；运行使用 Oracle Java 21.0.8+12-LTS-250、Minecraft 1.21.1、NeoForge 21.1.248、RTX 3060 Laptop / NVIDIA 610.47：
+
+| 路径 / 预设 | 捕获数 | 本地目录 |
+| --- | ---: | --- |
+| 原生 / Ultra，1920×1080 | 10 | `native-stars-v3-ultra` |
+| HDR2 StellarView / Ultra，同视点与分辨率，含四 shader | 11 | `native-stars-v3-stellar-comparison` |
+| 原生，动态切换 Performance / Balanced / High / Ultra | 7 | `native-stars-v3-quality` |
+| 旧 externalview2 / Balanced | 4 | `native-stars-v3-legacy` |
+| Direct + Procedural / Custom | 3 | `native-stars-v3-direct-procedural` |
+| Direct + Legacy / Custom | 3 | `native-stars-v3-direct-legacy` |
+
+合计 38 张实际客户端截图，六组均成功退出并生成 `complete.txt`。目录位于 `run-space-smoke/screenshots`；截图与日志不提交。原生运行 classpath 不含 StellarView。旧版记录非零显示颜色绘制与导入拷贝，HDR2 记录非零直接线性绘制、零导入拷贝，四 shader 的 uniform 和普通天空上传额度恢复通过；两者均未触发原生降级。Direct + Procedural 实际绘制原生 GPU 星点，Direct + Legacy 不分配独立场景目标。
+
+前四组通过既有大气、云、银河与遮挡检查，以及新增星点像素积分检查。总通量目标为 2.0，两种分辨率、六个亚像素位置得到 `1.999174–1.999804`，相对变化约 0.032%，符合半精度目标误差；单像素峰值随星心位置合理变化。世界深度哨兵为 `0.37000003`，不透明深度及事件状态保持。Direct 两组按设计跳过独立深度/星点数值检查，但同样执行三个光学表 unpack 上传回归。
+
+动态画质矩阵实际使用 2,000 / 6,000 / 20,000 / 32,000 星目录；Performance 的活动 Bloom 层数为零，其余分别为 3 / 4 / 5。切换与资源重载后无 shader 或目标失败，缩放后正常捕获；随后行星视点重建所需大气光学表。该运行的资源计数从启动累计，Performance 前已运行过 Balanced，不能把累计 Bloom 分配/绘制数解释为 Performance 的消耗。
+
+256 样本的 1920×1080 原生 Ultra 银河捕获：星点 pass CPU P50 / P95 为 `0.0243 / 0.0392 ms`，GPU 为 `0.0573 / 0.6963 ms`；TOTAL GPU 为 `1.4121 / 2.5498 ms`。同设置的 StellarView 星点 GPU 为 `0.0543 / 0.4485 ms`。两个目录的族群不同，运行间背景 pass 也有明显功耗/调度差异；这些数据用于定位开销，不宣称原生更快或给出持续帧率结论。
+
+最终普通生产 `test build` 不加入 StellarView，成功通过 150 套件、728 项测试，零失败/错误/跳过。生产 JAR 包含原生光度模型与星点光学 include，不包含三个渲染夹具。连续色温、暗星总通量及高画质目录稳定前缀由纯 Java 测试覆盖；公开 API 反射兼容由实际客户端矩阵覆盖。
+
+当前默认路径已独立，StellarView fork 本阶段没有修改。完整相机运动、其他 GPU / shaderpack、透明交叠仍需专项验收；黑洞背景星目录查询与曲线光线积分尚未实现。

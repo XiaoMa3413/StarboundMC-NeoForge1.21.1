@@ -1,57 +1,59 @@
 package com.starboundmc.client;
 
 import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
-import net.povstalec.stellarview.client.render.shader.StellarViewShaders;
-import net.povstalec.stellarview.common.config.GeneralConfig;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
-/** Only loaded by the opt-in matrix with the customized optional mod installed. */
+/** Optional runtime matrix; the fixture itself compiles without the external mod. */
 final class StellarShaderSmoke {
-    private static boolean originalTextured, originalInstanced, changed;
+    private static boolean originalTextured,originalInstanced,changed;
     private static int originalLoadBudget;
-
-    static void configure(boolean textured, boolean instanced) {
-        if (!changed) {
-            originalTextured = GeneralConfig.textured_stars.get();
-            originalInstanced = GeneralConfig.instancing.get();
-            changed = true;
-            try {
-                originalLoadBudget = (int) net.povstalec.stellarview.client.render.SpaceRenderer.class
-                        .getMethod("beginExternalStarLoading").invoke(null);
-                // Every matrix mode must upload even when the ordinary sky's budget is exhausted.
-                net.povstalec.stellarview.client.render.SpaceRenderer.loadedStars(100001);
-            } catch (ReflectiveOperationException failure) { throw new IllegalStateException(failure); }
-        }
-        // Change only this fixture's live values, without saving a config file.
-        GeneralConfig.textured_stars.boolean_value.set(textured);
-        GeneralConfig.instancing.boolean_value.set(instanced);
-        StellarViewStarfield.resetSession();
+    private static ModConfigSpec.BooleanValue setting(String name) throws ReflectiveOperationException {
+        Object wrapper=Class.forName("net.povstalec.stellarview.common.config.GeneralConfig").getField(name).get(null);
+        return (ModConfigSpec.BooleanValue)wrapper.getClass().getField("boolean_value").get(wrapper);
     }
-
+    private static Class<?> renderer() throws ClassNotFoundException {
+        return Class.forName("net.povstalec.stellarview.client.render.SpaceRenderer");
+    }
+    static void configure(boolean textured,boolean instanced) {
+        try {
+            if (!changed) {
+                originalTextured=setting("textured_stars").get();
+                originalInstanced=setting("instancing").get();
+                originalLoadBudget=(int)renderer().getMethod("beginExternalStarLoading").invoke(null);
+                renderer().getMethod("loadedStars",int.class).invoke(null,100001);
+                changed=true;
+            }
+            setting("textured_stars").set(textured);
+            setting("instancing").set(instanced);
+            StellarViewStarfield.resetSession();
+        } catch (ReflectiveOperationException failure) { throw new IllegalStateException("Stellar matrix API missing",failure); }
+    }
     static void verifyRestoration() {
-        if (changed && net.povstalec.stellarview.client.render.SpaceRenderer.loadNewStars())
-            throw new IllegalStateException("External rendering changed the ordinary sky's exhausted upload budget");
-        for (var shader : new net.minecraft.client.renderer.ShaderInstance[] {
-                StellarViewShaders.starShader(), StellarViewShaders.instancedStarShader(),
-                StellarViewShaders.starTexShader(), StellarViewShaders.instancedStarTexShader()}) {
-            if (shader == null || shader.getUniform("ExternalRadiance") == null)
-                throw new IllegalStateException("Stellar HDR matrix requires all four customized shaders");
-            if (shader.getUniform("ExternalRadiance").getFloatBuffer().get(0) != 0F)
-                throw new IllegalStateException("External HDR mode leaked into ordinary skies");
-            var viewport = shader.getUniform("ExternalViewport").getFloatBuffer();
-            if (viewport.get(0) != 1F || viewport.get(1) != 1F)
-                throw new IllegalStateException("External viewport uniforms were not restored");
-        }
+        try {
+            if (changed && (boolean)renderer().getMethod("loadNewStars").invoke(null))
+                throw new IllegalStateException("External rendering changed the ordinary sky upload budget");
+            Class<?> shaders=Class.forName("net.povstalec.stellarview.client.render.shader.StellarViewShaders");
+            for (String method:new String[] {"starShader","instancedStarShader","starTexShader","instancedStarTexShader"}) {
+                ShaderInstance shader=(ShaderInstance)shaders.getMethod(method).invoke(null);
+                if (shader == null || shader.getUniform("ExternalRadiance") == null)
+                    throw new IllegalStateException("Stellar matrix requires customized HDR shaders");
+                if (shader.getUniform("ExternalRadiance").getFloatBuffer().get(0) != 0F)
+                    throw new IllegalStateException("External HDR mode leaked into ordinary skies");
+                var viewport=shader.getUniform("ExternalViewport").getFloatBuffer();
+                if (viewport.get(0) != 1F || viewport.get(1) != 1F)
+                    throw new IllegalStateException("External viewport was not restored");
+            }
+        } catch (ReflectiveOperationException failure) { throw new IllegalStateException(failure); }
     }
-
     static void restore() {
         if (!changed) return;
-        GeneralConfig.textured_stars.boolean_value.set(originalTextured);
-        GeneralConfig.instancing.boolean_value.set(originalInstanced);
-        StellarViewStarfield.resetSession();
         try {
-            net.povstalec.stellarview.client.render.SpaceRenderer.class
-                    .getMethod("endExternalStarLoading",int.class).invoke(null,originalLoadBudget);
+            setting("textured_stars").set(originalTextured);
+            setting("instancing").set(originalInstanced);
+            StellarViewStarfield.resetSession();
+            renderer().getMethod("endExternalStarLoading",int.class).invoke(null,originalLoadBudget);
+            changed=false;
         } catch (ReflectiveOperationException failure) { throw new IllegalStateException(failure); }
-        changed = false;
     }
 }

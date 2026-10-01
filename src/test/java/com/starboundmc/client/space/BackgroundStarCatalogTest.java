@@ -18,9 +18,12 @@ class BackgroundStarCatalogTest {
         for (var star : BackgroundStarCatalog.generate(32000)) {
             double length = Math.sqrt(star.x() * star.x() + star.y() * star.y() + star.z() * star.z());
             assertEquals(1, length, 2e-7);
-            assertTrue(star.size() > 0 && star.size() < .5);
-            assertTrue(star.brightness() >= .006F && star.brightness() <= 1);
-            assertTrue(star.phase() >= 0 && star.phase() < Math.PI * 2);
+            assertTrue(star.sigmaPixels() >= .42F && star.sigmaPixels() <= .48F);
+            assertTrue(star.flux() > 0 && star.flux() <= 8);
+            assertTrue(star.dustFraction() >= 0 && star.dustFraction() <= 1);
+            assertTrue(star.red() > 0 && star.red() <= 1);
+            assertTrue(star.green() > 0 && star.green() <= 1);
+            assertTrue(star.blue() > 0 && star.blue() <= 1);
         }
         assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(0));
         assertThrows(IllegalArgumentException.class, () -> BackgroundStarCatalog.generate(32001));
@@ -29,10 +32,13 @@ class BackgroundStarCatalogTest {
     @Test
     void faintPopulationAndRareHighlightsRemainDistinct() {
         var stars = BackgroundStarCatalog.generate(32000);
-        long faint = Arrays.stream(stars).filter(star -> star.brightness() < .1).count();
-        long bright = Arrays.stream(stars).filter(star -> star.brightness() > .8).count();
-        assertTrue(faint > stars.length * .75 && faint < stars.length * .9);
-        assertTrue(bright > stars.length * .01 && bright < stars.length * .025);
+        long faint = Arrays.stream(stars).filter(star -> star.flux() < .1).count();
+        long bright = Arrays.stream(stars).filter(star -> star.flux() > 1).count();
+        assertTrue(faint > stars.length * .9 && faint < stars.length * .99);
+        assertTrue(bright > 5 && bright < stars.length * .01);
+        double baseMean=Arrays.stream(stars).limit(2000).mapToDouble(BackgroundStarCatalog.Star::flux).average().orElseThrow();
+        double detailMean=Arrays.stream(stars).skip(2000).mapToDouble(BackgroundStarCatalog.Star::flux).average().orElseThrow();
+        assertTrue(detailMean < baseMean*.7, "Extra quality must add fine stars rather than many more bright sources");
     }
 
     @Test

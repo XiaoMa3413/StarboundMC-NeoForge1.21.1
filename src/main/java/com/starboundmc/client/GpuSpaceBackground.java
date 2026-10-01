@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.logging.LogUtils;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.BackgroundStarCatalog;
+import com.starboundmc.client.space.StarPhotometry;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -32,6 +33,8 @@ final class GpuSpaceBackground {
     static boolean ready() {
         return backgroundShader != null && starShader != null && !backgroundFailed && !starsFailed;
     }
+
+    static ShaderInstance starShader() { return starShader; }
 
     static void register(RegisterShadersEvent event) {
         releaseGeometry();
@@ -107,8 +110,9 @@ final class GpuSpaceBackground {
                         DefaultVertexFormat.POSITION_TEX_COLOR);
                 for (var star : BackgroundStarCatalog.generate(count))
                     for (int corner = 0; corner < 4; corner++)
-                        builder.addVertex(star.x(), star.y(), star.z()).setUv(star.size(), star.phase())
-                                .setColor(star.red(), star.green(), star.blue(), star.brightness());
+                        builder.addVertex(star.x(), star.y(), star.z()).setUv(star.sigmaPixels(), star.flux())
+                                .setColor(StarPhotometry.display(star.red()),StarPhotometry.display(star.green()),
+                                        StarPhotometry.display(star.blue()),star.dustFraction());
                 stars = upload(builder);
                 STAR_BUFFERS.put(count, stars);
             }
@@ -120,9 +124,10 @@ final class GpuSpaceBackground {
             starShader.safeGetUniform("ConvergenceAxis").set(convergenceAxis.x, convergenceAxis.y, convergenceAxis.z);
             starShader.safeGetUniform("Convergence").set(convergence);
             starShader.safeGetUniform("StarAlpha").set(alpha);
-            starShader.safeGetUniform("TimePhase").set(phase);
             setTint(starShader, tint, tintAmount);
             starShader.safeGetUniform("LinearColor").set(SpaceSceneTarget.linear() ? 1F : 0F);
+            starShader.safeGetUniform("FieldDetail").set(
+                    StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() == SpaceVisualQuality.PERFORMANCE ? 0F : 1F);
             starShader.safeGetUniform("ViewportSize").set((float) SpaceSceneTarget.width(), (float) SpaceSceneTarget.height());
             stars.bind();
             stars.drawWithShader(modelView, projection, starShader);

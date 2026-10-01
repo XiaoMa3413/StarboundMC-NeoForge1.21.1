@@ -408,7 +408,10 @@ repositories {
 
 dependencies {
     implementation "com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all"
-    implementation "net.povstalec.stellarview:StellarView:${stellarview_version}"
+    // Native rendering and ordinary builds do not resolve or compile against StellarView.
+    if (project.hasProperty('withStellarView')) {
+        runtimeOnly "net.povstalec.stellarview:StellarView:${stellarview_version}"
+    }
     if (project.hasProperty('spaceSmoke') && project.hasProperty('spaceSmokeWithoutStellarView')) {
         configurations.runtimeClasspath.exclude group: 'net.povstalec.stellarview', module: 'StellarView'
     }

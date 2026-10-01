@@ -25,7 +25,8 @@ class SpaceVisualQualityTest
         {
             assertTrue(quality.cloudsEnabled(false));
             assertTrue(quality.atmosphereEnabled(false));
-            assertTrue(quality.stellarViewStarsEnabled(false));
+            assertFalse(quality.stellarViewStarsEnabled(false));
+            assertTrue(quality.stellarViewStarsEnabled(true));
             assertEquals(quality != SpaceVisualQuality.BALANCED, quality.cloudShadowsEnabled(false));
         }
     }

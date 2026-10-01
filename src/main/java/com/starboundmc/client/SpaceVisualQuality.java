@@ -59,13 +59,12 @@ public enum SpaceVisualQuality
         };
     }
 
-    public boolean stellarViewStarsEnabled(boolean customValue)
+    public boolean stellarViewStarsEnabled(boolean requested)
     {
         return switch (this)
         {
             case PERFORMANCE -> false;
-            case BALANCED, HIGH, ULTRA -> true;
-            case CUSTOM -> customValue;
+            case BALANCED, HIGH, ULTRA, CUSTOM -> requested;
         };
     }
 

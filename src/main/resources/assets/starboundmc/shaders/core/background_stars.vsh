@@ -1,4 +1,6 @@
 #version 150
+#moj_import <starboundmc:space_common.glsl>
+#moj_import <starboundmc:space_background_field.glsl>
 in vec3 Position;
 in vec2 UV0;
 in vec4 Color;
@@ -7,34 +9,34 @@ uniform mat4 ProjMat;
 uniform vec3 ConvergenceAxis;
 uniform float Convergence;
 uniform float StarAlpha;
-uniform float TimePhase;
 uniform vec3 TintColor;
 uniform float TintAmount;
 uniform vec2 ViewportSize;
-out vec2 starUv;
-out vec4 starColor;
+uniform float FieldDetail;
+out vec2 pixelOffset;
+flat out vec3 starRadiance;
+flat out vec2 starOptics;
+flat out float starVisibility;
 void main() {
     vec3 axis = normalize(ConvergenceAxis);
     float axial = dot(Position, axis);
     float front = smoothstep(-0.05, 1.0, axial);
     vec3 direction = normalize(axis * axial + (Position - axis * axial)
                               * (1.0 - 0.82 * Convergence * front));
-    vec3 right = abs(direction.y) > 0.99 ? vec3(1,0,0)
-                : normalize(vec3(-direction.z, 0, direction.x));
-    vec3 up = cross(right, direction);
     int corner = gl_VertexID % 4;
-    starUv = corner == 0 ? vec2(1,1) : corner == 1 ? vec2(-1,1)
-           : corner == 2 ? vec2(-1,-1) : vec2(1,-1);
-    float size = UV0.x * (1.0 + Convergence * front * 0.65);
-    vec4 centerClip = ProjMat * ModelViewMat * vec4(direction * 200.0, 1.0);
-    float pixels = size * abs(ProjMat[1][1]) * ViewportSize.y / max(2.0 * abs(centerClip.w), .001);
-    float expanded = max(pixels, .7);
-    float energy = min(1.0, pixels * pixels / (expanded * expanded));
-    size *= expanded / max(pixels, .0001);
-    vec3 point = direction * 200.0 + (right * starUv.x + up * starUv.y) * size;
-    gl_Position = ProjMat * ModelViewMat * vec4(point, 1.0);
+    vec2 uv = corner == 0 ? vec2(1,1) : corner == 1 ? vec2(-1,1)
+            : corner == 2 ? vec2(-1,-1) : vec2(1,-1);
+    // Screen-aligned support avoids pole singularities and off-axis foreshortening.
+    float extent = UV0.y > .15 ? 7.25 : 2.5;
+    pixelOffset = uv*extent;
+    gl_Position = ProjMat * ModelViewMat * vec4(direction * 200.0, 1.0);
+    gl_Position.xy += pixelOffset*(2.0/max(ViewportSize,vec2(1)))*gl_Position.w;
     gl_Position.z = gl_Position.w;
-    float twinkle = 1.0 + Convergence*.025 * sin(TimePhase * float(2 + (gl_VertexID / 4) % 4) + UV0.y);
-    starColor = vec4(mix(Color.rgb, TintColor, clamp(TintAmount, 0.0, 1.0)),
-                     Color.a * energy * StarAlpha * twinkle * (1.0 + Convergence * front * 1.15));
+    vec3 color=spaceToLinear(mix(Color.rgb,TintColor,clamp(TintAmount,0.0,1.0)));
+    color/=max(dot(color,vec3(.2126,.7152,.0722)),.05);
+    vec3 transmission = Color.a > .001
+            ? pow(spaceBackgroundTransmission(normalize(Position),FieldDetail),vec3(Color.a)) : vec3(1);
+    starRadiance=color*transmission;
+    starOptics = UV0; // sigma and unquantized integrated flux, both float attributes
+    starVisibility = StarAlpha;
 }

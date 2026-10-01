@@ -662,6 +662,6 @@
   "starboundmc.config.clouds_enabled": "云层",
   "starboundmc.config.cloud_shadows_enabled": "云层阴影",
   "starboundmc.config.atmosphere_enabled": "大气层",
-  "starboundmc.config.stellar_view_background_stars": "Stellar View 背景星场",
+  "starboundmc.config.space_starfield_backend": "背景星场后端",
   "starboundmc.config.space_bloom_strength": "太空辉光强度"
 }

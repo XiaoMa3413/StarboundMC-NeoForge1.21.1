@@ -9,6 +9,7 @@ public final class StarfieldClientConfig
 
     public enum BackgroundMode { PROCEDURAL, LEGACY }
     public enum PipelineMode { ISOLATED, DIRECT }
+    public enum StarfieldBackend { NATIVE, STELLAR_VIEW }
 
     public static final ModConfigSpec.DoubleValue SPACE_BLOOM_STRENGTH = BUILDER
             .comment("HDR optical bloom strength. Performance and Direct disable bloom; zero disables it in all presets.")
@@ -52,11 +53,11 @@ public final class StarfieldClientConfig
             .translation("starboundmc.config.atmosphere_enabled")
             .define("atmosphereEnabled", true);
 
-    public static final ModConfigSpec.BooleanValue STELLAR_VIEW_BACKGROUND_STARS = BUILDER
-            .comment("Use Stellar View for ordinary ship-dimension background stars when the compatible mod is installed.",
-                    "This toggle is used when spaceVisualQuality is Custom.")
-            .translation("starboundmc.config.stellar_view_background_stars")
-            .define("stellarViewBackgroundStars", true);
+    public static final ModConfigSpec.EnumValue<StarfieldBackend> SPACE_STARFIELD_BACKEND = BUILDER
+            .comment("Native is the default cinematic starfield. Stellar_View selects the optional compatible mod.",
+                    "Applies to every quality preset except Performance, which always uses Native.")
+            .translation("starboundmc.config.space_starfield_backend")
+            .defineEnum("spaceStarfieldBackend", StarfieldBackend.NATIVE);
 
     public static final ModConfigSpec SPEC = BUILDER.build();
 
@@ -77,7 +78,7 @@ public final class StarfieldClientConfig
 
     public static boolean stellarViewStarsEnabled()
     {
-        return SPACE_VISUAL_QUALITY.get().stellarViewStarsEnabled(STELLAR_VIEW_BACKGROUND_STARS.get());
+        return SPACE_VISUAL_QUALITY.get().stellarViewStarsEnabled(SPACE_STARFIELD_BACKEND.get() == StarfieldBackend.STELLAR_VIEW);
     }
 
     private StarfieldClientConfig() {}

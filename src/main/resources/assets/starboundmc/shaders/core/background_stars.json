@@ -3,8 +3,31 @@
   "fragment": "starboundmc:background_stars",
   "samplers": [],
   "uniforms": [
-    { "name": "ViewportSize", "type": "float", "count": 2, "values": [1280,720] },
-    { "name": "LinearColor", "type": "float", "count": 1, "values": [0.0] },
+    {
+      "name": "FieldDetail",
+      "type": "float",
+      "count": 1,
+      "values": [
+        1
+      ]
+    },
+    {
+      "name": "ViewportSize",
+      "type": "float",
+      "count": 2,
+      "values": [
+        1280,
+        720
+      ]
+    },
+    {
+      "name": "LinearColor",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0.0
+      ]
+    },
     {
       "name": "ModelViewMat",
       "type": "matrix4x4",
@@ -75,14 +98,6 @@
       "count": 1,
       "values": [
         1
-      ]
-    },
-    {
-      "name": "TimePhase",
-      "type": "float",
-      "count": 1,
-      "values": [
-        0
       ]
     },
     {

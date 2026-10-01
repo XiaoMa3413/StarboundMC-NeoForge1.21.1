@@ -28,8 +28,8 @@ git apply /absolute/path/to/starbound-hdr.patch
 .\gradlew.bat --gradle-user-home ../.gradle-home --offline '-Dorg.gradle.java.installations.paths=E:/Develop/Program Files/Android Studio/jbr' build publishToMavenLocal
 ```
 
-主项目 gradle.properties 指向新版本，不覆盖旧 externalview2 / HDR1 Maven artifact。新克隆需要先构建此依赖；尚未上传远程 Maven。发布自定义 JAR 时保留原许可/作者说明。
+主项目默认使用原生星场，普通新克隆的构建与运行不需要此依赖。`gradle.properties` 保留可选版本号，不覆盖旧 externalview2 / HDR1 Maven artifact；开发验证加 `-PwithStellarView` 才加入 runtime。该定制版本尚未上传远程 Maven，因此只有请求此可选运行方式时才需要先构建并安装到本地 Maven。客户端同时设 `spaceStarfieldBackend = "STELLAR_VIEW"`（夹具用 `-PspaceSmokeStellarView=true`）才能启用。发布自定义 JAR 时保留原许可/作者说明。
 
-主项目通过一次性能力查找兼容旧 externalview2 API；旧版采用 LDR 解码导入。PowerShell 可用 `'-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 验证旧依赖；模组缺失时使用原生星场。完整太空视觉回退为 `DIRECT + LEGACY`，升级前主项目检查点为 `8eab25d`，电影感修正前检查点为 `5116f07`。
+主项目不导入 StellarView 类型，通过缓存的公开 API 签名和坐标接口代理连接；不依赖其私有字段或方法。旧 externalview2 API 采用 LDR 解码导入。PowerShell 可用 `-PwithStellarView '-Pstellarview_version=0.5.4-alpha-externalview2-NeoForge'` 验证旧依赖；模组缺失或接口不兼容时使用原生星场。完整太空视觉回退为 `DIRECT + LEGACY`，升级前主项目检查点为 `8eab25d`，电影感修正前检查点为 `5116f07`，原生后端默认迁移前检查点为 `9034d46`。
 
 当前修改没有移植其黑洞透镜算法。未来卡冈图雅效果需要按主项目的曲线光线/HDR 路线单独实现。
