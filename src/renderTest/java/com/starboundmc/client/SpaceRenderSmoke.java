@@ -202,6 +202,25 @@ public final class SpaceRenderSmoke {
                     .cross(new org.joml.Vector3f(.87F,-.24F,0)).normalize();
             delta = new UniverseDelta(direction.x,direction.y,direction.z);
         }
+        else if (view != null && view.startsWith("@ring-")) {
+            body="sys1:gasgiant";
+            var sun=UniverseNavigation.sunDirection(body).normalize();
+            var profile=StarmapUniverse.body(body).spaceVisual().orElseThrow();
+            var n=RingRenderer.bodyOrientation(profile).transformDirection(new org.joml.Vector3f(0,1,0));
+            var normal=new net.minecraft.world.phys.Vec3(n.x,n.y,n.z);
+            var planar=sun.subtract(normal.scale(sun.dot(normal))).normalize();
+            double side=sun.dot(normal) < 0 ? -1 : 1;
+            var up=switch(view) {
+                case "@ring-backlit" -> sun.scale(-1).subtract(normal.scale(side*.1)).normalize();
+                case "@ring-edge" -> planar.add(normal.scale(side*.045)).normalize();
+                case "@ring-shadow" -> sun.cross(normal).add(sun.scale(.35)).add(normal.scale(side*.55)).normalize();
+                case "@ring-overlap" -> planar.add(normal.scale(side*.22)).normalize();
+                default -> sun.add(normal.scale(side*.55)).normalize();
+            };
+            double distance=UniverseNavigation.radius(body)*4.3;
+            position=UniverseNavigation.universeBodyPosition(body).add(new UniverseDelta(up.x*distance,up.y*distance,up.z*distance));
+            delta=position.deltaTo(UniverseNavigation.universeBodyPosition(body));
+        }
         else if ("@atmosphere".equals(view)) {
             body = "sys1:lush";
             var sun = UniverseNavigation.sunDirection(body).normalize();

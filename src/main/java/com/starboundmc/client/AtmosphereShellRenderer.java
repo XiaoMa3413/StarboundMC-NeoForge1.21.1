@@ -38,7 +38,28 @@ final class AtmosphereShellRenderer
                        Vector3f color, float strength, float alpha,
                        float shellScale, float nightFraction, float twilightStrength)
     {
+        renderLayer(model,sunDirectionMesh,cameraPositionMesh,color,strength,alpha,shellScale,
+                nightFraction,twilightStrength,0F,0);
+    }
+
+    /** 0: whole volume; 1/2/3: behind, between, and in front of cloud intersections. */
+    static void renderLayer(Matrix4f model, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
+                       Vector3f color, float strength, float alpha,
+                       float shellScale, float nightFraction, float twilightStrength,
+                       float cloudRadius, int layer)
+    {
+        renderLayer(model,sunDirectionMesh,cameraPositionMesh,color,strength,alpha,shellScale,
+                nightFraction,twilightStrength,cloudRadius,layer,null,0F);
+    }
+
+    static void renderLayer(Matrix4f model, Vector3f sunDirectionMesh, Vector3f cameraPositionMesh,
+                       Vector3f color, float strength, float alpha,
+                       float shellScale, float nightFraction, float twilightStrength,
+                       float cloudRadius, int layer,
+                       com.starboundmc.world.universe.BodySpaceVisualProfile profile, float spin)
+    {
         boolean scattering = SpaceSceneTarget.linear() && AtmosphereShader.scattering() != null;
+        if (!scattering && layer > 1) return; // one glow if scattering becomes unavailable mid-frame
         ShaderInstance activeShader = scattering ? AtmosphereShader.scattering() : AtmosphereShader.current();
         if (activeShader == null || strength <= 0.0F || alpha <= 0.0F)
             return;
@@ -79,7 +100,10 @@ final class AtmosphereShellRenderer
                         radii.maxOpticalDepth(),
                         nightFraction, twilightStrength);
                 SpaceSceneTarget.configure(activeShader);
+                RingRenderer.configureShadow(activeShader,profile,spin,alpha);
                 if (scattering) {
+                    activeShader.safeGetUniform("CloudRadius").set(cloudRadius);
+                    activeShader.safeGetUniform("AtmosphereLayer").set(layer);
                     Vector3f scale = model.getScale(new Vector3f());
                     activeShader.safeGetUniform("MeshToUniverse").set(scale.x);
                     SpaceVisualQuality quality = StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();

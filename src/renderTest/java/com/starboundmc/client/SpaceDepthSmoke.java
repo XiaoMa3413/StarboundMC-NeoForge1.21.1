@@ -94,6 +94,9 @@ final class SpaceDepthSmoke {
             verifyNativeStarMotion(report);
             verifyBackgroundField(report);
             verifyCloudOptics(quad,report);
+            verifyRingOptics(quad,sphere,report);
+            verifyAtmospherePartitions(quad,report);
+            verifyTransparentBodyOrder(report);
         } finally {
             SpaceSceneTarget.abort();
             sphere.close(); quad.close(); VertexBuffer.unbind();
@@ -424,6 +427,160 @@ final class SpaceDepthSmoke {
         } finally { textures.release(id); }
     }
 
+    private static void verifyRingOptics(VertexBuffer star, VertexBuffer sphere, StringBuilder report) {
+        var textures=net.minecraft.client.Minecraft.getInstance().getTextureManager();
+        var id=ResourceLocation.fromNamespaceAndPath("starboundmc","render_test_half_ring");
+        var image=new com.mojang.blaze3d.platform.NativeImage(1,1,false);
+        image.setPixelRGBA(0,0,0x80FFFFFF);
+        textures.register(id,new net.minecraft.client.renderer.texture.DynamicTexture(image));
+        try {
+            float[][] values=new float[5][];
+            for (int condition=0;condition<5;condition++) {
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing ring target");
+                SpaceSceneTarget.distanceScale(1F);
+                float depth=readDepth();
+                float tilt=condition==2 ? 10F : 90F;
+                Vector3f sun=switch(condition) {
+                    case 1 -> new Vector3f(0,-1,0);
+                    case 3 -> new Vector3f(.95F,.31F,0).normalize();
+                    case 4 -> new Vector3f(-.95F,.31F,0).normalize();
+                    default -> new Vector3f(0,1,0);
+                };
+                RingRenderer.drawRingPass(new PoseStack(),new Matrix4f().translate(85,0,-280)
+                        .rotateX((float)Math.toRadians(tilt)),id,1F,true,sun,0F);
+                values[condition]=readColor();
+                for(float value:values[condition]) if(!Float.isFinite(value)||value<0F||value>7F)
+                    throw new IllegalStateException("Unbounded ring radiance: "+Arrays.toString(values[condition]));
+                if(depth!=readDepth()) throw new IllegalStateException("Ring modified opaque depth");
+                SpaceSceneTarget.finish();
+            }
+            float normal=values[0][3], slant=values[2][3];
+            if(Math.abs(normal-.4518F)>.01F || slant<normal+.2F || slant>1F)
+                throw new IllegalStateException("Ring optical coverage failed: "+normal+" / "+slant);
+            if(values[1][0]<.005F) throw new IllegalStateException("Equal-angle ring transmission vanished");
+            if(values[3][0]>values[4][0]*.05F || Math.abs(values[3][3]-values[4][3])>.002F)
+                throw new IllegalStateException("Planet shadow changed ring coverage or failed to remove sunlight");
+            for(boolean near:new boolean[]{false,true}) {
+                // The ring point projects over the planet's limb despite lying outside its volume.
+                float y=(float)(85*Math.sin(Math.toRadians(20)))*(near ? 1 : -1);
+                Matrix4f model=new Matrix4f().translate(0,y,-280).rotateX((float)Math.toRadians(20));
+                float[] all=null;
+                for(int pass=0;pass<3;pass++) {
+                    if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing ring split target");
+                    SpaceSceneTarget.distanceScale(1F);
+                    RingRenderer.drawRingPass(new PoseStack(),model,id,1F,pass==2,new Vector3f(0,1,0),pass==0 ? 0F : 55F);
+                    float[] color=readColor();
+                    if(pass==0) all=color;
+                    else for(int i=0;i<3;i++) if(Math.abs(color[i]-((near==(pass==2)) ? all[i] : 0F))>.003F)
+                        throw new IllegalStateException("Ring split wrong side: near="+near+" pass="+pass+" all="
+                                +Arrays.toString(all)+" actual="+Arrays.toString(color));
+                    SpaceSceneTarget.finish();
+                }
+            }
+            for(boolean foreground:new boolean[]{false,true}) {
+                if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing ring occlusion target");
+                drawStar(star,foreground ? 180 : 480);
+                float[] before=readColor(); float depth=readDepth();
+                SpaceSceneTarget.distanceScale(1F);
+                RingRenderer.drawRingPass(new PoseStack(),new Matrix4f().translate(85,0,-280).rotateX((float)Math.PI/2),
+                        id,1F,true,new Vector3f(0,1,0),0F);
+                float[] after=readColor();
+                for(int i=0;i<3;i++) {
+                    float expected=foreground ? before[i] : before[i]*(1-normal)+values[0][i];
+                    if(Math.abs(after[i]-expected)>.015F) throw new IllegalStateException("Ring linear occlusion failed");
+                }
+                if(depth!=readDepth()) throw new IllegalStateException("Ring replaced star depth");
+                SpaceSceneTarget.finish();
+            }
+            float[] unshadowed=null, shadowed=null;
+            for(boolean shadow:new boolean[]{false,true}) {
+                if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing ring surface-shadow target");
+                drawPlanet(sphere,280);
+                var shader=PlanetSurfaceShader.current();
+                shader.safeGetUniform("SunDirection").set(0F,.8F,.6F);
+                shader.safeGetUniform("RingShadowEnabled").set(shadow ? 1F : 0F);
+                shader.safeGetUniform("RingRadii").set(1.24F,2.27F);
+                var rotation=new org.joml.Matrix3f().rotateX((float)Math.toRadians(20));
+                shader.safeGetUniform("RingFrameX").set(rotation.m00(),rotation.m01(),rotation.m02());
+                shader.safeGetUniform("RingFrameY").set(rotation.m10(),rotation.m11(),rotation.m12());
+                shader.safeGetUniform("RingFrameZ").set(rotation.m20(),rotation.m21(),rotation.m22());
+                shader.setSampler("RingOpticalDepth",textures.getTexture(id).getId());
+                sphere.bind(); sphere.drawWithShader(new Matrix4f().translate(0,0,-280).scale(1.4F),
+                        RenderSystem.getProjectionMatrix(),shader); VertexBuffer.unbind();
+                if(shadow) shadowed=readColor(); else unshadowed=readColor();
+                SpaceSceneTarget.finish();
+            }
+            float ratio=shadowed[0]/unshadowed[0];
+            if(ratio<.30F || ratio>.38F) throw new IllegalStateException("Ring did not cast its optical shadow on the surface: "+ratio);
+            report.append("ring lit=").append(Arrays.toString(values[0])).append(" backlit=").append(Arrays.toString(values[1]))
+                    .append(" grazing=").append(Arrays.toString(values[2])).append(" shadow=").append(Arrays.toString(values[3]))
+                    .append(" surfaceShadowRatio=").append(ratio)
+                    .append(" equalAngleFinite/shadowCoveragePreserved/raySplit/linearOcclusion/depthPreserved\n");
+        } finally { textures.release(id); }
+    }
+
+    private static void verifyAtmospherePartitions(VertexBuffer star,StringBuilder report) {
+        Matrix4f model=new Matrix4f().translate(63.85F,0,-280).scale(1.4F);
+        Vector3f camera=PlanetSurfaceLighting.cameraPositionMesh(model), sun=new Vector3f(1,0,0), tint=new Vector3f(.3F,.6F,1);
+        var previous=StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();
+        try {
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.ULTRA);
+            float[] whole=null, split=null;
+            for(boolean partition:new boolean[]{false,true}) {
+                if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing atmosphere partition target");
+                drawStar(star,480); float depth=readDepth(); SpaceSceneTarget.distanceScale(1F);
+                if(partition) for(int layer=1;layer<=3;layer++)
+                    AtmosphereShellRenderer.renderLayer(model,sun,camera,tint,.5F,1F,1.1F,0,0,50F*1.008F/1.1F,layer);
+                else AtmosphereShellRenderer.render(model,sun,camera,tint,.5F,1F,1.1F,0,0);
+                if(partition) split=readColor(); else whole=readColor();
+                if(depth!=readDepth()) throw new IllegalStateException("Partition modified opaque depth");
+                SpaceSceneTarget.finish();
+            }
+            for(int i=0;i<3;i++) if(Math.abs(whole[i]-split[i])>.007F)
+                throw new IllegalStateException("Atmosphere split changed energy: "+Arrays.toString(whole)+" / "+Arrays.toString(split));
+            report.append("atmosphere whole=").append(Arrays.toString(whole)).append(" partition=").append(Arrays.toString(split))
+                    .append(" cloudIntervalsConserveRadiance/depthPreserved\n");
+        } finally { StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(previous); }
+    }
+
+    private static void verifyTransparentBodyOrder(StringBuilder report) {
+        var textures=net.minecraft.client.Minecraft.getInstance().getTextureManager();
+        var green=ResourceLocation.fromNamespaceAndPath("starboundmc","render_test_green_cloud");
+        var red=ResourceLocation.fromNamespaceAndPath("starboundmc","render_test_red_cloud");
+        for(var id:new ResourceLocation[]{green,red}) {
+            var image=new com.mojang.blaze3d.platform.NativeImage(1,1,false);
+            image.setPixelRGBA(0,0,id.equals(green) ? 0x8000FF00 : 0x800000FF);
+            textures.register(id,new net.minecraft.client.renderer.texture.DynamicTexture(image));
+        }
+        var profile=StarmapUniverse.body("sys1:lush").spaceVisual().orElseThrow();
+        var view=new Matrix4f().lookAt(0,0,0,49,0,-24,0,1,0);
+        Matrix4f large=new Matrix4f(view).translate(0,0,-100).scale(90F/50),
+                small=new Matrix4f(view).translate(49,0,-24).scale(.2F/50);
+        Vector3f sun=new Vector3f(0,0,1);
+        float[][] values=new float[4][];
+        try {
+            double largeKey=com.starboundmc.client.space.CelestialTransparencyOrder.key(10000,90),
+                    smallKey=com.starboundmc.client.space.CelestialTransparencyOrder.key(49*49+24*24,.2);
+            if(smallKey<=largeKey) throw new IllegalStateException("Small body must be behind large limb");
+            for(int pass=0;pass<4;pass++) {
+                if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing transparent overlap target");
+                if(pass==1 || pass==2) CloudShellRenderer.render(small,red.toString(),sun,1F,1F,profile);
+                if(pass!=1) CloudShellRenderer.render(large,green.toString(),sun,1F,1F,profile);
+                if(pass==3) CloudShellRenderer.render(small,red.toString(),sun,1F,1F,profile);
+                values[pass]=readColor();
+                if(readDepth()!=1F) throw new IllegalStateException("Transparent overlap wrote depth");
+                SpaceSceneTarget.finish();
+            }
+            for(int i=0;i<3;i++) {
+                float expected=values[0][i]+values[1][i]*(1-values[0][3]);
+                if(Math.abs(values[2][i]-expected)>.008F) throw new IllegalStateException("Transparent body ray order violated linear composition");
+            }
+            if(values[3][0]<values[2][0]+.02F) throw new IllegalStateException("Overlap fixture did not distinguish centre sort from ray sort");
+            report.append("transparentBodies rayOrder=").append(Arrays.toString(values[2])).append(" centreOrder=")
+                    .append(Arrays.toString(values[3])).append(" disjointBounds/limbOverlap/linearComposite/depthPreserved\n");
+        } finally { textures.release(green); textures.release(red); }
+    }
+
     private static String stateSignature() {
         StringBuilder result = new StringBuilder();
         for (int query : new int[] { GL11.GL_DEPTH_FUNC, GL11.GL_DEPTH_WRITEMASK,
@@ -442,6 +599,12 @@ final class SpaceDepthSmoke {
         result.append(Arrays.toString(RenderSystem.getShaderColor()))
                 .append(RenderSystem.getShaderFogStart()).append(RenderSystem.getShaderFogEnd())
                 .append(RenderSystem.getShaderFogShape()).append(Arrays.toString(RenderSystem.getShaderFogColor()));
+        int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
+        for(int i=0;i<5;i++) {
+            GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);
+            result.append(GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)).append(',');
+        }
+        GlStateManager._activeTexture(active);
         return result.toString();
     }
 
@@ -492,6 +655,7 @@ final class SpaceDepthSmoke {
         PlanetSurfaceShader.setLighting(shader, new Vector3f(0,0,1), PlanetSurfaceLighting.cameraPositionMesh(model),
                 .003F, .1F, 0, 1, 0, false, 0, 1, .1F);
         shader.safeGetUniform("CloudShadowEnabled").set(0F);
+        shader.safeGetUniform("RingShadowEnabled").set(0F);
         sphere.bind(); sphere.drawWithShader(model, RenderSystem.getProjectionMatrix(), shader);
         VertexBuffer.unbind();
     }

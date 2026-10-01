@@ -79,6 +79,50 @@
         1,
         1
       ]
+    },
+    {
+      "name": "SunDirection",
+      "type": "float",
+      "count": 3,
+      "values": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "name": "CameraPositionMesh",
+      "type": "float",
+      "count": 3,
+      "values": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "GroundRadius",
+      "type": "float",
+      "count": 1,
+      "values": [
+        50
+      ]
+    },
+    {
+      "name": "VolumeRadius",
+      "type": "float",
+      "count": 1,
+      "values": [
+        0
+      ]
+    },
+    {
+      "name": "RingLayer",
+      "type": "int",
+      "count": 1,
+      "values": [
+        0
+      ]
     }
   ]
 }

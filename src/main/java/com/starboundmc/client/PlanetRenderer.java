@@ -14,6 +14,7 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.CelestialLod;
 import com.starboundmc.client.space.CelestialLodPolicy;
 import com.starboundmc.client.space.CelestialLodTransitions;
+import com.starboundmc.client.space.CelestialTransparencyOrder;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.StarSystemResolver;
@@ -54,6 +55,8 @@ public class PlanetRenderer
     private static CelestialBodyDefinition[] drawOrder = new CelestialBodyDefinition[0];
     private static double[] drawDistanceSq = new double[0];
     private static float[] frameDetails = new float[0];
+    private static int[] transparentOrder = new int[0];
+    private static double[] transparentKeys = new double[0];
     private enum BodyPass { ALL, OPAQUE, TRANSPARENT }
     /**
      * Distance-driven body quality with a temporal blend to avoid popping.
@@ -111,6 +114,8 @@ public class PlanetRenderer
         drawOrder = bodies.toArray(CelestialBodyDefinition[]::new);
         drawDistanceSq = new double[drawOrder.length];
         frameDetails = new float[drawOrder.length];
+        transparentOrder = new int[drawOrder.length];
+        transparentKeys = new double[drawOrder.length];
         planetLodTransitions = new CelestialLodTransitions(drawOrder.length * 2);
         drawOrderCatalog = catalog;
     }
@@ -293,10 +298,24 @@ public class PlanetRenderer
     /** Reuses this frame's selection and LOD; transparent geometry follows all opaque bodies and coronas. */
     static void renderTransparentPlanets(PoseStack pose, Camera camera, SpaceRenderContext space,
                                          SpaceCoordinateFrame coordinateFrame) {
-        for (int i = 0; i < drawOrder.length; i++)
+        for (int i = 0; i < drawOrder.length; i++) {
+            var profile = visual(drawOrder[i]);
+            double extent = Math.max(profile.atmosphereShellScale(), profile.cloudShellScale());
+            if (profile.hasRings()) extent = com.starboundmc.world.GasGiantGeometry.RING_OUTER_RADII;
+            transparentKeys[i] = CelestialTransparencyOrder.key(
+                    drawDistanceSq[i], UniverseNavigation.radius(drawOrder[i].entryId())*extent);
+            int j=i;
+            while (j > 0 && transparentKeys[transparentOrder[j-1]] < transparentKeys[i]) {
+                transparentOrder[j]=transparentOrder[j-1]; j--;
+            }
+            transparentOrder[j]=i;
+        }
+        for (int slot = 0; slot < drawOrder.length; slot++) {
+            int i=transparentOrder[slot];
             if (frameDetails[i] > .001F)
                 renderVirtualPlanet(pose, camera, drawOrder[i], space, coordinateFrame, 1F,
                         frameDetails[i], BodyPass.TRANSPARENT);
+        }
     }
 
     private static float updatePlanetLod(CelestialBodyDefinition body, CelestialLod requested, float animationTicks)
@@ -363,6 +382,11 @@ public class PlanetRenderer
         float cz = (float) bodyCenter.z;
         boolean atmosphere = StarfieldClientConfig.atmosphereEnabled()
                 && fullWeight > 0.002F && renderedRadius >= 0.45F;
+        if (pass == BodyPass.TRANSPARENT) {
+            renderTransparentBody(pose, body, bodyScale, alpha*(reducedWeight+fullWeight), alpha*fullWeight,
+                    cx, cy, cz, (float)space.yaw(), (float)space.pitch(), space.animationTicks(), atmosphere);
+            return;
+        }
         if (pass == BodyPass.ALL && atmosphere)
             renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
@@ -370,14 +394,51 @@ public class PlanetRenderer
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
                     alpha * fullWeight,
                     cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks(), pass);
-        if (pass == BodyPass.TRANSPARENT && atmosphere)
-            renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
-                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (pass != BodyPass.TRANSPARENT && pointWeight > 0.002F)
             renderPlanetPoint(pose, body, alpha * pointWeight, cx, cy, cz, renderedRadius);
     }
 
-    /** Direct glow precedes the surface; native scattering composes transmission after transparent geometry. */
+    /** Analytic ordering of an exterior ring and the two surfaces of a thin cloud shell. */
+    private static void renderTransparentBody(PoseStack pose, CelestialBodyDefinition body, float scale,
+            float alpha, float fullAlpha, float cx, float cy, float cz, float yaw, float pitch,
+            float ticks, boolean atmosphere) {
+        BodySpaceVisualProfile profile=visual(body);
+        boolean clouds=profile.hasClouds() && StarfieldClientConfig.cloudsEnabled() && fullAlpha > .002F;
+        boolean scatter=atmosphere && profile.hasAtmosphere() && SpaceSceneTarget.linear()
+                && AtmosphereShader.scattering() != null;
+        float extent=Math.max(clouds ? profile.cloudShellScale() : 1F,
+                atmosphere && profile.hasAtmosphere() ? profile.atmosphereShellScale() : 1F);
+        Vector3f sun=fixedSunDirection(body);
+        if (profile.hasRings()) RingRenderer.drawPlanetRings(pose,profile,cx,cy,cz,scale,yaw,pitch,
+                alpha,false,sun,extent);
+        float spin=ticks*profile.spinRate();
+        Matrix4f atmosphereModel=shipSpacePlanetModel(pose.last().pose(),body,cx,cy,cz,scale,yaw,pitch,spin)
+                .scale(profile.atmosphereShellScale());
+        Vector3f atmosphereSun=meshSpaceSun(body,spin);
+        Vector3f atmosphereCamera=PlanetSurfaceLighting.cameraPositionMesh(atmosphereModel);
+        Vector3f color=new Vector3f(profile.atmosphereRed(),profile.atmosphereGreen(),profile.atmosphereBlue());
+        if (clouds) {
+            float cloudSpin=spin+ticks*profile.cloudDriftRate();
+            Matrix4f cloudModel=shipSpacePlanetModel(pose.last().pose(),body,cx,cy,cz,scale,yaw,pitch,cloudSpin)
+                    .scale(profile.cloudShellScale());
+            Vector3f cloudSun=meshSpaceSun(body,cloudSpin);
+            float cloudRadius=PLANET_RADIUS*profile.cloudShellScale()/profile.atmosphereShellScale();
+            for (int layer=1;layer<=3;layer++) {
+                if (scatter) AtmosphereShellRenderer.renderLayer(atmosphereModel,atmosphereSun,atmosphereCamera,
+                        color,profile.atmospherePeak(),fullAlpha,profile.atmosphereShellScale(),
+                        profile.atmosphereNightFraction(),profile.atmosphereTwilightStrength(),cloudRadius,layer,profile,spin);
+                if (layer < 3) CloudShellRenderer.render(cloudModel,profile.cloudTexture().orElseThrow(),cloudSun,
+                        profile.cloudOpacity(),fullAlpha,profile,layer == 1,cloudSpin);
+            }
+        }
+        if (!scatter || !clouds) {
+            if (atmosphere) renderAtmosphereGlow(pose,body,scale,fullAlpha,cx,cy,cz,yaw,pitch,ticks);
+        }
+        if (profile.hasRings()) RingRenderer.drawPlanetRings(pose,profile,cx,cy,cz,scale,yaw,pitch,
+                alpha,true,sun,extent);
+    }
+
+    /** Whole-volume scattering when there is no cloud cut, or the direct glow fallback. */
     private static void renderAtmosphereGlow(PoseStack pose, CelestialBodyDefinition body, float scale, float alpha,
                                              float cx, float cy, float cz, float shipYaw, float shipPitch,
                                              float animationTicks)
@@ -394,9 +455,9 @@ public class PlanetRenderer
         Vector3f cameraPositionMesh = PlanetSurfaceLighting.cameraPositionMesh(model);
         Vector3f color = new Vector3f(profile.atmosphereRed(), profile.atmosphereGreen(),
                 profile.atmosphereBlue());
-        AtmosphereShellRenderer.render(model, meshSpaceSun, cameraPositionMesh,
+        AtmosphereShellRenderer.renderLayer(model, meshSpaceSun, cameraPositionMesh,
                 color, profile.atmospherePeak(), alpha, atmosphereShellScale,
-                profile.atmosphereNightFraction(), profile.atmosphereTwilightStrength());
+                profile.atmosphereNightFraction(), profile.atmosphereTwilightStrength(),0F,0,profile,spinDegrees);
     }
 
     private static Vector3f fixedSunDirection(CelestialBodyDefinition body)
@@ -499,11 +560,11 @@ public class PlanetRenderer
                                      float shipYaw, float shipPitch, float animationTicks, BodyPass pass)
     {
         // Safe local projection keeps float coordinates small. The isolated path reconstructs
-        // universe distance per fragment; only the direct fallback splits rings into two halves.
+        // universe distance per fragment. Native transparent layers have a separate ordered submission.
         BodySpaceVisualProfile profile = visual(body);
         if (RingRenderer.hasRings(profile) && !SpaceSceneTarget.active())
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
-                    shipYaw, shipPitch, alpha, false);
+                    shipYaw, shipPitch, alpha, false, fixedSunDirection(body), 0F);
         if (pass != BodyPass.TRANSPARENT)
             drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
                     fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
@@ -521,7 +582,7 @@ public class PlanetRenderer
         }
         if (RingRenderer.hasRings(profile))
             RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
-                    shipYaw, shipPitch, alpha, true);
+                    shipYaw, shipPitch, alpha, true, fixedSunDirection(body), 0F);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
@@ -590,6 +651,7 @@ public class PlanetRenderer
                 PlanetSurfaceShader.setCloudShadow(surfaceShader, cloudShadowEnabled,
                         profile.cloudShellScale(), profile.cloudOpacity(), cloudFade,
                         surfaceToCloudRotation);
+                RingRenderer.configureShadow(surfaceShader,profile,spinDegrees,alpha);
             }
             else
             {

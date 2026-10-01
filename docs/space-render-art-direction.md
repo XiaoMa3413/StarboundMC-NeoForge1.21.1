@@ -51,3 +51,9 @@ GPU 夹具新增银心/外围亮度、缩小后的平均辐射、经度接缝与
 ## 验收视点
 
 除原有行星与舷窗视点，固定夹具增加日面、半亮面、弯月、近晨昏线、低空日落和夜面。手工观察整体画面，GPU 检查前后景透射、波长衰减顺序及各画质档的掠射晨昏线收敛；数值检查不能替代美术判断。运行说明与验证结果见 [管线文档](space-render-pipeline.md)。
+
+## 星环光照补充（2026-10-01）
+
+环的明暗、行星投影和细环透光参考 [NASA / JPL 的旅行者土星新月图像](https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/) 与 [Cassini 的 Shadow and Ringshine](https://science.nasa.gov/photojournal/shadow-and-ringshine/)。不把整条环处理为恒定发光贴纸：顺光有冰粒与细带，逆光保留薄环亮边与密环体积，投影中的环仍遮挡背景。
+
+[PDS 的 UVS 环剖面](https://pds-rings.seti.org/voyager/uvs/profiles.html)采用法向光学深度；本项目借用该表达方式，把现有艺术 alpha 映射为相对厚度，并未导入或拟合真实土星测量。当前有限厚度、双 HG 与漫射闭合是美术近似；颜色/密度校准不代表真实冰粒尺寸分布、完整多次散射或行星反照光已实现。

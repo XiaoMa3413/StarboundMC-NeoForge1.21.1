@@ -1,6 +1,7 @@
 #version 150
 #moj_import <starboundmc:space_common.glsl>
 #moj_import <starboundmc:space_atmosphere.glsl>
+#moj_import <starboundmc:space_ring_shadow.glsl>
 uniform sampler2D SceneColor;
 uniform sampler2D SceneDepth;
 uniform vec2 ViewportSize;
@@ -64,10 +65,13 @@ void integrateSegment(float a, float b, vec3 ray, vec3 sun, vec2 heights,
         vec3 sunlight = spaceSunTransmission(p,sun,InnerRadius,OuterRadius,betaR,betaM,LightSamples)
                       * (visibility/max(spaceSunVisibility(p,sun,InnerRadius),.000001));
         vec3 source = betaR*rho.x*phaseR+betaM*rho.y*.9*phaseM;
+        sunlight *= spaceRingShadow(p/InnerRadius,sun);
         scattering += viewTransmission*sunlight*source*(1.0-segmentTransmission)/max(extinction,vec3(.000001));
     }
     viewTransmission *= segmentTransmission;
 }
+uniform float CloudRadius;
+uniform int AtmosphereLayer;
 void main() {
     vec2 uv = gl_FragCoord.xy / ViewportSize;
     vec3 background = texture(SceneColor,uv).rgb;
@@ -82,6 +86,14 @@ void main() {
     }
     vec2 ground = sphere(CameraPositionMesh,ray,InnerRadius);
     if (ground.x > 0.0 && ground.y > ground.x) end = min(end,ground.x);
+    if (AtmosphereLayer != 0) {
+        vec2 cloud=sphere(CameraPositionMesh,ray,CloudRadius);
+        if (cloud.y > cloud.x) {
+            if (AtmosphereLayer == 1) begin=max(begin,cloud.y);
+            else if (AtmosphereLayer == 2) { begin=max(begin,cloud.x); end=min(end,cloud.y); }
+            else end=min(end,cloud.x);
+        } else if (AtmosphereLayer != 1) discard;
+    }
     if (end <= begin) discard;
     vec2 heights = spaceAtmosphereHeights(InnerRadius,OuterRadius);
     vec3 betaR,betaM;

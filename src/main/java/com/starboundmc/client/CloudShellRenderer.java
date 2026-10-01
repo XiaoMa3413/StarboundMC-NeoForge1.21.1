@@ -46,6 +46,13 @@ final class CloudShellRenderer
                        float cloudOpacity, float globalAlpha,
                        com.starboundmc.world.universe.BodySpaceVisualProfile profile)
     {
+        render(model,textureId,sunDirectionMesh,cloudOpacity,globalAlpha,profile,false,0F);
+    }
+
+    static void render(Matrix4f model, String textureId, Vector3f sunDirectionMesh,
+                       float cloudOpacity, float globalAlpha,
+                       com.starboundmc.world.universe.BodySpaceVisualProfile profile, boolean backFace, float spin)
+    {
         if (textureId == null || textureId.isBlank() || cloudOpacity <= 0.0F || globalAlpha <= 0.0F)
             return;
 
@@ -80,16 +87,18 @@ final class CloudShellRenderer
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
             RenderSystem.enableDepthTest();
-            RenderSystem.enableCull();
+            if (backFace) RenderSystem.disableCull(); else RenderSystem.enableCull();
             RenderSystem.depthMask(false);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.setShaderTexture(0, texture);
             RenderSystem.setShader(() -> activeShader);
             CloudShader.setLighting(activeShader, sunDirectionMesh, cloudOpacity, globalAlpha);
+            activeShader.safeGetUniform("CloudBackFace").set(backFace ? 1F : 0F);
             Vector3f camera = PlanetSurfaceLighting.cameraPositionMesh(model);
             activeShader.safeGetUniform("CameraPositionMesh").set(camera.x,camera.y,camera.z);
             AtmosphereShader.setSurfaceLighting(activeShader, profile, profile.cloudShellScale());
             SpaceSceneTarget.configure(activeShader);
+            RingRenderer.configureShadow(activeShader,profile,spin,globalAlpha);
 
             shell.bind();
             shell.drawWithShader(model, RenderSystem.getProjectionMatrix(), activeShader);

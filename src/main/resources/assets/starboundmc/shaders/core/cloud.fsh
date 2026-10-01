@@ -3,6 +3,7 @@
 #moj_import <starboundmc:space_texture.glsl>
 #moj_import <starboundmc:space_atmosphere.glsl>
 #moj_import <starboundmc:space_cloud_optics.glsl>
+#moj_import <starboundmc:space_ring_shadow.glsl>
 uniform float AtmosphereGroundRadius;
 uniform float AtmosphereTopRadius;
 uniform vec3 AtmosphereColor;
@@ -15,6 +16,7 @@ uniform vec3 SunDirection;
 uniform vec3 CameraPositionMesh;
 uniform float CloudOpacity;
 uniform float GlobalAlpha;
+uniform float CloudBackFace;
 
 in vec2 texCoord0;
 in vec3 cloudNormal;
@@ -28,6 +30,7 @@ vec3 safeNormalize(vec3 value, vec3 fallbackValue) {
 }
 
 void main() {
+    if (CloudBackFace > .5 && gl_FrontFacing) discard;
     vec4 cloud = DistanceScale > 0.0 ? spaceBilinear(Sampler0,texCoord0,true) : texture(Sampler0, texCoord0);
     vec3 normal = safeNormalize(cloudNormal, vec3(0.0, 0.0, 1.0));
     vec3 lightDirection = safeNormalize(SunDirection, normal);
@@ -46,6 +49,7 @@ void main() {
                 AtmosphereTopRadius,AtmosphereColor,AtmosphereStrength);
         if (AtmosphereStrength <= 0.0)
             sunlight *= spaceSunVisibility(normal*50.0,lightDirection,AtmosphereGroundRadius);
+        sunlight *= spaceRingShadow(meshPosition/AtmosphereGroundRadius,lightDirection);
         // A forward-scattered component lets sunlit thin edges wrap around the
         // terminator; dense interiors suppress this light instead of glowing.
         float forward = spaceCloudPhase(-dot(view,lightDirection));

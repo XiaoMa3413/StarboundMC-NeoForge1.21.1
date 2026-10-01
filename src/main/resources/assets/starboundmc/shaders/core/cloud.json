@@ -3,7 +3,8 @@
   "fragment": "starboundmc:cloud",
   "samplers": [
     { "name": "Sampler0" },
-    { "name": "SolarOpticalDepth" }
+    { "name": "SolarOpticalDepth" },
+    { "name": "RingOpticalDepth" }
   ],
   "uniforms": [
     { "name": "DistanceScale", "type": "float", "count": 1, "values": [0.0] },
@@ -27,6 +28,12 @@
     {"name": "AtmosphereGroundRadius", "type": "float", "count": 1, "values": [50.0]},
     {"name": "AtmosphereTopRadius", "type": "float", "count": 1, "values": [52.5]},
     {"name": "AtmosphereColor", "type": "float", "count": 3, "values": [0.3, 0.6, 1.0]},
-    {"name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.0]}
+    {"name": "AtmosphereStrength", "type": "float", "count": 1, "values": [0.0]},
+    {"name":"CloudBackFace","type":"float","count":1,"values":[0]},
+    {"name":"RingShadowEnabled","type":"float","count":1,"values":[0]},
+    {"name":"RingRadii","type":"float","count":2,"values":[1.24,2.27]},
+    {"name":"RingFrameX","type":"float","count":3,"values":[1,0,0]},
+    {"name":"RingFrameY","type":"float","count":3,"values":[0,1,0]},
+    {"name":"RingFrameZ","type":"float","count":3,"values":[0,0,1]}
   ]
 }

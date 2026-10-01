@@ -50,7 +50,8 @@ final class SpaceRenderPassState
         private final int vertexArray = GL11.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING);
         private final int arrayBuffer = GL11.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING);
         private final int activeTexture = GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        private final int[] boundTextures = new int[3];
+        // Surface: diffuse, material, cloud, solar LUT, and ring optical depth.
+        private final int[] boundTextures = new int[5];
         private final int[] viewport = new int[4], scissorBox = new int[4], colorMask = new int[4];
         private final float[] clearColor = new float[4], shaderColor = RenderSystem.getShaderColor().clone();
         private final double clearDepth = GL11.glGetDouble(GL11.GL_DEPTH_CLEAR_VALUE);

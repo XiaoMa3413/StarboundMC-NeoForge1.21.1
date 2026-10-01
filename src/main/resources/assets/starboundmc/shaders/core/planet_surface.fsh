@@ -3,6 +3,7 @@
 #moj_import <starboundmc:space_texture.glsl>
 #moj_import <starboundmc:space_atmosphere.glsl>
 #moj_import <starboundmc:space_cloud_optics.glsl>
+#moj_import <starboundmc:space_ring_shadow.glsl>
 uniform float AtmosphereGroundRadius;
 uniform float AtmosphereTopRadius;
 uniform vec3 AtmosphereColor;
@@ -103,6 +104,7 @@ void main() {
         float shadow = CloudShadowEnabled > .5 ? projectedCloudShadow(normal, lightDirection, dotNL) : 0.0;
         vec3 sunlight = spaceSurfaceSun(normal*AtmosphereGroundRadius,lightDirection,
                 AtmosphereGroundRadius,AtmosphereTopRadius,AtmosphereColor,AtmosphereStrength);
+        sunlight *= spaceRingShadow(normal,lightDirection);
         vec3 ambient = vec3(clamp(NightFloor * .015, .0003, .004));
         vec3 radiance = albedo * (ambient + sunlight * (2.2 * nl * (1.0 - shadow)));
         if (nl > 0.0 && SpecularStrength > 0.0) {
