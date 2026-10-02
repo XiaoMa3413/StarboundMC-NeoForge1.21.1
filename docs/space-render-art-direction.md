@@ -52,6 +52,10 @@ GPU 夹具新增银心/外围亮度、缩小后的平均辐射、经度接缝与
 
 除原有行星与舷窗视点，固定夹具增加日面、半亮面、弯月、近晨昏线、低空日落和夜面。手工观察整体画面，GPU 检查前后景透射、波长衰减顺序及各画质档的掠射晨昏线收敛；数值检查不能替代美术判断。运行说明与验证结果见 [管线文档](space-render-pipeline.md)。
 
+## 卡冈图雅参考（2026-10-02）
+
+吸积盘阶段开始前已查阅 DNEG 官方剧照、制作团队论文与 Oliver James 的说明，并直接检查电影风格、频移对照和柔光参考图。来源、电影与物理显示的区别、项目美术判断及验收镜头集中于 [卡冈图雅参考](space-gargantua-reference.md)。后续以空间成像、盘面细节、曝光与运动稳定性共同制造冲击力；当前 Schwarzschild 背景预览继续作为研究基准。
+
 ## 星环光照补充（2026-10-01）
 
 环的明暗、行星投影和细环透光参考 [NASA / JPL 的旅行者土星新月图像](https://www.jpl.nasa.gov/images/pia00335-full-disk-color-image-of-crescent-saturn-with-rings-and-ring-shadows/) 与 [Cassini 的 Shadow and Ringshine](https://science.nasa.gov/photojournal/shadow-and-ringshine/)。不把整条环处理为恒定发光贴纸：顺光有冰粒与细带，逆光保留薄环亮边与密环体积，投影中的环仍遮挡背景。
