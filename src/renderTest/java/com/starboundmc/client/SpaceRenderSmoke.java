@@ -121,6 +121,9 @@ public final class SpaceRenderSmoke {
             if(GpuSkyQuery.reloads()<=reloadGeneration)throw new IllegalStateException("Requested shader reload did not run");
         }
         if (stageStart == 0) selectView(mc);
+        boolean discSequence="@disc-motion".equals(BODIES[stage]) || "@disc-animation".equals(BODIES[stage]);
+        if("@disc-animation".equals(BODIES[stage]))
+            GpuSkyQuery.discTimeOverride=180F+(float)((System.nanoTime()-stageStart)/1e9)*6F;
         // Initial server teleport packets can otherwise overwrite the first
         // camera pose after selectView, producing a mislabeled reference image.
         float movingYaw=fixtureYaw;
@@ -132,23 +135,23 @@ public final class SpaceRenderSmoke {
         mc.player.xRotO = fixturePitch;
         long now = System.nanoTime();
         double stageSeconds=(now-stageStart)/1e9;
-        if("@disc-motion".equals(BODIES[stage]) && stageSeconds>=2 && discSequenceFrame<12) {
+        if(discSequence && stageSeconds>=2 && discSequenceFrame<12) {
             int frame=(int)((stageSeconds-2)/.2);
             if(frame>=discSequenceFrame) {
                 var directory=mc.gameDirectory.toPath().resolve("screenshots")
-                        .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel","capture")).resolve("disc-motion-sequence");
+                        .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel","capture"))
+                        .resolve("@disc-animation".equals(BODIES[stage])?"disc-animation-sequence":"disc-motion-sequence");
                 Files.createDirectories(directory);
                 String name=String.format(java.util.Locale.ROOT,"%02d",discSequenceFrame);
                 try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())) {image.writeToFile(directory.resolve(name+".png"));}
                 Files.writeString(directory.resolve(name+".txt"),"stageSeconds="+stageSeconds+" cameraYaw="+mc.gameRenderer.getMainCamera().getYRot()
-                        +" discTime="+GpuSkyQuery.discTimeOverride+"\n");discSequenceFrame++;
+                        +" discTime="+GpuSkyQuery.lastDiscTime+"\n");discSequenceFrame++;
             }
         }
         if (previousFrame != 0 && samples < FRAME_MS.length)
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
         previousFrame = now;
-        if (stageSeconds < ("@disc-motion".equals(BODIES[stage])?5:3) || samples == 0
-                || "@disc-motion".equals(BODIES[stage]) && discSequenceFrame<12) return;
+        if (stageSeconds < (discSequence?5:3) || samples == 0 || discSequence && discSequenceFrame<12) return;
         if(GpuSkyQuery.mode!=GpuSkyQuery.Mode.DISABLED && !GpuSkyQuery.active())
             throw new IllegalStateException("Research view silently fell back: "+GpuSkyQuery.diagnostics());
         if (BODIES[stage] != null && (BODIES[stage].startsWith("@spyglass-") || "@disc-spyglass".equals(BODIES[stage]))
@@ -204,11 +207,15 @@ public final class SpaceRenderSmoke {
                 : view!=null && view.startsWith("@query-") ? GpuSkyQuery.Mode.QUERY : GpuSkyQuery.Mode.DISABLED;
         GpuSkyQuery.discDiagnostic="@disc-diagnostic".equals(view);
         GpuSkyQuery.discPhysical="@disc-physical".equals(view);
+        GpuSkyQuery.discWideGlare=!"@disc-clean".equals(view);
         GpuSkyQuery.discInclination="@disc-face".equals(view)?0F:"@disc-inclined".equals(view)?60F:86.56F;
+        GpuSkyQuery.discObserverRadius="@disc-near".equals(view)?12F:"@disc-close".equals(view)?6F:20F;
         GpuSkyQuery.discTimeOverride="@disc-time".equals(view)?400F:180F;
         if(GpuSkyQuery.mode==GpuSkyQuery.Mode.DISABLED) GpuSkyQuery.release();
         if("@query-performance".equals(view) || "@lens-performance".equals(view) || "@disc-performance".equals(view))
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.PERFORMANCE);
+        if("@disc-balanced".equals(view))StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.BALANCED);
+        if("@disc-high".equals(view))StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.HIGH);
         if("@query-ultra".equals(view) || "@lens-ultra".equals(view) || "@disc-ultra".equals(view))
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.ULTRA);
         mc.options.hideGui=!"@spyglass-overlay".equals(view);

@@ -33,7 +33,8 @@ void main() {
         vec3 radial=-normalize(LensDirection);
         float cosine=clamp(-dot(direction,radial),-1.0,1.0);
         float angle=acos(cosine),width=max(fwidth(angle),0.000001);
-        escapeCoverage=clamp((angle-LensShadow)/width+0.5,0.0,1.0);
+        float criticalDistance=(angle-LensShadow)-(DiscEnabled>0.5?DiscShadowLow:0.0);
+        escapeCoverage=clamp(criticalDistance/width+0.5,0.0,1.0);
         vec3 tangent=direction+radial*cosine;
         tangent=dot(tangent,tangent)>1e-12 ? normalize(tangent) : normalize(cross(radial,vec3(0,1,0)));
         if(DiscEnabled>0.5)disc=discRadiance(radial,tangent,angle);

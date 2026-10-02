@@ -33,8 +33,9 @@ final class GpuSkyQuery {
     private static SchwarzschildLensTable lens;
     private static SchwarzschildDiscTable discTable;
     private static int discTexture;
-    static float discInclination=86.56F,discTimeOverride=Float.NaN;
-    static boolean discDiagnostic,discPhysical;
+    static float discInclination=86.56F,discTimeOverride=Float.NaN,discObserverRadius=20F;
+    static float lastDiscTime;
+    static boolean discDiagnostic,discPhysical,discWideGlare=true;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
     private static boolean failed;
@@ -82,7 +83,8 @@ final class GpuSkyQuery {
             shader.safeGetUniform("DiscEnabled").set(mode==Mode.DISC?1F:0F);
             shader.safeGetUniform("DiscDiagnostic").set(discDiagnostic?1F:0F);
             shader.safeGetUniform("DiscPhysical").set(discPhysical?1F:0F);
-            shader.safeGetUniform("DiscTime").set(Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F);
+            lastDiscTime=Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F;
+            shader.safeGetUniform("DiscTime").set(lastDiscTime);
             Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
             float inclination=(float)Math.toRadians(discInclination);
             Vector3f normal=new Vector3f(up).mul((float)Math.sin(inclination)).fma((float)Math.cos(inclination),radial).normalize();
@@ -131,11 +133,21 @@ final class GpuSkyQuery {
     }
 
     static void bindDisc(ShaderInstance target) {
-        if(discTable==null)discTable=new SchwarzschildDiscTable(SchwarzschildLensTable.OBSERVER_RADIUS);
+        if(discTable!=null && discTable.radius()!=discObserverRadius) {
+            if(discTexture!=0)GlStateManager._deleteTexture(discTexture);
+            discTexture=0;discTable=null;
+        }
+        if(discTable==null)discTable=new SchwarzschildDiscTable(discObserverRadius);
         if(discTexture==0) {
             discTexture=SpaceFloatTexture.upload(SchwarzschildDiscTable.WIDTH,SchwarzschildDiscTable.HEIGHT,4,discTable.data());uploads++;
         }
+        double shadow=SchwarzschildRay.shadowAngle(discObserverRadius);
         target.setSampler("LensAzimuth",discTexture);target.safeGetUniform("DiscEnabled").set(1F);
+        target.safeGetUniform("DiscObserverRadius").set(discObserverRadius);
+        target.safeGetUniform("LensShadow").set((float)shadow);
+        // Preserve the small distance from the critical angle after float upload.
+        target.safeGetUniform("DiscShadowLow").set((float)(shadow-(float)shadow));
+        target.safeGetUniform("LensLogRange").set((float)Math.log((Math.PI/2-shadow)/SchwarzschildDiscTable.EDGE));
     }
     static SchwarzschildDiscTable discTable() { return discTable; }
     static int discTexture() { return discTexture; }
@@ -162,6 +174,6 @@ final class GpuSkyQuery {
                 +" queryGpuBytes="+(catalog==null?0:catalog.gpuBytes())+" lensTexture="+(textures[4]!=0)
                 +" discTexture="+(discTexture!=0)+" discGpuBytes="+(discTexture==0?0:discTable.gpuBytes())
                 +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
-                +" discTimeOverride="+discTimeOverride;
+                +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare;
     }
 }

@@ -111,6 +111,7 @@ final class AccretionDiscSmoke {
             if(images==0 || capturedImages==0 || multiImages==0)throw new IllegalStateException("Disc image checks did not cover all ray outcomes");
             report.append("discGpuFirstImages=").append(images).append(" captured=").append(capturedImages)
                     .append(" multiple=").append(multiImages).append(" CPUPlaneEvents/opaqueDiagnostic\n");
+            verifyNearObservers(report);
             if(GL11.glGetError()!=GL11.GL_NO_ERROR)throw new IllegalStateException("Disc OpenGL error");
         } finally {
             shader.safeGetUniform("TestMode").set(0F);shader.safeGetUniform("DiscEnabled").set(0F);
@@ -124,6 +125,36 @@ final class AccretionDiscSmoke {
         }
         if(!before.equals(SpaceDepthSmoke.stateSignature()) || depthBefore[0]!=depthAfter[0])throw new IllegalStateException("Disc checks changed GL state/main depth");
         return report.append("discStateRestored=fiveTextureUnits/program/framebuffers/viewport/buffers/mainDepth\n").toString();
+    }
+    private static void verifyNearObservers(StringBuilder report) {
+        var shader=GpuSkyQuery.shader();int count=0;double maxRadius=0,maxDelay=0;
+        try {
+            for(float observer:new float[]{12,6}) {
+                GpuSkyQuery.discObserverRadius=observer;GpuSkyQuery.bindDisc(shader);
+                shader.safeGetUniform("TestMode").set(3F);
+                double edge=SchwarzschildRay.shadowAngle(observer);
+                for(double raw:new double[]{.03,edge-.00004,edge+.00004,.65,1.2,1.8,2.6}) {
+                    float angle=(float)raw;var path=new SchwarzschildPath(observer,angle,1e-12);
+                    shader.safeGetUniform("TestAngle").set(angle);
+                    for(int i=1;i<100;i++) {
+                        float phi=(float)(path.endAzimuth()*i/100);var expected=path.sample(phi);
+                        if(expected.radius()<4 || expected.radius()>10)continue;
+                        shader.safeGetUniform("TestSigma").set(phi);draw();float[] actual=read();
+                        double dr=Math.abs(1/actual[0]-expected.radius()),dt=Math.abs(actual[2]-expected.delay());
+                        maxRadius=Math.max(maxRadius,dr);maxDelay=Math.max(maxDelay,dt);count++;
+                        if(actual[3]!=1 || dr>.005 || dt>.015)
+                            throw new IllegalStateException("Near observer GPU trajectory mismatch at r="+observer+": "+dr+" / "+dt
+                                    +" angle="+angle+" phi="+phi);
+                    }
+                }
+                shader.safeGetUniform("TestMode").set(5F);
+                shader.safeGetUniform("TestSigma").set(6F);shader.safeGetUniform("TestAngle").set(.3F);draw();
+                if(Math.abs(read()[0]-SchwarzschildDisc.frequencyRatio(observer,6,.3))>2e-6)
+                    throw new IllegalStateException("Near observer detector lapse mismatch");
+            }
+        } finally {GpuSkyQuery.discObserverRadius=20F;GpuSkyQuery.bindDisc(shader);}
+        report.append("nearObserverGpuTimedQueries=").append(count).append(" radiiRs=12/6 maxRadiusErrorRs=")
+                .append(maxRadius).append(" maxDelayErrorRsOverC=").append(maxDelay).append(" detectorLapse=verified\n");
     }
     private static void draw() {
         RenderSystem.setShader(GpuSkyQuery::shader);

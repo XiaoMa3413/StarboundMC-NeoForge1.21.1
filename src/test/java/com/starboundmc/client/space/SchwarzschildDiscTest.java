@@ -88,4 +88,27 @@ class SchwarzschildDiscTest {
         }
         System.out.println("discTable maxRadiusError="+maxRadius+" maxDelayError="+maxTime+" bytes="+table.gpuBytes());
     }
+
+    @Test void nearObserverTablesRetainRayAndTimeAccuracyInsideTheDiscRadius() {
+        for(double observer:new double[]{6,12}) {
+            var table=new SchwarzschildDiscTable(observer);
+            double edge=SchwarzschildRay.shadowAngle(observer);
+            for(double angle:new double[]{.03,edge-.00004,edge+.00004,.65,1.2,1.8,2.6}) {
+                var path=new SchwarzschildPath(observer,angle,1e-12);
+                assertEquals(SchwarzschildRay.trace(observer,angle).fate(),path.fate());
+                for(int i=1;i<100;i++) {
+                    double phi=path.endAzimuth()*i/100;var reference=path.sample(phi);
+                    if(reference.radius()<4 || reference.radius()>10)continue;
+                    var actual=table.lookup(angle,phi);assertNotNull(actual);
+                    assertEquals(reference.radius(),actual.radius(),.005);
+                    assertEquals(reference.delay(),actual.delay(),.015);
+                }
+            }
+            // Moving a static detector inward produces a larger measured frequency
+            // for the same emitting orbit, with the exact lapse ratio.
+            double g=SchwarzschildDisc.frequencyRatio(observer,6,.3);
+            double far=SchwarzschildDisc.frequencyRatio(20,6,.3);
+            assertEquals(Math.sqrt(.95/(1-1/observer)),g/far,1e-14);
+        }
+    }
 }

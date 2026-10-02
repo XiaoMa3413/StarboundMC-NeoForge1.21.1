@@ -1,13 +1,16 @@
 // Timed finite trajectories packed in the fifth sampler; no extra texture units.
-uniform float DiscEnabled,DiscDiagnostic,DiscPhysical,DiscTime;
+uniform float DiscEnabled,DiscDiagnostic,DiscPhysical,DiscTime,DiscObserverRadius,DiscShadowLow;
 uniform vec3 DiscNormal,DiscU,DiscV;
 const float DISC_PI=3.14159265359;
 const int DISC_STRIDE=130;
 
 vec2 discAddress(float angle) {
-    int branch=angle<LensShadow?0:(angle<=DISC_PI*0.5?1:2);
-    float t=branch==0?log(max(LensShadow-angle,0.000001)/0.000001)/log(LensShadow/0.000001)
-            :branch==1?log(max(angle-LensShadow,0.000001)/0.000001)/LensLogRange
+    // Subtract the high part first, then the residual. Adding both shadow
+    // parts before subtraction would round away the correction again.
+    float distance=(angle-LensShadow)-DiscShadowLow;
+    int branch=distance<0.0?0:(angle<=DISC_PI*0.5?1:2);
+    float t=branch==0?log(max(-distance,0.000001)/0.000001)/log(LensShadow/0.000001)
+            :branch==1?log(max(distance,0.000001)/0.000001)/LensLogRange
             :(angle-DISC_PI*0.5)/(DISC_PI*0.5);
     return vec2(clamp(t,0.0,1.0)*1023.0,float(branch));
 }
@@ -46,7 +49,7 @@ vec3 discSpectrum(float temperature) {
 
 float discFrequency(float r,float mu) {
     float speed=inversesqrt(2.0*(max(r,3.0)-1.0));
-    return sqrt((1.0-1.0/r)/0.95)*sqrt(1.0-speed*speed)/(1.0-speed*mu);
+    return sqrt((1.0-1.0/r)/(1.0-1.0/DiscObserverRadius))*sqrt(1.0-speed*speed)/(1.0-speed*mu);
 }
 
 float discFilteredNoise(vec3 point) {
@@ -59,7 +62,7 @@ vec4 discRadiance(vec3 radial,vec3 tangent,float angle) {
     float A=dot(radial,DiscNormal),B=dot(tangent,DiscNormal);
     float planeWeight=step(0.0000001,length(vec2(A,B)));
     float first=mod(atan(-A,B+(1.0-planeWeight)),DISC_PI);if(first<0.0000001)first+=DISC_PI;
-    float impact=20.0*sin(angle)/sqrt(0.95);
+    float impact=DiscObserverRadius*sin(angle)/sqrt(1.0-1.0/DiscObserverRadius);
     vec3 color=vec3(0);float transmission=1.0;
     // EDGE clamp has fewer than six crossings; deeper critical trajectories remain research-only.
     // Fixed loop, no early exit: derivatives are evaluated in uniform control flow.
@@ -79,22 +82,27 @@ vec4 discRadiance(vec3 radial,vec3 tangent,float angle) {
         // Periodic coordinates avoid a polar wrap seam. Radial elongation and
         // orbital shear break the regular bands into material arcs and filaments.
         float broad=discFilteredNoise(vec3(r*2.1,phaseUnit*3.2)+vec3(17.8,41.2,6.3));
-        float turbulence=discFilteredNoise(vec3(r*12.0+(broad-0.5)*3.0,phaseUnit*5.7)+vec3(7.2,31.1,13.6));
-        float filaments=discFilteredNoise(vec3(r*31.0+(turbulence-0.5)*2.0,phaseUnit*8.1)+vec3(23.6,5.3,47.1));
+        float turbulence=discFilteredNoise(vec3(r*7.0+(broad-0.5)*4.0,phaseUnit*7.3)+vec3(7.2,31.1,13.6));
+        float filaments=discFilteredNoise(vec3(r*23.0+(turbulence-0.5)*4.0,phaseUnit*11.1)+vec3(23.6,5.3,47.1));
         float envelope=1.0-smoothstep(8.45+0.65*turbulence,9.35,r);
         float finePhase=r*83.0+sin(phase*5.0)*1.1+sin(r*11.0)*0.7;
         float fineWidth=length(vec2(dFdx(finePhase),dFdy(finePhase)));
         float fine=cos(finePhase)*exp(-0.125*fineWidth*fineWidth);
         float medium=cos(r*21.0+sin(phase*3.0)*2.0)*exp(-0.125*pow(fwidth(r)*21.0,2.0));
         float patches=cos(phase*9.0+log(r)*4.0)*exp(-0.125*phaseWidth*phaseWidth*81.0);
-        float density=clamp(0.10+0.85*turbulence*turbulence+0.60*filaments*filaments
-                +0.10*fine+0.07*medium+0.07*patches,0.025,1.5);
+        float density=clamp(0.045+1.10*turbulence*turbulence+0.65*filaments*filaments
+                +0.025*fine+0.025*medium+0.05*patches,0.015,1.5);
         float incidence=abs(impact*u*sqrt(1.0-u)*dot(angular,DiscNormal));
         float alpha=(1.0-exp(-0.30*density*coverage*envelope/max(incidence,0.025)))*path.w*planeWeight;
         float mu=clamp(-impact*u*sqrt(1.0-u)*dot(cross(radial,tangent),DiscNormal),-1.0,1.0);
         // Emission is supported only outside ISCO; keep unused off-disc samples finite too.
         float frequency=discFrequency(r,mu);
-        vec3 emission=discSpectrum(4500.0*(DiscPhysical>0.5?frequency:1.0))*3.2*density;
+        // Artist-calibrated thermal structure, shared by film and frequency views.
+        // The inner material carries warm-white highlights; cooler, sparse outer
+        // filaments retain orange colour and dark gaps instead of a uniform ring.
+        float temperature=clamp(4600.0*pow(4.63/r,0.45)+(turbulence-0.5)*1600.0
+                +(filaments-0.5)*1000.0,2500.0,5700.0);
+        vec3 emission=discSpectrum(temperature*(DiscPhysical>0.5?frequency:1.0))*4.0*density;
         if(DiscDiagnostic>0.5) {
             float sector=floor(mod(polar+DISC_PI,2.0*DISC_PI)/(2.0*DISC_PI)*12.0);
             float band=floor((r-4.63)/(9.35-4.63)*6.0);

@@ -19,6 +19,8 @@
     {"name":"DiscDiagnostic","type":"float","count":1,"values":[0]},
     {"name":"DiscPhysical","type":"float","count":1,"values":[0]},
     {"name":"DiscTime","type":"float","count":1,"values":[0]},
+    {"name":"DiscObserverRadius","type":"float","count":1,"values":[20]},
+    {"name":"DiscShadowLow","type":"float","count":1,"values":[0]},
     {"name":"DiscNormal","type":"float","count":3,"values":[0,1,0]},
     {"name":"DiscU","type":"float","count":3,"values":[1,0,0]},
     {"name":"DiscV","type":"float","count":3,"values":[0,0,1]},

@@ -33,6 +33,13 @@ final class SpaceBloom {
     static int render(TextureTarget source) {
         SpaceVisualQuality quality = StarfieldClientConfig.SPACE_VISUAL_QUALITY.get();
         int count = quality.bloomLevels();
+        // The research disc has sustained, extended highlights. A wider optical
+        // response uses two very small additional levels; ordinary sky and the
+        // Performance/Custom contracts retain their existing pyramid.
+        boolean wideDisc=(quality==SpaceVisualQuality.HIGH || quality==SpaceVisualQuality.ULTRA)
+                && GpuSkyQuery.mode==GpuSkyQuery.Mode.DISC && GpuSkyQuery.active() && GpuSkyQuery.discWideGlare;
+        if(wideDisc && quality==SpaceVisualQuality.ULTRA)count+=2;
+        else if(wideDisc && quality==SpaceVisualQuality.HIGH)count++;
         if (count == 0 || StarfieldClientConfig.SPACE_BLOOM_STRENGTH.get() == 0) {
             release(); return 0;
         }
@@ -67,7 +74,7 @@ final class SpaceBloom {
             for (int i = count - 2; i >= 0; i--) {
                 input = levels[i + 1];
                 filter.safeGetUniform("Prefilter").set(0F);
-                filter.safeGetUniform("Gain").set(.65F);
+                filter.safeGetUniform("Gain").set(wideDisc?.82F:.65F);
                 filter.safeGetUniform("TexelSize").set(1F / input.width, 1F / input.height);
                 levels[i].bindWrite(true);
                 SpaceSceneTarget.drawFullscreen(filter, input.getColorTextureId(), true);
