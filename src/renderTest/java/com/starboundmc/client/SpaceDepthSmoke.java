@@ -581,7 +581,7 @@ final class SpaceDepthSmoke {
         } finally { textures.release(green); textures.release(red); }
     }
 
-    private static String stateSignature() {
+    static String stateSignature() {
         StringBuilder result = new StringBuilder();
         for (int query : new int[] { GL11.GL_DEPTH_FUNC, GL11.GL_DEPTH_WRITEMASK,
                 org.lwjgl.opengl.GL14.GL_BLEND_SRC_RGB, org.lwjgl.opengl.GL14.GL_BLEND_DST_RGB,

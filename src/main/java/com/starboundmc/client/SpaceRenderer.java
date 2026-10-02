@@ -74,11 +74,16 @@ public final class SpaceRenderer
             StarSystemResolver.ResolvedStarField stars = StarSystemResolver.resolve(space);
             isolated = SpaceSceneTarget.begin();
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.BACKGROUND);
-            try { SpaceBackgroundRenderer.renderSpaceDome(skyPose, space, stars.environment()); }
+            boolean queriedBackground;
+            try {
+                // The research preview is disabled by default and allocates no query resources.
+                queriedBackground = GpuSkyQuery.render(skyModelView, skyProjection, space, stars.environment());
+                if (!queriedBackground) SpaceBackgroundRenderer.renderSpaceDome(skyPose, space, stars.environment());
+            }
             finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.BACKGROUND); }
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.STARFIELD);
             try {
-                SpaceBackgroundRenderer.renderStarField(skyPose, level, event.getCamera(), partialTick,
+                if (!queriedBackground) SpaceBackgroundRenderer.renderStarField(skyPose, level, event.getCamera(), partialTick,
                         space, coordinateFrame, stars.environment());
             } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.STARFIELD); }
 

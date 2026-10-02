@@ -55,6 +55,7 @@ public final class SpaceRenderSmoke {
     private static float fixtureYaw, fixturePitch;
     private static CompletableFuture<?> setup;
     private static CompletableFuture<Void> reload;
+    private static long reloadGeneration;
 
     @SubscribeEvent
     public static void frame(RenderFrameEvent.Post event) throws Exception {
@@ -110,23 +111,30 @@ public final class SpaceRenderSmoke {
         }
         if (!setup.isDone() || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)) return;
         setup.join();
-        if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])) {
-            if (reload == null) { reload = mc.reloadResourcePacks(); return; }
+        if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])
+                || "@query-reload".equals(BODIES[stage]) || "@lens-reload".equals(BODIES[stage])) {
+            if (reload == null) { reloadGeneration=GpuSkyQuery.reloads();reload = mc.reloadResourcePacks(); return; }
             if (!reload.isDone()) return;
             reload.join();
+            if(GpuSkyQuery.reloads()<=reloadGeneration)throw new IllegalStateException("Requested shader reload did not run");
         }
         if (stageStart == 0) selectView(mc);
         // Initial server teleport packets can otherwise overwrite the first
         // camera pose after selectView, producing a mislabeled reference image.
-        mc.player.setYRot(fixtureYaw);
+        float movingYaw=fixtureYaw;
+        if("@query-motion".equals(BODIES[stage]) || "@lens-motion".equals(BODIES[stage]))
+            movingYaw+=(float)Math.sin((System.nanoTime()-stageStart)/1e9*2)*.15F;
+        mc.player.setYRot(movingYaw);
         mc.player.setXRot(fixturePitch);
-        mc.player.yRotO = fixtureYaw;
+        mc.player.yRotO = movingYaw;
         mc.player.xRotO = fixturePitch;
         long now = System.nanoTime();
         if (previousFrame != 0 && samples < FRAME_MS.length)
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
         previousFrame = now;
         if ((now - stageStart) / 1e9 < 3 || samples == 0) return;
+        if(GpuSkyQuery.mode!=GpuSkyQuery.Mode.DISABLED && !GpuSkyQuery.active())
+            throw new IllegalStateException("Research view silently fell back: "+GpuSkyQuery.diagnostics());
         if (BODIES[stage] != null && BODIES[stage].startsWith("@spyglass-")
                 && !mc.player.isScoping()) throw new IllegalStateException("Spyglass fixture did not start using the real item");
         if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.verifyRestoration();
@@ -145,8 +153,10 @@ public final class SpaceRenderSmoke {
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
                 + "cameraYaw=" + fixtureYaw + " cameraPitch=" + fixturePitch + "\n"
+                + "renderCameraYaw="+mc.gameRenderer.getMainCamera().getYRot()+" renderCameraPitch="+mc.gameRenderer.getMainCamera().getXRot()+"\n"
                 + "scoping=" + mc.player.isScoping() + " ordinaryFov=" + mc.options.fov().get() + "\n"
                 + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
+                + GpuSkyQuery.diagnostics() + "\n"
                 + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
                 + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
                 + SpaceRenderProfiler.report());
@@ -154,12 +164,14 @@ public final class SpaceRenderSmoke {
             mc.options.keyUse.setDown(false);
             if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
+            Files.writeString(output.resolve("sky-query-checks.txt"), SkyQuerySmoke.verify());
             SpaceRenderState.resetPoseProvider();
             if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
             Files.writeString(output.resolve("complete.txt"), "Completed " + BODIES.length + " fixed space views.\n");
             finished = true;
             mc.stop();
         } else {
+            reload = null;
             stageStart = previousFrame = 0;
             samples = 0;
         }
@@ -167,6 +179,13 @@ public final class SpaceRenderSmoke {
 
     private static void selectView(Minecraft mc) {
         String view = BODIES[stage];
+        GpuSkyQuery.mode=view!=null && view.startsWith("@lens-") ? GpuSkyQuery.Mode.SCHWARZSCHILD
+                : view!=null && view.startsWith("@query-") ? GpuSkyQuery.Mode.QUERY : GpuSkyQuery.Mode.DISABLED;
+        if(GpuSkyQuery.mode==GpuSkyQuery.Mode.DISABLED) GpuSkyQuery.release();
+        if("@query-performance".equals(view) || "@lens-performance".equals(view))
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.PERFORMANCE);
+        if("@query-ultra".equals(view) || "@lens-ultra".equals(view))
+            StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.ULTRA);
         mc.options.hideGui=!"@spyglass-overlay".equals(view);
         mc.options.keyUse.setDown(false);
         if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
@@ -195,7 +214,8 @@ public final class SpaceRenderSmoke {
                     .filter(s -> s.dustFraction() == 0 && Math.abs(s.x()*.24+s.y()*.87+s.z()*.43) > .2)
                     .max(java.util.Comparator.comparingDouble(BackgroundStarCatalog.Star::flux)).orElseThrow();
             delta=new UniverseDelta(star.x(),star.y(),star.z());
-        } else if ("@galaxy".equals(view) || "@spyglass-galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
+        } else if ("@galaxy".equals(view) || "@galaxy-return".equals(view) || "@spyglass-galaxy".equals(view)
+                || GpuSkyQuery.mode!=GpuSkyQuery.Mode.DISABLED) delta = new UniverseDelta(.87, -.24, 0);
         else if ("@galaxy-outer".equals(view)) delta = new UniverseDelta(-.87,.24,0);
         else if ("@galaxy-side".equals(view)) {
             var direction = new org.joml.Vector3f(.24F,.87F,.43F)
@@ -263,7 +283,12 @@ public final class SpaceRenderSmoke {
                     view.substring("@quality-".length()).toUpperCase(java.util.Locale.ROOT)));
             delta = new UniverseDelta(.87,-.24,0);
         }
-        if ("@resize".equals(view) || "@spyglass-resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
+        if("@query-pole".equals(view))delta=new UniverseDelta(.24,.87,.43);
+        if("@query-edge".equals(view))delta=new UniverseDelta(1,1,1);
+        if("@lens-offset".equals(view))delta=new UniverseDelta(.87,-.24,.20);
+        if ("@resize".equals(view) || "@spyglass-resize".equals(view)
+                || "@query-resize".equals(view) || "@lens-resize".equals(view))
+            GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
         if ("@window".equals(view)) {
             mc.getSingleplayerServer().submit(() -> {
                 var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();

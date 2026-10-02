@@ -57,6 +57,7 @@ public final class Stage2ClientRegistrar {
         AtmosphereShader.register(event);
         CloudShader.register(event);
         GpuSpaceBackground.register(event);
+        GpuSkyQuery.register(event);
         SpaceStellarRenderer.register(event);
         SpaceRingShader.register(event);
         SpaceSceneTarget.register(event);

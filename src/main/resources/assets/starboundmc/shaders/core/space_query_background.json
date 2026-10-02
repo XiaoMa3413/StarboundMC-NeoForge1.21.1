@@ -1,0 +1,26 @@
+{
+  "vertex": "starboundmc:space_background",
+  "fragment": "starboundmc:space_query_background",
+  "samplers": [
+    {"name":"SkyCells"}, {"name":"SkyIndices"}, {"name":"SkySources"},
+    {"name":"SkyFlux"}, {"name":"LensAzimuth"}
+  ],
+  "uniforms": [
+    {"name":"InverseViewProjection","type":"matrix4x4","count":16,"values":[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]},
+    {"name":"LinearColor","type":"float","count":1,"values":[0]},
+    {"name":"FieldDetail","type":"float","count":1,"values":[1]},
+    {"name":"TintColor","type":"float","count":3,"values":[1,1,1]},
+    {"name":"TintAmount","type":"float","count":1,"values":[0]},
+    {"name":"LensEnabled","type":"float","count":1,"values":[0]},
+    {"name":"LensDirection","type":"float","count":3,"values":[0.87,-0.24,0]},
+    {"name":"LensShadow","type":"float","count":1,"values":[0.126954]},
+    {"name":"LensLogRange","type":"float","count":1,"values":[14]},
+    {"name":"TestMode","type":"float","count":1,"values":[0]},
+    {"name":"TestSigma","type":"float","count":1,"values":[0]},
+    {"name":"TestAnisotropy","type":"float","count":1,"values":[1]},
+    {"name":"TestRotation","type":"float","count":1,"values":[0]},
+    {"name":"TestImagePsf","type":"float","count":1,"values":[0]},
+    {"name":"TestAngle","type":"float","count":1,"values":[1]},
+    {"name":"TestDirection","type":"float","count":3,"values":[0,0,1]}
+  ]
+}
