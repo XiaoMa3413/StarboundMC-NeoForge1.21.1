@@ -36,6 +36,7 @@ final class GpuSkyQuery {
     static float discInclination=86.56F,discTimeOverride=Float.NaN,discObserverRadius=20F;
     static float lastDiscTime;
     static boolean discDiagnostic,discPhysical,discWideGlare=true;
+    static boolean discFiniteBeam=true;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
     private static boolean failed;
@@ -83,6 +84,7 @@ final class GpuSkyQuery {
             shader.safeGetUniform("DiscEnabled").set(mode==Mode.DISC?1F:0F);
             shader.safeGetUniform("DiscDiagnostic").set(discDiagnostic?1F:0F);
             shader.safeGetUniform("DiscPhysical").set(discPhysical?1F:0F);
+            shader.safeGetUniform("DiscBeamGrid").set((float)discBeamGrid());
             lastDiscTime=Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F;
             shader.safeGetUniform("DiscTime").set(lastDiscTime);
             Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
@@ -151,6 +153,12 @@ final class GpuSkyQuery {
     }
     static SchwarzschildDiscTable discTable() { return discTable; }
     static int discTexture() { return discTexture; }
+    static int discBeamGrid() {
+        if(!discFiniteBeam)return 1;
+        return switch(StarfieldClientConfig.SPACE_VISUAL_QUALITY.get()) {
+            case ULTRA -> 8;case HIGH,CUSTOM -> 4;case BALANCED -> 2;case PERFORMANCE -> 1;
+        };
+    }
 
     static ShaderInstance shader() { return shader; }
     static long reloads() { return reloads; }
@@ -174,6 +182,7 @@ final class GpuSkyQuery {
                 +" queryGpuBytes="+(catalog==null?0:catalog.gpuBytes())+" lensTexture="+(textures[4]!=0)
                 +" discTexture="+(discTexture!=0)+" discGpuBytes="+(discTexture==0?0:discTable.gpuBytes())
                 +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
-                +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare;
+                +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare
+                +" discBeamGrid="+discBeamGrid();
     }
 }

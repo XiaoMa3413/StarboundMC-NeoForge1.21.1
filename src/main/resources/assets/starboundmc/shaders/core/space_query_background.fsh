@@ -21,7 +21,14 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
-    if(TestMode>7.5) { fragColor=discFlowRadiance(TestSigma,TestAngle,DiscTime,1.0,1.0);return; }
+    if(TestMode>10.5) {
+        vec3 direction=vec3(sin(TestAngle),0,-cos(TestAngle));
+        fragColor=discFiniteBeam(vec3(0,0,1),direction,vec3(cos(TestAngle),0,sin(TestAngle))*TestSigma,
+                vec3(0,TestSigma*TestAnisotropy,0));return;
+    }
+    if(TestMode>9.5) { fragColor=vec4(spaceBackgroundNoise(TestDirection),0,0,1);return; }
+    if(TestMode>8.5) { fragColor=discNoiseGradient(TestDirection);return; }
+    if(TestMode>7.5) { fragColor=discFlowRadiance(TestSigma,TestAngle,DiscTime,1.0,1.0,vec2(0),vec2(0),vec2(0));return; }
     if(TestMode>6.5) { fragColor=discRadiance(vec3(0,0,1),normalize(TestDirection),TestAngle);return; }
     if(TestMode>5.5) { fragColor=discHeader(TestAngle);return; }
     if(TestMode>4.5) { fragColor=vec4(discFrequency(TestSigma,TestAngle),0,0,1);return; }
@@ -30,6 +37,7 @@ void main() {
     if(TestMode>1.5) { fragColor=vec4(lensAzimuth(TestAngle),0,0,1);return; }
     vec4 ray=InverseViewProjection*vec4(screenPosition,1,1);
     vec3 direction=normalize(ray.xyz);float escapeCoverage=1.0;vec4 disc=vec4(0,0,0,1);
+    vec3 imageDirection=direction,imageDx=dFdx(direction),imageDy=dFdy(direction);
     if(LensEnabled>0.5) {
         vec3 radial=-normalize(LensDirection);
         float cosine=clamp(-dot(direction,radial),-1.0,1.0);
@@ -38,7 +46,14 @@ void main() {
         escapeCoverage=clamp(criticalDistance/width+0.5,0.0,1.0);
         vec3 tangent=direction+radial*cosine;
         tangent=dot(tangent,tangent)>1e-12 ? normalize(tangent) : normalize(cross(radial,vec3(0,1,0)));
-        if(DiscEnabled>0.5)disc=discRadiance(radial,tangent,angle);
+        if(DiscEnabled>0.5) {
+            disc=discRadiance(radial,tangent,angle);
+            // Half an fwidth spans the angular extent of the pixel. Keep a
+            // one-pixel guard beyond that support rather than a broad annulus.
+            float beamWeight=1.0-smoothstep(width*.5,width*1.5,abs(criticalDistance));
+            if(DiscBeamGrid>1.5 && beamWeight>0.0)
+                disc=mix(disc,discFiniteBeam(radial,imageDirection,imageDx,imageDy),beamWeight);
+        }
         float azimuth=DiscEnabled>0.5?discHeader(max(angle,LensShadow+0.000001)).y
                 :lensAzimuth(max(angle,LensShadow+0.000001));
         direction=normalize(radial*cos(azimuth)+tangent*sin(azimuth));

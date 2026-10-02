@@ -272,6 +272,8 @@ neoForge {
                     systemProperty 'starboundmc.debug.spaceSmokeViews', project.property('spaceSmokeViews').toString()
                 }
                 systemProperty 'starboundmc.debug.spaceSmokeHidden', 'true'
+                systemProperty 'starboundmc.debug.spaceSmokeBenchmark',
+                        (project.findProperty('spaceSmokeBenchmark') ?: 'false').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeBackground',
                         (project.findProperty('spaceSmokeBackground') ?: 'procedural').toString()
                 systemProperty 'starboundmc.debug.spaceTimeTicks', '600'

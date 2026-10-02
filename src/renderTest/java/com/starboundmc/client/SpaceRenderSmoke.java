@@ -48,7 +48,9 @@ public final class SpaceRenderSmoke {
                     "@stellar-mode-textured-instanced", "@stellar-mode-textured-regular",
                     "@stellar-mode-plain-instanced", "@stellar-mode-plain-regular")).toArray(String[]::new)
             : BASE_VIEWS;
-    private static final double[] FRAME_MS = new double[180];
+    private static final boolean BENCHMARK=Boolean.getBoolean("starboundmc.debug.spaceSmokeBenchmark");
+    private static final double BENCH_SECONDS=30,WARM_SECONDS=5;
+    private static final double[] FRAME_MS = new double[BENCHMARK?24000:180];
     private static boolean started, finished;
     private static long start, stageStart, previousFrame;
     private static int stage, samples;
@@ -72,7 +74,11 @@ public final class SpaceRenderSmoke {
                 GLFW.glfwHideWindow(mc.getWindow().getWindow());
             mc.options.pauseOnLostFocus = false;
             mc.options.hideGui = true;
-            mc.options.renderDistance().set(4);
+            mc.options.renderDistance().set(BENCHMARK?12:4);
+            if(BENCHMARK) {
+                mc.options.enableVsync().set(false);
+                mc.options.framerateLimit().set(260);
+            }
             mc.options.fov().set(70);
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
                     System.getProperty("starboundmc.debug.spaceSmokeQuality", "custom").toUpperCase(java.util.Locale.ROOT)));
@@ -93,7 +99,7 @@ public final class SpaceRenderSmoke {
                             .value().createWorldDimensions(), mc.screen);
             return;
         }
-        if ((System.nanoTime() - start) / 1e9 > 240)
+        if ((System.nanoTime() - start) / 1e9 > (BENCHMARK?120+BODIES.length*(BENCH_SECONDS+WARM_SECONDS):240))
             throw new IllegalStateException("Space fixture timed out at stage " + stage);
         if (mc.player == null || mc.level == null || mc.getOverlay() != null || mc.screen != null) return;
         if (setup == null) {
@@ -135,7 +141,7 @@ public final class SpaceRenderSmoke {
         mc.player.xRotO = fixturePitch;
         long now = System.nanoTime();
         double stageSeconds=(now-stageStart)/1e9;
-        if(discSequence && stageSeconds>=2 && discSequenceFrame<12) {
+        if(discSequence && !BENCHMARK && stageSeconds>=2 && discSequenceFrame<12) {
             int frame=(int)((stageSeconds-2)/.2);
             if(frame>=discSequenceFrame) {
                 var directory=mc.gameDirectory.toPath().resolve("screenshots")
@@ -148,10 +154,13 @@ public final class SpaceRenderSmoke {
                         +" discTime="+GpuSkyQuery.lastDiscTime+"\n");discSequenceFrame++;
             }
         }
-        if (previousFrame != 0 && samples < FRAME_MS.length)
-            FRAME_MS[samples++] = (now - previousFrame) / 1e6;
-        previousFrame = now;
-        if (stageSeconds < (discSequence?5:3) || samples == 0 || discSequence && discSequenceFrame<12) return;
+        if(!BENCHMARK || stageSeconds>=WARM_SECONDS) {
+            if (previousFrame != 0 && samples < FRAME_MS.length)
+                FRAME_MS[samples++] = (now - previousFrame) / 1e6;
+            previousFrame=now;
+        } else previousFrame=0;
+        if (stageSeconds < (BENCHMARK?BENCH_SECONDS+WARM_SECONDS:discSequence?5:3) || samples == 0
+                || !BENCHMARK && discSequence && discSequenceFrame<12) return;
         if(GpuSkyQuery.mode!=GpuSkyQuery.Mode.DISABLED && !GpuSkyQuery.active())
             throw new IllegalStateException("Research view silently fell back: "+GpuSkyQuery.diagnostics());
         if (BODIES[stage] != null && (BODIES[stage].startsWith("@spyglass-") || "@disc-spyglass".equals(BODIES[stage]))
@@ -173,6 +182,7 @@ public final class SpaceRenderSmoke {
                 "Frame wall time includes the full client; this is not isolated GPU time.\n"
                 + "samples=" + samples + " p50_ms=" + sorted[samples / 2]
                 + " p95_ms=" + sorted[Math.min(samples - 1, (int) (samples * .95))] + "\n"
+                + benchmarkReport(sorted,mc)
                 + "resolution=" + mc.getMainRenderTarget().width + "x" + mc.getMainRenderTarget().height + "\n"
                 + "cameraYaw=" + fixtureYaw + " cameraPitch=" + fixturePitch + "\n"
                 + "renderCameraYaw="+mc.gameRenderer.getMainCamera().getYRot()+" renderCameraPitch="+mc.gameRenderer.getMainCamera().getXRot()+"\n"
@@ -200,6 +210,19 @@ public final class SpaceRenderSmoke {
         }
     }
 
+    private static String benchmarkReport(double[] sorted,Minecraft mc) {
+        if(!BENCHMARK)return "";
+        double sum=Arrays.stream(sorted).sum(),p95=sorted[(int)(sorted.length*.95)],p99=sorted[(int)(sorted.length*.99)];
+        long slow=Arrays.stream(sorted).filter(ms->ms>20).count();
+        double fps=sorted.length*1000/sum;
+        boolean passes=fps>=50 && p95<=20 && mc.getMainRenderTarget().width==1920 && mc.getMainRenderTarget().height==1080
+                && StarfieldClientConfig.SPACE_VISUAL_QUALITY.get()==SpaceVisualQuality.ULTRA;
+        return "fullClientBenchmark=true warmup_seconds="+WARM_SECONDS+" measured_seconds="+sum/1000
+                +" average_fps="+fps+" p99_ms="+p99+" worst_ms="+sorted[sorted.length-1]+" frames_over_20ms="+slow
+                +" over20_percent="+slow*100.0/sorted.length+" floor50_avg_and_p95="+passes
+                +" renderDistance="+mc.options.renderDistance().get()+" vsync="+mc.options.enableVsync().get()
+                +" framerateLimitSetting="+mc.options.framerateLimit().get()+"\n";
+    }
     private static void selectView(Minecraft mc) {
         String view = BODIES[stage];
         GpuSkyQuery.mode=view!=null && view.startsWith("@disc-") ? GpuSkyQuery.Mode.DISC
@@ -207,6 +230,7 @@ public final class SpaceRenderSmoke {
                 : view!=null && view.startsWith("@query-") ? GpuSkyQuery.Mode.QUERY : GpuSkyQuery.Mode.DISABLED;
         GpuSkyQuery.discDiagnostic="@disc-diagnostic".equals(view);
         GpuSkyQuery.discPhysical="@disc-physical".equals(view);
+        GpuSkyQuery.discFiniteBeam=!"@disc-single".equals(view);
         GpuSkyQuery.discWideGlare=!"@disc-clean".equals(view);
         GpuSkyQuery.discInclination="@disc-face".equals(view)?0F:"@disc-inclined".equals(view)?60F:86.56F;
         GpuSkyQuery.discObserverRadius="@disc-near".equals(view)?12F:"@disc-close".equals(view)?6F:20F;

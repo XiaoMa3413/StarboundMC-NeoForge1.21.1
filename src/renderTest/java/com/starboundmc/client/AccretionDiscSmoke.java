@@ -113,6 +113,8 @@ final class AccretionDiscSmoke {
                     .append(" multiple=").append(multiImages).append(" CPUPlaneEvents/opaqueDiagnostic\n");
             verifyNearObservers(report);
             verifyMaterialContinuity(report);
+            verifyNoiseGradients(report);
+            verifyFiniteBeam(report);
             if(GL11.glGetError()!=GL11.GL_NO_ERROR)throw new IllegalStateException("Disc OpenGL error");
         } finally {
             shader.safeGetUniform("TestMode").set(0F);shader.safeGetUniform("DiscEnabled").set(0F);
@@ -191,6 +193,106 @@ final class AccretionDiscSmoke {
         }
         report.append("discGpuMaterialContinuity transitions=").append(transitions).append(" seams=").append(seams)
                 .append(" maxTransitionScaledError=").append(maxTransition).append(" maxSeamScaledError=").append(maxSeam).append('\n');
+    }
+    private static void verifyNoiseGradients(StringBuilder report) {
+        var shader=GpuSkyQuery.shader();double maxValue=0,maxGradient=0;int points=0;
+        for(float[] point:new float[][]{{.21F,.37F,.63F},{1.001F,2.999F,3.49F},{7.72F,31.41F,13.29F},
+                {50.33F,73.61F,94.83F},{-7.3F,-1.2F,6.4F},{140.37F,88.21F,57.73F}}) {
+            shader.safeGetUniform("TestMode").set(9F);
+            shader.safeGetUniform("TestDirection").set(point[0],point[1],point[2]);draw();float[] analytic=read();
+            shader.safeGetUniform("TestMode").set(10F);draw();float expected=read()[0];
+            double error=Math.abs(analytic[3]-expected);maxValue=Math.max(maxValue,error);
+            if(error>1e-6)throw new IllegalStateException("Disc gradient noise changed its value "+error);
+            for(int axis=0;axis<3;axis++) {
+                float[] plus=point.clone(),minus=point.clone();plus[axis]+=.005F;minus[axis]-=.005F;
+                shader.safeGetUniform("TestDirection").set(plus[0],plus[1],plus[2]);draw();float a=read()[0];
+                shader.safeGetUniform("TestDirection").set(minus[0],minus[1],minus[2]);draw();float b=read()[0];
+                double finite=(a-b)/(plus[axis]-minus[axis]);error=Math.abs(analytic[axis]-finite);
+                maxGradient=Math.max(maxGradient,error);
+                if(error>.002)throw new IllegalStateException("Disc analytic noise gradient mismatch "+error);
+            }
+            points++;
+        }
+        report.append("discGpuNoiseGradient points=").append(points).append(" maxValueError=").append(maxValue)
+                .append(" maxFiniteDifferenceError=").append(maxGradient).append('\n');
+    }
+    private static void verifyFiniteBeam(StringBuilder report) {
+        var shader=GpuSkyQuery.shader();
+        // This plane exposes higher-order images instead of hiding them behind
+        // an opaque direct image. Dense CPU rays use independent ODE trajectories
+        // and exact plane events, with no packed GPU table or edge coverage.
+        var normal=new org.joml.Vector3f(.15F,(float)Math.sqrt(1-.15*.15-.7*.7),.7F).normalize();
+        var axisU=new org.joml.Vector3f(0,0,1).fma(-normal.z,normal).normalize();
+        var axisV=new org.joml.Vector3f(normal).cross(axisU).normalize();
+        shader.safeGetUniform("DiscNormal").set(normal.x,normal.y,normal.z);
+        shader.safeGetUniform("DiscU").set(axisU.x,axisU.y,axisU.z);
+        shader.safeGetUniform("DiscV").set(axisV.x,axisV.y,axisV.z);
+        shader.safeGetUniform("DiscDiagnostic").set(1F);
+        shader.safeGetUniform("DiscBeamGrid").set(8F);
+        shader.safeGetUniform("TestMode").set(11F);
+        double edge=SchwarzschildRay.shadowAngle(20),maxError=0,squaredError=0,coarseSquaredError=0,referenceError=0;
+        int queries=0,visible=0,partial=0;
+        for(float[] beam:new float[][]{{-.0012F,.0012F,1F},{-.0005F,.0012F,1F},
+                {-.0001F,.0012F,1F},{.0001F,.0012F,1F},{.0005F,.0012F,1F},{.0012F,.0012F,1F},
+                {.0002F,.0024F,.5F},{-.0002F,.0024F,2F}}) {
+            float angle=(float)(edge+beam[0]),width=beam[1],aspect=beam[2];
+            shader.safeGetUniform("TestAngle").set(angle);
+            shader.safeGetUniform("TestSigma").set(width);
+            shader.safeGetUniform("TestAnisotropy").set(aspect);
+            shader.safeGetUniform("DiscBeamGrid").set(4F);draw();float[] coarse=read();
+            shader.safeGetUniform("DiscBeamGrid").set(8F);draw();float[] actual=read();
+            double[] reference64=opaqueBeamReference(angle,width,aspect,64,normal,axisU,axisV);
+            double[] reference=opaqueBeamReference(angle,width,aspect,128,normal,axisU,axisV);
+            for(int k=0;k<4;k++) {
+                if(!Float.isFinite(actual[k]) || actual[k]<0 || actual[k]>1)
+                    throw new IllegalStateException("Non-finite/unbounded finite disc beam");
+                double error=Math.abs(actual[k]-reference[k]);maxError=Math.max(maxError,error);
+                squaredError+=error*error;
+                coarseSquaredError+=Math.pow(coarse[k]-reference[k],2);
+                referenceError=Math.max(referenceError,Math.abs(reference[k]-reference64[k]));
+                if(error>.1)throw new IllegalStateException("Finite disc beam disagrees with dense CPU plane events: "
+                        +error+" offset="+beam[0]+" width="+width+" aspect="+aspect+" actual="
+                        +java.util.Arrays.toString(actual)+" reference="+java.util.Arrays.toString(reference));
+            }
+            if(reference[3]<1)visible++;
+            if(reference[3]>.05 && reference[3]<.95)partial++;
+            queries++;
+        }
+        if(visible<4 || partial<2)throw new IllegalStateException("Finite beam checks did not expose narrow/partial images");
+        if(referenceError>.025 || squaredError>=coarseSquaredError)
+            throw new IllegalStateException("Finite beam convergence check failed: referenceError="+referenceError
+                    +" squaredError8="+squaredError+" squaredError4="+coarseSquaredError);
+        shader.safeGetUniform("DiscDiagnostic").set(0F);shader.safeGetUniform("DiscBeamGrid").set(1F);
+        report.append("discGpuFiniteBeams=").append(queries).append(" grid=8x8 denseCPUGrid=128x128 visible=")
+                .append(visible).append(" partial=").append(partial).append(" maxAbsRGBAError=").append(maxError)
+                .append(" rmsRGBAError=").append(Math.sqrt(squaredError/(queries*4)))
+                .append(" coarse4x4RmsError=").append(Math.sqrt(coarseSquaredError/(queries*4)))
+                .append(" dense64To128MaxDifference=").append(referenceError).append('\n');
+    }
+    private static double[] opaqueBeamReference(float angle,float width,float aspect,int grid,
+            org.joml.Vector3f normal,org.joml.Vector3f axisU,org.joml.Vector3f axisV) {
+        double[] sum=new double[4];
+        for(int y=0;y<grid;y++)for(int x=0;x<grid;x++) {
+            double ox=((x+.5)/grid-.5)*width,oy=((y+.5)/grid-.5)*width*aspect;
+            var direction=new org.joml.Vector3d(Math.sin(angle)+Math.cos(angle)*ox,oy,
+                    -Math.cos(angle)+Math.sin(angle)*ox).normalize();
+            double theta=Math.acos(-direction.z);
+            var tangent=new org.joml.Vector3d(direction.x,direction.y,0).normalize();
+            var path=new SchwarzschildPath(20,theta,1e-12);
+            var hits=SchwarzschildDisc.intersections(path,normal.z,tangent.x*normal.x+tangent.y*normal.y,4.63,9.35);
+            if(hits.isEmpty()) {sum[3]+=1;continue;}
+            var hit=hits.getFirst();
+            var position=new org.joml.Vector3d(tangent).mul(Math.sin(hit.azimuth()));
+            position.z=Math.cos(hit.azimuth());
+            double polar=Math.atan2(position.x*axisV.x+position.y*axisV.y+position.z*axisV.z,
+                    position.x*axisU.x+position.y*axisU.y+position.z*axisU.z);
+            int sector=(int)Math.floor((polar+Math.PI)/(2*Math.PI)*12);
+            int band=(int)Math.floor((hit.radius()-4.63)/(9.35-4.63)*6);
+            if((sector+band)%2==0) {sum[0]+=.042;sum[1]+=.49;sum[2]+=.7;}
+            else {sum[0]+=.7;sum[1]+=.21;sum[2]+=.028;}
+        }
+        for(int k=0;k<4;k++)sum[k]/=grid*grid;
+        return sum;
     }
     private static void requireMaterial(float[] value,int channel) {
         if(!Float.isFinite(value[channel]) || value[channel]<0 || channel==3 && value[channel]>1)

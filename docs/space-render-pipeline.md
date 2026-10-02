@@ -378,3 +378,53 @@ Ultra / Performance 各通过 36 个星点 GPU 数值条件：两种分辨率 ×
 普通原生 1920×1080 银河 SHA256 仍与前两检查点相同，退出预览释放查询数据。最新截图已有较断续的细丝，但远景仍存在过整齐的环带，临界细像还有颗粒；薄盘程序近似距视频里的体积、湍流、连续穿行和镜头成像仍有差距。
 
 最终普通生产 `test build` 成功：**155 套件、754 项测试，零失败 / 错误 / 跳过**。生产 JAR 包含更新后的盘 include，不含五个渲染夹具。此轮没有新增第三方依赖或电影素材，关闭研究开关恢复普通天空，材质修改可独立 revert 回 `7b30a5b`。
+
+## 临界盘像采样与客户端预算（2026-10-03 复核）
+
+基线 `13feb1e`。材质噪声使用显式解析梯度和链式足迹，跳过无发射区域；临界核心 Ultra / High（含 Custom）/ Balanced / Performance 的主光线数为 `64 / 16 / 4 / 1`。只积分盘发射与透射率，完整背景光束尚未完成。技术近似与诊断误差见 [临界盘像积分](space-black-hole-foundation.md#临界盘像的像素内积分2026-10-02)。最高画质工程目标为本机 1080p 约 50 FPS，用户允许最重视点小幅超出。
+
+| 最终兼容路径 | 固定视点数 | `run-space-smoke/screenshots` 目录 |
+| --- | ---: | --- |
+| 原生 Ultra，1920×1080，双重载、960×540 缩放、三半径、真实望远镜与四档切换 | 21 | `disc-beam-final-ultra` |
+| 原生 Performance，1280×720，三半径、望远镜与重载 | 8 | `disc-beam-final-performance` |
+| Direct + Legacy / Custom，1280×720，物理显示、近景、重载与缩放 | 8 | `disc-beam-final-direct` |
+| HDR2 StellarView / Ultra，1280×720，三半径、四种星 shader 与重载 | 11 | `disc-beam-final-stellar` |
+
+四组全部正常退出并生成完成标记，共 **48 张固定截图与 24 张连续截图**。Ultra 重载代数为 `2 / 3`，画质切换的 BeamGrid 为 `1 / 2 / 4 / 8`，Bloom 为 `0 / 3 / 5 / 7`；退出研究路径恢复普通 5 层 Bloom 和零查询数据。Performance 保留零 Bloom；Direct 不分配场景目标；StellarView 普通视点有非零 HDR2 绘制、零导入拷贝和零降级，四 shader 状态检查通过。直接检查了最终远近景及运动 / 材质序列中的实际 PNG；规则环带仍明显，不能称为电影美术已完成。
+
+四组都通过原有上传、轨迹、谱、频移、主世界深度和 GL 状态检查。新增六个噪声点的值与旧函数完全相同，解析梯度与旧函数中心差分的最大差为 `.0014132`，阈值 `.002`。八个临界诊断足迹使用独立 `128×128` CPU 参考，GPU 8×8 的 RGBA 均方根 / 最大绝对差为 `.0348372 / .0827962`，4×4 对照均方根为 `.0620229`；64×64 到 128×128 的参考最大差为 `.0173951`。这些结果只证明所覆盖诊断足迹的改进，不是全场景或非线性热材质的全局误差上限。
+
+最终浮点审查将子光线的平面交点保护项明确为 `B + (1 - weight)`，避免 `B + 1 - weight` 先相加再相减损失小值精度。`disc-beam-final-precision` 另完成三个原生 1080p 视点与全部 GPU 数值检查，误差记录保持相同，最终生产包随后重建。
+
+标准四区块视距的原生 1080p 银河 PNG SHA256 仍为 `69EA0165F49D013EA516E20E6F4DACCBE2AD3C790C69503D3281F0E91627B733`。十二区块长测的首尾银河 PNG 都为 `F60ABA732A9C3234AF91E9A8214174261FCA89BDBFC4870A0E2C9973B55132EB`；按同一测试条件比较退出预览前后的图像。宇宙、航行、星图与行星渲染逻辑未改动。
+
+### 完整客户端长测
+
+新增 `-PspaceSmokeBenchmark=true`。隐藏客户端、独立夹具世界、十二区块视距、VSync 关闭、Minecraft 限帧设置 260（最大值 / 不限帧），1920×1080 / Ultra。每视点预热 5 秒后连续测量约 30 秒，用 `RenderFrameEvent.Post → Post` 间隔统计完整客户端循环。PNG 写盘和 GPU 数值夹具不在测量区间；首次生成 / 换半径预计算被预热排除，仍有实际停顿，未宣称解决。独立世界只有测试船体 / 平台，不能外推到复杂用户存档、实体负载或其他 GPU。
+
+最终复测标签为 `disc-beam-budget-telemetry`，七视点累计约 210 秒，额外每秒记录 NVIDIA 温度、时钟、功耗与利用率于忽略目录 `build/disc-beam-budget-telemetry.csv`。同机 RTX 3060 Laptop / i7-12700H / NVIDIA 610.47 / Java 21.0.8 的完整客户端数据如下。
+
+| 视点 | 平均 FPS | P50 / P95 / P99（ms） | 最慢帧（ms） | 超过 20 ms 帧数 |
+| --- | ---: | --- | ---: | ---: |
+| 普通银河，开始 | 402.30 | 2.325 / 3.304 / 3.931 | 20.147 | 1 / 12069 |
+| 黑洞移动镜头 | 115.26 | 8.547 / 9.745 / 10.429 | 11.365 | 0 / 3458 |
+| 黑洞盘面动画 | 112.01 | 8.793 / 9.933 / 10.481 | 11.688 | 0 / 3360 |
+| 黑洞静止近景，6 rs | 82.10 | 12.059 / 13.483 / 14.078 | 15.410 | 0 / 2463 |
+| 黑洞远景，20 rs | 110.11 | 8.947 / 10.102 / 10.744 | 12.467 | 0 / 3303 |
+| 普通行星 | 103.14 | 9.558 / 10.686 / 11.356 | 20.081 | 1 / 3094 |
+| 普通银河，返回 | 372.19 | 2.677 / 3.403 / 3.971 | 10.930 | 0 / 11166 |
+
+这次七视点均达到平均 50 FPS 与 P95 ≤ 20 ms 的工程指标。更早的宽临界区 8×8 版本 `disc-beam-budget-benchmark` 近景约 50.24 FPS / P95 22.342 ms，随后收紧外围支持、停止已经结束的轨迹并跳过边缘支持以外的邻近查表，保留核心 64 条光线。当前代码另一轮 `disc-beam-final-benchmark` 出现大幅波动，移动镜头 / 普通行星平均仅约 17.65 / 7.29 FPS，多个未改动 pass 也受影响；数值验证与运行完成，但性能未达标，原因未查明。复测没有重现，原始报告仍保留，不能只凭正常复测否认环境波动或保证所有场景持续达标。
+
+重现长测：
+
+```powershell
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline `
+  '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' `
+  '-Dorg.gradle.java.installations.auto-detect=false' '-Dorg.gradle.jvmargs=-Xmx1G' `
+  -PspaceSmoke -PspaceSmokeBenchmark=true -PspaceSmokeQuality=ultra `
+  -PspaceSmokeLabel=disc-budget-repeat -PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080 `
+  '-PspaceSmokeViews=@galaxy,@disc-motion,@disc-animation,@disc-close,@disc-film,sys1:lush,@galaxy-return' runClient
+```
+
+普通生产 `test build` 成功：**155 套件、754 项测试，零失败 / 错误 / 跳过**。生产 JAR 含解析梯度、8×8 盘积分与终止路径退出，不含五个渲染夹具。没有新增第三方依赖或电影资产；关闭研究开关恢复普通天空，本次可单独 revert 回 `13feb1e`。盘厚度、连续观察者、背景联合光束、完整镜头模型与 Kerr 继续作为后续工作。
