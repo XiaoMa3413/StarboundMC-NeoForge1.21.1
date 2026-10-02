@@ -120,20 +120,20 @@ public final class SpaceRenderSmoke {
         setup.join();
         if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])
                 || "@query-reload".equals(BODIES[stage]) || "@lens-reload".equals(BODIES[stage])
-                || "@disc-reload".equals(BODIES[stage])) {
+                || "@disc-reload".equals(baseView(BODIES[stage]))) {
             if (reload == null) { reloadGeneration=GpuSkyQuery.reloads();reload = mc.reloadResourcePacks(); return; }
             if (!reload.isDone()) return;
             reload.join();
             if(GpuSkyQuery.reloads()<=reloadGeneration)throw new IllegalStateException("Requested shader reload did not run");
         }
         if (stageStart == 0) selectView(mc);
-        boolean discSequence="@disc-motion".equals(BODIES[stage]) || "@disc-animation".equals(BODIES[stage]);
-        if("@disc-animation".equals(BODIES[stage]))
+        boolean discSequence=BODIES[stage]!=null && (BODIES[stage].startsWith("@disc-motion") || BODIES[stage].startsWith("@disc-animation"));
+        if(BODIES[stage]!=null && BODIES[stage].startsWith("@disc-animation"))
             GpuSkyQuery.discTimeOverride=180F+(float)((System.nanoTime()-stageStart)/1e9)*6F;
         // Initial server teleport packets can otherwise overwrite the first
         // camera pose after selectView, producing a mislabeled reference image.
         float movingYaw=fixtureYaw;
-        if("@query-motion".equals(BODIES[stage]) || "@lens-motion".equals(BODIES[stage]) || "@disc-motion".equals(BODIES[stage]))
+        if("@query-motion".equals(BODIES[stage]) || "@lens-motion".equals(BODIES[stage]) || "@disc-motion".equals(baseView(BODIES[stage])))
             movingYaw+=(float)Math.sin((System.nanoTime()-stageStart)/1e9*2)*.15F;
         mc.player.setYRot(movingYaw);
         mc.player.setXRot(fixturePitch);
@@ -146,7 +146,7 @@ public final class SpaceRenderSmoke {
             if(frame>=discSequenceFrame) {
                 var directory=mc.gameDirectory.toPath().resolve("screenshots")
                         .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel","capture"))
-                        .resolve("@disc-animation".equals(BODIES[stage])?"disc-animation-sequence":"disc-motion-sequence");
+                        .resolve(BODIES[stage].startsWith("@disc-animation")?"disc-animation-sequence":"disc-motion-sequence");
                 Files.createDirectories(directory);
                 String name=String.format(java.util.Locale.ROOT,"%02d",discSequenceFrame);
                 try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())) {image.writeToFile(directory.resolve(name+".png"));}
@@ -223,8 +223,14 @@ public final class SpaceRenderSmoke {
                 +" renderDistance="+mc.options.renderDistance().get()+" vsync="+mc.options.enableVsync().get()
                 +" framerateLimitSetting="+mc.options.framerateLimit().get()+"\n";
     }
+    private static String baseView(String view) {
+        if(view==null)return null;
+        if(view.endsWith("-cache"))return view.substring(0,view.length()-6);
+        if(view.endsWith("-procedural"))return view.substring(0,view.length()-11);
+        return view;
+    }
     private static void selectView(Minecraft mc) {
-        String view = BODIES[stage];
+        String view = baseView(BODIES[stage]);
         GpuSkyQuery.mode=view!=null && view.startsWith("@disc-") ? GpuSkyQuery.Mode.DISC
                 :view!=null && view.startsWith("@lens-") ? GpuSkyQuery.Mode.SCHWARZSCHILD
                 : view!=null && view.startsWith("@query-") ? GpuSkyQuery.Mode.QUERY : GpuSkyQuery.Mode.DISABLED;
@@ -233,6 +239,7 @@ public final class SpaceRenderSmoke {
         GpuSkyQuery.discFiniteBeam=!"@disc-single".equals(view) && !"@disc-volume-single".equals(view);
         GpuSkyQuery.discVolume=!"@disc-single".equals(view) && !"@disc-thin".equals(view);
         GpuSkyQuery.discDifferentials=view==null || !view.endsWith("-full-foot");
+        GpuSkyQuery.discCoefficientCache=BODIES[stage]!=null && BODIES[stage].endsWith("-cache");
         GpuSkyQuery.discWideGlare=!"@disc-clean".equals(view);
         GpuSkyQuery.discInclination="@disc-face".equals(view)?0F:"@disc-inclined".equals(view)?60F:86.56F;
         GpuSkyQuery.discObserverRadius="@disc-near".equals(view)?12F:view!=null && view.startsWith("@disc-close")?6F:20F;

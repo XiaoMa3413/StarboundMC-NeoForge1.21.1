@@ -2,8 +2,12 @@
   "vertex": "starboundmc:space_background",
   "fragment": "starboundmc:space_query_background",
   "samplers": [
-    {"name":"SkyCells"}, {"name":"SkyIndices"}, {"name":"SkySources"},
-    {"name":"SkyFlux"}, {"name":"LensAzimuth"}
+    {"name":"SkyCells"},
+    {"name":"SkyIndices"},
+    {"name":"SkySources"},
+    {"name":"SkyFlux"},
+    {"name":"LensAzimuth"},
+    {"name":"DiscCoefficients"}
   ],
   "uniforms": [
     {"name":"InverseViewProjection","type":"matrix4x4","count":16,"values":[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]},
@@ -27,7 +31,7 @@
     {"name":"DiscVolumeSteps","type":"float","count":1,"values":[8]},
     {"name":"DiscDifferentials","type":"float","count":1,"values":[1]},
     {"name":"DiscPiHigh","type":"float","count":1,"values":[3.1415927410125732]},
-    {"name":"DiscPiLow","type":"float","count":1,"values":[-8.742278e-8]},
+    {"name":"DiscPiLow","type":"float","count":1,"values":[-8.742278e-08]},
     {"name":"DiscNormal","type":"float","count":3,"values":[0,1,0]},
     {"name":"DiscU","type":"float","count":3,"values":[1,0,0]},
     {"name":"DiscV","type":"float","count":3,"values":[0,0,1]},
@@ -37,6 +41,13 @@
     {"name":"TestRotation","type":"float","count":1,"values":[0]},
     {"name":"TestImagePsf","type":"float","count":1,"values":[0]},
     {"name":"TestAngle","type":"float","count":1,"values":[1]},
-    {"name":"TestDirection","type":"float","count":3,"values":[0,0,1]}
+    {"name":"TestDirection","type":"float","count":3,"values":[0,0,1]},
+    {"name":"DiscCacheEnabled","type":"float","count":1,"values":[0]},
+    {"name":"DiscCacheSize","type":"float","count":3,"values":[128,512,16]},
+    {"name":"DiscCacheAtlas","type":"float","count":4,"values":[2080,8288,1036,7]},
+    {"name":"DiscCacheKeys0","type":"float","count":4,"values":[-1000000,-1000000,-1000000,-1000000]},
+    {"name":"DiscCacheKeys1","type":"float","count":4,"values":[-1000000,-1000000,-1000000,-1000000]},
+    {"name":"DiscCacheGains0","type":"float","count":4,"values":[0,0,0,0]},
+    {"name":"DiscCacheGains1","type":"float","count":4,"values":[0,0,0,0]}
   ]
 }

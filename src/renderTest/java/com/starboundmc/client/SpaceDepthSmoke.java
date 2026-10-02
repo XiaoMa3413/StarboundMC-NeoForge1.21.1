@@ -600,7 +600,7 @@ final class SpaceDepthSmoke {
                 .append(RenderSystem.getShaderFogStart()).append(RenderSystem.getShaderFogEnd())
                 .append(RenderSystem.getShaderFogShape()).append(Arrays.toString(RenderSystem.getShaderFogColor()));
         int active=GL11.glGetInteger(GL13.GL_ACTIVE_TEXTURE);
-        for(int i=0;i<5;i++) {
+        for(int i=0;i<6;i++) {
             GlStateManager._activeTexture(GL13.GL_TEXTURE0+i);
             result.append(GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)).append(',');
         }

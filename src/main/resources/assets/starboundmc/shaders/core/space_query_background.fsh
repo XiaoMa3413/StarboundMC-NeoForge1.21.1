@@ -22,6 +22,10 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
+    if(TestMode>21.5) {
+        fragColor=volumeCachedCoefficients(TestSigma,TestAngle,TestAnisotropy,DiscTime,vec3(0),vec3(0),vec3(0),vec3(0));return;
+    }
+    if(TestMode>20.5) {fragColor=coefficientChart(TestDirection,TestSigma,TestAngle);return;}
     if(TestMode>19.5) {
         vec3 radial=vec3(0,0,1);
         DiscBeamRay center=discBeamRay(radial,vec3(sin(TestAngle),0,-cos(TestAngle)));

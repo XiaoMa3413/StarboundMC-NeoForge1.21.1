@@ -121,6 +121,7 @@ final class AccretionDiscSmoke {
             verifyVolumeContinuity(report);
             verifyVolumeBeam(report);
             verifyVolumeNoise(report);
+            report.append(DiscMediumSmoke.verify());
             if(GL11.glGetError()!=GL11.GL_NO_ERROR)throw new IllegalStateException("Disc OpenGL error");
         } finally {
             shader.safeGetUniform("TestMode").set(0F);shader.safeGetUniform("DiscEnabled").set(0F);
@@ -133,7 +134,7 @@ final class AccretionDiscSmoke {
             for(int i=0;i<names.length;i++)GlStateManager._pixelStore(names[i],pack[i]);
         }
         if(!before.equals(SpaceDepthSmoke.stateSignature()) || depthBefore[0]!=depthAfter[0])throw new IllegalStateException("Disc checks changed GL state/main depth");
-        return report.append("discStateRestored=fiveTextureUnits/program/framebuffers/viewport/buffers/mainDepth\n").toString();
+        return report.append("discStateRestored=sixTextureUnits/program/framebuffers/viewport/buffers/mainDepth\n").toString();
     }
     private static void verifyVolumeDifferentials(StringBuilder report) {
         var shader=GpuSkyQuery.shader();int gradients=0,footprints=0,fast=0,fallback=0;
@@ -538,10 +539,10 @@ final class AccretionDiscSmoke {
         if(!Float.isFinite(value[channel]) || value[channel]<0 || channel==3 && value[channel]>1)
             throw new IllegalStateException("Non-finite/unbounded disc radiative coefficient");
     }
-    private static void draw() {
+    static void draw() {
         RenderSystem.setShader(GpuSkyQuery::shader);
         // Bind explicitly: another fixture restored its VAO behind BufferUploader's immediate cache.
         triangle.bind();triangle.drawWithShader(new org.joml.Matrix4f(),new org.joml.Matrix4f(),GpuSkyQuery.shader());
     }
-    private static float[] read() {float[] pixel=new float[4];GL11.glReadPixels(0,0,1,1,GL11.GL_RGBA,GL11.GL_FLOAT,pixel);return pixel;}
+    static float[] read() {float[] pixel=new float[4];GL11.glReadPixels(0,0,1,1,GL11.GL_RGBA,GL11.GL_FLOAT,pixel);return pixel;}
 }

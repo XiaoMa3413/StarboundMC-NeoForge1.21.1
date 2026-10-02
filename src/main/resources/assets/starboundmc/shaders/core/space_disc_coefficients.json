@@ -1,0 +1,13 @@
+{
+  "vertex":"starboundmc:space_background",
+  "fragment":"starboundmc:space_disc_coefficients",
+  "samplers":[{"name":"Sampler0"},{"name":"LensAzimuth"}],
+  "uniforms":[
+    {"name":"FieldDetail","type":"float","count":1,"values":[1]},
+    {"name":"BakeLevel","type":"float","count":1,"values":[0]},
+    {"name":"BakeGeneration","type":"float","count":1,"values":[0]},
+    {"name":"BakeSize","type":"float","count":3,"values":[128,512,16]},
+    {"name":"PreviousSize","type":"float","count":3,"values":[128,512,16]},
+    {"name":"ScratchSize","type":"float","count":2,"values":[2080,514]}
+  ]
+}

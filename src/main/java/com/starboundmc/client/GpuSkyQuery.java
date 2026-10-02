@@ -41,6 +41,9 @@ final class GpuSkyQuery {
     static boolean discFiniteBeam=true;
     static boolean discVolume=Boolean.getBoolean("starboundmc.debug.accretionDiscVolume");
     static boolean discDifferentials=!Boolean.getBoolean("starboundmc.debug.discFullFootprints");
+    // Coefficient filtering is a separate opt-in until its new radiance model
+    // preserves the accepted art direction across close and in-medium views.
+    static boolean discCoefficientCache=Boolean.getBoolean("starboundmc.debug.discCoefficientCache");
     static float discThickness=(float)SchwarzschildVolume.ASPECT;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
@@ -53,6 +56,7 @@ final class GpuSkyQuery {
     static void register(RegisterShadersEvent event) {
         reloads++;
         release();shader=null;failed=false;
+        DiscMediumCache.register(event);
         try {
             event.registerShader(new ShaderInstance(event.getResourceProvider(),
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID,"space_query_background"),
@@ -96,6 +100,9 @@ final class GpuSkyQuery {
             shader.safeGetUniform("DiscDifferentials").set(discDifferentials?1F:0F);
             lastDiscTime=Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F;
             shader.safeGetUniform("DiscTime").set(lastDiscTime);
+            if(mode==Mode.DISC && discVolume && discCoefficientCache && !discPhysical)
+                DiscMediumCache.prepare(lastDiscTime);
+            DiscMediumCache.bind(shader,textures[1],discCoefficientCache && discVolume && !discPhysical);
             Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
             float inclination=(float)Math.toRadians(discInclination);
             Vector3f normal=new Vector3f(up).mul((float)Math.sin(inclination)).fma((float)Math.cos(inclination),radial).normalize();
@@ -116,7 +123,7 @@ final class GpuSkyQuery {
         }
     }
 
-    /** All five samplers are stock 2D textures, compatible with Minecraft ShaderInstance. */
+    /** All samplers, including the optional medium atlas, use stock 2D bindings. */
     static void bind(ShaderInstance target,boolean withLens) {
         int count=StarfieldClientConfig.SPACE_VISUAL_QUALITY.get().backgroundStarBudget();
         if(catalog==null || catalog.count()!=count) {
@@ -138,6 +145,7 @@ final class GpuSkyQuery {
         for(int i=0;i<4;i++)target.setSampler(SAMPLERS[i],textures[i]);
         // The lens sampler must have a complete binding even when its branch is disabled.
         target.setSampler(SAMPLERS[4],textures[4]!=0?textures[4]:textures[1]);
+        DiscMediumCache.bind(target,textures[1],false);
         target.safeGetUniform("LensShadow").set(SHADOW);
         target.safeGetUniform("LensLogRange").set(LOG_RANGE);
         target.safeGetUniform("DiscEnabled").set(0F);
@@ -187,6 +195,7 @@ final class GpuSkyQuery {
         catalog=null;
     }
     static void release() {
+        DiscMediumCache.release();
         releaseCatalog();if(textures[4]!=0)GlStateManager._deleteTexture(textures[4]);textures[4]=0;
         if(discTexture!=0)GlStateManager._deleteTexture(discTexture);discTexture=0;discTable=null;
         if(triangle!=null)triangle.close();triangle=null;
@@ -200,6 +209,6 @@ final class GpuSkyQuery {
                 +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
                 +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare
                 +" discBeamGrid="+discBeamGrid()+" discVolume="+discVolume+" discThickness="+discThickness+" discVolumeSteps="+discVolumeSteps()
-                +" discDifferentials="+discDifferentials;
+                +" discDifferentials="+discDifferentials+" discCoefficientCache="+discCoefficientCache+DiscMediumCache.diagnostics();
     }
 }
