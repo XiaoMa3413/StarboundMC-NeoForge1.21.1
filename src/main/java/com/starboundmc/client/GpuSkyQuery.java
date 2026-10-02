@@ -8,6 +8,7 @@ import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.SchwarzschildLensTable;
 import com.starboundmc.client.space.SchwarzschildRay;
+import com.starboundmc.client.space.SchwarzschildDiscTable;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.StellarBackground;
 import net.minecraft.client.renderer.FogRenderer;
@@ -19,8 +20,9 @@ import org.joml.Vector3f;
 
 /** On-demand background queries and opt-in static Schwarzschild research preview. */
 final class GpuSkyQuery {
-    enum Mode { DISABLED, QUERY, SCHWARZSCHILD }
-    static Mode mode=Boolean.getBoolean("starboundmc.debug.schwarzschild") ? Mode.SCHWARZSCHILD
+    enum Mode { DISABLED, QUERY, SCHWARZSCHILD, DISC }
+    static Mode mode=Boolean.getBoolean("starboundmc.debug.accretionDisc") ? Mode.DISC
+            : Boolean.getBoolean("starboundmc.debug.schwarzschild") ? Mode.SCHWARZSCHILD
             : Boolean.getBoolean("starboundmc.debug.backgroundQuery") ? Mode.QUERY : Mode.DISABLED;
     // Fixed celestial direction and static observer; this is not a new universe/gameplay body.
     static final Vector3f LENS_DIRECTION=new Vector3f(.87F,-.24F,0).normalize();
@@ -29,6 +31,10 @@ final class GpuSkyQuery {
     private static VertexBuffer triangle;
     private static StellarBackground catalog;
     private static SchwarzschildLensTable lens;
+    private static SchwarzschildDiscTable discTable;
+    private static int discTexture;
+    static float discInclination=86.56F,discTimeOverride=Float.NaN;
+    static boolean discDiagnostic,discPhysical;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
     private static boolean failed;
@@ -55,6 +61,7 @@ final class GpuSkyQuery {
         var previous=RenderSystem.getShader();
         try {
             bind(shader,mode==Mode.SCHWARZSCHILD);
+            if(mode==Mode.DISC)bindDisc(shader);
             if(triangle==null) {
                 var builder=Tesselator.getInstance().begin(VertexFormat.Mode.TRIANGLES,DefaultVertexFormat.POSITION);
                 builder.addVertex(-1,-1,0);builder.addVertex(3,-1,0);builder.addVertex(-1,3,0);
@@ -71,7 +78,19 @@ final class GpuSkyQuery {
             int tint=environment.skyTintColor();
             shader.safeGetUniform("TintColor").set(((tint>>16)&255)/255F,((tint>>8)&255)/255F,(tint&255)/255F);
             shader.safeGetUniform("TintAmount").set(environment.skyTintAmount());
-            shader.safeGetUniform("LensEnabled").set(mode==Mode.SCHWARZSCHILD?1F:0F);
+            shader.safeGetUniform("LensEnabled").set(mode==Mode.SCHWARZSCHILD || mode==Mode.DISC?1F:0F);
+            shader.safeGetUniform("DiscEnabled").set(mode==Mode.DISC?1F:0F);
+            shader.safeGetUniform("DiscDiagnostic").set(discDiagnostic?1F:0F);
+            shader.safeGetUniform("DiscPhysical").set(discPhysical?1F:0F);
+            shader.safeGetUniform("DiscTime").set(Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F);
+            Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
+            float inclination=(float)Math.toRadians(discInclination);
+            Vector3f normal=new Vector3f(up).mul((float)Math.sin(inclination)).fma((float)Math.cos(inclination),radial).normalize();
+            Vector3f u=new Vector3f(radial).fma(-radial.dot(normal),normal);
+            if(u.lengthSquared()<1e-8)u.set(0,0,1);else u.normalize();
+            Vector3f v=new Vector3f(normal).cross(u).normalize();
+            shader.safeGetUniform("DiscNormal").set(normal.x,normal.y,normal.z);
+            shader.safeGetUniform("DiscU").set(u.x,u.y,u.z);shader.safeGetUniform("DiscV").set(v.x,v.y,v.z);
             shader.safeGetUniform("LensDirection").set(LENS_DIRECTION.x,LENS_DIRECTION.y,LENS_DIRECTION.z);
             shader.safeGetUniform("TestMode").set(0F);
             triangle.bind();triangle.drawWithShader(new Matrix4f(),new Matrix4f(),shader);draws++;
@@ -108,11 +127,23 @@ final class GpuSkyQuery {
         target.setSampler(SAMPLERS[4],textures[4]!=0?textures[4]:textures[1]);
         target.safeGetUniform("LensShadow").set(SHADOW);
         target.safeGetUniform("LensLogRange").set(LOG_RANGE);
+        target.safeGetUniform("DiscEnabled").set(0F);
     }
+
+    static void bindDisc(ShaderInstance target) {
+        if(discTable==null)discTable=new SchwarzschildDiscTable(SchwarzschildLensTable.OBSERVER_RADIUS);
+        if(discTexture==0) {
+            discTexture=SpaceFloatTexture.upload(SchwarzschildDiscTable.WIDTH,SchwarzschildDiscTable.HEIGHT,4,discTable.data());uploads++;
+        }
+        target.setSampler("LensAzimuth",discTexture);target.safeGetUniform("DiscEnabled").set(1F);
+    }
+    static SchwarzschildDiscTable discTable() { return discTable; }
+    static int discTexture() { return discTexture; }
 
     static ShaderInstance shader() { return shader; }
     static long reloads() { return reloads; }
-    static boolean active() { return shader!=null && !failed && catalog!=null && (mode!=Mode.SCHWARZSCHILD || textures[4]!=0); }
+    static boolean active() { return shader!=null && !failed && catalog!=null
+            && (mode!=Mode.SCHWARZSCHILD || textures[4]!=0) && (mode!=Mode.DISC || discTexture!=0); }
     static StellarBackground catalog() { return catalog; }
     static int[] textureIds() { return textures.clone(); }
     private static void releaseCatalog() {
@@ -121,12 +152,16 @@ final class GpuSkyQuery {
     }
     static void release() {
         releaseCatalog();if(textures[4]!=0)GlStateManager._deleteTexture(textures[4]);textures[4]=0;
+        if(discTexture!=0)GlStateManager._deleteTexture(discTexture);discTexture=0;discTable=null;
         if(triangle!=null)triangle.close();triangle=null;
     }
     static String diagnostics() {
         return "queryMode="+mode+" queryShader="+(shader!=null)+" queryFailed="+failed+" queryReloads="+reloads+" queryUploads="+uploads
                 +" queryDraws="+draws+" querySources="+(catalog==null?0:catalog.count())
                 +" queryMaxCandidates="+(catalog==null?0:catalog.maximumCandidates())
-                +" queryGpuBytes="+(catalog==null?0:catalog.gpuBytes())+" lensTexture="+(textures[4]!=0);
+                +" queryGpuBytes="+(catalog==null?0:catalog.gpuBytes())+" lensTexture="+(textures[4]!=0)
+                +" discTexture="+(discTexture!=0)+" discGpuBytes="+(discTexture==0?0:discTable.gpuBytes())
+                +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
+                +" discTimeOverride="+discTimeOverride;
     }
 }

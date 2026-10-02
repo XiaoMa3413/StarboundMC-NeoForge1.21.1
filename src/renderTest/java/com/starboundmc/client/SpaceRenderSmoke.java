@@ -56,6 +56,7 @@ public final class SpaceRenderSmoke {
     private static CompletableFuture<?> setup;
     private static CompletableFuture<Void> reload;
     private static long reloadGeneration;
+    private static int discSequenceFrame;
 
     @SubscribeEvent
     public static void frame(RenderFrameEvent.Post event) throws Exception {
@@ -112,7 +113,8 @@ public final class SpaceRenderSmoke {
         if (!setup.isDone() || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)) return;
         setup.join();
         if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])
-                || "@query-reload".equals(BODIES[stage]) || "@lens-reload".equals(BODIES[stage])) {
+                || "@query-reload".equals(BODIES[stage]) || "@lens-reload".equals(BODIES[stage])
+                || "@disc-reload".equals(BODIES[stage])) {
             if (reload == null) { reloadGeneration=GpuSkyQuery.reloads();reload = mc.reloadResourcePacks(); return; }
             if (!reload.isDone()) return;
             reload.join();
@@ -122,26 +124,43 @@ public final class SpaceRenderSmoke {
         // Initial server teleport packets can otherwise overwrite the first
         // camera pose after selectView, producing a mislabeled reference image.
         float movingYaw=fixtureYaw;
-        if("@query-motion".equals(BODIES[stage]) || "@lens-motion".equals(BODIES[stage]))
+        if("@query-motion".equals(BODIES[stage]) || "@lens-motion".equals(BODIES[stage]) || "@disc-motion".equals(BODIES[stage]))
             movingYaw+=(float)Math.sin((System.nanoTime()-stageStart)/1e9*2)*.15F;
         mc.player.setYRot(movingYaw);
         mc.player.setXRot(fixturePitch);
         mc.player.yRotO = movingYaw;
         mc.player.xRotO = fixturePitch;
         long now = System.nanoTime();
+        double stageSeconds=(now-stageStart)/1e9;
+        if("@disc-motion".equals(BODIES[stage]) && stageSeconds>=2 && discSequenceFrame<12) {
+            int frame=(int)((stageSeconds-2)/.2);
+            if(frame>=discSequenceFrame) {
+                var directory=mc.gameDirectory.toPath().resolve("screenshots")
+                        .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel","capture")).resolve("disc-motion-sequence");
+                Files.createDirectories(directory);
+                String name=String.format(java.util.Locale.ROOT,"%02d",discSequenceFrame);
+                try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())) {image.writeToFile(directory.resolve(name+".png"));}
+                Files.writeString(directory.resolve(name+".txt"),"stageSeconds="+stageSeconds+" cameraYaw="+mc.gameRenderer.getMainCamera().getYRot()
+                        +" discTime="+GpuSkyQuery.discTimeOverride+"\n");discSequenceFrame++;
+            }
+        }
         if (previousFrame != 0 && samples < FRAME_MS.length)
             FRAME_MS[samples++] = (now - previousFrame) / 1e6;
         previousFrame = now;
-        if ((now - stageStart) / 1e9 < 3 || samples == 0) return;
+        if (stageSeconds < ("@disc-motion".equals(BODIES[stage])?5:3) || samples == 0
+                || "@disc-motion".equals(BODIES[stage]) && discSequenceFrame<12) return;
         if(GpuSkyQuery.mode!=GpuSkyQuery.Mode.DISABLED && !GpuSkyQuery.active())
             throw new IllegalStateException("Research view silently fell back: "+GpuSkyQuery.diagnostics());
-        if (BODIES[stage] != null && BODIES[stage].startsWith("@spyglass-")
+        if (BODIES[stage] != null && (BODIES[stage].startsWith("@spyglass-") || "@disc-spyglass".equals(BODIES[stage]))
                 && !mc.player.isScoping()) throw new IllegalStateException("Spyglass fixture did not start using the real item");
         if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.verifyRestoration();
         var output = mc.gameDirectory.toPath().resolve("screenshots")
                 .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture"));
         Files.createDirectories(output);
         String view = BODIES[stage] == null ? "deep-space" : BODIES[stage].replace(':', '-').replace("@", "");
+        int occurrence=1;
+        for(int i=0;i<stage;i++)if(java.util.Objects.equals(BODIES[i],BODIES[stage]))occurrence++;
+        if(occurrence>1)view+="-"+occurrence;
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(output.resolve(view + ".png"));
         }
@@ -165,6 +184,7 @@ public final class SpaceRenderSmoke {
             if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             Files.writeString(output.resolve("sky-query-checks.txt"), SkyQuerySmoke.verify());
+            Files.writeString(output.resolve("disc-checks.txt"), AccretionDiscSmoke.verify());
             SpaceRenderState.resetPoseProvider();
             if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
             Files.writeString(output.resolve("complete.txt"), "Completed " + BODIES.length + " fixed space views.\n");
@@ -179,17 +199,22 @@ public final class SpaceRenderSmoke {
 
     private static void selectView(Minecraft mc) {
         String view = BODIES[stage];
-        GpuSkyQuery.mode=view!=null && view.startsWith("@lens-") ? GpuSkyQuery.Mode.SCHWARZSCHILD
+        GpuSkyQuery.mode=view!=null && view.startsWith("@disc-") ? GpuSkyQuery.Mode.DISC
+                :view!=null && view.startsWith("@lens-") ? GpuSkyQuery.Mode.SCHWARZSCHILD
                 : view!=null && view.startsWith("@query-") ? GpuSkyQuery.Mode.QUERY : GpuSkyQuery.Mode.DISABLED;
+        GpuSkyQuery.discDiagnostic="@disc-diagnostic".equals(view);
+        GpuSkyQuery.discPhysical="@disc-physical".equals(view);
+        GpuSkyQuery.discInclination="@disc-face".equals(view)?0F:"@disc-inclined".equals(view)?60F:86.56F;
+        GpuSkyQuery.discTimeOverride="@disc-time".equals(view)?400F:180F;
         if(GpuSkyQuery.mode==GpuSkyQuery.Mode.DISABLED) GpuSkyQuery.release();
-        if("@query-performance".equals(view) || "@lens-performance".equals(view))
+        if("@query-performance".equals(view) || "@lens-performance".equals(view) || "@disc-performance".equals(view))
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.PERFORMANCE);
-        if("@query-ultra".equals(view) || "@lens-ultra".equals(view))
+        if("@query-ultra".equals(view) || "@lens-ultra".equals(view) || "@disc-ultra".equals(view))
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.ULTRA);
         mc.options.hideGui=!"@spyglass-overlay".equals(view);
         mc.options.keyUse.setDown(false);
         if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
-        if (view != null && view.startsWith("@spyglass-")) {
+        if (view != null && (view.startsWith("@spyglass-") || view.equals("@disc-spyglass"))) {
             // Equip through the ordinary creative inventory packet and hold use;
             // GameRenderer then supplies the real interpolated spyglass projection.
             mc.player.getInventory().selected=0;
@@ -287,7 +312,7 @@ public final class SpaceRenderSmoke {
         if("@query-edge".equals(view))delta=new UniverseDelta(1,1,1);
         if("@lens-offset".equals(view))delta=new UniverseDelta(.87,-.24,.20);
         if ("@resize".equals(view) || "@spyglass-resize".equals(view)
-                || "@query-resize".equals(view) || "@lens-resize".equals(view))
+                || "@query-resize".equals(view) || "@lens-resize".equals(view) || "@disc-resize".equals(view))
             GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
         if ("@window".equals(view)) {
             mc.getSingleplayerServer().submit(() -> {
@@ -316,6 +341,7 @@ public final class SpaceRenderSmoke {
         PlanetRenderer.resetSceneState();
         SpaceRenderProfiler.resetSamples();
         stageStart = System.nanoTime();
+        discSequenceFrame=0;
     }
 
     private record FixturePose(UniversePosition universePosition, String currentBodyId, String hint)

@@ -1,6 +1,6 @@
 # 可查询恒星背景与黑洞成像基准
 
-基线：`423ae02`，`refactor/space-render-v2`。本阶段保持已验收的普通太空画面，建立可供曲线光线调用的原生背景与 Schwarzschild 参考。研究预览显式启用；宇宙数据、航行、星图和天体类型均不变。
+背景基线：`423ae02`；定时吸积盘基线：`f8a26fa`，分支 `refactor/space-render-v2`。已实现方向背景查询、固定观察者 Schwarzschild 透镜和定时薄吸积盘研究预览。以下先保留背景基准的合同，再记录吸积盘扩展。研究预览显式启用；宇宙数据、航行、星图和天体类型均不变。
 
 ## 背景查询合同
 
@@ -48,7 +48,7 @@ b = r_observer · sin(psi) / sqrt(1 - 1/r_observer)
 
 预览用现有 HDR/Bloom 合成弯曲后的银河和原生恒星，固定镜头朝向银心；偏移镜头与小角度连续相机运动也有夹具。黑洞在这里仅改变背景成像，没有加入真实宇宙实体，也没有参与前景行星、船舱或世界深度。
 
-## 本阶段边界与后续技术路线
+## 背景基准交付时的边界与技术路线
 
 - 宽光束使用以主轴选层的平均通量近似，极高长宽比的宽光束还没有完整 EWA 积分。粗层尘埃按亮度加权的份额估计，不等于逐源、逐波段的精确消光。
 - 光束用局部线性 Jacobian 与高斯二阶矩过滤；捕获边界使用覆盖率抗锯齿。临界曲线附近跨越多像/捕获的强非线性束，仍需有限光束积分与专门的时间稳定性验证。
@@ -79,3 +79,57 @@ b = r_observer · sin(psi) / sqrt(1 - 1/r_observer)
 夹具创建独立世界，隐藏窗口，保存截图、姿态、资源计数、CPU/GPU 时间与数值检查；不打开用户存档。`sky-query-checks.txt` 检查三个异常上传状态下的五张纹理完整读回、圆/椭圆/成像平面 PSF 查询、宽光束面边界、真实 GPU 偏折表与主深度/GL 状态恢复。普通 `test build` 不编入四个渲染夹具。
 
 本阶段可整体 revert 回 `423ae02`；研究预览开关也能直接回到普通天空。最终验证结果记录在 [管线文档](space-render-pipeline.md)。
+
+## 定时薄吸积盘扩展（2026-10-02）
+
+本次从 `f8a26fa` 推进，把盘面相交和背景终点连接到同一条光线。`SchwarzschildPath` 是独立的双精度定时参考，沿用自适应 RK4 / Richardson 方法，同时积分正向累积的回溯坐标时间：
+
+```text
+dt/dphi = 1 / [b u² (1-u)]
+position(phi) = observerRadial cos(phi) + rayTangent sin(phi)
+dot(position(phi), discNormal) = 0
+```
+
+长度单位为 `r_s`，时间单位为 `r_s/c`；`t` 是 Schwarzschild 坐标时间，不能解释为盘上粒子的固有时间。有限轨迹止于 `r = 1.05` 或 `r = 64`，避免视界和无穷远的坐标时间发散。`SchwarzschildRay` 继续提供无穷远的背景方向与捕获分类。盘交点在有限轨迹上按相位递增求取，包含最终捕获光线在视界外遇到的发射物；不会先把整条捕获光线涂黑。
+
+研究盘的内外径为 `4.63 / 9.35 r_s`，显式换算自 DNGR 参考的 `9.26 / 18.70 GM/c²`。它位于 Schwarzschild 的稳定圆轨道区之外，并非据此声称已实现电影的 Kerr 时空。诊断模式使用 6 个径向带 × 12 个方位色块，检查直接像、上下折返像、高阶像和最近交点的遮挡顺序。
+
+`SchwarzschildDiscTable` 将捕获、内向逃逸、外向逃逸三条角度分支分开。前两者在临界角附近取对数采样；每列保存终点、无穷远相位、冲量和 129 个有限轨迹样本。GPU 对每个邻列按其各自的终点归一化，再用 Hermite 插值重建 `u / u' / t`，随后按角度混合。已终止的邻列不会与有效交点混合。1024×391 RGBA32F 合并表为 **6,406,144 字节（约 6.11 MiB）**；最后一行保存 256 个相对可见光黑体谱样本，复用第五个 sampler，不增加纹理单元或场景目标。Ultra 背景与该表合计约 **11.05 MiB**，盘预览不另分配原有的 16 KiB 偏折表。
+
+圆轨道发射体的速度、角速度和静止观察者测得的频率比为：
+
+```text
+v = 1 / sqrt(2r-2)
+Omega = 1 / sqrt(2r³)
+g = sqrt[(1-1/r)/(1-1/r_observer)] · sqrt(1-v²) / (1-v mu)
+```
+
+`mu` 是发射体局部轨道速度与源到观察者光子方向的夹角余弦，来自同一条曲线光线的角动量方向。物理频移显示遵循 `I_nu,obs = g³ I_nu,emit(nu/g)`；对黑体直接查询 `T_obs = g T_emit`，保留谱强度，避免再次乘 `g⁴` 而重复计入增亮。电影显示省略该频移，保留相同的光线与盘几何。二者都复用既有 HDR / Bloom / tone mapping；当前没有加入 DNGR 的独立镜头 veiling flare。
+
+发射温度暂定 4500 K，曝光、密度、掠射光程上限和程序纹理属于美术近似。盘光按由近到远的 `radiance += transmission * alpha * source` 与 `transmission *= 1-alpha` 合成。密度沿盘面方位剪切，材质在 `t_observer - delay` 处取样；周期坐标避免极角接缝，像素导数抑制未解析的纹理频率。程序细丝不代表流体或磁流体计算，薄层透射也不代表完整体积辐射传输。
+
+### 当前可验证范围与限制
+
+- 实际 GPU 检查覆盖整张表读回、定时轨迹、光谱、频移、最近盘面像及捕获前发射；CPU 另用径向积分检查时间与相位，不用查表验证查表。
+- 固定观察者仍是 `r = 20`。临界角差截到 `1e-6 rad`，shader 最多处理 6 个平面交点；尚不解析无限高阶像或精确有限椭圆束跨临界曲线的积分。
+- 像素导数过滤与连续相机截图用于检查当前近似，不能据此宣称完成所有速度、倾角、分辨率或其他 GPU 的时间稳定性验收。极薄高阶像仍有可见颗粒，需后续光束积分与光学过滤。
+- 无限薄盘中恰好共面的光线没有孤立交点，当前明确不发射；掠射用有限光程闭合。盘厚度、自遮挡、吸收谱和散射仍待实现。
+- 首次预览与资源重载仍在渲染线程生成/上传表，有预热停顿；计时取预热后的 pass，不包含这项一次性成本。退出研究预览或断开连接释放盘表、目录和纹理，普通天空没有这部分 CPU/GPU 数据。
+- 尚无 Kerr 自旋、运动观察者、正式宇宙黑洞实体或弯曲前景遮挡。本阶段是可复算的薄盘成像检查点，距卡冈图雅最终视觉仍有工作。
+
+### 运行与后续
+
+普通游戏保持原画面。显式 JVM 开关 `-Dstarboundmc.debug.accretionDisc=true` 启用随游戏时间运动的电影预览；固定倾角为 86.56°。开发夹具可独立选择诊断、物理频移、正面 / 60° 倾角、两个材质时间及真实望远镜视角：
+
+```powershell
+.\gradlew.bat --gradle-user-home ../.gradle-home --offline `
+  '-Dorg.gradle.java.installations.paths=D:/JAVA RE/jdk21' `
+  '-Dorg.gradle.java.installations.auto-detect=false' '-Dorg.gradle.jvmargs=-Xmx1G' `
+  -PspaceSmoke -PspaceSmokeQuality=ultra -PspaceSmokeLabel=disc-check `
+  '-PspaceSmokeViews=@galaxy,@disc-diagnostic,@disc-film,@disc-physical,@disc-face,@disc-inclined,@disc-time,@disc-motion,@disc-spyglass,@disc-reload,@disc-resize,@disc-reload,@galaxy-return' `
+  -PspaceSmokeWidth=1920 -PspaceSmokeHeight=1080 runClient
+```
+
+额外报告为 `disc-checks.txt`；连续镜头另保存 12 帧和实际相机姿态。重复重载截图使用 `disc-reload / disc-reload-2`，并检查 shader 代数递增。普通生产构建不编入五个渲染夹具，沿用独立世界和 GL / 世界深度恢复要求。关闭研究开关即可恢复普通天空；本次修改也可单独 revert 回 `f8a26fa`。
+
+接下来优先解决临界束与盘材质的时间稳定性、径向运动观察者和盘厚度 / 光学响应；保持这一参考作为回归，再接入 Kerr 成像。资料依据和电影取舍见 [卡冈图雅参考](space-gargantua-reference.md)，实际验证见 [管线文档](space-render-pipeline.md)。

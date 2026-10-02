@@ -33,6 +33,21 @@ public final class StarPhotometry {
     }
 
     private static Color integrate(double kelvin) {
+        double[] rgb=integrateRadiance(kelvin);
+        double maximum=Math.max(rgb[0],Math.max(rgb[1],rgb[2]));
+        return new Color((float)(rgb[0]/maximum),(float)(rgb[1]/maximum),(float)(rgb[2]/maximum));
+    }
+
+    /** Linear blackbody radiance in the existing visible-band RGB approximation, relative to
+     * the red channel at 4500 K. Unlike star colours, this preserves spectral intensity. */
+    public static Color blackbodyRadiance(double kelvin) {
+        if(!Double.isFinite(kelvin) || kelvin<1500 || kelvin>12000)
+            throw new IllegalArgumentException("Disc spectral palette requires 1500..12000 K");
+        double[] rgb=integrateRadiance(kelvin);double reference=integrateRadiance(4500)[0];
+        return new Color((float)(rgb[0]/reference),(float)(rgb[1]/reference),(float)(rgb[2]/reference));
+    }
+
+    private static double[] integrateRadiance(double kelvin) {
         double x=0,y=0,z=0;
         // Planck spectrum, 5 nm bins; Wyman/Sloan/Shirley 2013 CIE 1931 fits, Eq. 4.
         // https://jcgt.org/published/0002/02/01/
@@ -48,8 +63,7 @@ public final class StarPhotometry {
         double r=Math.max(0,3.2406*x-1.5372*y-.4986*z),
                 g=Math.max(0,-.9689*x+1.8758*y+.0415*z),
                 b=Math.max(0,.0557*x-.204*y+1.057*z);
-        double maximum=Math.max(r,Math.max(g,b));
-        return new Color((float)(r/maximum),(float)(g/maximum),(float)(b/maximum));
+        return new double[]{r,g,b};
     }
 
     private static double gaussian(double wavelength,double mean,double left,double right) {

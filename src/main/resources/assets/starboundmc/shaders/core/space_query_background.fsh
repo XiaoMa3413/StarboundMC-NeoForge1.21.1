@@ -9,6 +9,7 @@ uniform vec3 TintColor,LensDirection;
 // Used only by the real GPU validation fixture; normal draws always set zero.
 uniform float TestMode,TestSigma,TestAngle,TestAnisotropy,TestRotation,TestImagePsf;
 uniform vec3 TestDirection;
+#moj_import <starboundmc:space_schwarzschild_disc.glsl>
 in vec2 screenPosition;
 out vec4 fragColor;
 
@@ -20,9 +21,14 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
+    if(TestMode>6.5) { fragColor=discRadiance(vec3(0,0,1),normalize(TestDirection),TestAngle);return; }
+    if(TestMode>5.5) { fragColor=discHeader(TestAngle);return; }
+    if(TestMode>4.5) { fragColor=vec4(discFrequency(TestSigma,TestAngle),0,0,1);return; }
+    if(TestMode>3.5) { fragColor=vec4(discSpectrum(TestSigma),1);return; }
+    if(TestMode>2.5) { fragColor=discTrajectory(TestAngle,TestSigma);return; }
     if(TestMode>1.5) { fragColor=vec4(lensAzimuth(TestAngle),0,0,1);return; }
     vec4 ray=InverseViewProjection*vec4(screenPosition,1,1);
-    vec3 direction=normalize(ray.xyz);float escapeCoverage=1.0;
+    vec3 direction=normalize(ray.xyz);float escapeCoverage=1.0;vec4 disc=vec4(0,0,0,1);
     if(LensEnabled>0.5) {
         vec3 radial=-normalize(LensDirection);
         float cosine=clamp(-dot(direction,radial),-1.0,1.0);
@@ -30,7 +36,9 @@ void main() {
         escapeCoverage=clamp((angle-LensShadow)/width+0.5,0.0,1.0);
         vec3 tangent=direction+radial*cosine;
         tangent=dot(tangent,tangent)>1e-12 ? normalize(tangent) : normalize(cross(radial,vec3(0,1,0)));
-        float azimuth=lensAzimuth(max(angle,LensShadow+0.000001));
+        if(DiscEnabled>0.5)disc=discRadiance(radial,tangent,angle);
+        float azimuth=DiscEnabled>0.5?discHeader(max(angle,LensShadow+0.000001)).y
+                :lensAzimuth(max(angle,LensShadow+0.000001));
         direction=normalize(radial*cos(azimuth)+tangent*sin(azimuth));
     }
     vec3 dx=dFdx(direction),dy=dFdy(direction);
@@ -47,6 +55,7 @@ void main() {
     if(TestMode<0.5)stars=mix(stars,stars*(0.75+TintColor*0.25),clamp(TintAmount,0.0,1.0));
     vec3 color=TestMode>0.5 ? stars : stars+spaceBackgroundRadiance(direction,TintColor,TintAmount,FieldDetail,footprint);
     color*=escapeCoverage;
+    color=disc.rgb+color*disc.a;
     if(LinearColor<0.5)color=spaceToDisplay(color);
     fragColor=vec4(color,1);
 }
