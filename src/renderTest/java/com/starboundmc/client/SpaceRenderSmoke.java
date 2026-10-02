@@ -232,11 +232,13 @@ public final class SpaceRenderSmoke {
         GpuSkyQuery.discPhysical="@disc-physical".equals(view);
         GpuSkyQuery.discFiniteBeam=!"@disc-single".equals(view) && !"@disc-volume-single".equals(view);
         GpuSkyQuery.discVolume=!"@disc-single".equals(view) && !"@disc-thin".equals(view);
+        GpuSkyQuery.discDifferentials=view==null || !view.endsWith("-full-foot");
         GpuSkyQuery.discWideGlare=!"@disc-clean".equals(view);
         GpuSkyQuery.discInclination="@disc-face".equals(view)?0F:"@disc-inclined".equals(view)?60F:86.56F;
-        if("@disc-volume-inside".equals(view))GpuSkyQuery.discInclination=89.5F;
-        GpuSkyQuery.discObserverRadius="@disc-near".equals(view)?12F:"@disc-close".equals(view)?6F:20F;
-        if("@disc-volume-inside".equals(view))GpuSkyQuery.discObserverRadius=6F;
+        GpuSkyQuery.discObserverRadius="@disc-near".equals(view)?12F:view!=null && view.startsWith("@disc-close")?6F:20F;
+        if(view!=null && view.startsWith("@disc-volume-inside")) {
+            GpuSkyQuery.discObserverRadius=6F;GpuSkyQuery.discInclination=89.5F;
+        }
         GpuSkyQuery.discTimeOverride="@disc-time".equals(view)?400F:180F;
         if(GpuSkyQuery.mode==GpuSkyQuery.Mode.DISABLED) GpuSkyQuery.release();
         if("@query-performance".equals(view) || "@lens-performance".equals(view) || "@disc-performance".equals(view))

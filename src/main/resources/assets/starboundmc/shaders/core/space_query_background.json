@@ -25,6 +25,7 @@
     {"name":"DiscVolumeEnabled","type":"float","count":1,"values":[0]},
     {"name":"DiscThickness","type":"float","count":1,"values":[0.016]},
     {"name":"DiscVolumeSteps","type":"float","count":1,"values":[8]},
+    {"name":"DiscDifferentials","type":"float","count":1,"values":[1]},
     {"name":"DiscPiHigh","type":"float","count":1,"values":[3.1415927410125732]},
     {"name":"DiscPiLow","type":"float","count":1,"values":[-8.742278e-8]},
     {"name":"DiscNormal","type":"float","count":3,"values":[0,1,0]},

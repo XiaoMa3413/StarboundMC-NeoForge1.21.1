@@ -117,6 +117,7 @@ final class AccretionDiscSmoke {
             verifyNoiseGradients(report);
             verifyFiniteBeam(report);
             verifyVolume(report);
+            verifyVolumeDifferentials(report);
             verifyVolumeContinuity(report);
             verifyVolumeBeam(report);
             verifyVolumeNoise(report);
@@ -133,6 +134,56 @@ final class AccretionDiscSmoke {
         }
         if(!before.equals(SpaceDepthSmoke.stateSignature()) || depthBefore[0]!=depthAfter[0])throw new IllegalStateException("Disc checks changed GL state/main depth");
         return report.append("discStateRestored=fiveTextureUnits/program/framebuffers/viewport/buffers/mainDepth\n").toString();
+    }
+    private static void verifyVolumeDifferentials(StringBuilder report) {
+        var shader=GpuSkyQuery.shader();int gradients=0,footprints=0,fast=0,fallback=0;
+        shader.safeGetUniform("DiscDifferentials").set(1F);
+        double maxQ=0,maxTimeGradient=0,maxRadius=0,maxDelay=0;
+        try {
+            for(float observer:new float[]{6,12,20}) {
+                GpuSkyQuery.discObserverRadius=observer;GpuSkyQuery.bindDisc(shader);
+                double edge=SchwarzschildRay.shadowAngle(observer);
+                for(double raw:new double[]{.03,.1,edge-.0002,edge+.0002,.4,.7,1.2,1.8,2.6,3.1}) {
+                    float angle=(float)raw;var reference=new SchwarzschildPath(observer,angle,1e-12);
+                    shader.safeGetUniform("TestAngle").set(angle);
+                    for(int i=1;i<80;i++) {
+                        float phi=(float)(reference.endAzimuth()*i/80);
+                        var s=reference.sample(phi);if(s.radius()<4.71 || s.radius()>9.27)continue;
+                        shader.safeGetUniform("TestSigma").set(phi);shader.safeGetUniform("TestMode").set(19F);draw();
+                        float[] actual=read();double q=reference.angularDerivative(phi),dt=reference.angularTimeDerivative(phi);
+                        double dq=Math.abs(actual[0]-q)/Math.max(1,Math.abs(q)),ddt=Math.abs(actual[1]-dt)/Math.max(1,Math.abs(dt));
+                        maxQ=Math.max(maxQ,dq);maxTimeGradient=Math.max(maxTimeGradient,ddt);gradients++;
+                        if(!Float.isFinite(actual[0]) || !Float.isFinite(actual[1]) || actual[3]!=1 || dq>.02 || ddt>.02)
+                            throw new IllegalStateException("GPU angular differential mismatch: "+dq+" / "+ddt+" observer="+observer+" angle="+angle+" phi="+phi);
+                        for(float sign:new float[]{-1,1}) {
+                            float theta=sign*Math.min(.0005F,(float)Math.abs(angle-edge)*.005F);
+                            shader.safeGetUniform("TestAnisotropy").set(theta);
+                            shader.safeGetUniform("TestRotation").set(sign*.0003F);
+                            shader.safeGetUniform("TestMode").set(20F);draw();float[] difference=read();
+                            double dr=Math.abs(difference[0]),delay=Math.abs(difference[1]);
+                            maxRadius=Math.max(maxRadius,dr);maxDelay=Math.max(maxDelay,delay);footprints++;
+                            if(difference[3]>.5)fast++;else fallback++;
+                            if(!Float.isFinite(difference[0]) || !Float.isFinite(difference[1]) || dr>.001 || delay>.005 || difference[2]!=0)
+                                throw new IllegalStateException("Fast footprint disagrees with neighbouring GPU trajectory: "+dr+" / "+delay+" observer="+observer+" angle="+angle+" phi="+phi);
+                        }
+                        // Deliberately cross the critical region: the full path
+                        // must be retained, rather than extrapolating a derivative.
+                        shader.safeGetUniform("TestAnisotropy").set((float)(edge-angle)*1.02F);
+                        shader.safeGetUniform("TestRotation").set(0F);shader.safeGetUniform("TestMode").set(20F);draw();
+                        float[] rejected=read();
+                        if(rejected[3]!=0 || rejected[0]!=0 || rejected[1]!=0 || rejected[2]!=0)
+                            throw new IllegalStateException("Critical footprint did not retain full neighbouring ray");
+                        fallback++;
+                    }
+                }
+            }
+        } finally {GpuSkyQuery.discObserverRadius=20F;GpuSkyQuery.bindDisc(shader);}
+        if(gradients<200 || fast<200 || fallback==0)throw new IllegalStateException("Insufficient differential coverage");
+        report.append("discGpuVolumeDifferentials gradients=").append(gradients).append(" footprints=").append(footprints)
+                .append(" fast=").append(fast).append(" fallback=").append(fallback)
+                .append(" maxScaledUGradientError=").append(maxQ).append(" maxScaledTimeGradientError=").append(maxTimeGradient)
+                .append(" maxFootRadiusErrorRs=").append(maxRadius).append(" maxFootDelayErrorRsOverC=").append(maxDelay)
+                .append(" variationalODE/CPUfiniteDifference/GPUfullNeighbourFallback\n");
     }
     private static void verifyVolume(StringBuilder report) {
         var shader=GpuSkyQuery.shader();int shells=0,transfers=0,captured=0,inside=0;

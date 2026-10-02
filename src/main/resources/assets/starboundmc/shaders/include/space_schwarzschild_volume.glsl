@@ -1,6 +1,6 @@
 // Finite-height, grey research medium. Geometry uses the existing timed null
 // trajectories; the compact vertical profile and stochastic flow are closures.
-uniform float DiscVolumeEnabled,DiscThickness,DiscVolumeSteps,DiscPiHigh,DiscPiLow;
+uniform float DiscVolumeEnabled,DiscThickness,DiscVolumeSteps,DiscPiHigh,DiscPiLow,DiscDifferentials;
 float discHeightProfile(float height);
 vec4 volumeNoisePlane(ivec3 cell) {
     cell=cell&ivec3(63);
@@ -20,8 +20,11 @@ vec4 volumeNoiseGradient(vec3 point) {
     return vec4(gradient,mix(y.x,y.y,s.z));
 }
 float volumeFilteredNoise(vec3 point,vec3 dx,vec3 dy,vec3 dz,out vec3 slope) {
-    vec4 noise=volumeNoiseGradient(point);
-    float widthSquared=max(max(dot(dx,dx),dot(dy,dy)),dot(dz,dz)),fade=exp(-.6*widthSquared);
+    float widthSquared=max(max(dot(dx,dx),dot(dy,dy)),dot(dz,dz));
+    // Beyond this width the value rounds to .5; the remaining projected
+    // gradient is below 1e-8, which is omitted as a bounded filtering remainder.
+    if(widthSquared>36.0) {slope=vec3(0);return .5;}
+    vec4 noise=volumeNoiseGradient(point);float fade=exp(-.6*widthSquared);
     slope=vec3(dot(noise.xyz,dx),dot(noise.xyz,dy),dot(noise.xyz,dz))*fade;
     return mix(.5,noise.w,fade);
 }
@@ -50,26 +53,33 @@ VolumeLookup volumeLookup(float angle) {
     return VolumeLookup(x,branch,fract(p.x),texelFetch(LensAzimuth,ivec2(x,row),0),
             texelFetch(LensAzimuth,ivec2(min(x+1,1023),row),0),false);
 }
-vec4 volumeColumn(int x,int branch,vec4 header,float phi) {
+vec4 volumeColumn(int x,int branch,vec4 header,float phi,out float angularDerivative) {
     float p=clamp(phi/header.x,0.0,1.0)*128.0;
     int y=min(int(floor(p)),127);float t=p-float(y),h=header.x/128.0;
-    vec3 a=texelFetch(LensAzimuth,ivec2(x,branch*DISC_STRIDE+1+y),0).xyz;
-    vec3 b=texelFetch(LensAzimuth,ivec2(x,branch*DISC_STRIDE+2+y),0).xyz;
+    vec4 a=texelFetch(LensAzimuth,ivec2(x,branch*DISC_STRIDE+1+y),0);
+    vec4 b=texelFetch(LensAzimuth,ivec2(x,branch*DISC_STRIDE+2+y),0);
     float u=discHermite(a.x,b.x,h*a.y,h*b.y,t);
     float v=((6.0*t*t-6.0*t)*a.x+(-6.0*t*t+6.0*t)*b.x)/h
             +(3.0*t*t-4.0*t+1.0)*a.y+(3.0*t*t-2.0*t)*b.y;
     float delay=discHermite(a.z,b.z,h*discTimeRate(header.z,a.x),h*discTimeRate(header.z,b.x),t);
+    angularDerivative=mix(a.w,b.w,t);
     return vec4(u,v,delay,phi<=header.x?1.0:0.0);
 }
-vec4 volumeTrajectory(VolumeLookup lookup,float phi) {
+vec4 volumeTrajectory(VolumeLookup lookup,float phi,out float angularDerivative) {
     if(lookup.radial) {
         float u=1.0/DiscObserverRadius+lookup.a.y*phi/lookup.a.z,r=1.0/u;
         float delay=lookup.a.y*(DiscObserverRadius-r+log((DiscObserverRadius-1.0)/(r-1.0)));
+        angularDerivative=0.0;
         return vec4(u,lookup.a.y/lookup.a.z,delay,phi<=lookup.a.x?1.0:0.0);
     }
-    vec4 a=volumeColumn(lookup.x,lookup.branch,lookup.a,phi);
-    vec4 b=volumeColumn(min(lookup.x+1,1023),lookup.branch,lookup.b,phi);
+    float qa,qb;
+    vec4 a=volumeColumn(lookup.x,lookup.branch,lookup.a,phi,qa);
+    vec4 b=volumeColumn(min(lookup.x+1,1023),lookup.branch,lookup.b,phi,qb);
+    angularDerivative=mix(qa,qb,lookup.blend);
     vec4 result=mix(a,b,lookup.blend);result.w=min(a.w,b.w);return result;
+}
+vec4 volumeTrajectory(VolumeLookup lookup,float phi) {
+    float q;return volumeTrajectory(lookup,phi,q);
 }
 float volumeLocalU(VolumeLookup lookup,vec4 path,float offset) {
     if(lookup.radial)return path.x+path.y*offset;
@@ -119,6 +129,27 @@ vec4 volumePoint(vec3 radial,DiscBeamRay ray,VolumeLookup lookup,float phi) {
     return vec4(1.0/clamp(path.x,.015625,.952381),atan(dot(position,DiscV),dot(position,DiscU)),path.z,
             dot(position,DiscNormal)/DiscThickness);
 }
+bool volumeDifferentialAllowed(DiscBeamRay ray,DiscBeamRay rx,DiscBeamRay ry) {
+    float width=max(abs(rx.angle-ray.angle),abs(ry.angle-ray.angle));
+    float critical=abs((ray.angle-LensShadow)-DiscShadowLow);
+    float distance=min(critical,min(ray.angle,DISC_PI-ray.angle));
+    return DiscDifferentials>.5 && ray.angle>.02 && ray.angle<DISC_PI-.02 && width<.01*distance;
+}
+vec4 volumeFootPoint(vec3 radial,DiscBeamRay ray,VolumeLookup lookup,float phi,
+        vec4 centerPath,float centerAngle,float centerPhi,float q,float impact,bool differential) {
+    float dphi=phi-centerPhi,dtheta=ray.angle-centerAngle;
+    float du=centerPath.y*dphi+q*dtheta;
+    // A bounded first-order footprint is inexpensive away from the critical
+    // curve. Full neighbouring trajectories remain the fallback across the
+    // curve, poles, large phase shifts or strong radius variations.
+    if(!differential || abs(dphi)>.01 || abs(centerPath.y*dphi)+abs(q*dtheta)>.005*centerPath.x)
+        return volumePoint(radial,ray,lookup,phi);
+    float u=centerPath.x,f=1.0-u;
+    float delay=centerPath.z+discTimeRate(impact,u)*dphi+impact*centerPath.y*q/(f*u*u)*dtheta;
+    vec3 position=radial*cos(phi)+ray.tangent*sin(phi);
+    return vec4(1.0/clamp(u+du,.015625,.952381),atan(dot(position,DiscV),dot(position,DiscU)),delay,
+            dot(position,DiscNormal)/DiscThickness);
+}
 // Three correlated scales in a periodic, vertically varying flow. The volume
 // does not need the thin surface's fourth noise layer at every integration cell.
 vec3 volumeField(float r,float polar,float height,float age,float generation,
@@ -152,7 +183,11 @@ vec3 volumeField(float r,float polar,float height,float age,float generation,
 vec3 volumeMaterial(float r,float height,vec3 flow) {
     float ribbon=max((flow.y-.16)/.84,0.0);
     float density=clamp(.006+6.0*pow(ribbon,3.0)*pow(flow.x,1.3)+2.0*pow(flow.z,5.0)*flow.x,.006,2.0);
-    float temperature=clamp(4900.0*pow(4.63/r,.2)+(density-.30)*1800.0+(flow.x-.5)*2100.0,2650.0,6450.0);
+    // Cool interstitial gas can absorb the far layer without becoming an
+    // equally bright thermal sheet. Dense filaments supply the warm-white
+    // highlights; keep density (extinction) separate from source temperature.
+    float temperature=clamp(3350.0*pow(4.63/r,.25)+2600.0*smoothstep(.15,.95,density)
+            +(flow.x-.5)*1700.0,2100.0,6900.0);
     temperature*=1.0-.08*min(height*height/9.0,1.0);
     float envelope=smoothstep(4.63,4.71,r)*(1.0-smoothstep(9.2,9.35,r));
     return vec3(density,temperature,envelope);
@@ -182,6 +217,7 @@ vec4 discVolumeSample(vec3 radial,DiscBeamRay ray,DiscBeamRay rx,DiscBeamRay ry,
     float impact=max(mix(lookup.a.z,lookup.b.z,lookup.blend),1e-12);
     float orbitNormal=dot(cross(radial,ray.tangent),DiscNormal);
     float ampX=volumePlaneAmplitude(radial,rx),ampY=volumePlaneAmplitude(radial,ry),support=DiscThickness*3.0;
+    bool differential=volumeDifferentialAllowed(ray,rx,ry);
     bool full=amplitude<=support;float halfWidth=asin(clamp(support/max(amplitude,1e-9),0.0,1.0));
     vec3 color=vec3(0);float transmission=1.0;opticalDepth=0.0;
     int steps=int(clamp(DiscVolumeSteps,2.0,32.0));
@@ -200,7 +236,7 @@ vec4 discVolumeSample(vec3 radial,DiscBeamRay ray,DiscBeamRay rx,DiscBeamRay ry,
             for(int i=0;i<32;i++) {
                 if(i>=steps)break;
                 float fraction=(float(i)+.5)/float(steps),phi=mix(span.x,span.y,fraction);
-                vec4 path=volumeTrajectory(lookup,phi);float u=clamp(path.x,.015625,.952381),r=1.0/u;
+                float q;vec4 path=volumeTrajectory(lookup,phi,q);float u=clamp(path.x,.015625,.952381),r=1.0/u;
                 if(path.w<.5 || r<4.63 || r>9.35)continue;
                 vec3 position=radial*cos(phi)+ray.tangent*sin(phi),angular=-radial*sin(phi)+ray.tangent*cos(phi);
                 float m=dot(position,DiscNormal),height=m/DiscThickness,profile=discHeightProfile(height);
@@ -229,7 +265,8 @@ vec4 discVolumeSample(vec3 radial,DiscBeamRay ray,DiscBeamRay rx,DiscBeamRay ry,
                     }
                     emitted=vec4(source*alpha,alpha);
                 } else {
-                    vec4 hx=volumePoint(radial,rx,lookupX,mix(spanX.x,spanX.y,fraction)),hy=volumePoint(radial,ry,lookupY,mix(spanY.x,spanY.y,fraction));
+                    vec4 hx=volumeFootPoint(radial,rx,lookupX,mix(spanX.x,spanX.y,fraction),path,ray.angle,phi,q,impact,differential);
+                    vec4 hy=volumeFootPoint(radial,ry,lookupY,mix(spanY.x,spanY.y,fraction),path,ray.angle,phi,q,impact,differential);
                     vec2 polarDifference=vec2(hx.y-polar,hy.y-polar);
                     vec2 polarFoot=atan(sin(polarDifference),cos(polarDifference));
                     vec2 planar=vec2(dot(position,DiscU),dot(position,DiscV)),planarRate=vec2(dot(angular,DiscU),dot(angular,DiscV));

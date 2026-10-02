@@ -22,7 +22,7 @@ public final class SchwarzschildDiscTable {
             put(x,branch*STRIDE,path.endAzimuth(),ray.azimuth(),path.impact(),branch==0?-1:1);
             for(int y=0;y<=INTERVALS;y++) {
                 var s=path.sample(path.endAzimuth()*y/INTERVALS);
-                put(x,branch*STRIDE+1+y,s.inverseRadius(),s.slope(),s.delay(),0);
+                put(x,branch*STRIDE+1+y,s.inverseRadius(),s.slope(),s.delay(),path.angularDerivative(s.azimuth()));
             }
             var shell=path.shellRanges(SchwarzschildDisc.INNER_RADIUS,SchwarzschildDisc.OUTER_RADIUS);
             put(x,branch*STRIDE+STRIDE-1,shell[0],shell[1],shell[2],shell[3]);

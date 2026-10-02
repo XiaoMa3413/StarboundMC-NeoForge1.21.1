@@ -40,6 +40,7 @@ final class GpuSkyQuery {
     static boolean discDiagnostic,discPhysical,discWideGlare=true;
     static boolean discFiniteBeam=true;
     static boolean discVolume=Boolean.getBoolean("starboundmc.debug.accretionDiscVolume");
+    static boolean discDifferentials=!Boolean.getBoolean("starboundmc.debug.discFullFootprints");
     static float discThickness=(float)SchwarzschildVolume.ASPECT;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
@@ -92,6 +93,7 @@ final class GpuSkyQuery {
             shader.safeGetUniform("DiscVolumeEnabled").set(discVolume?1F:0F);
             shader.safeGetUniform("DiscThickness").set(discThickness);
             shader.safeGetUniform("DiscVolumeSteps").set((float)discVolumeSteps());
+            shader.safeGetUniform("DiscDifferentials").set(discDifferentials?1F:0F);
             lastDiscTime=Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F;
             shader.safeGetUniform("DiscTime").set(lastDiscTime);
             Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
@@ -197,6 +199,7 @@ final class GpuSkyQuery {
                 +" discTexture="+(discTexture!=0)+" discGpuBytes="+(discTexture==0?0:discTable.gpuBytes())
                 +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
                 +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare
-                +" discBeamGrid="+discBeamGrid()+" discVolume="+discVolume+" discThickness="+discThickness+" discVolumeSteps="+discVolumeSteps();
+                +" discBeamGrid="+discBeamGrid()+" discVolume="+discVolume+" discThickness="+discThickness+" discVolumeSteps="+discVolumeSteps()
+                +" discDifferentials="+discDifferentials;
     }
 }

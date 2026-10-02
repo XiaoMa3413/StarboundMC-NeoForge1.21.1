@@ -22,6 +22,25 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
+    if(TestMode>19.5) {
+        vec3 radial=vec3(0,0,1);
+        DiscBeamRay center=discBeamRay(radial,vec3(sin(TestAngle),0,-cos(TestAngle)));
+        DiscBeamRay neighbour=discBeamRay(radial,vec3(sin(TestAngle+TestAnisotropy),0,-cos(TestAngle+TestAnisotropy)));
+        center.angle=TestAngle;neighbour.angle=TestAngle+TestAnisotropy;
+        VolumeLookup lookup=volumeLookup(center.angle),other=volumeLookup(neighbour.angle);
+        float q;vec4 path=volumeTrajectory(lookup,TestSigma,q);
+        bool allowed=volumeDifferentialAllowed(center,neighbour,neighbour);
+        float impact=mix(lookup.a.z,lookup.b.z,lookup.blend);
+        vec4 fast=volumeFootPoint(radial,neighbour,other,TestSigma+TestRotation,path,center.angle,TestSigma,q,impact,allowed);
+        vec4 full=volumePoint(radial,neighbour,other,TestSigma+TestRotation);
+        bool used=allowed && abs(TestRotation)<=.01 && abs(path.y*TestRotation)+abs(q*TestAnisotropy)<=.005*path.x;
+        fragColor=vec4(fast.x-full.x,fast.z-full.z,fast.w-full.w,used?1.0:0.0);return;
+    }
+    if(TestMode>18.5) {
+        VolumeLookup lookup=volumeLookup(TestAngle);float q;
+        vec4 path=volumeTrajectory(lookup,TestSigma,q);float u=path.x,b=mix(lookup.a.z,lookup.b.z,lookup.blend);
+        fragColor=vec4(q,b*path.y*q/((1.0-u)*u*u),0,path.w);return;
+    }
     if(TestMode>17.5) {fragColor=volumeNoiseGradient(TestDirection);return;}
     if(TestMode>16.5) {
         VolumeLookup lookup=volumeLookup(TestAngle);

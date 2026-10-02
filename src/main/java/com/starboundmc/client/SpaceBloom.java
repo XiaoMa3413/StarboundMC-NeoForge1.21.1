@@ -74,7 +74,10 @@ final class SpaceBloom {
             for (int i = count - 2; i >= 0; i--) {
                 input = levels[i + 1];
                 filter.safeGetUniform("Prefilter").set(0F);
-                filter.safeGetUniform("Gain").set(wideDisc?.82F:.65F);
+                // The finite medium already has extended bright layers. Give
+                // it the broad support without raising every dark gap through
+                // repeated high-gain additions of the smallest levels.
+                filter.safeGetUniform("Gain").set(wideDisc?(GpuSkyQuery.discVolume?.58F:.82F):.65F);
                 filter.safeGetUniform("TexelSize").set(1F / input.width, 1F / input.height);
                 levels[i].bindWrite(true);
                 SpaceSceneTarget.drawFullscreen(filter, input.getColorTextureId(), true);

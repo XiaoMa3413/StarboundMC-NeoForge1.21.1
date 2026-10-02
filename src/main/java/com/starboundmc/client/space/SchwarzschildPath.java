@@ -13,6 +13,8 @@ public final class SchwarzschildPath {
     private final double impact;
     private final SchwarzschildRay.Fate fate;
     private final List<Sample> samples;
+    private record AngularSample(double azimuth,double derivative,double rate) {}
+    private final List<AngularSample> angularSamples;
     private final double maximumEnergyError;
 
     public SchwarzschildPath(double radius, double angle) { this(radius, angle, 1e-11); }
@@ -23,20 +25,24 @@ public final class SchwarzschildPath {
                 || tolerance < 1e-14 || tolerance > 1e-5)
             throw new IllegalArgumentException("Finite path requires 1.5 < r < 64, nonradial ray and valid tolerance");
         var nodes = new ArrayList<Sample>();
-        double[] state = {1 / radius, Math.cos(angle) / impact, 0};
+        var angularNodes = new ArrayList<AngularSample>();
+        // Vary the launch angle at fixed observer radius. Differentiating the
+        // same null ODE gives q''=(-1+3u)q, q(0)=0, q'(0)=-1/(b sin(angle)).
+        double[] state = {1 / radius, Math.cos(angle) / impact, 0, 0, -1/(impact*Math.sin(angle))};
         double phi = 0, h = Math.min(.02, .02 * impact), errorEnergy = 0;
         nodes.add(new Sample(0, state[0], state[1], 0));
+        angularNodes.add(new AngularSample(0,state[3],state[4]));
         SchwarzschildRay.Fate end = SchwarzschildRay.Fate.UNRESOLVED;
         for (int steps = 0; steps < 200000 && phi < 64 * Math.PI; ) {
             h = Math.min(h, .15 * Math.min(state[0], 1 - state[0]) / Math.max(Math.abs(state[1]), 1e-8));
             double[] full = step(state, h), half = step(step(state, h / 2), h / 2);
             double error = 0;
-            for (int k = 0; k < 3; k++)
+            for (int k = 0; k < state.length; k++)
                 error = Math.max(error, Math.abs(half[k] - full[k]) / (15 * Math.max(1, Math.abs(half[k]))));
             if (!Double.isFinite(error)) throw new IllegalStateException("Nonfinite timed trajectory");
             if (error > tolerance) { h *= Math.max(.2, .9 * Math.pow(tolerance / error, .2)); continue; }
             steps++;
-            for (int k = 0; k < 3; k++) half[k] += (half[k] - full[k]) / 15;
+            for (int k = 0; k < state.length; k++) half[k] += (half[k] - full[k]) / 15;
             if (half[0] <= 1 / FAR_RADIUS || half[0] >= 1 / NEAR_RADIUS) {
                 double boundary = half[0] <= 1 / FAR_RADIUS ? 1 / FAR_RADIUS : 1 / NEAR_RADIUS;
                 double lo = 0, hi = h;
@@ -54,32 +60,52 @@ public final class SchwarzschildPath {
             double energy = state[1] * state[1] + state[0] * state[0] * (1 - state[0]);
             errorEnergy = Math.max(errorEnergy, Math.abs(energy * impact * impact - 1));
             nodes.add(new Sample(phi, state[0], state[1], state[2]));
+            angularNodes.add(new AngularSample(phi,state[3],state[4]));
             if (end != SchwarzschildRay.Fate.UNRESOLVED) break;
             h = Math.min(.03, h * Math.clamp(error == 0 ? 2 : .9 * Math.pow(tolerance / error, .2), .5, 2));
         }
         samples = List.copyOf(nodes);
+        angularSamples = List.copyOf(angularNodes);
         fate = end;
         maximumEnergyError = errorEnergy;
     }
 
     private double[] step(double[] s, double h) {
-        double[] k1 = derivative(s), t = new double[3];
-        for (int k = 0; k < 3; k++) t[k] = s[k] + h * k1[k] / 2;
+        double[] k1 = derivative(s), t = new double[s.length];
+        for (int k = 0; k < s.length; k++) t[k] = s[k] + h * k1[k] / 2;
         double[] k2 = derivative(t);
-        for (int k = 0; k < 3; k++) t[k] = s[k] + h * k2[k] / 2;
+        for (int k = 0; k < s.length; k++) t[k] = s[k] + h * k2[k] / 2;
         double[] k3 = derivative(t);
-        for (int k = 0; k < 3; k++) t[k] = s[k] + h * k3[k];
+        for (int k = 0; k < s.length; k++) t[k] = s[k] + h * k3[k];
         double[] k4 = derivative(t);
-        for (int k = 0; k < 3; k++) t[k] = s[k] + h * (k1[k] + 2*k2[k] + 2*k3[k] + k4[k]) / 6;
+        for (int k = 0; k < s.length; k++) t[k] = s[k] + h * (k1[k] + 2*k2[k] + 2*k3[k] + k4[k]) / 6;
         return t;
     }
 
     private double[] derivative(double[] s) {
         double u = s[0];
-        return new double[]{s[1], -u + 1.5*u*u, timeDerivative(impact, u)};
+        return new double[]{s[1], -u + 1.5*u*u, timeDerivative(impact, u),s[4],(-1+3*u)*s[3]};
     }
 
     public static double timeDerivative(double impact, double u) { return 1 / (impact * u * u * (1-u)); }
+
+    /** Partial inverse radius / launch angle at fixed phi, not at fixed table row. */
+    public double angularDerivative(double phi) {
+        if(!Double.isFinite(phi) || phi<0 || phi>endAzimuth()+1e-12)
+            throw new IllegalArgumentException("Outside finite trajectory");
+        int lo=0,hi=angularSamples.size()-1;
+        while(hi-lo>1) {int mid=(lo+hi)/2;if(angularSamples.get(mid).azimuth()<phi)lo=mid;else hi=mid;}
+        var a=angularSamples.get(lo);var b=angularSamples.get(hi);
+        double h=b.azimuth()-a.azimuth(),t=Math.clamp((phi-a.azimuth())/h,0,1);
+        return hermite(a.derivative(),b.derivative(),h*a.rate(),h*b.rate(),t);
+    }
+
+    /** Endpoint variation of optical travel time in the static metric.
+     * dt/dangle=(b v / ((1-u)u²)) du/dangle at fixed phi. */
+    public double angularTimeDerivative(double phi) {
+        var s=sample(phi);double u=s.inverseRadius();
+        return impact*s.slope()*angularDerivative(phi)/((1-u)*u*u);
+    }
 
     public Sample sample(double phi) {
         if (!Double.isFinite(phi) || phi < 0 || phi > endAzimuth() + 1e-12)
