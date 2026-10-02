@@ -2,7 +2,7 @@
 uniform float DiscEnabled,DiscDiagnostic,DiscPhysical,DiscTime,DiscObserverRadius,DiscShadowLow,DiscBeamGrid;
 uniform vec3 DiscNormal,DiscU,DiscV;
 const float DISC_PI=3.14159265359;
-const int DISC_STRIDE=130;
+const int DISC_STRIDE=131;
 
 vec2 discAddress(float angle) {
     // Subtract the high part first, then the residual. Adding both shadow
@@ -43,8 +43,8 @@ vec4 discTrajectory(float angle,float phi) {
 vec3 discSpectrum(float temperature) {
     float p=clamp((temperature-1500.0)/10500.0,0.0,1.0)*255.0;
     int x=int(floor(p));
-    return mix(texelFetch(LensAzimuth,ivec2(x,390),0).rgb,
-            texelFetch(LensAzimuth,ivec2(min(x+1,255),390),0).rgb,fract(p));
+    return mix(texelFetch(LensAzimuth,ivec2(x,393),0).rgb,
+            texelFetch(LensAzimuth,ivec2(min(x+1,255),393),0).rgb,fract(p));
 }
 
 float discFrequency(float r,float mu) {

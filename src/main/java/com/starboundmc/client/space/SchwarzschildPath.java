@@ -99,6 +99,48 @@ public final class SchwarzschildPath {
     public static double hermite(double a,double b,double da,double db,double t) {
         return (2*t*t*t-3*t*t+1)*a+(-2*t*t*t+3*t*t)*b+(t*t*t-2*t*t+t)*da+(t*t*t-t*t)*db;
     }
+    /** Monotone inbound/outbound portions inside a spherical radial shell.
+     * Empty portions collapse at the nearest shell contact, preserving the two
+     * slots as the turning point enters the shell. All coordinates are azimuths. */
+    public double[] shellRanges(double inner,double outer) {
+        if(!Double.isFinite(inner) || !Double.isFinite(outer) || inner<3 || outer<=inner || outer>=FAR_RADIUS)
+            throw new IllegalArgumentException("Invalid exterior shell");
+        double turn=0;
+        if(samples.getFirst().slope()>1e-14) {
+            turn=endAzimuth();
+            for(int i=1;i<samples.size();i++)if(samples.get(i).slope()<0) {
+                double lo=samples.get(i-1).azimuth(),hi=samples.get(i).azimuth();
+                for(int j=0;j<45;j++) {
+                    double mid=(lo+hi)/2;
+                    if(sample(mid).slope()>0)lo=mid;else hi=mid;
+                }
+                turn=(lo+hi)/2;break;
+            }
+        }
+        var inbound=shellHalf(0,turn,inner,outer);
+        var outbound=shellHalf(turn,endAzimuth(),inner,outer);
+        return new double[]{inbound[0],inbound[1],outbound[0],outbound[1]};
+    }
+    private double[] shellHalf(double lo,double hi,double inner,double outer) {
+        double a=sample(lo).radius(),b=sample(hi).radius();
+        double minimum=Math.max(Math.min(a,b),inner),maximum=Math.min(Math.max(a,b),outer);
+        if(hi-lo<1e-12 || minimum>=maximum) {
+            double contact=Math.min(a,b)>outer?(a<b?lo:hi):(a>b?lo:hi);
+            return new double[]{contact,contact};
+        }
+        boolean increasing=b>a;
+        return new double[]{shellRoot(lo,hi,increasing?minimum:maximum,increasing),
+                shellRoot(lo,hi,increasing?maximum:minimum,increasing)};
+    }
+    private double shellRoot(double lo,double hi,double target,boolean increasing) {
+        if(Math.abs(sample(lo).radius()-target)<1e-10)return lo;
+        if(Math.abs(sample(hi).radius()-target)<1e-10)return hi;
+        for(int j=0;j<45;j++) {
+            double mid=(lo+hi)/2;
+            if((sample(mid).radius()<target)==increasing)lo=mid;else hi=mid;
+        }
+        return (lo+hi)/2;
+    }
     public double endAzimuth() { return samples.getLast().azimuth(); }
     public double impact() { return impact; }
     public double maximumEnergyError() { return maximumEnergyError; }

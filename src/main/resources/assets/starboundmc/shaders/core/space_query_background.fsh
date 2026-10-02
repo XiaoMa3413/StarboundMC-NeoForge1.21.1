@@ -10,6 +10,7 @@ uniform vec3 TintColor,LensDirection;
 uniform float TestMode,TestSigma,TestAngle,TestAnisotropy,TestRotation,TestImagePsf;
 uniform vec3 TestDirection;
 #moj_import <starboundmc:space_schwarzschild_disc.glsl>
+#moj_import <starboundmc:space_schwarzschild_volume.glsl>
 in vec2 screenPosition;
 out vec4 fragColor;
 
@@ -21,6 +22,31 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
+    if(TestMode>17.5) {fragColor=volumeNoiseGradient(TestDirection);return;}
+    if(TestMode>16.5) {
+        VolumeLookup lookup=volumeLookup(TestAngle);
+        fragColor=vec4(lookup.a.z,DiscObserverRadius,TestAngle,lookup.radial?1.0:0.0);return;
+    }
+    if(TestMode>15.5) {fragColor=volumeTrajectory(volumeLookup(TestAngle),TestSigma);return;}
+    if(TestMode>14.5) {
+        vec3 direction=vec3(sin(TestAngle),0,-cos(TestAngle));
+        fragColor=discVolumeBeamMode(vec3(0,0,1),direction,vec3(cos(TestAngle),0,sin(TestAngle))*TestSigma,
+                vec3(0,TestSigma*TestAnisotropy,0),true);return;
+    }
+    if(TestMode>13.5) {
+        fragColor=volumeFlow(TestSigma,TestAngle,TestAnisotropy,DiscTime,1.0,1.0,
+                vec3(0),vec3(0),vec3(0),vec3(0));return;
+    }
+    if(TestMode>12.5) {
+        vec3 radial=vec3(0,0,1),direction=vec3(sin(TestAngle),0,-cos(TestAngle));
+        DiscBeamRay beam=discBeamRay(radial,direction);
+        // The diagnostic directly queries the supplied float angle, as in the
+        // timed-ray check; projection inversion is validated by image fixtures.
+        beam.angle=TestAngle;beam.impact=DiscObserverRadius*sin(TestAngle)/sqrt(1.0-1.0/DiscObserverRadius);
+        float tau;vec4 transfer=discVolumeSample(radial,beam,beam,beam,true,tau);
+        fragColor=vec4(tau,transfer.a,transfer.r,1);return;
+    }
+    if(TestMode>11.5) { fragColor=discShell(TestAngle);return; }
     if(TestMode>10.5) {
         vec3 direction=vec3(sin(TestAngle),0,-cos(TestAngle));
         fragColor=discFiniteBeam(vec3(0,0,1),direction,vec3(cos(TestAngle),0,sin(TestAngle))*TestSigma,
@@ -47,12 +73,18 @@ void main() {
         vec3 tangent=direction+radial*cosine;
         tangent=dot(tangent,tangent)>1e-12 ? normalize(tangent) : normalize(cross(radial,vec3(0,1,0)));
         if(DiscEnabled>0.5) {
-            disc=discRadiance(radial,tangent,angle);
             // Half an fwidth spans the angular extent of the pixel. Keep a
             // one-pixel guard beyond that support rather than a broad annulus.
             float beamWeight=1.0-smoothstep(width*.5,width*1.5,abs(criticalDistance));
-            if(DiscBeamGrid>1.5 && beamWeight>0.0)
-                disc=mix(disc,discFiniteBeam(radial,imageDirection,imageDx,imageDy),beamWeight);
+            if(DiscVolumeEnabled>.5) {
+                disc=discVolumeImage(radial,imageDirection,imageDx,imageDy);
+                if(DiscBeamGrid>1.5 && beamWeight>0.0)
+                    disc=mix(disc,discVolumeBeam(radial,imageDirection,imageDx,imageDy),beamWeight);
+            } else {
+                disc=discRadiance(radial,tangent,angle);
+                if(DiscBeamGrid>1.5 && beamWeight>0.0)
+                    disc=mix(disc,discFiniteBeam(radial,imageDirection,imageDx,imageDy),beamWeight);
+            }
         }
         float azimuth=DiscEnabled>0.5?discHeader(max(angle,LensShadow+0.000001)).y
                 :lensAzimuth(max(angle,LensShadow+0.000001));

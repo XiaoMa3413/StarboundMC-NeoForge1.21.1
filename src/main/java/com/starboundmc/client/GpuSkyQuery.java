@@ -9,6 +9,7 @@ import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.SchwarzschildLensTable;
 import com.starboundmc.client.space.SchwarzschildRay;
 import com.starboundmc.client.space.SchwarzschildDiscTable;
+import com.starboundmc.client.space.SchwarzschildVolume;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.StellarBackground;
 import net.minecraft.client.renderer.FogRenderer;
@@ -21,7 +22,8 @@ import org.joml.Vector3f;
 /** On-demand background queries and opt-in static Schwarzschild research preview. */
 final class GpuSkyQuery {
     enum Mode { DISABLED, QUERY, SCHWARZSCHILD, DISC }
-    static Mode mode=Boolean.getBoolean("starboundmc.debug.accretionDisc") ? Mode.DISC
+    static Mode mode=Boolean.getBoolean("starboundmc.debug.accretionDisc")
+            || Boolean.getBoolean("starboundmc.debug.accretionDiscVolume") ? Mode.DISC
             : Boolean.getBoolean("starboundmc.debug.schwarzschild") ? Mode.SCHWARZSCHILD
             : Boolean.getBoolean("starboundmc.debug.backgroundQuery") ? Mode.QUERY : Mode.DISABLED;
     // Fixed celestial direction and static observer; this is not a new universe/gameplay body.
@@ -37,6 +39,8 @@ final class GpuSkyQuery {
     static float lastDiscTime;
     static boolean discDiagnostic,discPhysical,discWideGlare=true;
     static boolean discFiniteBeam=true;
+    static boolean discVolume=Boolean.getBoolean("starboundmc.debug.accretionDiscVolume");
+    static float discThickness=(float)SchwarzschildVolume.ASPECT;
     private static final int[] textures=new int[5];
     private static long uploads,draws,reloads;
     private static boolean failed;
@@ -85,6 +89,9 @@ final class GpuSkyQuery {
             shader.safeGetUniform("DiscDiagnostic").set(discDiagnostic?1F:0F);
             shader.safeGetUniform("DiscPhysical").set(discPhysical?1F:0F);
             shader.safeGetUniform("DiscBeamGrid").set((float)discBeamGrid());
+            shader.safeGetUniform("DiscVolumeEnabled").set(discVolume?1F:0F);
+            shader.safeGetUniform("DiscThickness").set(discThickness);
+            shader.safeGetUniform("DiscVolumeSteps").set((float)discVolumeSteps());
             lastDiscTime=Float.isFinite(discTimeOverride)?discTimeOverride:space.animationTicks()*.3F;
             shader.safeGetUniform("DiscTime").set(lastDiscTime);
             Vector3f radial=new Vector3f(LENS_DIRECTION).negate(),up=new Vector3f(.24F,.87F,0).normalize();
@@ -146,6 +153,8 @@ final class GpuSkyQuery {
         double shadow=SchwarzschildRay.shadowAngle(discObserverRadius);
         target.setSampler("LensAzimuth",discTexture);target.safeGetUniform("DiscEnabled").set(1F);
         target.safeGetUniform("DiscObserverRadius").set(discObserverRadius);
+        target.safeGetUniform("DiscPiHigh").set((float)Math.PI);
+        target.safeGetUniform("DiscPiLow").set((float)(Math.PI-(float)Math.PI));
         target.safeGetUniform("LensShadow").set((float)shadow);
         // Preserve the small distance from the critical angle after float upload.
         target.safeGetUniform("DiscShadowLow").set((float)(shadow-(float)shadow));
@@ -156,7 +165,12 @@ final class GpuSkyQuery {
     static int discBeamGrid() {
         if(!discFiniteBeam)return 1;
         return switch(StarfieldClientConfig.SPACE_VISUAL_QUALITY.get()) {
-            case ULTRA -> 8;case HIGH,CUSTOM -> 4;case BALANCED -> 2;case PERFORMANCE -> 1;
+            case ULTRA -> discVolume?4:8;case HIGH,CUSTOM -> discVolume?3:4;case BALANCED -> 2;case PERFORMANCE -> 1;
+        };
+    }
+    static int discVolumeSteps() {
+        return switch(StarfieldClientConfig.SPACE_VISUAL_QUALITY.get()) {
+            case ULTRA -> 8;case HIGH,CUSTOM -> 6;case BALANCED -> 4;case PERFORMANCE -> 4;
         };
     }
 
@@ -183,6 +197,6 @@ final class GpuSkyQuery {
                 +" discTexture="+(discTexture!=0)+" discGpuBytes="+(discTexture==0?0:discTable.gpuBytes())
                 +" discInclination="+discInclination+" discDiagnostic="+discDiagnostic+" discPhysical="+discPhysical
                 +" discTimeOverride="+discTimeOverride+" discObserverRadius="+discObserverRadius+" discWideGlare="+discWideGlare
-                +" discBeamGrid="+discBeamGrid();
+                +" discBeamGrid="+discBeamGrid()+" discVolume="+discVolume+" discThickness="+discThickness+" discVolumeSteps="+discVolumeSteps();
     }
 }

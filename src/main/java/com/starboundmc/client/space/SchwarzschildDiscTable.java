@@ -3,7 +3,8 @@ package com.starboundmc.client.space;
 /** Fixed-observer research accelerator. Three separate angle branches never interpolate capture
  * with escape. Each column stores a terminal header and a normalized finite timed trajectory. */
 public final class SchwarzschildDiscTable {
-    public static final int WIDTH=1024, INTERVALS=128, STRIDE=INTERVALS+2, HEIGHT=3*STRIDE+1;
+    public static final int WIDTH=1024, INTERVALS=128, STRIDE=INTERVALS+3, PALETTE_ROW=3*STRIDE;
+    public static final int FLOW_ROW=PALETTE_ROW+1, FLOW_ROWS=PeriodicFlowNoise.COUNT/WIDTH, HEIGHT=FLOW_ROW+FLOW_ROWS;
     public static final int PALETTE_SIZE=256;
     public static final double MIN_TEMPERATURE=1500, MAX_TEMPERATURE=12000;
     public static final double EDGE=SchwarzschildLensTable.MIN_EDGE_ANGLE;
@@ -23,10 +24,17 @@ public final class SchwarzschildDiscTable {
                 var s=path.sample(path.endAzimuth()*y/INTERVALS);
                 put(x,branch*STRIDE+1+y,s.inverseRadius(),s.slope(),s.delay(),0);
             }
+            var shell=path.shellRanges(SchwarzschildDisc.INNER_RADIUS,SchwarzschildDisc.OUTER_RADIUS);
+            put(x,branch*STRIDE+STRIDE-1,shell[0],shell[1],shell[2],shell[3]);
         }
         for(int x=0;x<PALETTE_SIZE;x++) {
             var c=StarPhotometry.blackbodyRadiance(MIN_TEMPERATURE+(MAX_TEMPERATURE-MIN_TEMPERATURE)*x/(PALETTE_SIZE-1));
-            put(x,HEIGHT-1,c.red(),c.green(),c.blue(),0);
+            put(x,PALETTE_ROW,c.red(),c.green(),c.blue(),0);
+        }
+        for(int z=0;z<64;z++)for(int y=0;y<64;y++)for(int x=0;x<64;x++) {
+            int pixel=(z*64+y)*64+x;
+            put(pixel%WIDTH,FLOW_ROW+pixel/WIDTH,PeriodicFlowNoise.value(x,y,z),PeriodicFlowNoise.value(x+1,y,z),
+                    PeriodicFlowNoise.value(x,y+1,z),PeriodicFlowNoise.value(x+1,y+1,z));
         }
     }
 
@@ -59,6 +67,14 @@ public final class SchwarzschildDiscTable {
         if(a==null || b==null)return null;
         return new SchwarzschildPath.Sample(phi,a.inverseRadius()*(1-f)+b.inverseRadius()*f,
                 a.slope()*(1-f)+b.slope()*f,a.delay()*(1-f)+b.delay()*f);
+    }
+    public double[] shellLookup(double angle) {
+        if(!Double.isFinite(angle) || angle<0 || angle>Math.PI)throw new IllegalArgumentException("Invalid shell query");
+        int branch=angle<shadow?0:angle<=Math.PI/2?1:2;
+        double p=pixel(angle,branch);int x=(int)p,right=Math.min(x+1,WIDTH-1);double f=p-x;
+        int a=((branch*STRIDE+STRIDE-1)*WIDTH+x)*4,b=((branch*STRIDE+STRIDE-1)*WIDTH+right)*4;
+        var result=new double[4];for(int i=0;i<4;i++)result[i]=data[a+i]*(1-f)+data[b+i]*f;
+        return result;
     }
     private SchwarzschildPath.Sample column(int x,int branch,double phi) {
         int header=(branch*STRIDE*WIDTH+x)*4;double end=data[header],impact=data[header+2];
