@@ -57,6 +57,56 @@ float discFilteredNoise(vec3 point) {
     return mix(0.5,spaceBackgroundNoise(point),exp(-0.6*width*width));
 }
 
+// Finite-lived advected structures avoid winding one initial noise field into
+// increasingly fine complete rings. Two overlapping generations have zero
+// weight and zero time derivative when their seed changes. This is an artistic
+// stochastic flow closure, not a fluid simulation.
+vec3 discFlowLayer(float r,float polar,float age,float generation) {
+    float omega=inversesqrt(2.0*r*r*r);
+    float phase=polar-omega*age;
+    vec2 p=vec2(cos(phase),sin(phase));
+    vec3 seed=vec3(17.8,41.2,6.3)+vec3(5.7,13.1,3.9)*generation;
+    float broad=discFilteredNoise(vec3(r*1.6,p*4.3)+seed);
+    float ribbon=discFilteredNoise(vec3(r*10.0+(broad-.5)*5.0,p*11.3)+seed+37.1);
+    float filaments=.5;
+    // FieldDetail is uniform for the whole draw, so derivatives remain valid.
+    if(FieldDetail>.5) {
+        float warp=discFilteredNoise(vec3(r*3.7,p*7.1)+seed+19.7);
+        filaments=discFilteredNoise(vec3(r*31.0+(warp-.5)*8.0,p*19.7)+seed+71.3);
+    }
+    return vec3(broad,ribbon,filaments);
+}
+vec3 discMaterial(float r,vec3 flow) {
+    // Broad dark gaps survive between branching bright ribbons; neither a
+    // global sine band nor a uniform colour supplies the final structure.
+    // A ridge transform would put its maximum at the filtered noise mean .5,
+    // turning unresolved images into excessively hot, dense complete rings.
+    float density=clamp(.035+2.4*pow(flow.y,3.0)*pow(flow.x,1.4)
+            +pow(flow.z,4.0)*flow.x,.015,1.8);
+    float temperature=clamp(4700.0*pow(4.63/r,.35)+(density-.45)*2400.0
+            +(flow.x-.5)*1200.0,2400.0,5900.0);
+    float envelope=1.0-smoothstep(8.45+.65*flow.x,9.35,r);
+    return vec3(density,temperature,envelope);
+}
+vec4 discGenerationRadiance(vec3 material,float frequency,float opticalPath) {
+    float alpha=1.0-exp(-.30*material.x*material.z*opticalPath);
+    // Density controls optical depth. An opaque thermal layer approaches its
+    // source spectrum instead of multiplying that spectrum by density again.
+    vec3 source=discSpectrum(material.y*frequency)*5.0;
+    return vec4(source*alpha,alpha);
+}
+vec4 discFlowRadiance(float r,float polar,float emissionTime,float frequency,float opticalPath) {
+    const float lifetime=70.0;
+    float ageA=mod(emissionTime,lifetime),ageB=mod(emissionTime+lifetime*.5,lifetime);
+    float weightA=pow(sin(DISC_PI*ageA/lifetime),2.0);
+    vec3 a=discMaterial(r,discFlowLayer(r,polar,ageA,floor(emissionTime/lifetime)*2.0));
+    vec3 b=discMaterial(r,discFlowLayer(r,polar,ageB,floor((emissionTime+lifetime*.5)/lifetime)*2.0+1.0));
+    // Mix emitted radiance and coverage after the nonlinear thermal/opacity
+    // responses. Mixing noise or temperature first causes periodic dimming.
+    return mix(discGenerationRadiance(b,frequency,opticalPath),
+            discGenerationRadiance(a,frequency,opticalPath),weightA);
+}
+
 // Radiance and remaining line-of-sight transmission, accumulated camera to source.
 vec4 discRadiance(vec3 radial,vec3 tangent,float angle) {
     float A=dot(radial,DiscNormal),B=dot(tangent,DiscNormal);
@@ -73,44 +123,22 @@ vec4 discRadiance(vec3 radial,vec3 tangent,float angle) {
         vec3 position=radial*cos(phi)+tangent*sin(phi);
         vec3 angular=-radial*sin(phi)+tangent*cos(phi);
         float polar=atan(dot(position,DiscV),dot(position,DiscU));
-        float omega=inversesqrt(2.0*r*r*r);
-        float phase=polar-omega*(DiscTime-path.z);
-        vec2 phaseUnit=vec2(cos(phase),sin(phase));
-        float phaseWidth=max(length(dFdx(phaseUnit)),length(dFdy(phaseUnit)));
         float width=max(0.015,min(fwidth(r),0.8));
         float coverage=smoothstep(4.63-width,4.63+width,r)*(1.0-smoothstep(9.35-width,9.35+width,r));
-        // Periodic coordinates avoid a polar wrap seam. Radial elongation and
-        // orbital shear break the regular bands into material arcs and filaments.
-        float broad=discFilteredNoise(vec3(r*2.1,phaseUnit*3.2)+vec3(17.8,41.2,6.3));
-        float turbulence=discFilteredNoise(vec3(r*7.0+(broad-0.5)*4.0,phaseUnit*7.3)+vec3(7.2,31.1,13.6));
-        float filaments=discFilteredNoise(vec3(r*23.0+(turbulence-0.5)*4.0,phaseUnit*11.1)+vec3(23.6,5.3,47.1));
-        float envelope=1.0-smoothstep(8.45+0.65*turbulence,9.35,r);
-        float finePhase=r*83.0+sin(phase*5.0)*1.1+sin(r*11.0)*0.7;
-        float fineWidth=length(vec2(dFdx(finePhase),dFdy(finePhase)));
-        float fine=cos(finePhase)*exp(-0.125*fineWidth*fineWidth);
-        float medium=cos(r*21.0+sin(phase*3.0)*2.0)*exp(-0.125*pow(fwidth(r)*21.0,2.0));
-        float patches=cos(phase*9.0+log(r)*4.0)*exp(-0.125*phaseWidth*phaseWidth*81.0);
-        float density=clamp(0.045+1.10*turbulence*turbulence+0.65*filaments*filaments
-                +0.025*fine+0.025*medium+0.05*patches,0.015,1.5);
         float incidence=abs(impact*u*sqrt(1.0-u)*dot(angular,DiscNormal));
-        float alpha=(1.0-exp(-0.30*density*coverage*envelope/max(incidence,0.025)))*path.w*planeWeight;
         float mu=clamp(-impact*u*sqrt(1.0-u)*dot(cross(radial,tangent),DiscNormal),-1.0,1.0);
         // Emission is supported only outside ISCO; keep unused off-disc samples finite too.
         float frequency=discFrequency(r,mu);
-        // Artist-calibrated thermal structure, shared by film and frequency views.
-        // The inner material carries warm-white highlights; cooler, sparse outer
-        // filaments retain orange colour and dark gaps instead of a uniform ring.
-        float temperature=clamp(4600.0*pow(4.63/r,0.45)+(turbulence-0.5)*1600.0
-                +(filaments-0.5)*1000.0,2500.0,5700.0);
-        vec3 emission=discSpectrum(temperature*(DiscPhysical>0.5?frequency:1.0))*4.0*density;
+        vec4 emitted=discFlowRadiance(r,polar,DiscTime-path.z,DiscPhysical>0.5?frequency:1.0,
+                coverage/max(incidence,.025))*path.w*planeWeight;
         if(DiscDiagnostic>0.5) {
             float sector=floor(mod(polar+DISC_PI,2.0*DISC_PI)/(2.0*DISC_PI)*12.0);
             float band=floor((r-4.63)/(9.35-4.63)*6.0);
-            emission=mix(vec3(0.06,0.7,1.0),vec3(1.0,0.3,0.04),mod(sector+band,2.0))*0.7;
-            alpha=coverage*path.w*planeWeight;
+            float alpha=coverage*path.w*planeWeight;
+            emitted=vec4(mix(vec3(.06,.7,1.0),vec3(1.0,.3,.04),mod(sector+band,2.0))*.7*alpha,alpha);
         }
-        color+=transmission*alpha*emission;
-        transmission*=1.0-alpha;
+        color+=transmission*emitted.rgb;
+        transmission*=1.0-emitted.a;
     }
     return vec4(color,transmission);
 }

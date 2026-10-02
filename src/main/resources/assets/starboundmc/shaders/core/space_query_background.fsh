@@ -21,6 +21,7 @@ float lensAzimuth(float angle) {
     return mix(texelFetch(LensAzimuth,ivec2(left,row),0).r,texelFetch(LensAzimuth,ivec2(right,row),0).r,fract(p));
 }
 void main() {
+    if(TestMode>7.5) { fragColor=discFlowRadiance(TestSigma,TestAngle,DiscTime,1.0,1.0);return; }
     if(TestMode>6.5) { fragColor=discRadiance(vec3(0,0,1),normalize(TestDirection),TestAngle);return; }
     if(TestMode>5.5) { fragColor=discHeader(TestAngle);return; }
     if(TestMode>4.5) { fragColor=vec4(discFrequency(TestSigma,TestAngle),0,0,1);return; }

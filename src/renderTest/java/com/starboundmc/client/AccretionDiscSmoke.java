@@ -112,6 +112,7 @@ final class AccretionDiscSmoke {
             report.append("discGpuFirstImages=").append(images).append(" captured=").append(capturedImages)
                     .append(" multiple=").append(multiImages).append(" CPUPlaneEvents/opaqueDiagnostic\n");
             verifyNearObservers(report);
+            verifyMaterialContinuity(report);
             if(GL11.glGetError()!=GL11.GL_NO_ERROR)throw new IllegalStateException("Disc OpenGL error");
         } finally {
             shader.safeGetUniform("TestMode").set(0F);shader.safeGetUniform("DiscEnabled").set(0F);
@@ -155,6 +156,45 @@ final class AccretionDiscSmoke {
         } finally {GpuSkyQuery.discObserverRadius=20F;GpuSkyQuery.bindDisc(shader);}
         report.append("nearObserverGpuTimedQueries=").append(count).append(" radiiRs=12/6 maxRadiusErrorRs=")
                 .append(maxRadius).append(" maxDelayErrorRsOverC=").append(maxDelay).append(" detectorLapse=verified\n");
+    }
+    private static void verifyMaterialContinuity(StringBuilder report) {
+        var shader=GpuSkyQuery.shader();shader.safeGetUniform("TestMode").set(8F);
+        int transitions=0,seams=0;double maxTransition=0,maxSeam=0;
+        for(float radius:new float[]{4.8F,6F,8F,9.2F}) {
+            shader.safeGetUniform("TestSigma").set(radius);
+            for(float polar:new float[]{-2.5F,-.4F,1.1F}) {
+                shader.safeGetUniform("TestAngle").set(polar);
+                for(float time:new float[]{-70F,-35F,0F,35F,70F,105F,140F,175F,350F}) {
+                    shader.safeGetUniform("DiscTime").set(time-.0001F);draw();float[] a=read();
+                    shader.safeGetUniform("DiscTime").set(time+.0001F);draw();float[] b=read();
+                    for(int k=0;k<4;k++) {
+                        requireMaterial(a,k);requireMaterial(b,k);
+                        double error=Math.abs(a[k]-b[k])/Math.max(1,Math.max(a[k],b[k]));
+                        maxTransition=Math.max(maxTransition,error);
+                        if(error>.0025)throw new IllegalStateException("Disc generation discontinuity at t="+time+" r="+radius+": "+error);
+                    }
+                    transitions++;
+                }
+            }
+            for(float time:new float[]{0F,17.5F,35F,180F,400F,10000F}) {
+                shader.safeGetUniform("DiscTime").set(time);
+                shader.safeGetUniform("TestAngle").set((float)-Math.PI);draw();float[] a=read();
+                shader.safeGetUniform("TestAngle").set((float)Math.PI);draw();float[] b=read();
+                for(int k=0;k<4;k++) {
+                    requireMaterial(a,k);requireMaterial(b,k);
+                    double error=Math.abs(a[k]-b[k])/Math.max(1,Math.max(a[k],b[k]));
+                    maxSeam=Math.max(maxSeam,error);
+                    if(error>.0002)throw new IllegalStateException("Disc polar material seam at t="+time+": "+error);
+                }
+                seams++;
+            }
+        }
+        report.append("discGpuMaterialContinuity transitions=").append(transitions).append(" seams=").append(seams)
+                .append(" maxTransitionScaledError=").append(maxTransition).append(" maxSeamScaledError=").append(maxSeam).append('\n');
+    }
+    private static void requireMaterial(float[] value,int channel) {
+        if(!Float.isFinite(value[channel]) || value[channel]<0 || channel==3 && value[channel]>1)
+            throw new IllegalStateException("Non-finite/unbounded disc radiative coefficient");
     }
     private static void draw() {
         RenderSystem.setShader(GpuSkyQuery::shader);
