@@ -8,6 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CelestialLodPolicyTest
 {
     @Test
+    void silhouetteUsesTangentAngleAndHandlesSurfaceObserver()
+    {
+        assertEquals(60, CelestialLodPolicy.angularDiameterDegrees(1, 2), 1e-10);
+        assertEquals(180, CelestialLodPolicy.angularDiameterDegrees(1, 1), 1e-10);
+        assertEquals(180, CelestialLodPolicy.angularDiameterDegrees(1, 0), 1e-10);
+    }
+
+    @Test
     void classifiesByAngularSizeRatherThanRawDistance()
     {
         assertEquals(CelestialLod.FULL, CelestialLodPolicy.classify(1.0, 30.0));

@@ -1,0 +1,6 @@
+{
+  "vertex": "starboundmc:space_composite",
+  "fragment": "starboundmc:space_external_stars",
+  "samplers": [{ "name": "Sampler0" }],
+  "uniforms": []
+}

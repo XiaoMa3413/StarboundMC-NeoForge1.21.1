@@ -29,7 +29,8 @@ public final class CelestialLodPolicy
             throw new IllegalArgumentException("radius must be positive and finite");
         if (!Double.isFinite(distance) || distance < 0.0)
             throw new IllegalArgumentException("distance must be finite and non-negative");
-        double angle = 2.0 * Math.atan2(radius, Math.max(0.0, distance));
+        // The silhouette is tangent to the view ray; the external formula ends at the surface.
+        double angle = distance <= radius ? Math.PI : 2.0 * Math.asin(radius / distance);
         return Math.toDegrees(angle);
     }
 

@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.space.CelestialLod;
+import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.world.RockyMoonPlanet;
 import com.starboundmc.world.universe.BodySpaceVisualProfile;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
@@ -91,10 +92,12 @@ public class RockyMoonSkyRenderer
         // without this the whole sky is pinned to the screen instead of the
         // world. The global RenderSystem ModelView is still identity here too.
         pose.mulPose(event.getModelViewMatrix());
-        PlanetRenderer.renderSpaceDome(pose);
+        SpaceBackgroundRenderer.renderSpaceDome(pose);
         // Fixed world-anchored stars: the yaw/pitch parameters rotate the shell
         // with the ship heading, which the moon surface has none of.
-        PlanetRenderer.renderStarField(pose, 0.0F, 0.0F, 1.0F, 0.0F, 0xFFFFFF, 0.0F);
+        SpaceBackgroundRenderer.renderStarField(pose, SpaceCoordinateFrame.identity(),
+                1.0F, 0.0F, 0xFFFFFF, 0.0F,
+                com.starboundmc.client.space.SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick));
         renderSunAndGiant(pose, level, partialTick);
     }
 
@@ -161,7 +164,7 @@ public class RockyMoonSkyRenderer
         Vector3f sunLocal = new Vector3f((float) Math.cos(phaseAngle), 0.0F, (float) Math.sin(phaseAngle));
         pose.pushPose();
         pose.translate(0.0F, -GIANT_DISTANCE, 0.0F);
-        Matrix4f body = PlanetRenderer.bodyOrientation(profile);
+        Matrix4f body = RingRenderer.bodyOrientation(profile);
         Matrix4f ringModel = new Matrix4f(body).scale(GIANT_SCALE);
         Matrix4f sphereModel = new Matrix4f(pose.last().pose()).mul(body);
         // drawPlanetSphere bakes light in the sphere's local frame, so the sun
@@ -172,11 +175,11 @@ public class RockyMoonSkyRenderer
                 .rotateX((float) Math.toRadians(-profile.orientationTilt()))
                 .rotateY((float) Math.toRadians(-profile.orientationYaw()));
         if (ringTexture != null)
-            PlanetRenderer.drawRingPass(pose, ringModel, ResourceLocation.parse(ringTexture), 1.0F, false);
+            RingRenderer.drawRingPass(pose, ringModel, ResourceLocation.parse(ringTexture), 1.0F, false);
         PlanetRenderer.drawPlanetSphere(pose, sphereModel, ResourceLocation.parse(parentTexture),
                 0.0F, 0.0F, 0.0F, GIANT_SCALE, sunInBodyFrame, GIANT_BRIGHTNESS, 1.0F);
         if (ringTexture != null)
-            PlanetRenderer.drawRingPass(pose, ringModel, ResourceLocation.parse(ringTexture), 1.0F, true);
+            RingRenderer.drawRingPass(pose, ringModel, ResourceLocation.parse(ringTexture), 1.0F, true);
         pose.popPose();
         pose.popPose();
     }
@@ -205,25 +208,32 @@ public class RockyMoonSkyRenderer
     /** Vanilla-style square sun: the same textured additive quad the overworld draws. */
     private static void renderVanillaSun(PoseStack pose)
     {
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE,
-                GlStateManager.DestFactor.ZERO);
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, VANILLA_SUN_TEXTURE);
+        try
+        {
+            FogRenderer.setupNoFog();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE, GlStateManager.SourceFactor.ONE,
+                    GlStateManager.DestFactor.ZERO);
+            RenderSystem.enableDepthTest();
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShaderTexture(0, VANILLA_SUN_TEXTURE);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        Matrix4f matrix = pose.last().pose();
-        BufferBuilder bb = Tesselator.getInstance().begin(
-                VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(0.0F, 0.0F);
-        bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(1.0F, 0.0F);
-        bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(1.0F, 1.0F);
-        bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(0.0F, 1.0F);
-        BufferUploader.drawWithShader(bb.buildOrThrow());
-
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.depthMask(true);
+            Matrix4f matrix = pose.last().pose();
+            BufferBuilder bb = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+            bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(0.0F, 0.0F);
+            bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, -SUN_HALF_SIZE).setUv(1.0F, 0.0F);
+            bb.addVertex(matrix, SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(1.0F, 1.0F);
+            bb.addVertex(matrix, -SUN_HALF_SIZE, SUN_DISTANCE, SUN_HALF_SIZE).setUv(0.0F, 1.0F);
+            BufferUploader.drawWithShader(bb.buildOrThrow());
+        }
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 }

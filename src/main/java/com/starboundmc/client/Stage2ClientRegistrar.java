@@ -53,6 +53,13 @@ public final class Stage2ClientRegistrar {
     public static void registerThrusterShaders(net.neoforged.neoforge.client.event.RegisterShadersEvent event)
             throws java.io.IOException {
         ThrusterRenderTypes.registerShaders(event);
+        PlanetSurfaceShader.register(event);
+        AtmosphereShader.register(event);
+        CloudShader.register(event);
+        GpuSpaceBackground.register(event);
+        SpaceStellarRenderer.register(event);
+        SpaceRingShader.register(event);
+        SpaceSceneTarget.register(event);
     }
 
     @SubscribeEvent

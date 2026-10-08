@@ -9,10 +9,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.starboundmc.client.space.StarSystemResolver;
+import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.client.renderer.GameRenderer;
 import org.joml.Matrix4f;
+import org.joml.Vector3d;
 
 /** Draws all LOD-2 stellar points in one allocation-free buffer submission. */
 public final class StellarPointBatchRenderer
@@ -40,44 +42,41 @@ public final class StellarPointBatchRenderer
     }
 
     public static void render(PoseStack pose, StarSystemResolver.ResolvedStarField stars,
-                              double yawCos, double yawSin,
-                              double pitchCos, double pitchSin)
+                              SpaceCoordinateFrame coordinateFrame)
     {
         if (!hasPoints(stars))
             return;
 
-        FogRenderer.setupNoFog();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
-        RenderSystem.disableCull();
-        RenderSystem.disableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-        Matrix4f matrix = pose.last().pose();
-        BufferBuilder buffer = Tesselator.getInstance().begin(
-                VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
-        for (int i = 0; i < stars.count(); i++)
+        try
         {
-            StarSystemResolver.VisibleStar star = stars.star(i);
-            if (star.pointLodWeight() <= 0.002F)
-                continue;
+            FogRenderer.setupNoFog();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
+            RenderSystem.disableCull();
+            RenderSystem.disableDepthTest();
+            RenderSystem.depthMask(false);
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-            double viewX = star.relativeX() * yawCos + star.relativeZ() * yawSin;
-            double yawZ = -star.relativeX() * yawSin + star.relativeZ() * yawCos;
-            double viewY = star.relativeY() * pitchCos - yawZ * pitchSin;
-            double viewZ = star.relativeY() * pitchSin + yawZ * pitchCos;
-            addPoint(buffer, matrix, star, viewX, viewY, viewZ);
+            Matrix4f matrix = pose.last().pose();
+            Vector3d view = new Vector3d();
+            BufferBuilder buffer = Tesselator.getInstance().begin(
+                    VertexFormat.Mode.TRIANGLES, DefaultVertexFormat.POSITION_COLOR);
+            for (int i = 0; i < stars.count(); i++)
+            {
+                StarSystemResolver.VisibleStar star = stars.star(i);
+                if (star.pointLodWeight() <= 0.002F)
+                    continue;
+
+                coordinateFrame.toViewRelative(star.relativeX(), star.relativeY(), star.relativeZ(), view);
+                addPoint(buffer, matrix, star, view.x, view.y, view.z);
+            }
+            BufferUploader.drawWithShader(buffer.buildOrThrow());
         }
-        BufferUploader.drawWithShader(buffer.buildOrThrow());
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
+        finally
+        {
+            SpaceRenderPassState.restoreDefaults();
+        }
     }
 
     private static boolean hasPoints(StarSystemResolver.ResolvedStarField stars)

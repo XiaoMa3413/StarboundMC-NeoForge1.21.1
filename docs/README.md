@@ -12,6 +12,7 @@
 
 ## 当前活动计划
 
+- [太空渲染新版技术路线](space-render-roadmap.md)：`refactor/space-render-v2` 的现行执行路线与验证记录，覆盖深空、独立天体深度、HDR、材质、大气、恒星和后续黑洞；取代该分支旧 PR 顺序。
 - [EPP 环境生存实施计划](epp-implementation-plan.md)：Lush 基础电路板与 Mk.I 制造、独立装备槽、
   氧气、补给站、月球补给与 NOVA 引导；本轮确认范围和实际验证结果以此计划为准。
 - [亚光速引擎维修闭环](sublight-engine-repair-plan.md)：核心打印、独立飞船引擎模块槽安装、服务端
@@ -19,8 +20,7 @@
   按计划补验。
 - [舰载人工智能终端与序章剧情计划](ship-ai-terminal-plan.md)：序章、远程通信 HUD、四页任务终端、
   任务详情展开和 NOVA 左侧布局已经接入；终端重制配方、环境灯光/屏幕联动和整体验收仍在后续范围。
-- [飞船维度太空视觉增强计划](ship-space-visual-enhancement-plan.md)：星系尺度、跨星系航行节奏、
-  行星过渡和气态巨行星光环航线已完成当前阶段；S0 深空背景层次及后续视觉阶段尚未开始。
+- [原飞船太空视觉增强计划](ship-space-visual-enhancement-plan.md)：保留星系尺度、航行节奏和过渡的历史设计；渲染实现顺序现以新版路线为准。
 - [体素提炼与打印合成站计划](voxel-printing-station-plan.md)：M0–M5 已完成，M6 批处理与打印队列
   代码已落地；客户端视觉/交互验收记录仍需补齐。
 - [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：传送器、货箱、燃料控制器和物质枪升级
@@ -36,6 +36,9 @@
 ## 架构参考
 
 - [宇宙系统总设计](StarboundMC%20宇宙系统总设计.md)：当前数据驱动宇宙架构的说明，不是施工清单。
+- [太空渲染管线与验证](space-render-pipeline.md)：当前独立天体深度、HDR/材质、StellarView HDR/旧版颜色适配、大气/Bloom 预算、配置回退和客户端验证方法。
+- [太空渲染美术方向](space-render-art-direction.md)：一眼惊艳的电影镜头目标、星等层次、大气晨昏线与验收视点。
+- [太空渲染架构改进提案](space-render-architecture-proposal.md)：基于接手前 `2ff090d` 的审查；实现进展以新版路线及管线文档为准。
 
 ## 已知问题
 

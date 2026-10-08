@@ -1,0 +1,10 @@
+{
+  "star_types": [
+    { "rgb": { "red": 210, "green": 225, "blue": 255 }, "min_size": 0.025, "max_size": 0.045, "min_brightness": 8, "max_brightness": 32, "max_visible_distance": 6000000, "weight": 420 },
+    { "rgb": { "red": 255, "green": 237, "blue": 216 }, "min_size": 0.025, "max_size": 0.045, "min_brightness": 8, "max_brightness": 32, "max_visible_distance": 6000000, "weight": 420 },
+    { "rgb": { "red": 255, "green": 249, "blue": 244 }, "min_size": 0.05, "max_size": 0.075, "min_brightness": 32, "max_brightness": 80, "max_visible_distance": 6000000, "weight": 130 },
+    { "rgb": { "red": 236, "green": 245, "blue": 255 }, "min_size": 0.08, "max_size": 0.13, "min_brightness": 90, "max_brightness": 180, "max_visible_distance": 6000000, "weight": 25 },
+    { "rgb": { "red": 255, "green": 232, "blue": 203 }, "min_size": 0.12, "max_size": 0.22, "min_brightness": 225, "max_brightness": 255, "max_visible_distance": 6000000, "weight": 3 },
+    { "rgb": { "red": 222, "green": 239, "blue": 255 }, "min_size": 0.12, "max_size": 0.22, "min_brightness": 225, "max_brightness": 255, "max_visible_distance": 6000000, "weight": 2 }
+  ]
+}

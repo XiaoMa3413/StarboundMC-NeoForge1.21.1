@@ -1,0 +1,61 @@
+package com.starboundmc.client;
+
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
+/** Coordinate conversions for the shared ship-space planet surface mesh. */
+final class PlanetSurfaceLighting
+{
+    private PlanetSurfaceLighting()
+    {
+    }
+
+    /**
+     * Appends the existing body orientation and animation spin to the planet model matrix.
+     * The order matches the old CPU-oriented sphere vertices: body yaw, body tilt, then spin.
+     */
+    static Matrix4f appendBodyOrientation(Matrix4f model, float spinDegrees,
+                                          float orientationTiltDegrees, float orientationYawDegrees)
+    {
+        return model.rotateY((float) Math.toRadians(spinDegrees))
+                .rotateX((float) Math.toRadians(orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(orientationYawDegrees));
+    }
+
+    /**
+     * Converts the fixed virtual-space sun direction into the unrotated sphere mesh frame.
+     * The inverse body orientation and spin keep normals and sunlight in the same space.
+     */
+    static Vector3f toMeshSpaceSun(Vector3f worldSunDirection, float spinDegrees,
+                                   float orientationTiltDegrees, float orientationYawDegrees)
+    {
+        return new Vector3f(worldSunDirection)
+                .rotateY((float) Math.toRadians(-spinDegrees))
+                .rotateX((float) Math.toRadians(-orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(-orientationYawDegrees));
+    }
+
+    /**
+     * Maps a point in the surface mesh frame into the cloud mesh frame.
+     * Cloud spin is applied before the same fixed body orientation, so the relative
+     * transform is B^-1 * Ry(-cloudDelta) * B, where B is tilt followed by body yaw.
+     */
+    static Matrix3f surfaceToCloudRelativeRotation(float cloudDeltaDegrees,
+                                                    float orientationTiltDegrees,
+                                                    float orientationYawDegrees)
+    {
+        return new Matrix3f()
+                .rotateY((float) Math.toRadians(-orientationYawDegrees))
+                .rotateX((float) Math.toRadians(-orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(-cloudDeltaDegrees))
+                .rotateX((float) Math.toRadians(orientationTiltDegrees))
+                .rotateY((float) Math.toRadians(orientationYawDegrees));
+    }
+
+    /** Camera origin transformed into the unrotated sphere mesh frame. */
+    static Vector3f cameraPositionMesh(Matrix4f modelViewModel)
+    {
+        return new Matrix4f(modelViewModel).invert().transformPosition(new Vector3f());
+    }
+}

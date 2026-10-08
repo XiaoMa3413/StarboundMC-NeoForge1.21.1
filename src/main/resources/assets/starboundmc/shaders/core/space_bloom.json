@@ -1,0 +1,9 @@
+{
+  "vertex": "starboundmc:space_composite", "fragment": "starboundmc:space_bloom",
+  "samplers": [{"name": "Sampler0"}],
+  "uniforms": [
+    {"name": "TexelSize", "type": "float", "count": 2, "values": [1,1]},
+    {"name": "Prefilter", "type": "float", "count": 1, "values": [0]},
+    {"name": "Gain", "type": "float", "count": 1, "values": [1]}
+  ]
+}

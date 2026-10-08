@@ -25,12 +25,17 @@
       "space_visual": {
         "atmosphere_blue": 0.5,
         "atmosphere_green": 0.65,
+        "atmosphere_night_fraction": 0.025,
         "atmosphere_peak": 0.15,
         "atmosphere_red": 0.75,
+        "atmosphere_shell_scale": 1.02,
+        "atmosphere_twilight_strength": 0.15,
         "night_floor": 0.06,
         "orientation_tilt": 12.0,
         "orientation_yaw": 285.0,
         "point_color": -3100550,
+        "roughness": 0.92,
+        "specular_strength": 0.02,
         "spin_rate": 0.00275,
         "terminator_width": 0.18,
         "texture": "starboundmc:textures/planet/barren.png"
@@ -78,11 +83,22 @@
       "space_visual": {
         "atmosphere_blue": 1.0,
         "atmosphere_green": 0.6,
+        "atmosphere_night_fraction": 0.045,
         "atmosphere_peak": 0.2,
         "atmosphere_red": 0.3,
+        "atmosphere_shell_scale": 1.05,
+        "atmosphere_twilight_strength": 0.55,
+        "cloud_drift_rate": 0.0025,
+        "cloud_opacity": 0.82,
+        "cloud_shell_scale": 1.008,
+        "cloud_texture": "starboundmc:textures/planet/lush_clouds.png",
+        "fresnel_strength": 0.05,
+        "material_mask": "starboundmc:textures/planet/lush_material.png",
         "orientation_tilt": 23.0,
         "orientation_yaw": 15.0,
         "point_color": -9906550,
+        "roughness": 0.56,
+        "specular_strength": 0.14,
         "terminator_width": 0.24,
         "texture": "starboundmc:textures/planet/lush.png"
       },
@@ -132,12 +148,19 @@
       "space_visual": {
         "atmosphere_blue": 0.2,
         "atmosphere_green": 0.45,
+        "atmosphere_night_fraction": 0.04,
         "atmosphere_peak": 0.26,
         "atmosphere_red": 1.0,
+        "atmosphere_shell_scale": 1.03,
+        "atmosphere_twilight_strength": 0.3,
+        "emissive_strength": 0.5,
+        "material_mask": "starboundmc:textures/planet/molten_material.png",
         "night_floor": 0.16,
         "orientation_tilt": 6.0,
         "orientation_yaw": 210.0,
         "point_color": -30132,
+        "roughness": 0.78,
+        "specular_strength": 0.025,
         "spin_rate": 0.0075,
         "terminator_width": 0.16,
         "texture": "starboundmc:textures/planet/molten.png"
@@ -157,7 +180,7 @@
       "surface": {
         "dimension": "starboundmc:molten",
         "environment": {
-          "heat_tier": 3
+          "heat_tier": 1
         }
       },
       "threat_level": 6,
@@ -188,13 +211,19 @@
       "space_visual": {
         "atmosphere_blue": 0.7,
         "atmosphere_green": 0.91,
+        "atmosphere_night_fraction": 0.1,
         "atmosphere_peak": 0.24,
         "atmosphere_red": 0.99,
+        "atmosphere_shell_scale": 1.07,
+        "atmosphere_twilight_strength": 0.2,
+        "fresnel_strength": 0.035,
         "night_floor": 0.22,
         "orientation_tilt": 26.7,
         "orientation_yaw": 40.0,
         "point_color": -1783661,
         "ring_texture": "starboundmc:textures/planet/gasgiant_ring.png",
+        "roughness": 0.92,
+        "specular_strength": 0.02,
         "spin_rate": 0.009,
         "terminator_width": 0.42,
         "texture": "starboundmc:textures/planet/gasgiant.png"
