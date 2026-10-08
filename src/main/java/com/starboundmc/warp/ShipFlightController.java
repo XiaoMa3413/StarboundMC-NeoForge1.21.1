@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class ShipFlightController
 {
     public static final int TPS=20, SHORT_ROUTE_TICKS=220, LONG_ROUTE_MIN=300;
-    public static final int LONG_ROUTE_MIN_TICKS=360, LONG_ROUTE_MAX_TICKS=560;
+    public static final int LONG_ROUTE_MAX_TICKS=560;
     public static final int TURN_TICKS=50, ACCEL_TICKS=60, DECEL_TICKS=60, ARRIVE_TICKS=50;
     /** Visual heading takes longer than the manoeuvre phase to convey inertia. */
     private static final int HEADING_ALIGN_TICKS = 110;
@@ -35,24 +35,18 @@ public final class ShipFlightController
     /** Samples on either side of the current point when estimating route heading. */
     private static final double MAX_ROLL_DEGREES = 3.5;
     private static final double ROLL_GAIN = 0.55;
-    /** Compatibility constants retained for callers. */
-    public static final int DEPART_TICKS=TURN_TICKS+ACCEL_TICKS, DOCK_TICKS=ARRIVE_TICKS;
-
     private final String from,target; private final UniversePosition start,end; private final boolean shortRoute; private final int totalTicks;
     private int elapsedTicks; private FlightPhase phase; private UniversePosition pos; private UniverseDelta velocity=new UniverseDelta(0.0,0.0,0.0); private double yaw,pitch;
 
-    public ShipFlightController(String from,String target){this(from,target,UniverseNavigation.universeDock(from),0,null,0,0,0);}
-    public ShipFlightController(String from,String target,Vec3 persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
-    {
-        this(from,target,UniversePosition.fromLegacy(persisted),elapsed,persistedPhase,yaw,pitch,ignoredRoll);
-    }
-    public ShipFlightController(String from,String target,UniversePosition persisted,int elapsed,FlightPhase persistedPhase,double yaw,double pitch,double ignoredRoll)
+    public ShipFlightController(String from,String target){this(from,target,0);}
+    /** Resumes the deterministic route at its persisted elapsed tick. */
+    public ShipFlightController(String from,String target,int elapsed)
     {
         this.from=from;this.target=target;this.start=UniverseNavigation.universeDock(from);this.end=UniverseNavigation.universeDock(target);
         double distance=Math.sqrt(start.distanceToSqr(end));this.shortRoute=distance<=LONG_ROUTE_MIN;this.totalTicks=durationFor(distance,shortRoute);
         this.elapsedTicks=clamp(elapsed,0,totalTicks);this.pos=sampleUniversePosition(from,target,totalTicks,this.elapsedTicks);
         this.phase=samplePhase(from,target,totalTicks,this.elapsedTicks);
-        // Velocity: forward difference to match tick() scaling (delta per tick * TPS). Central diff previously used TPS*0.5 which mismatched tick's TPS.
+        // Forward difference uses the same units as tick(): delta per tick * TPS.
         if (this.elapsedTicks > 0 && this.elapsedTicks < this.totalTicks)
         {
             UniversePosition prev = sampleUniversePosition(from, target, totalTicks, this.elapsedTicks - 1);
@@ -64,7 +58,7 @@ public final class ShipFlightController
             this.velocity = this.pos.deltaTo(next).scale(TPS);
         }
         else this.velocity = new UniverseDelta(0.0, 0.0, 0.0);
-        // Persisted yaw/pitch/pos are validated against the deterministic curve: the curve is authoritative, so any mismatch indicates a save from an older curve version and is intentionally healed.
+        // Route identity and elapsed time determine the complete pose.
         updatePose();
     }
 

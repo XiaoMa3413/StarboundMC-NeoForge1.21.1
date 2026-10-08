@@ -11,18 +11,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
-/**
- * Places a player on a body's surface (migration step A8).
- *
- * <p>Previously each planet dimension owned a near-identical copy of this scan,
- * and the caller chose between them with a {@code switch} over the legacy planet
- * enum. The scan is the same algorithm in all cases, so it lives here once and
- * the destination comes from the body's {@code surface} definition instead of
- * from a branch.</p>
- *
- * <p>The scan itself is unchanged: the plan explicitly forbids altering the
- * current safe-landing behaviour, so only the dispatch around it moved.</p>
- */
+/** Finds a safe landing column in the surface dimension authored by a body.
+ * The bounded scan preserves the current safe-landing policy without per-body dispatch. */
 public final class SurfaceLandingService
 {
     /** Search centre, and the fallback when no suitable column is found. */

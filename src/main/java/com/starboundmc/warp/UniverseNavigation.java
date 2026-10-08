@@ -10,23 +10,9 @@ import com.starboundmc.world.universe.StarSystemDefinition;
 import com.starboundmc.world.universe.UniverseCatalog;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Flight geometry looked up by body id (migration step A5).
- *
- * <p>This is the universe queries {@link ShipSpace} used to answer from
- * {@code EnumMap<Planet, ...>} tables. Those tables were the universe database
- * living inside a math helper; here they come from the catalog, so a body added
- * by a datapack is flyable without touching any of this.</p>
- *
- * <h2>Which catalog</h2>
- *
- * <p>Both sides of the connection must compute the same curve, and each has its
- * own catalog. The server is authoritative when it has one, so a running
- * server's universe wins; a pure client falls back to its own synced (or
- * built-in) catalog. Since both are built from the same registry they agree by
- * construction, and preferring the server keeps that true even in the window
- * before a client finishes syncing.</p>
- */
+/** Flight geometry and ownership queries by body ID.
+ * The running server catalog owns navigation; a client uses its synchronized catalog.
+ * Geometry requires a navigation profile, while ownership is an explicit data relationship. */
 public final class UniverseNavigation
 {
     private UniverseNavigation()
@@ -75,14 +61,12 @@ public final class UniverseNavigation
         return profile.bodyRadius();
     }
 
-    /**
-     * Dock heading. A body with no navigation profile yields 0 degrees, matching
-     * the lenient lookup the legacy table used.
-     */
+    /** Dock heading for a navigable body. Unknown geometry is an error. */
     public static double yawDock(String entryId)
     {
         BodyNavigationProfile profile = navigation(entryId);
-        return profile == null ? 0.0 : profile.dockYaw();
+        if (profile == null) throw new IllegalArgumentException("Unknown navigable body: " + entryId);
+        return profile.dockYaw();
     }
 
     /** Where the ship parks at this body, in continuous-universe coordinates. */
@@ -127,12 +111,6 @@ public final class UniverseNavigation
         return Math.sqrt(universeDock(fromEntryId).distanceToSqr(universeDock(toEntryId)));
     }
 
-    /** Fixed virtual-space star position for a body's system. */
-    public static Vec3 sunPos(String entryId)
-    {
-        return systemOf(entryId).stellarVisual().getVirtualPosition();
-    }
-
     /** Unit direction from a body toward its system's star. */
     public static Vec3 sunDirection(String entryId)
     {
@@ -142,8 +120,7 @@ public final class UniverseNavigation
     /**
      * The system owning a body.
      *
-     * <p>Ownership is a data property, replacing the legacy habit of splitting the
-     * entry id on {@code ':'}.</p>
+     * <p>Ownership is a data property, independent of the entry ID prefix.</p>
      */
     public static StarSystemDefinition systemOf(String entryId)
     {
@@ -173,9 +150,7 @@ public final class UniverseNavigation
      * Bodies that take part in route obstacle avoidance.
      *
      * <p>Every navigable body is one: a course has to clear the body it departs
-     * from and the one it arrives at like any other. That is the same set the
-     * legacy code used, which iterated the whole planet enum rather than only the
-     * bodies the ship could be sent to.</p>
+     * from and the one it arrives at like any other.</p>
      */
     public static java.util.List<CelestialBodyDefinition> avoidanceBodies()
     {

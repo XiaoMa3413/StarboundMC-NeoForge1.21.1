@@ -3,7 +3,6 @@ package com.starboundmc.client.space;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.FlightPhase;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * Minimal render-facing contract for a future freely controlled ship.
@@ -20,19 +19,6 @@ public interface FreeFlightPoseProvider extends ShipPoseProvider
     UniversePosition universePosition();
 
     UniverseDelta universeVelocity();
-
-    /** Local compatibility view; sector changes recenter it automatically. */
-    @Override
-    default Vec3 position()
-    {
-        return universePosition().toLocalVec3();
-    }
-
-    @Override
-    default Vec3 velocity()
-    {
-        return universeVelocity().toVec3();
-    }
 
     @Override
     default FlightPhase flightPhase()

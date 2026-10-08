@@ -1,17 +1,13 @@
 package com.starboundmc;
 
-import com.starboundmc.item.MatterManipulatorItem;
 import com.starboundmc.item.MatterManipulatorUpgrades;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 final class Stage4DataComponentTest {
     @Test
@@ -43,23 +39,4 @@ final class Stage4DataComponentTest {
                 new MatterManipulatorUpgrades(-4, 99, 8, -1));
     }
 
-    @Test
-    void migratesAndRemovesLegacyFieldsOnce() {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt(MatterManipulatorItem.NBT_LEGACY_UPGRADES, 2);
-        tag.putInt(MatterManipulatorItem.NBT_RANGE_UPGRADES, 3);
-        tag.putInt(MatterManipulatorItem.NBT_MINING_UPGRADES, 7);
-        tag.putInt(MatterManipulatorItem.NBT_FORTUNE_UPGRADES, 2);
-        tag.put("Enchantments", StringTag.valueOf("legacy"));
-        tag.putString("Unrelated", "keep");
-
-        assertEquals(new MatterManipulatorUpgrades(2, 3, 2, 2),
-                MatterManipulatorItem.migrateLegacyTag(tag));
-        assertFalse(tag.contains(MatterManipulatorItem.NBT_LEGACY_UPGRADES));
-        assertFalse(tag.contains(MatterManipulatorItem.NBT_RANGE_UPGRADES));
-        assertFalse(tag.contains(MatterManipulatorItem.NBT_MINING_UPGRADES));
-        assertFalse(tag.contains(MatterManipulatorItem.NBT_FORTUNE_UPGRADES));
-        assertFalse(tag.contains("Enchantments"));
-        assertEquals("keep", tag.getString("Unrelated"));
-    }
 }

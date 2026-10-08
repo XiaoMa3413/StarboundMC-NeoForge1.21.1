@@ -24,13 +24,25 @@ class ShipStructurePlacementTest
     private static final Path ARCHIVE = Path.of("docs/blueprints/shuttle-interior-2026-09-05");
 
     @Test
-    void preservesTheSavedTemplateExceptForTheRequestedStarterSupplies() throws Exception
+    void preservesAuthoredGeometryWithCurrentSuppliesAndCanonicalTeleporterState() throws Exception
     {
         try (var input = ShipStructure.class.getResourceAsStream(ShipStructure.TEMPLATE_RESOURCE))
         {
             assertNotNull(input);
             var shipped = NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap());
             var archived = NbtIo.readCompressed(ARCHIVE.resolve("shuttle-interior.nbt"), NbtAccounter.unlimitedHeap());
+            for (Tag state : archived.getList("palette", Tag.TAG_COMPOUND)) {
+                var blockState = (CompoundTag) state;
+                if (blockState.getString("Name").equals("starboundmc:teleporter"))
+                    blockState.put("Properties", TagParser.parseTag("{facing: \"north\", part: \"0\"}"));
+            }
+            for (Tag block : archived.getList("blocks", Tag.TAG_COMPOUND)) {
+                var nbt = ((CompoundTag) block).getCompound("nbt");
+                if (nbt.getString("id").equals("starboundmc:voxel_printing_station")) {
+                    nbt.remove("items");
+                    nbt.putInt("storage_version", 1);
+                }
+            }
             int suppliedCrates = 0;
             for (Tag tag : shipped.getList("blocks", Tag.TAG_COMPOUND))
             {
@@ -43,7 +55,7 @@ class ShipStructurePlacementTest
                 }
             }
             assertEquals(1, suppliedCrates);
-            assertEquals(archived, shipped, "Only the starter crate inventory may differ from the authored template");
+            assertEquals(archived, shipped, "Authored geometry must remain unchanged after canonical state encoding");
         }
         var expected = new HashMap<BlockPos, ShipStructure.Placement>();
         var snapshot = JsonParser.parseString(Files.readString(ARCHIVE.resolve("blocks.json"))).getAsJsonObject();
@@ -61,6 +73,8 @@ class ShipStructurePlacementTest
                 state.getAsJsonObject("Properties").entrySet().forEach(e -> properties.putString(e.getKey(), e.getValue().getAsString()));
                 stateTag.put("Properties", properties);
             }
+            if (stateTag.getString("Name").equals("starboundmc:teleporter"))
+                stateTag.put("Properties", TagParser.parseTag("{facing: \"north\", part: \"0\"}"));
             CompoundTag entity = block.has("nbt_snbt") ? TagParser.parseTag(block.get("nbt_snbt").getAsString()) : null;
             if (entity != null)
             {
@@ -69,6 +83,10 @@ class ShipStructurePlacementTest
                 entity.remove("z");
                 if (entity.getString("id").equals("starboundmc:ship_crate"))
                     entity.put("Items", starterSupplies());
+                if (entity.getString("id").equals("starboundmc:voxel_printing_station")) {
+                    entity.remove("items");
+                    entity.putInt("storage_version", 1);
+                }
             }
             expected.put(pos, new ShipStructure.Placement(stateTag, entity));
         }
@@ -79,7 +97,8 @@ class ShipStructurePlacementTest
     @Test
     void usesTheAuthoredEquipmentPositionsAndRetainsTheirOrientations()
     {
-        assertDevice(ShipStructure.SHIP_TELEPORTER_POS, "teleporter", null);
+        assertDevice(ShipStructure.SHIP_TELEPORTER_POS, "teleporter", Direction.NORTH);
+        assertEquals("0", ShipStructure.layout().get(ShipStructure.SHIP_TELEPORTER_POS).stateTag().getCompound("Properties").getString("part"));
         assertEquals(new BlockPos(0, 102, -7), ShipStructure.SHIP_TELEPORTER_POS.above());
         assertDevice(ShipStructure.SHIP_AI_TERMINAL_POS, "ship_ai_terminal", ShipStructure.SHIP_AI_TERMINAL_FACING);
         assertDevice(ShipStructure.SHIP_VOXEL_PRINTING_STATION_POS, "voxel_printing_station", ShipStructure.SHIP_VOXEL_PRINTING_STATION_FACING);

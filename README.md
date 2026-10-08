@@ -15,7 +15,7 @@
 探索未知世界、采集资源、提炼体素、打印设备与升级模块——然后继续飞向更远的地方。
 
 > [!WARNING]
-> StarboundMC 目前处于 **Alpha 开发阶段**。  
+> StarboundMC 目前处于 **Alpha 开发阶段**。
 > 内容、平衡性、世界生成、剧情设定和存档格式仍可能发生变化。游玩开发版本时建议备份重要世界。
 
 ---
@@ -148,7 +148,7 @@ StarboundMC 拥有独立的飞船太空渲染系统，而不是简单使用 Mine
 
 相关设计与开发计划可查看：
 
-[`docs/ship-space-visual-enhancement-plan.md`](docs/ship-space-visual-enhancement-plan.md)
+[`docs/current-work.md`](docs/current-work.md)
 
 ---
 
@@ -493,3 +493,5 @@ Minecraft 及相关商标属于 Mojang Studios / Microsoft。
   <b>StarboundMC</b><br>
   From one small ship to an entire universe.
 </p>
+
+首次公开 playtest 前，内部开发存档/API 不承诺兼容。当前 schema 与 failure policy 见 [架构](docs/architecture.md)，文档从 [索引](docs/README.md)进入。

@@ -102,7 +102,7 @@ public final class RingRenderer
                 volumeScale * PlanetRenderer.PLANET_RADIUS);
     }
 
-    /** Legacy dimension skies keep their CPU far/near split. */
+    /** Surface dimension skies use their CPU far/near split. */
     static void drawRingPass(PoseStack pose, Matrix4f model, ResourceLocation texture,
                              float alpha, boolean nearPass) {
         drawRingPass(pose,model,texture,alpha,nearPass,new Vector3f(0,1,0),0F);

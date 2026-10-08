@@ -7,17 +7,7 @@ import com.starboundmc.world.universe.UniverseCatalog;
 
 import java.util.List;
 
-/**
- * Universe lookups for the star-map UI, in terms the UI actually asks for.
- *
- * <p>This exists so the star map does not have to care which source the universe
- * came from, and so the "is this the body I am parked at" question has exactly
- * one implementation. That question has a subtlety worth keeping in one place:
- * the authoritative answer is the synced entry id, but before the first
- * star-state packet arrives that id is null while the legacy planet already
- * defaults to Lush. Falling back to the planet keeps a freshly opened console
- * pointing at the right body instead of at nothing.</p>
- */
+/** Star-map queries over the client universe catalog and the single current body identity. */
 public final class StarmapUniverse
 {
     private StarmapUniverse()
@@ -38,8 +28,7 @@ public final class StarmapUniverse
     /**
      * Bodies the cockpit window draws.
      *
-     * <p>Replaces the renderer's {@code Planet.values()} iteration, so a body added
-     * by a datapack renders without a new enum constant.</p>
+     * <p>Only catalog bodies with both visual and navigation profiles are returned.</p>
      */
     public static List<CelestialBodyDefinition> spaceRenderedBodies()
     {
@@ -98,19 +87,12 @@ public final class StarmapUniverse
                 .map(StarSystemDefinition::systemId).orElse(null);
     }
 
-    /**
-     * Whether the ship is currently at this body.
-     *
-     * <p>Uses the synced entry id when present, and falls back to the legacy
-     * planet only while that id is still unknown.</p>
-     */
+    /** Whether this ID equals the single client current-body identity. */
     public static boolean isCurrent(String entryId)
     {
         if (entryId == null)
             return false;
-        // getCurrentEntryId() already falls back to the locally tracked body, so
-        // the synced id and the tracked id are the same question now.
-        return entryId.equals(ClientPlanetState.getCurrentEntryId());
+        return entryId.equals(ClientPlanetState.getCurrent());
     }
 
     /**

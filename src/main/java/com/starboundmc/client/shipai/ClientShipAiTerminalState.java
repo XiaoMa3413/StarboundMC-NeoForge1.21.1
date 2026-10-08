@@ -43,13 +43,7 @@ public final class ClientShipAiTerminalState
         current.bindContainer(containerId);
     }
 
-    /** Compatibility helper for callers that do not have a menu id yet. */
-    public static void beginTerminalSession()
-    {
-        current.bindContainer(-1);
-    }
-
-    enum Speaker
+    public enum Speaker
     {
         SYSTEM("gui.starboundmc.ship_ai.speaker.system"),
         NOVA("gui.starboundmc.ship_ai.speaker.nova"),
@@ -225,11 +219,6 @@ public final class ClientShipAiTerminalState
             activeContainerId = containerId;
         }
 
-        long beginRequest(CompletionKind kind)
-        {
-            return beginRequest(activeContainerId, kind);
-        }
-
         long beginRequest(int containerId, CompletionKind kind)
         {
             if (pendingRequest != null)
@@ -238,11 +227,6 @@ public final class ClientShipAiTerminalState
             nextRequestId = nextRequestId == Long.MAX_VALUE ? 1L : nextRequestId + 1L;
             pendingRequest = new PendingRequest(containerId, requestId, kind);
             return requestId;
-        }
-
-        boolean acknowledge(long requestId)
-        {
-            return acknowledge(activeContainerId, requestId);
         }
 
         boolean acknowledge(int containerId, long requestId)

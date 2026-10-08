@@ -52,6 +52,8 @@ public final class ClientConnectionEvents {
         SpaceSceneTarget.release();
         StellarViewStarfield.resetSession();
         ClientNetworkState.resetConnectionState();
+        ClientPlanetState.resetConnectionState();
+        WarpSounds.reset();
         com.starboundmc.client.space.RelayClientState.reset();
         com.starboundmc.client.epp.EppClientState.reset();
         StarboundHudLayer.INSTANCE.resetConnectionState();

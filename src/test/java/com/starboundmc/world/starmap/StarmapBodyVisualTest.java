@@ -12,7 +12,7 @@ class StarmapBodyVisualTest
     @Test
     void basicProfilePreservesLegacyMarkerValues()
     {
-        StarmapBodyVisual visual = StarmapBodyVisual.basic(0xFF58C458, 18);
+        StarmapBodyVisual visual = StarmapBodyVisual.builder(com.starboundmc.world.starmap.StarmapBodyType.GENERIC, 0xFF58C458, 18, 0L).build();
 
         assertEquals(StarmapBodyType.GENERIC, visual.getBodyType());
         assertEquals(0xFF58C458, visual.getPrimaryColor());

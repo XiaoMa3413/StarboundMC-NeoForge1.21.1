@@ -2,26 +2,8 @@ package com.starboundmc.world.universe;
 
 import net.minecraft.server.MinecraftServer;
 
-/**
- * The server's universe, built from the registry the save actually loaded
- * (migration step A3, server half).
- *
- * <p>The server is the authority on the universe: it validates warps, charges
- * fuel, unlocks systems and gates story progress. Until this existed, only the
- * client had a catalog, so any server-side question about "where is this body"
- * still had to go through the legacy enum tables.</p>
- *
- * <h2>Lifecycle</h2>
- *
- * <p>Built on {@code ServerStartedEvent} and cleared on
- * {@code ServerStoppedEvent}. Clearing matters because a dedicated server or an
- * integrated one can host more than one world in a single JVM session (returning
- * to the title screen and loading another save); a catalog left over from the
- * previous world would describe systems the current one does not have.</p>
- *
- * <p>Between those two events the catalog reflects the running server's registry,
- * which is what makes a datapack-added system usable by warp logic.</p>
- */
+/** Server universe authority built from the loaded registry on startup and cleared on stop.
+ * An unusable server registry is a startup error; it never falls back to built-in gameplay definitions. */
 public final class ServerUniverseCatalog
 {
     /**

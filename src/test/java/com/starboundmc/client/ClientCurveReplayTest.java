@@ -72,7 +72,7 @@ class ClientCurveReplayTest
 
                 ClientPlanetState.resetConnectionState();
                 ClientPlanetState.setCurrent(from);
-                ClientPlanetState.startWarp(to, 400, to);
+                ClientPlanetState.startWarp(to, 400);
 
                 var snapshot = ClientPlanetState.captureVisualSnapshot();
                 assertTrue(snapshot.warping(), from + " -> " + to + " should be warping");
@@ -96,7 +96,7 @@ class ClientCurveReplayTest
     {
         ClientPlanetState.resetConnectionState();
         ClientPlanetState.setCurrent("sys1:lush");
-        ClientPlanetState.startWarp("sys2:frozen", 400, "sys2:frozen");
+        ClientPlanetState.startWarp("sys2:frozen", 400);
 
         var snapshot = ClientPlanetState.captureVisualSnapshot();
         var live = ClientPlanetState.getShipUniversePosition();
@@ -135,7 +135,7 @@ class ClientCurveReplayTest
     void warpingToTheCurrentBodyKeepsTheShipAtItsDock()
     {
         ClientPlanetState.setCurrent("sys1:lush");
-        ClientPlanetState.startWarp("sys1:lush", 400, "sys1:lush");
+        ClientPlanetState.startWarp("sys1:lush", 400);
 
         var snapshot = ClientPlanetState.captureVisualSnapshot();
         assertOnCurve("sys1:lush", "sys1:lush", "same-body warp",

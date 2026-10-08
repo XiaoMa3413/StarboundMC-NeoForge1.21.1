@@ -48,9 +48,7 @@ class ShipStoryServiceTest
     void futureSharedOrPersonalSchemasDisableEveryTerminalMutation()
     {
         SharedShipProgress current = SharedShipProgress.newWorld();
-        PlayerStoryState futurePersonal = new PlayerStoryState(
-                PlayerStoryState.CURRENT_SCHEMA_VERSION + 1,
-                0L, false, 0, 0, 0);
+        PlayerStoryState futurePersonal = new PlayerStoryState(PlayerStoryState.CURRENT_SCHEMA_VERSION + 1, 0L, false, 0, 0, 0, 0);
 
         CompoundTag futureTag = new CompoundTag();
         futureTag.putInt("Version", SharedShipProgress.CURRENT_SCHEMA_VERSION + 1);

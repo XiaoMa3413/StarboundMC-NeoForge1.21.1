@@ -35,12 +35,12 @@ final class NavigableBodyExpectations
     {
         UniversePosition dockPosition()
         {
-            return UniversePosition.fromLegacy(new Vec3(dockX, dockY, dockZ));
+            return UniversePosition.of(dockX, dockY, dockZ);
         }
 
         UniversePosition bodyPosition()
         {
-            return UniversePosition.fromLegacy(new Vec3(bodyX, bodyY, bodyZ));
+            return UniversePosition.of(bodyX, bodyY, bodyZ);
         }
 
         Vec3 dockOffset()

@@ -10,7 +10,7 @@
 
 本文记录飞船维度已经具备的太空渲染能力，避免后续美化工作重复实现既有功能。当前代码、测试与
 实际游戏画面始终优先于本文；新的视觉需求统一记录在
-[飞船维度太空视觉增强计划](../ship-space-visual-enhancement-plan.md) 中。
+[飞船维度太空视觉增强计划](ship-space-visual-enhancement-plan.md) 中。
 
 ## 已实现的空间背景
 

@@ -230,11 +230,11 @@ public final class StarmapTerminalRoot extends UIElement {
 
     /** The ship's current system is the only deep-space signal available before hyperdrive repair. */
     private String currentSystemId() {
-        String entryId = ClientPlanetState.getCurrentEntryId();
+        String entryId = ClientPlanetState.getCurrent();
         String systemId = StarmapUniverse.systemIdOfEntry(entryId);
         if (systemId != null)
             return systemId;
-        StarSystemDefinition current = StarmapUniverse.systemOf(ClientPlanetState.getCurrentEntryId());
+        StarSystemDefinition current = StarmapUniverse.systemOf(ClientPlanetState.getCurrent());
         return current == null ? null : current.systemId();
     }
 
@@ -757,10 +757,9 @@ public final class StarmapTerminalRoot extends UIElement {
                     selectedEntry != null && selectedEntry.orbit().isMoon());
         }
         if (selectedEntry == null)
-            return StarmapActionAvailability.planet(false, false, false,
-                    false, 0, 0);
-        int fuel = ClientPlanetState.getFuel();
-        int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(),
+            return StarmapActionAvailability.planet(false, false, false, false, true, true, true, 0, 0);
+        int fuel = com.starboundmc.network.ClientNetworkState.fuel();
+        int cost = ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrent(),
                 selectedEntry.entryId());
         String currentSystem = currentSystemId();
         String targetSystem = StarmapUniverse.systemIdOfEntry(selectedEntry.entryId());
@@ -783,7 +782,7 @@ public final class StarmapTerminalRoot extends UIElement {
         var state = com.starboundmc.client.space.RelayClientState.snapshot;
         var home = relayHome();
         if (state == null || home == null || isEnvironmentLocked()
-                || state.phase() == com.starboundmc.encounter.RelayData.Phase.UNDISCOVERED.ordinal()) return false;
+                || state.phase() == com.starboundmc.encounter.RelayData.Phase.UNDISCOVERED) return false;
         var system = StarmapUniverse.systemOf(home.entryId());
         if (!isSystemRevealed(system)) return false;
         return RelayMapPresentation.visibleAt(level, system.systemId(),
@@ -812,13 +811,13 @@ public final class StarmapTerminalRoot extends UIElement {
 
     boolean relayActive() {
         var state = com.starboundmc.client.space.RelayClientState.snapshot;
-        return state != null && state.phase() == com.starboundmc.encounter.RelayData.Phase.ACTIVE.ordinal();
+        return state != null && state.phase() == com.starboundmc.encounter.RelayData.Phase.ACTIVE;
     }
 
     int relayFuelCost() {
         var state = com.starboundmc.client.space.RelayClientState.snapshot;
-        return state == null || relayActive() || java.util.Objects.equals(ClientPlanetState.getCurrentEntryId(), state.homeBody())
-                ? 0 : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(), state.homeBody());
+        return state == null || relayActive() || java.util.Objects.equals(ClientPlanetState.getCurrent(), state.homeBody())
+                ? 0 : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrent(), state.homeBody());
     }
 
     boolean relayActionAvailable() {
@@ -826,7 +825,7 @@ public final class StarmapTerminalRoot extends UIElement {
         return state != null && relayVisible() && RelayMapPresentation.canAct(state.phase(), state.outsideCrew(),
                 ClientPlanetState.isWarping(), isSublightOnline(), isHyperdriveOnline(),
                 java.util.Objects.equals(currentSystemId(), StarmapUniverse.systemIdOfEntry(state.homeBody())),
-                ClientPlanetState.getFuel(), relayFuelCost());
+                com.starboundmc.network.ClientNetworkState.fuel(), relayFuelCost());
     }
 
     Component relayStatus() {
@@ -838,8 +837,8 @@ public final class StarmapTerminalRoot extends UIElement {
             if (!isSublightOnline()) return Component.translatable("gui.starboundmc.starmap.sublight_offline");
             if (!java.util.Objects.equals(currentSystemId(), StarmapUniverse.systemIdOfEntry(state.homeBody())) && !isHyperdriveOnline())
                 return Component.translatable("gui.starboundmc.starmap.hyperdrive_offline");
-            if (ClientPlanetState.getFuel() < relayFuelCost())
-                return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail", relayFuelCost(), ClientPlanetState.getFuel());
+            if (com.starboundmc.network.ClientNetworkState.fuel() < relayFuelCost())
+                return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail", relayFuelCost(), com.starboundmc.network.ClientNetworkState.fuel());
         }
         return Component.translatable("gui.starboundmc.relay." + RelayMapPresentation.phaseKey(state.phase()));
     }

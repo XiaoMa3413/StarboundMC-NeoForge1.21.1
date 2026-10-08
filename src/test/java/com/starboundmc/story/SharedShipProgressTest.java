@@ -11,6 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SharedShipProgressTest
 {
     @Test
+    void internalSchemasAndMissingAuthoritativeFieldsAreRejected() {
+        var old = new CompoundTag(); old.putInt("Version", 2);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(old));
+        var incomplete = new CompoundTag(); incomplete.putInt("Version", SharedShipProgress.CURRENT_SCHEMA_VERSION);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(incomplete));
+    }
+
+    @Test
     void newWorldStartsOfflineAndLocked()
     {
         SharedShipProgress state = SharedShipProgress.newWorld();
@@ -177,11 +185,7 @@ class SharedShipProgressTest
         CompoundTag malformed = ready.beginSublightIgnition(100L, 60L).save();
         malformed.putString("MineralScan", MineralScanState.LOCKED.id());
 
-        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(malformed);
-
-        assertEquals(EngineState.DAMAGED, loaded.state().sublightEngine());
-        assertEquals(0L, loaded.state().sublightIgnitionCompleteGameTime());
-        assertTrue(loaded.requiresSave());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(malformed));
     }
 
     @Test
@@ -202,25 +206,6 @@ class SharedShipProgressTest
     }
 
     @Test
-    void versionOneDamagedShipCanEnterTheNewMineralScanScene()
-    {
-        CompoundTag old = SharedShipProgress.newWorld()
-                .beginCoreReboot(0L, 1L)
-                .finishCoreRebootIfDue(1L)
-                .activateSurfaceMission()
-                .completeSurfaceMission()
-                .save();
-        old.putInt("Version", 1);
-        old.remove("MineralScan");
-        old.remove("MineralScanNextCueAt");
-
-        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(old);
-
-        assertEquals(MineralScanState.LOCKED, loaded.state().mineralScan());
-        assertTrue(loaded.requiresSave());
-    }
-
-    @Test
     void interruptedRebootRecoversOnlineWhenLoaded()
     {
         SharedShipProgress rebooting = SharedShipProgress.newWorld().beginCoreReboot(500L, 60L);
@@ -235,27 +220,19 @@ class SharedShipProgressTest
     @Test
     void invalidEngineCombinationFailsClosed()
     {
-        CompoundTag tag = SharedShipProgress.legacyUnlocked().save();
+        CompoundTag tag = SharedShipProgress.newWorld().debugCompletePrologue().save();
         tag.putString("SublightEngine", EngineState.DAMAGED.id());
 
-        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(tag);
-
-        assertEquals(EngineState.DAMAGED, loaded.state().sublightEngine());
-        assertEquals(EngineState.DAMAGED, loaded.state().hyperdrive());
-        assertTrue(loaded.requiresSave());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(tag));
     }
 
     @Test
     void enginesLoadedBeforeFirstLandingFailClosed()
     {
-        CompoundTag tag = SharedShipProgress.legacyUnlocked().save();
+        CompoundTag tag = SharedShipProgress.newWorld().debugCompletePrologue().save();
         tag.putString("SurfaceMission", SurfaceMissionState.LOCKED.id());
 
-        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(tag);
-
-        assertEquals(EngineState.DAMAGED, loaded.state().sublightEngine());
-        assertEquals(EngineState.DAMAGED, loaded.state().hyperdrive());
-        assertTrue(loaded.requiresSave());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(tag));
     }
 
     @Test

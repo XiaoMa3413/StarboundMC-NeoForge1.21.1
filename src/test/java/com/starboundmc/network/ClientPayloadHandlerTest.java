@@ -30,8 +30,8 @@ class ClientPayloadHandlerTest {
         ClientNetworkState.resetConnectionState();
         ClientPlanetState.resetConnectionState();
         ClientPlanetState.setCurrent("sys1:lush");
-        ClientPlanetState.setFuel(100, 100);
-        ClientPlanetState.setStarState(List.of(), null);
+        ClientPayloadHandler.handle(new SyncFuelPacket(100, 100), null);
+
     }
 
     @Test
@@ -40,11 +40,10 @@ class ClientPayloadHandlerTest {
         ClientPayloadHandler.handle(new SyncStarStatePacket(
                 List.of("sys1:lush", "sys1:frozen"), "sys1:frozen"), null);
 
-        // The star-state packet is now the only carrier of the body identity: the
-        // legacy planet sync packet was removed once the arrival cue moved here.
-        assertEquals("sys1:frozen", ClientPlanetState.getCurrentEntryId());
-        assertEquals(640, ClientPlanetState.getFuel());
-        assertEquals(1000, ClientPlanetState.getMaxFuel());
+        // The star-state packet updates the single current-body identity.
+        assertEquals("sys1:frozen", ClientPlanetState.getCurrent());
+        assertEquals(640, com.starboundmc.network.ClientNetworkState.fuel());
+        assertEquals(1000, com.starboundmc.network.ClientNetworkState.maxFuel());
         assertTrue(ClientPlanetState.isVisited("sys1:frozen"));
     }
 
@@ -62,7 +61,7 @@ class ClientPayloadHandlerTest {
         assertTrue(ClientPlanetState.isWarping());
         assertEquals(FlightPhase.ACCELERATE, ClientPlanetState.getFlightPhase());
         assertEquals(position, ClientPlanetState.getShipUniversePosition());
-        assertEquals(velocity.toVec3(), ClientPlanetState.getShipVelocity());
+        assertEquals(velocity, ClientPlanetState.getShipVelocity());
         assertEquals(240, ClientPlanetState.getWarpDurationTicks());
     }
 

@@ -16,8 +16,7 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-8 compile the migrated registry, gameplay, warp and worldgen
-// layers. Stage 9 adds client rendering in independently verified slices.
+// Production sources; runtime test fixtures are included only by explicit opt-in below.
 sourceSets {
     main {
         java {
@@ -88,7 +87,6 @@ sourceSets {
             include 'com/starboundmc/menu/FuelControllerMenu.java'
             include 'com/starboundmc/menu/AlloyFurnaceMenu.java'
             include 'com/starboundmc/client/Stage2ClientRegistrar.java'
-            include 'com/starboundmc/client/Stage2MenuScreen.java'
             include 'com/starboundmc/client/SeatRenderer.java'
             include 'com/starboundmc/client/ClientTeleporterState.java'
             include 'com/starboundmc/client/UpgradeScreen.java'
@@ -272,11 +270,8 @@ neoForge {
                     systemProperty 'starboundmc.debug.spaceSmokeViews', project.property('spaceSmokeViews').toString()
                 }
                 systemProperty 'starboundmc.debug.spaceSmokeHidden', 'true'
-                systemProperty 'starboundmc.debug.spaceSmokeBackground',
-                        (project.findProperty('spaceSmokeBackground') ?: 'procedural').toString()
                 systemProperty 'starboundmc.debug.spaceTimeTicks', '600'
-                systemProperty 'starboundmc.debug.spaceSmokePipeline',
-                        (project.findProperty('spaceSmokePipeline') ?: 'isolated').toString()
+                systemProperty 'starboundmc.debug.spaceMinimal', project.hasProperty('spaceSmokeMinimal').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeStellarView',
                         (project.findProperty('spaceSmokeStellarView') ?: 'false').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeQuality',

@@ -23,39 +23,25 @@ public record SyncStarStatePacket(List<String> visited, String currentEntryId)
                     entryId, PayloadSupport.MAX_ID_LENGTH, "visited entry"));
         }
         visited = List.copyOf(copy);
-        if (currentEntryId != null) {
-            currentEntryId = PayloadSupport.requireString(
-                    currentEntryId, PayloadSupport.MAX_ID_LENGTH, "currentEntryId");
-        }
+        currentEntryId = PayloadSupport.requireString(currentEntryId, PayloadSupport.MAX_ID_LENGTH, "currentEntryId");
+        if (currentEntryId.isBlank()) throw new IllegalArgumentException("Current body is empty");
     }
 
     private SyncStarStatePacket(FriendlyByteBuf buffer) {
-        this(readVisited(buffer), readNullableId(buffer));
+        this(readVisited(buffer), buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
     }
 
     private void write(FriendlyByteBuf buffer) {
         buffer.writeVarInt(visited.size());
-        for (String entryId : visited) {
-            buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
-        }
-        buffer.writeBoolean(currentEntryId != null);
-        if (currentEntryId != null) {
-            buffer.writeUtf(currentEntryId, PayloadSupport.MAX_ID_LENGTH);
-        }
+        for (String entryId : visited) buffer.writeUtf(entryId, PayloadSupport.MAX_ID_LENGTH);
+        buffer.writeUtf(currentEntryId, PayloadSupport.MAX_ID_LENGTH);
     }
 
     private static List<String> readVisited(FriendlyByteBuf buffer) {
-        int count = PayloadSupport.readCount(
-                buffer, PayloadSupport.MAX_LIST_ENTRIES, "visited");
+        int count = PayloadSupport.readCount(buffer, PayloadSupport.MAX_LIST_ENTRIES, "visited");
         List<String> visited = new ArrayList<>(count);
-        for (int index = 0; index < count; index++) {
-            visited.add(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
-        }
+        for (int index = 0; index < count; index++) visited.add(buffer.readUtf(PayloadSupport.MAX_ID_LENGTH));
         return visited;
-    }
-
-    private static String readNullableId(FriendlyByteBuf buffer) {
-        return buffer.readBoolean() ? buffer.readUtf(PayloadSupport.MAX_ID_LENGTH) : null;
     }
 
     @Override

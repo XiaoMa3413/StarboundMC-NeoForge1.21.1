@@ -17,8 +17,7 @@ public final class UniversePosition
 
     /**
      * Datapack form: sector plus local offset. Definitions are authored as
-     * sector 0 with the local coordinate, which is exactly how the legacy
-     * virtual-space vectors convert ({@link #fromLegacy(Vec3)}).
+     * sector zero when no sector is specified.
      */
     public static final Codec<UniversePosition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             SectorCoordinate.CODEC.optionalFieldOf("sector", SectorCoordinate.ZERO)
@@ -59,13 +58,6 @@ public final class UniversePosition
     public static UniversePosition of(double x, double y, double z)
     {
         return of(SectorCoordinate.ZERO, x, y, z);
-    }
-
-    /** Compatibility adapter: all existing virtual coordinates start in sector zero. */
-    public static UniversePosition fromLegacy(Vec3 position)
-    {
-        Objects.requireNonNull(position, "position");
-        return of(position.x, position.y, position.z);
     }
 
     public UniversePosition add(UniverseDelta delta)
@@ -141,7 +133,7 @@ public final class UniversePosition
         return localZ;
     }
 
-    /** Compatibility view of this position inside its current sector. */
+    /** Current-sector local rendering/API view. */
     public Vec3 toLocalVec3()
     {
         return new Vec3(localX, localY, localZ);

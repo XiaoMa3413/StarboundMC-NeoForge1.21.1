@@ -25,8 +25,8 @@ final class SpaceDepthSmoke {
     static String verify() {
         StringBuilder report = new StringBuilder();
         verifySolarLutUpload(report);
-        if (StarfieldClientConfig.SPACE_PIPELINE_MODE.get() != StarfieldClientConfig.PipelineMode.ISOLATED)
-            return report.append("Depth integration checks skipped for direct pipeline.\n").toString();
+        if (Boolean.getBoolean("starboundmc.debug.spaceMinimal"))
+            return report.append("Minimal fallback: actual event state/world-depth checks are in pass-checks.txt; celestial integration is unavailable.\n").toString();
         var state = SpaceRenderPassState.capture();
         String stateBefore = stateSignature();
         Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
@@ -581,7 +581,7 @@ final class SpaceDepthSmoke {
         } finally { textures.release(green); textures.release(red); }
     }
 
-    private static String stateSignature() {
+    static String stateSignature() {
         StringBuilder result = new StringBuilder();
         for (int query : new int[] { GL11.GL_DEPTH_FUNC, GL11.GL_DEPTH_WRITEMASK,
                 org.lwjgl.opengl.GL14.GL_BLEND_SRC_RGB, org.lwjgl.opengl.GL14.GL_BLEND_DST_RGB,
@@ -610,7 +610,7 @@ final class SpaceDepthSmoke {
 
     private static int width() { int[] viewport = new int[4]; GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport); return viewport[2]; }
     private static int height() { int[] viewport = new int[4]; GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport); return viewport[3]; }
-    private static float readDepth() {
+    static float readDepth() {
         float[] value = new float[1];
         GL11.glReadPixels(width() / 2, height() / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, value);
         return value[0];

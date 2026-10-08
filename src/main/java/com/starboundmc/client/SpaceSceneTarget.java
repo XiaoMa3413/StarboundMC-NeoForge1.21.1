@@ -42,7 +42,7 @@ final class SpaceSceneTarget {
                     ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "space_composite"),
                     DefaultVertexFormat.POSITION), shader -> composite = shader);
         } catch (java.io.IOException | RuntimeException failure) {
-            LOGGER.warn("Space composite unavailable; using direct pipeline", failure);
+            LOGGER.warn("Space composite unavailable; using minimal visual fallback", failure);
         }
         try {
             event.registerShader(new ShaderInstance(event.getResourceProvider(),
@@ -57,14 +57,13 @@ final class SpaceSceneTarget {
         active = false;
         if (failed || composite == null || PlanetSurfaceShader.current() == null
                 || !SpaceStellarRenderer.ready() || !SpaceRingShader.ready()
-                || StarfieldClientConfig.SPACE_PIPELINE_MODE.get() == StarfieldClientConfig.PipelineMode.DIRECT)
+                || Boolean.getBoolean("starboundmc.debug.spaceMinimal"))
             return false;
         drawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
         // The external backend renders into a display-space target and is decoded on import.
-        linear = StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
-                && GpuSpaceBackground.ready()
+        linear = GpuSpaceBackground.ready()
                 && (externalCopy != null || !externalRequested()
                 || com.starboundmc.client.compat.stellarview.StellarViewStarfield.linearRadianceAvailable());
         try {
@@ -97,7 +96,7 @@ final class SpaceSceneTarget {
             failed = true;
             if (target != null) target.destroyBuffers();
             target = null;
-            LOGGER.warn("Space target unavailable; using direct pipeline until resource reload", failure);
+            LOGGER.warn("Space target unavailable; using minimal visual fallback until resource reload", failure);
             restoreDestination();
             return false;
         }
@@ -233,7 +232,7 @@ final class SpaceSceneTarget {
     static void disableAfterFailure(RuntimeException failure) {
         active = false;
         failed = true;
-        LOGGER.warn("Isolated space pipeline failed; using direct pipeline until resource reload", failure);
+        LOGGER.warn("Isolated space pipeline failed; using minimal visual fallback until resource reload", failure);
     }
 
     static void abort() { active = false; }

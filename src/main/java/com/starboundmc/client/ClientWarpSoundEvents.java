@@ -6,27 +6,12 @@ import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 /** Stops the warp loop when the player is no longer aboard the ship. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
 public class ClientWarpSoundEvents
 {
-    @SubscribeEvent
-    public static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event)
-    {
-        ClientPlanetState.resetConnectionState();
-        WarpSounds.reset();
-    }
-
-    @SubscribeEvent
-    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event)
-    {
-        ClientPlanetState.resetConnectionState();
-        WarpSounds.reset();
-    }
-
     @SubscribeEvent
     public static void onClientTick(ClientTickEvent.Post event)
     {

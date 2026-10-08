@@ -1,5 +1,4 @@
 {
-  "starboundmc.config.space_pipeline_mode": "Space Render Pipeline",
   "starboundmc.config.space_exposure": "Space Exposure",
   "hud.starboundmc.capability.restore": "VISUAL INTERFACE",
   "hud.starboundmc.capability.restore.detail": "RESTORING LOCAL DISPLAY",
@@ -657,7 +656,6 @@
   "gui.starboundmc.epp.service.upgrade_requirements": "Mk.I needs a Mk.II kit; Mk.II needs a Mk.III kit. Check the right-hand slot.",
   "gui.starboundmc.epp.service.install_requirements": "Requires one compatible module and a free module slot in the EPP.",
   "gui.starboundmc.epp.service.remove_requirements": "Requires an installed module and an empty middle slot.",
-  "starboundmc.config.space_background_mode": "Space Background",
   "starboundmc.config.space_visual_quality": "Space Visual Quality",
   "starboundmc.config.clouds_enabled": "Clouds",
   "starboundmc.config.cloud_shadows_enabled": "Cloud Shadows",

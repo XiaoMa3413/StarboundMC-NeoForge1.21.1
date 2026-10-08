@@ -65,15 +65,12 @@ public class ShipEngineUnitBlock extends BaseEntityBlock
         return RenderShape.MODEL;
     }
 
-    /** Recover a missing socket without changing the block or shared story state. */
+    /** The ignition socket must have its own block entity; missing storage fails closed. */
     public static ShipEngineBlockEntity storage(Level level, BlockPos pos) {
-        if (!level.getBlockState(pos).is(ModBlocks.SHIP_ENGINE_UNIT.get())) return null;
-        if (level.getBlockEntity(pos) instanceof ShipEngineBlockEntity engine) return engine;
-        if (level.isClientSide || level.getBlockEntity(pos) != null) return null;
-        var engine = new ShipEngineBlockEntity(pos, level.getBlockState(pos));
-        level.setBlockEntity(engine);
-        engine.setChanged();
-        return engine;
+        return level.getBlockState(pos).is(ModBlocks.SHIP_ENGINE_UNIT.get())
+                && level.getChunkAt(pos).getBlockEntity(pos,
+                        net.minecraft.world.level.chunk.LevelChunk.EntityCreationType.CHECK)
+                        instanceof ShipEngineBlockEntity engine ? engine : null;
     }
 
     @Override

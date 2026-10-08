@@ -18,22 +18,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
-/**
- * Shared server-authoritative travel boundary.
- *
- * <p>Surface travel reads the destination from the body's {@code surface}
- * definition (migration step A8). The previous implementation switched on the
- * legacy planet enum and called a per-planet teleport, so a new body needed a new
- * enum constant plus a new branch here; now it only needs a definition.</p>
- *
- * <h2>Landing failures are refusals, not relocations</h2>
- *
- * <p>A landing that cannot be performed is refused rather than redirected to the
- * overworld. Sending the player somewhere else on failure is worse than doing
- * nothing: the overworld is a planet surface as far as the story code is
- * concerned, so a redirected landing used to complete the prologue's surface
- * mission and hand out its progress for a planet the player never reached.</p>
- */
+/** Server-authoritative surface travel. Destination and landing policy come from the body definition.
+ * An unavailable destination refuses travel, so a failed landing cannot award arrival progress elsewhere. */
 public final class Stage6TravelService {
     public static final ResourceKey<Level> SHIP_LEVEL = ShipDimensions.SHIP_LEVEL;
     public static final BlockPos SHIP_POS = ShipDimensions.SHIP_POS;

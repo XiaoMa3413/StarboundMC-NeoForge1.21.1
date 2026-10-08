@@ -1,74 +1,28 @@
-# StarboundMC 文档索引
+# StarboundMC 文档入口
 
-本目录按文档用途分为活动计划、架构参考、已知问题和历史归档。发生冲突时，以当前代码、测试和
-实际运行结果为准。未确认的玩法构想单独放在仓库根目录的 [`.doc`](../.doc/) 中，不得直接作为
-开发指令。
+当前基线：PR #20 合并后的 `main` / `21c4c349664351966aaf0c3d8a4c6f53eec1339a`，整理日期 2026-10-09。Minecraft 1.21.1 / NeoForge 21.1.248 / Java 21。
 
-本次整理基线：`codex/nova-prologue` / `e608025`（2026-09-17）。
+## 权威与阅读顺序
 
-许可和第三方素材的当前说明位于仓库根目录的 [LICENSE](../LICENSE) 与
-[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。归档文档中的历史资源清单不代表当前发布包
-的资产或许可证清单。
+发生冲突时，以当前代码、测试与实际运行证据为准。普通开发依次阅读：
 
-## 当前活动计划
+1. 本页。
+2. [当前架构](architecture.md)：稳定 authority、存储、协议与 failure policy。
+3. 任务对应的 current reference。
+4. [当前工作](current-work.md)：真正未完成事项。
+5. [已知问题](known-issues.md)：已复现缺口与验证边界。
 
-- [太空渲染新版技术路线](space-render-roadmap.md)：`refactor/space-render-v2` 的现行执行路线与验证记录，覆盖深空、独立天体深度、HDR、材质、大气、恒星和后续黑洞；取代该分支旧 PR 顺序。
-- [EPP 环境生存实施计划](epp-implementation-plan.md)：Lush 基础电路板与 Mk.I 制造、独立装备槽、
-  氧气、补给站、月球补给与 NOVA 引导；本轮确认范围和实际验证结果以此计划为准。
-- [亚光速引擎维修闭环](sublight-engine-repair-plan.md)：核心打印、独立飞船引擎模块槽安装、服务端
-  点火计时和同星系航行门禁已经接入；创造模式与当前界面已确认，完整多人、重启和旧存档矩阵仍需
-  按计划补验。
-- [舰载人工智能终端与序章剧情计划](ship-ai-terminal-plan.md)：序章、远程通信 HUD、四页任务终端、
-  任务详情展开和 NOVA 左侧布局已经接入；终端重制配方、环境灯光/屏幕联动和整体验收仍在后续范围。
-- [原飞船太空视觉增强计划](ship-space-visual-enhancement-plan.md)：保留星系尺度、航行节奏和过渡的历史设计；渲染实现顺序现以新版路线为准。
-- [体素提炼与打印合成站计划](voxel-printing-station-plan.md)：M0–M5 已完成，M6 批处理与打印队列
-  代码已落地；客户端视觉/交互验收记录仍需补齐。
-- [普通机器界面 LDLib2 迁移计划](machine-ui-ldlib2-plan.md)：传送器、货箱、燃料控制器和物质枪升级
-  工作台及合金炉已有 LDLib2 实现；旧控制台和完整交互验收仍见原计划。
+`archive/` 与 `legacy-forge/` 默认不作为当前需求来源；仅在明确调查历史设计原因时读取。根目录 `.doc/` 是未确认构想，不直接授权开发。
 
-## UI 与美术规范
+## Current reference
 
-- [UI / 美术风格规范](ui-art-direction.md)：项目级舰载科幻视觉语言、颜色、层级、像素资产、星图、N.O.V.A.、物质枪、打印站、HUD 与动画规则。
-- [石墨舰载制造终端风格约束](ui-fabrication-style.md)：已认可的打印站皮肤基线，约束配色、组件材质、交互状态、悬浮提示和复用边界。
-- [舰载机器 UI 精修与验收记录](ui-design-contracts/ship-machines-polish.md)：10 类设备的差异化外观、状态反馈、渲染复核及验证边界。
-- [UI 重构工作流](ui-refactor-workflow.md)：定义 Design Contract、设计与 LDLib2 实现分工、Anti-AI UI 检查和后续 UI Kit / Playground 路线。
+- [太空渲染管线](space-render-pipeline.md)与[美术方向](space-render-art-direction.md)：正式 isolated 管线、最小能力降级、资源生命周期与运行验证。
+- [宇宙系统设计](StarboundMC%20宇宙系统总设计.md)：数据模型与玩法边界；authority 以 architecture 为准。
+- [UI / 美术规范](ui-art-direction.md)、[制造终端风格](ui-fabrication-style.md)、[机器 UI 合同](ui-design-contracts/ship-machines-polish.md)、[UI 工作流](ui-refactor-workflow.md)。
+- 现有专题计划：[EPP](epp-implementation-plan.md)、[亚光速引擎](sublight-engine-repair-plan.md)、[AI 终端](ship-ai-terminal-plan.md)、[打印站](voxel-printing-station-plan.md)、[机器界面](machine-ui-ldlib2-plan.md)。只按其中当前未完成事项继续，已结束阶段不是迁移兼容义务。
 
-## 架构参考
+## 历史与维护
 
-- [宇宙系统总设计](StarboundMC%20宇宙系统总设计.md)：当前数据驱动宇宙架构的说明，不是施工清单。
-- [太空渲染管线与验证](space-render-pipeline.md)：当前独立天体深度、HDR/材质、StellarView HDR/旧版颜色适配、大气/Bloom 预算、配置回退和客户端验证方法。
-- [太空渲染美术方向](space-render-art-direction.md)：一眼惊艳的电影镜头目标、星等层次、大气晨昏线与验收视点。
-- [太空渲染架构改进提案](space-render-architecture-proposal.md)：基于接手前 `2ff090d` 的审查；实现进展以新版路线及管线文档为准。
+[归档索引](archive/README.md)保存迁移提案、已结束路线与验证日志，后续任务从 current-work 进入。当前 reference 不追加 dated 施工日记、分支检查点或过期测试数量。
 
-## 已知问题
-
-- [已发现问题](known-issues.md)：记录仍需实机复验的 LDLib2 冷启动、宇宙迁移视觉验收，以及 Rocky
-  Moon 地表抵达任务触发缺口。
-
-## 已完成计划归档
-
-- [归档索引](archive/README.md)：归档规则和已结束计划列表。
-- [Forge → NeoForge 迁移计划](archive/neoforge-migration-plan.md)
-- [宇宙数据驱动技术迁移计划](archive/StarboundMC%20宇宙数据驱动技术迁移计划.md)
-- [航天飞机外形与内饰落地](archive/shuttle-ship-import-plan.md)
-- [NOVA 与指挥设备美化](archive/command-deck-art-pass.md)
-- [星图重绘需求](archive/starmap-redraw-requirements.md)
-- [星图重绘优化方案](archive/starmap-redraw-optimization.md)
-- [星图重绘完成清单](archive/starmap-redraw-todo.md)
-- [飞船维度太空渲染基线](archive/ship-space-visual-baseline.md)
-
-归档文档只保留历史决策、实施记录和验证证据，不再追加新任务。出现后续需求时，新建活动计划并
-链接相关归档。
-
-## 历史行为基线
-
-- [Forge 1.20.1 文档快照](legacy-forge/README.md)：只用于核对迁移前行为和设计理由，不得作为
-  NeoForge 1.21.1 API 指南，也不应反向修改。
-
-## 维护规则
-
-- 活动计划只保留未完成或正在验收的工作；完成后记录提交、测试和视觉核验，再移入 `archive/`。
-- `.doc/` 只保存明确标注为未确认的构想和讨论稿；确认后另建活动计划，不直接把构想当作需求。
-- `.agents/` 中仅提交明确纳入版本控制的项目级 Skills；其他本地 Agent 工作区内容继续忽略。
-- 不把本地 `LDLib2/` 源码、截图、运行日志或缓存写入项目文档清单。
-- 测试数量以最近一次完整执行为准；如果源集变化，应同步更新 README 和相应活动计划。
+许可与第三方素材以根目录 [LICENSE](../LICENSE) 和 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) 为准。开发资产审计见 current-work；本地截图、缓存、运行日志不进入文档资产清单。

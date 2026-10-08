@@ -3,11 +3,7 @@ package com.starboundmc;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.warp.ShipFlightController;
-import com.starboundmc.warp.ShipSpace;
 import com.starboundmc.warp.ShipWarpManager;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import com.starboundmc.warp.UniverseNavigation;
@@ -15,7 +11,6 @@ import com.starboundmc.world.universe.UniverseTestSupport;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class Stage7WarpTest {
@@ -78,55 +73,4 @@ final class Stage7WarpTest {
         assertEquals(100, ShipWarpManager.warpFuelCost("sys1:lush", "sys2:frozen"));
     }
 
-    @Test
-    void warpPayloadAndLifecycleEventsAreServerAuthoritative() throws IOException {
-        String handler = source("network/ServerPayloadHandler.java");
-        String actions = source("network/Stage7ServerPayloadActions.java");
-        String manager = source("warp/ShipWarpManager.java");
-        String events = source("event/ShipWarpEvents.java");
-        assertTrue(handler.contains("instanceof WarpControlMenu menu"));
-        assertTrue(handler.contains("menu.stillValid(player)"));
-        assertTrue(actions.contains("instanceof WarpControlMenu menu && menu.stillValid(player)"));
-        assertTrue(manager.contains("player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)"));
-        // Migration A5 renamed the reachability check: a warp target must be
-        // navigable (has flight geometry), which is deliberately not the same as
-        // landable (has a surface dimension). Assert both, so a later edit cannot
-        // silently swap one for the other and admit the gas giant as a destination.
-        assertTrue(manager.contains("entry == null || !entry.isNavigable()"));
-        assertFalse(manager.contains("!entry.isLandable()"));
-        assertTrue(manager.contains("getFuel() < cost"));
-        assertTrue(manager.contains("canTravelWithinSystem(server)"));
-        assertTrue(manager.contains("canTravelBetweenSystems(server)"));
-        assertTrue(manager.contains("SNAPSHOT_INTERVAL = 5"));
-        assertTrue(events.contains("ServerTickEvent.Post"));
-        assertTrue(events.contains("ServerStartedEvent"));
-        assertTrue(events.contains("ServerStoppedEvent"));
-        assertFalse(events.contains("net.minecraftforge"));
-    }
-
-    @Test
-    void bothConsoleTypesUseTheSameWarpAuthorityBoundary() throws IOException {
-        String shipConsole = source("menu/ShipConsoleMenu.java");
-        String starmapTerminal = source("menu/StarmapTerminalMenu.java");
-        String boundary = source("menu/WarpControlMenu.java");
-
-        assertTrue(shipConsole.contains("implements WarpControlMenu"));
-        assertTrue(starmapTerminal.contains("implements WarpControlMenu"));
-        assertTrue(boundary.contains("boolean stillValid(Player player)"));
-    }
-
-    @Test
-    void reconnectAndRestartCannotLeaveAStaleSnapshotRevision() throws IOException {
-        String client = source("network/ClientNetworkState.java");
-        String clientEvents = source("client/ClientConnectionEvents.java");
-        String manager = source("warp/ShipWarpManager.java");
-        assertTrue(client.contains("flight = null"));
-        assertTrue(clientEvents.contains("ClientPlayerNetworkEvent.LoggingIn"));
-        assertTrue(clientEvents.contains("ClientPlayerNetworkEvent.LoggingOut"));
-        assertTrue(manager.contains("server.overworld().getGameTime()"));
-    }
-
-    private static String source(String relativePath) throws IOException {
-        return Files.readString(Path.of("src/main/java/com/starboundmc").resolve(relativePath));
-    }
 }

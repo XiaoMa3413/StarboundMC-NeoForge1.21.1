@@ -2,9 +2,6 @@ package com.starboundmc.item;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
@@ -16,7 +13,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
@@ -33,11 +29,6 @@ import java.util.UUID;
 
 public class MatterManipulatorItem extends Item
 {
-    public static final String NBT_SPEED_UPGRADES = "SpeedUpgrades";
-    public static final String NBT_RANGE_UPGRADES = "RangeUpgrades";
-    public static final String NBT_MINING_UPGRADES = "MiningUpgrades";
-    public static final String NBT_FORTUNE_UPGRADES = "FortuneUpgrades";
-    public static final String NBT_LEGACY_UPGRADES = "Upgrades";
     public static final int MAX_UPGRADES = 3;
     /** Mining tier track (2 upgrades): 0 = stone-equivalent (up to iron ore),
      *  1 = diamond-equivalent (diamond ore, gold/redstone/emerald, obsidian),
@@ -133,68 +124,8 @@ public class MatterManipulatorItem extends Item
 
     public static MatterManipulatorUpgrades upgrades(ItemStack stack)
     {
-        MatterManipulatorUpgrades value = stack.get(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get());
-        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
-        if (value != null)
-        {
-            if (customData != null && containsLegacyFields(customData.copyTag()))
-            {
-                CompoundTag tag = customData.copyTag();
-                removeLegacyFields(tag);
-                storeCustomData(stack, tag);
-            }
-            return value;
-        }
-        if (customData == null)
-            return MatterManipulatorUpgrades.DEFAULT;
-
-        CompoundTag tag = customData.copyTag();
-        if (!containsLegacyFields(tag))
-            return MatterManipulatorUpgrades.DEFAULT;
-
-        value = migrateLegacyTag(tag);
-        stack.set(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(), value);
-        storeCustomData(stack, tag);
-        return value;
-    }
-
-    /** Reads and removes the 1.20.1 custom-data fields in one operation. */
-    public static MatterManipulatorUpgrades migrateLegacyTag(CompoundTag tag)
-    {
-        if (!containsLegacyFields(tag))
-            return MatterManipulatorUpgrades.DEFAULT;
-        int speed = tag.contains(NBT_SPEED_UPGRADES, Tag.TAG_INT)
-                ? tag.getInt(NBT_SPEED_UPGRADES) : tag.getInt(NBT_LEGACY_UPGRADES);
-        MatterManipulatorUpgrades value = new MatterManipulatorUpgrades(
-                speed, tag.getInt(NBT_RANGE_UPGRADES),
-                tag.getInt(NBT_MINING_UPGRADES), tag.getInt(NBT_FORTUNE_UPGRADES));
-        removeLegacyFields(tag);
-        return value;
-    }
-
-    private static boolean containsLegacyFields(CompoundTag tag)
-    {
-        return tag.contains(NBT_SPEED_UPGRADES) || tag.contains(NBT_RANGE_UPGRADES)
-                || tag.contains(NBT_MINING_UPGRADES) || tag.contains(NBT_FORTUNE_UPGRADES)
-                || tag.contains(NBT_LEGACY_UPGRADES) || tag.contains("Enchantments");
-    }
-
-    private static void removeLegacyFields(CompoundTag tag)
-    {
-        tag.remove(NBT_SPEED_UPGRADES);
-        tag.remove(NBT_RANGE_UPGRADES);
-        tag.remove(NBT_MINING_UPGRADES);
-        tag.remove(NBT_FORTUNE_UPGRADES);
-        tag.remove(NBT_LEGACY_UPGRADES);
-        tag.remove("Enchantments");
-    }
-
-    private static void storeCustomData(ItemStack stack, CompoundTag tag)
-    {
-        if (tag.isEmpty())
-            stack.remove(DataComponents.CUSTOM_DATA);
-        else
-            CustomData.set(DataComponents.CUSTOM_DATA, stack, tag);
+        return stack.getOrDefault(ModDataComponents.MATTER_MANIPULATOR_UPGRADES.get(),
+                MatterManipulatorUpgrades.DEFAULT);
     }
 
     @Override

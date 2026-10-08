@@ -38,14 +38,6 @@ final class StarmapActionAvailability {
         return available(0, 0);
     }
 
-    static Result planet(boolean hasSelection, boolean reachable, boolean warping,
-                         boolean currentDestination, int fuel, int cost) {
-        // Compatibility overload used by the original map tests and callers.
-        // It models a fully repaired propulsion system.
-        return planet(hasSelection, reachable, warping, currentDestination,
-                true, true, true, fuel, cost);
-    }
-
     /**
      * Evaluates a planetary jump with the propulsion stage included. The
      * caller supplies whether the target belongs to the ship's current star

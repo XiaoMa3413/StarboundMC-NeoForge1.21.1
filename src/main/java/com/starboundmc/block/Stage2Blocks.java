@@ -41,11 +41,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-/**
- * Stage 2 block implementations for systems whose full behavior belongs to a
- * later migration stage. The legacy Forge classes remain untouched beside
- * these adapters and will replace them when their dependencies are migrated.
- */
+/** Shared facing, interaction and shape implementations for the shipboard blocks. */
 public final class Stage2Blocks {
     private Stage2Blocks() {
     }

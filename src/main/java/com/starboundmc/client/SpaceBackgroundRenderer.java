@@ -23,7 +23,7 @@ import org.joml.Vector3f;
 
 import java.util.Random;
 
-/** Chooses ship-space backends while preserving world-sky and legacy paths. */
+/** Ship-space background orchestration plus simple surface-sky drawing for Rocky Moon. */
 public final class SpaceBackgroundRenderer
 {
     private static final int STAR_COUNT = 2000;
@@ -123,7 +123,7 @@ public final class SpaceBackgroundRenderer
         Matrix4f starModelView = new Matrix4f(pose.last().pose())
                 .rotateX((float) Math.toRadians(-space.pitch()))
                 .rotateY((float) Math.toRadians(-space.yaw()));
-        if (starAlpha > 0.01F)
+        if (SpaceSceneTarget.active() && starAlpha > 0.01F)
         {
             // Match the established star orientation: stable camera + visual roll,
             // then inverse ship pitch/yaw. The coordinate provider independently
@@ -141,8 +141,7 @@ public final class SpaceBackgroundRenderer
             if (rendered) return;
         }
 
-        if (StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
-                && GpuSpaceBackground.renderStars(starModelView, RenderSystem.getProjectionMatrix(),
+        if (SpaceSceneTarget.active() && GpuSpaceBackground.renderStars(starModelView, RenderSystem.getProjectionMatrix(),
                 frame.backgroundForwardDirection(new Vector3f()), starAlpha, starConvergence,
                 environment.skyTintColor(), environment.skyTintAmount(),
                 SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick)))
@@ -158,8 +157,7 @@ public final class SpaceBackgroundRenderer
         Matrix4f modelView = new Matrix4f(pose.last().pose())
                 .rotateX((float) Math.toRadians(-space.pitch()))
                 .rotateY((float) Math.toRadians(-space.yaw()));
-        if (StarfieldClientConfig.SPACE_BACKGROUND_MODE.get() == StarfieldClientConfig.BackgroundMode.PROCEDURAL
-                && GpuSpaceBackground.renderBackground(modelView, RenderSystem.getProjectionMatrix(), environment))
+        if (SpaceSceneTarget.active() && GpuSpaceBackground.renderBackground(modelView, RenderSystem.getProjectionMatrix(), environment))
             return;
         renderSpaceDome(pose);
     }

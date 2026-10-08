@@ -30,22 +30,22 @@ final class StarmapActionAvailabilityTest {
     @Test
     void planetActionReportsEveryWarpBlockerInGameplayOrder() {
         assertReason(StarmapActionAvailability.Reason.NO_SELECTION,
-                StarmapActionAvailability.planet(false, true, false, false, 50, 20));
+                StarmapActionAvailability.planet(false, true, false, false, true, true, true, 50, 20));
         assertReason(StarmapActionAvailability.Reason.BODY_LOCKED,
-                StarmapActionAvailability.planet(true, false, true, true, 0, 20));
+                StarmapActionAvailability.planet(true, false, true, true, true, true, true, 0, 20));
         assertReason(StarmapActionAvailability.Reason.WARP_IN_PROGRESS,
-                StarmapActionAvailability.planet(true, true, true, true, 0, 20));
+                StarmapActionAvailability.planet(true, true, true, true, true, true, true, 0, 20));
         assertReason(StarmapActionAvailability.Reason.CURRENT_DESTINATION,
-                StarmapActionAvailability.planet(true, true, false, true, 0, 20));
+                StarmapActionAvailability.planet(true, true, false, true, true, true, true, 0, 20));
 
         StarmapActionAvailability.Result insufficient =
-                StarmapActionAvailability.planet(true, true, false, false, 12, 20);
+                StarmapActionAvailability.planet(true, true, false, false, true, true, true, 12, 20);
         assertReason(StarmapActionAvailability.Reason.INSUFFICIENT_FUEL, insufficient);
         assertEquals(20, insufficient.requiredFuel());
         assertEquals(12, insufficient.availableFuel());
 
         StarmapActionAvailability.Result available =
-                StarmapActionAvailability.planet(true, true, false, false, 20, 20);
+                StarmapActionAvailability.planet(true, true, false, false, true, true, true, 20, 20);
         assertTrue(available.available());
         assertEquals(StarmapActionAvailability.Reason.NONE, available.reason());
     }

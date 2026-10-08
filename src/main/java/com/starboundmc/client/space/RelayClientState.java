@@ -8,6 +8,6 @@ public final class RelayClientState {
     private RelayClientState() { }
     public static void reset() { snapshot = null; receivedTick = 0; RelayProxyRenderer.reset(); }
     public static boolean local() {
-        return snapshot != null && (snapshot.phase() == RelayData.Phase.APPROACHING.ordinal() || snapshot.phase() == RelayData.Phase.ACTIVE.ordinal());
+        return snapshot != null && (snapshot.phase() == RelayData.Phase.APPROACHING || snapshot.phase() == RelayData.Phase.ACTIVE);
     }
 }

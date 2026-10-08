@@ -1,8 +1,8 @@
 # 普通机器界面 LDLib2 迁移计划
 
-> 状态：基础迁移与主要机器页面已接入；合金炉、旧控制台和最终清理仍在进行中。
+> 状态：主要机器页面（含合金炉）已接入；人工交互、多人同步与视觉验收记录仍待补齐。
 >
-> 当前基线：`codex/nova-prologue` / `e608025`
+> 当前基线与存储政策见 [文档入口](README.md) 和 [architecture](architecture.md)；以下迁移阶段记录用于追溯。
 >
 > 建立日期：2026-08-27
 
@@ -16,7 +16,7 @@
 - 共享层只提供 `ModularUI` 生命周期、布局和稳定控件，不建立统一的大型仪表盘外壳。
 - 不借 UI 迁移修改服务端业务、菜单槽位语义、网络权限或注册 ID。
 - 每个方块独立实现、测试、客户端验证和提交；未经确认不批量替换所有页面。
-- 旧 `ship_console` 为存档兼容保留且已废弃，不纳入迁移。
+- `ship_console` 仍有注册、创造物品与独立页面消费者；其当前功能不在本轮 UI 迁移范围。
 
 ## 当前进度
 
@@ -71,13 +71,13 @@
 ### M6：收口
 
 - [ ] 所有消费者迁移后，审计并删除不再使用的 `PixelButton`、`SciFiButton`、`UiStyle`
-      和旧手绘辅助代码；兼容代码仍有调用时不得提前删除。
+      和旧手绘辅助代码；先确认真实消费者，不为内部旧 API 保留入口。
 - [ ] 运行完整 `test`、`build`、客户端资源重载和专用服务器启动检查。
 - [ ] 更新 README、归档本计划，并记录每个页面的最终提交和视觉验收结果。
 
-当前收口范围：`AlloyFurnaceScreen` 和 `ShipConsoleScreen` 仍使用原版 `AbstractContainerScreen`；
-旧版 `Stage2MenuScreen` 兼容入口、无调用的旧按钮样式和各页面的验收记录需要在所有迁移完成后再统一
-清理。独立飞船引擎页面已使用同一套 `StarboundModularScreen` 桥接，但它的维修规则由亚光速引擎计划
+`AlloyFurnaceScreen` 已使用 `StarboundModularScreen`；`ShipConsoleScreen` 仍使用原版
+`AbstractContainerScreen`。无消费者的 `Stage2MenuScreen` 及其占位页面已删除。当前收口工作是
+各页面的人工验收记录；不要恢复旧入口。独立飞船引擎页面已使用同一套 `StarboundModularScreen`，但它的维修规则由亚光速引擎计划
 维护，不在本计划中重复定义。
 
 ## 每页质量门

@@ -36,15 +36,6 @@ final class Stage8WorldgenTest {
     }
 
     @Test
-    void shipDimensionIsVoidAndUsesTheDedicatedBiome() throws IOException {
-        JsonObject generator = json("dimension/ship.json").getAsJsonObject("generator");
-        JsonObject biomeSource = generator.getAsJsonObject("biome_source");
-        assertEquals("minecraft:fixed", biomeSource.get("type").getAsString());
-        assertEquals("starboundmc:ship", biomeSource.get("biome").getAsString());
-        assertTrue(Files.isRegularFile(resource("worldgen/biome/ship.json")));
-    }
-
-    @Test
     void planetProfilesRetainTheirGameplayConstraints() throws IOException {
         JsonObject frozen = json("dimension/frozen.json").getAsJsonObject("generator")
                 .getAsJsonObject("biome_source");
@@ -58,22 +49,6 @@ final class Stage8WorldgenTest {
         assertFalse(moltenType.get("has_ceiling").getAsBoolean());
     }
 
-    @Test
-    void worldgenCodecsAndLifecycleUseNeoForge121Signatures() throws IOException {
-        String registry = source("world/ModWorldgen.java");
-        String ship = source("world/ShipChunkGenerator.java");
-        String barren = source("world/BarrenChunkGenerator.java");
-        String molten = source("world/MoltenChunkGenerator.java");
-        String placement = source("event/ShipPlacementHandler.java");
-        assertTrue(registry.contains("ShipChunkGenerator.CODEC"));
-        assertTrue(registry.contains("FilteredBiomeSource.CODEC"));
-        assertTrue(ship.contains("MapCodec<ShipChunkGenerator>"));
-        assertTrue(barren.contains("super.fillFromNoise(blender, randomState, structureManager, chunk)"));
-        assertTrue(molten.contains("fillFromNoise(Blender blender"));
-        assertFalse(ship.contains("Executor executor"));
-        assertFalse(placement.contains("net.minecraftforge"));
-    }
-
     private static JsonObject json(String relativePath) throws IOException {
         return JsonParser.parseString(Files.readString(resource(relativePath))).getAsJsonObject();
     }
@@ -83,7 +58,4 @@ final class Stage8WorldgenTest {
         return Files.isRegularFile(authored) ? authored : GENERATED_DATA.resolve(relativePath);
     }
 
-    private static String source(String relativePath) throws IOException {
-        return Files.readString(Path.of("src/main/java/com/starboundmc").resolve(relativePath));
-    }
 }

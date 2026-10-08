@@ -157,7 +157,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         {
             this.selectedGalaxySystem = StarmapUniverse.system(rememberedSystemId);
         }
-        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrent());
         if (this.selectedGalaxySystem == null)
         {
             this.selectedGalaxySystem = current != null
@@ -291,7 +291,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
         // Default selection: the ship's current entry if it is in this system,
         // otherwise the first reachable body.
-        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrent());
         if (current != null && system.bodies().contains(current))
         {
             this.selectEntry(this.systemOverviewEntry(system, current));
@@ -531,8 +531,8 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
     {
         if (!ClientPlanetState.isWarping())
             return;
-        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
-        CelestialBodyDefinition target = StarmapUniverse.body(ClientPlanetState.getWarpEntryId());
+        CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrent());
+        CelestialBodyDefinition target = StarmapUniverse.body(ClientPlanetState.getWarpTarget());
         if (current == null || target == null)
             return;
         StarSystemDefinition from = StarmapUniverse.system(StarmapUniverse.systemIdOfEntry(current.entryId()));
@@ -658,14 +658,14 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         boolean mapInteractive = !warping
                 && !(this.layout.compact() && this.detailDrawerOpen);
         int cost = this.selectedEntry == null ? 0
-                : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrentEntryId(), this.selectedEntry.entryId());
+                : ShipWarpManager.warpFuelCost(ClientPlanetState.getCurrent(), this.selectedEntry.entryId());
         if (this.warpButton != null)
         {
             this.warpButton.active = !warping
                     && this.selectedEntry != null
                     && this.selectedEntry.isNavigable()
                     && !StarmapUniverse.isCurrent(this.selectedEntry.entryId())
-                    && ClientPlanetState.getFuel() >= cost;
+                    && com.starboundmc.network.ClientNetworkState.fuel() >= cost;
             this.warpButton.setMessage(this.warpActionLabel(warping, cost));
         }
         // During a warp every view switch is locked: the UI advances itself
@@ -713,7 +713,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
             return Component.translatable("gui.starboundmc.starmap.locked");
         if (StarmapUniverse.isCurrent(this.selectedEntry.entryId()))
             return Component.translatable("gui.starboundmc.starmap.current");
-        if (ClientPlanetState.getFuel() < cost)
+        if (com.starboundmc.network.ClientNetworkState.fuel() < cost)
             return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel");
         return Component.translatable("gui.starboundmc.starmap.warp");
     }
@@ -773,11 +773,11 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         if (StarmapUniverse.isCurrent(this.selectedEntry.entryId()))
             return Component.translatable("gui.starboundmc.starmap.current");
         int cost = ShipWarpManager.warpFuelCost(
-                ClientPlanetState.getCurrentEntryId(), this.selectedEntry.entryId());
-        if (ClientPlanetState.getFuel() < cost)
+                ClientPlanetState.getCurrent(), this.selectedEntry.entryId());
+        if (com.starboundmc.network.ClientNetworkState.fuel() < cost)
         {
             return Component.translatable("gui.starboundmc.starmap.action.insufficient_fuel_detail",
-                    cost, ClientPlanetState.getFuel());
+                    cost, com.starboundmc.network.ClientNetworkState.fuel());
         }
         return null;
     }
@@ -861,7 +861,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         int canvasWidth = canvasBounds.width();
         int canvasHeight = canvasBounds.height();
         float fuelRatio = Math.max(0.0F, Math.min(1.0F,
-                (float) ClientPlanetState.getFuel() / Math.max(1, ClientPlanetState.getMaxFuel())));
+                (float) com.starboundmc.network.ClientNetworkState.fuel() / Math.max(1, com.starboundmc.network.ClientNetworkState.maxFuel())));
         this.chromeRenderer.renderBase(graphics, this.width, this.height,
                 this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
                 this.layout, fuelRatio);
@@ -922,7 +922,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
 
         // Fuel readout, centered above the fuel bar.
         Component fuelText = Component.translatable("gui.starboundmc.fuel",
-                ClientPlanetState.getFuel(), ClientPlanetState.getMaxFuel());
+                com.starboundmc.network.ClientNetworkState.fuel(), com.starboundmc.network.ClientNetworkState.maxFuel());
         graphics.drawString(this.font, fuelText,
                 this.layout.canvas().x() + (this.layout.canvas().width() - this.font.width(fuelText)) / 2,
                 6, StarmapVisualTheme.STATUS_FUEL, true);
@@ -1064,7 +1064,7 @@ public class ShipConsoleScreen extends AbstractContainerScreen<ShipConsoleMenu>
         protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTick)
         {
             boolean selected = ShipConsoleScreen.this.selectedGalaxySystem == this.system;
-            CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrentEntryId());
+            CelestialBodyDefinition current = StarmapUniverse.body(ClientPlanetState.getCurrent());
             boolean docked = current != null && this.system.bodies().contains(current);
             boolean visited = this.system.bodies().stream()
                     .anyMatch(entry -> entry.isNavigable() && ClientPlanetState.isVisited(entry.entryId()));

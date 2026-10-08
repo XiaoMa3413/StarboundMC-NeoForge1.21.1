@@ -109,12 +109,6 @@ public final class StarmapBodyVisual
         return new Builder(bodyType, primaryColor, markerSize, textureSeed);
     }
 
-    /** Compatibility profile matching the former colour/size-only model. */
-    public static StarmapBodyVisual basic(int color, int markerSize)
-    {
-        return builder(StarmapBodyType.GENERIC, color, markerSize, 0L).build();
-    }
-
     public StarmapBodyType getBodyType()
     {
         return bodyType;

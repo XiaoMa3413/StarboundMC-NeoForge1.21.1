@@ -32,7 +32,7 @@ public final class StarmapOverlayRenderer
         CelestialBodyDefinition target = null;
         if (warping)
         {
-            target = catalog().body(ClientPlanetState.getWarpEntryId()).orElse(null);
+            target = catalog().body(ClientPlanetState.getWarpTarget()).orElse(null);
             if (target == null)
                 return;
         }
@@ -145,9 +145,9 @@ public final class StarmapOverlayRenderer
     {
         if (!ClientPlanetState.isWarping())
             return;
-        CelestialBodyDefinition current = catalog().body(ClientPlanetState.getCurrentEntryId())
+        CelestialBodyDefinition current = catalog().body(ClientPlanetState.getCurrent())
                 .orElse(null);
-        CelestialBodyDefinition target = catalog().body(ClientPlanetState.getWarpEntryId())
+        CelestialBodyDefinition target = catalog().body(ClientPlanetState.getWarpTarget())
                 .orElse(null);
         if (current == null || target == null)
             return;
@@ -178,18 +178,10 @@ public final class StarmapOverlayRenderer
         drawRouteShip(graphics, centerX, centerY, rotation);
     }
 
-    /**
-     * Resolves the initial client state before the entry id has been synced.
-     *
-     * <p>The legacy planet is the fallback only for clients that have not yet
-     * received a star-state packet; once the entry id is known it is
-     * authoritative.</p>
-     */
+    /** Resolves the single current body identity against the client catalog. */
     private static CelestialBodyDefinition resolveCurrentEntry()
     {
-        // The client tracks an entry id directly now, so this is a plain lookup;
-        // the previous legacy-planet fallback is no longer needed.
-        return catalog().body(ClientPlanetState.getCurrentEntryId()).orElse(null);
+        return catalog().body(ClientPlanetState.getCurrent()).orElse(null);
     }
 
     private static UniverseCatalog catalog()

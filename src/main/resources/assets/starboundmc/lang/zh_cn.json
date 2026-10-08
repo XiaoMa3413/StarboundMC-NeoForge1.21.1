@@ -1,5 +1,4 @@
 {
-  "starboundmc.config.space_pipeline_mode": "太空渲染管线",
   "starboundmc.config.space_exposure": "太空曝光",
   "hud.starboundmc.capability.restore": "个人视觉接口",
   "hud.starboundmc.capability.restore.detail": "正在恢复本地显示",
@@ -657,7 +656,6 @@
   "gui.starboundmc.epp.service.upgrade_requirements": "Mk.I 需要 Mk.II 套件；Mk.II 需要 Mk.III 套件。请检查右侧升级槽。",
   "gui.starboundmc.epp.service.install_requirements": "需要兼容的单个模块，且 EPP 必须有空余模块槽。",
   "gui.starboundmc.epp.service.remove_requirements": "EPP 必须装有模块，且中间槽必须为空。",
-  "starboundmc.config.space_background_mode": "太空背景",
   "starboundmc.config.space_visual_quality": "太空画质",
   "starboundmc.config.clouds_enabled": "云层",
   "starboundmc.config.cloud_shadows_enabled": "云层阴影",

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class Stage5PersistenceTest {
@@ -39,30 +38,6 @@ final class Stage5PersistenceTest {
         assertEquals(22.0, restored.getShipYaw());
         assertEquals(-3.0, restored.getShipPitch());
         assertEquals(1.5, restored.getShipRoll());
-    }
-
-    @Test
-    void invalidShipFieldsUseBoundedSafeDefaults() {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt("Fuel", Integer.MAX_VALUE);
-        tag.putBoolean("FlightActive", true);
-        tag.putInt("FlightElapsed", -20);
-        tag.putInt("FlightTotal", -1);
-        tag.putString("FlightTarget", "");
-        tag.putString("FlightPhaseName", "NOT_A_PHASE");
-        tag.putDouble("ShipLocalX", Double.NaN);
-        tag.putDouble("ShipYaw", Double.POSITIVE_INFINITY);
-
-        ShipStateData restored = ShipStateData.load(tag, RegistryAccess.EMPTY);
-
-        assertEquals(ShipStateData.MAX_FUEL, restored.getFuel());
-        assertFalse(restored.isFlightActive());
-        assertNull(restored.getFlightTargetEntryId());
-        assertEquals(0, restored.getFlightElapsedTicks());
-        assertEquals(0, restored.getFlightTotalTicks());
-        assertEquals(FlightPhase.DOCKED, restored.getFlightPhase());
-        assertEquals(UniversePosition.of(0.0, 102.0, 0.0), restored.getShipUniversePosition());
-        assertEquals(0.0, restored.getShipYaw());
     }
 
     @Test

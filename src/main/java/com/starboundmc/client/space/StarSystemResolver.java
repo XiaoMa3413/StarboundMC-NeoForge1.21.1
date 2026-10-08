@@ -132,8 +132,7 @@ public final class StarSystemResolver
             return;
 
         int reservedHints = reservedHintCount(currentHint, targetHint);
-        // The catalog's sector view replaces the legacy spatial index; both are
-        // keyed on the system's navigation centre sector.
+        // Query sector buckets keyed on each system's navigation centre.
         UniverseCatalog catalog = StarmapUniverse.catalog();
         candidateCount = catalog.spatialIndex().queryNearby(
                 ship.sector(), QUERY_SECTOR_RADIUS, CANDIDATES, CANDIDATES.length - reservedHints);

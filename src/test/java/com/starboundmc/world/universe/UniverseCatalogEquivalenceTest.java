@@ -170,7 +170,7 @@ class UniverseCatalogEquivalenceTest
         for (StarSystemDefinition system : CATALOG.allSystems())
         {
             assertEquals(NavigableBodyExpectations.starPosition(system.systemId()),
-                    system.stellarVisual().getVirtualPosition(),
+                    system.stellarVisual().getUniversePosition().toLocalVec3(),
                     system.systemId() + " star position");
             assertEquals(NavigableBodyExpectations.lightingDirection(system.systemId()),
                     system.lightingDirection(), system.systemId() + " lighting direction");
@@ -251,38 +251,6 @@ class UniverseCatalogEquivalenceTest
 
     // ------------------------------------------------ legacy save compatibility
 
-    /**
-     * A10 deleted the {@code Planet} enum, but the names it wrote into saves are
-     * permanent. This pins the mapping so the save migration cannot silently lose
-     * an entry — the failure mode being a player quietly relocated.
-     */
-    @Test
-    void theLegacySaveMappingIsCompleteAndLossless()
-    {
-        var mapping = LegacyUniverseCompatibility.legacyNameMapping();
-        assertEquals(4, mapping.size());
-        assertEquals("sys1:lush", mapping.get("lush"));
-        assertEquals("sys1:molten", mapping.get("molten"));
-        assertEquals("sys1:barren", mapping.get("barren"));
-        assertEquals("sys2:frozen", mapping.get("frozen"));
-
-        for (var entry : mapping.entrySet())
-        {
-            assertEquals(entry.getValue(),
-                    LegacyUniverseCompatibility.parsePlanetId(entry.getKey()).orElseThrow());
-            assertEquals(entry.getKey(),
-                    LegacyUniverseCompatibility.legacyPlanetName(entry.getValue()).orElseThrow());
-            assertTrue(LegacyUniverseCompatibility.hasLegacyName(entry.getValue()));
-        }
-
-        // Bodies with no legacy name answer empty rather than borrowing one.
-        assertTrue(LegacyUniverseCompatibility.legacyPlanetName("sys1:gasgiant").isEmpty());
-        assertTrue(LegacyUniverseCompatibility.legacyPlanetName("sys1:rockymoon").isEmpty());
-        assertTrue(LegacyUniverseCompatibility.parsePlanetId("othermod:planet_x").isEmpty());
-        assertTrue(LegacyUniverseCompatibility.parsePlanetId(null).isEmpty());
-        assertTrue(LegacyUniverseCompatibility.legacyPlanetName(null).isEmpty());
-    }
-
     // ------------------------------------------------------------------ codec
 
     @Test
@@ -325,12 +293,12 @@ class UniverseCatalogEquivalenceTest
         assertThrows(IllegalArgumentException.class, () -> new CelestialBodyDefinition(
                 "lush", "n", "t", "d", 0,
                 BodyOrbitDefinition.aroundStar(1, 0.0F),
-                StarmapBodyVisual.basic(0xFF000000, 8),
+                StarmapBodyVisual.builder(com.starboundmc.world.starmap.StarmapBodyType.GENERIC, 0xFF000000, 8, 0L).build(),
                 Optional.empty(), Optional.empty(), Optional.empty()));
         assertThrows(IllegalArgumentException.class, () -> new CelestialBodyDefinition(
                 null, "n", "t", "d", 0,
                 BodyOrbitDefinition.aroundStar(1, 0.0F),
-                StarmapBodyVisual.basic(0xFF000000, 8),
+                StarmapBodyVisual.builder(com.starboundmc.world.starmap.StarmapBodyType.GENERIC, 0xFF000000, 8, 0L).build(),
                 Optional.empty(), Optional.empty(), Optional.empty()));
     }
 
@@ -349,10 +317,7 @@ class UniverseCatalogEquivalenceTest
                 "sys1:clone", body.nameKey(), body.typeKey(), body.descriptionKey(), 1,
                 BodyOrbitDefinition.aroundStar(9, 9.0F), body.starmapVisual(),
                 Optional.empty(), Optional.empty(), body.surface());
-        StarSystemDefinition withClone = new StarSystemDefinition("sys1clone",
-                system.nameKey(), system.descriptionKey(), system.starTypeKey(),
-                system.stellarVisual(), system.galaxyMapPosition(),
-                system.navigationCenter(), system.influenceRadius(), List.of(body, second));
+        StarSystemDefinition withClone = new StarSystemDefinition("sys1clone", system.nameKey(), system.descriptionKey(), system.starTypeKey(), system.stellarVisual(), system.galaxyMapPosition(), system.navigationCenter(), system.influenceRadius(), system.influenceRadius(), List.of(body, second));
         assertThrows(IllegalArgumentException.class,
                 () -> UniverseCatalog.of(List.of(withClone)),
                 "duplicate dimension claim must be rejected");

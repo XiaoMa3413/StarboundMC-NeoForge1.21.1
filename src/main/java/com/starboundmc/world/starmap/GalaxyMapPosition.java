@@ -28,7 +28,7 @@ public record GalaxyMapPosition(double normalizedX, double normalizedY)
         requireNormalized("normalizedY", normalizedY);
     }
 
-    /** Creates a normalized position from the centre of a legacy canvas pixel. */
+    /** Creates a normalized position from the centre of an authoring canvas pixel. */
     public static GalaxyMapPosition fromPixelCenter(int x, int y, int width, int height)
     {
         if (width <= 0 || height <= 0)

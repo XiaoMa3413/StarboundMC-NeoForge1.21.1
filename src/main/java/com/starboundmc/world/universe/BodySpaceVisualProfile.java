@@ -9,23 +9,20 @@ import java.util.Optional;
 /**
  * How a body is drawn from the cockpit window.
  *
- * <p>This mirrors the per-planet tables inside {@code PlanetRenderer}: the
+ * <p>The authored profile owns the
  * atmosphere tint and peak alpha, the fixed body orientation, the point colour
  * used when the body is too far to shade, the planet texture, and the basic
  * view-dependent surface response. The surface shader reads the material
- * controls here; the remaining values continue to mirror the renderer's
- * per-body configuration.</p>
+ * controls here; renderers do not keep separate per-body tables.</p>
  *
  * <p>An optional {@code materialMask} uses its red channel as the
  * specular/smooth-surface mask (0 is rough, 1 is smooth) and its green channel
  * as the emissive mask (0 is unlit, 1 is emissive). Blue and alpha are reserved.</p>
  *
  * <p>The atmosphere tint is stored as three floats rather than a packed colour
- * because that is how the renderer holds it. Rounding it into an int here would
- * silently change the glow the moment the renderer starts reading this value.</p>
+ * to retain the authored tint precision.</p>
  *
- * <p>Orientation is {@code (axis tilt, fixed yaw, fixed roll)} in degrees. There
- * is no orbital or axial animation in the current model, so these are static.</p>
+ * <p>Orientation is {@code (axis tilt, fixed yaw, fixed roll)} in degrees. The fixed orientation is combined with the authored spin rate by the renderer.</p>
  *
  * <p>A present {@code ringTexture} means the body draws a ring band. The ring's
  * proportions, opacity and tint are deliberately not per-body values: they are
@@ -141,8 +138,8 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                             .forGetter(BodySpaceVisualProfile::orientationRoll),
                     Codec.INT.fieldOf("point_color").forGetter(BodySpaceVisualProfile::pointColor),
                     // Shading and material controls live in data so the renderer
-                    // does not branch on body identity. Material defaults preserve
-                    // the old look when older datapacks omit the fields.
+                    // does not branch on body identity. Omitted fields select the
+                    // current matte, non-emissive surface defaults.
                     Codec.FLOAT.optionalFieldOf("terminator_width", 0.20F)
                             .forGetter(BodySpaceVisualProfile::terminatorWidth),
                     Codec.FLOAT.optionalFieldOf("spin_rate", 0.00375F)
@@ -182,88 +179,6 @@ public record BodySpaceVisualProfile(Optional<String> texture,
                 atmosphere.twilightStrength(), clouds.texture(),
                 clouds.shellScale().orElse(DEFAULT_CLOUD_SHELL_SCALE),
                 clouds.opacity(), clouds.driftRate());
-    }
-
-    /** Backward-compatible full constructor for profiles authored before cloud fields existed. */
-    public BodySpaceVisualProfile(Optional<String> texture,
-                                  Optional<String> materialMask,
-                                  float emissiveStrength,
-                                  float atmosphereRed,
-                                  float atmosphereGreen,
-                                  float atmosphereBlue,
-                                  float atmospherePeak,
-                                  float orientationTilt,
-                                  float orientationYaw,
-                                  float orientationRoll,
-                                  int pointColor,
-                                  float terminatorWidth,
-                                  float spinRate,
-                                  float nightFloor,
-                                  float specularStrength,
-                                  float roughness,
-                                  float fresnelStrength,
-                                  Optional<String> ringTexture,
-                                  float atmosphereShellScale,
-                                  float atmosphereNightFraction,
-                                  float atmosphereTwilightStrength)
-    {
-        this(texture, materialMask, emissiveStrength, atmosphereRed, atmosphereGreen, atmosphereBlue,
-                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
-                terminatorWidth, spinRate, nightFloor, specularStrength, roughness, fresnelStrength,
-                ringTexture, atmosphereShellScale, atmosphereNightFraction, atmosphereTwilightStrength,
-                Optional.empty(), DEFAULT_CLOUD_SHELL_SCALE, DEFAULT_CLOUD_OPACITY,
-                DEFAULT_CLOUD_DRIFT_RATE);
-    }
-
-    /** Backward-compatible constructor for masked profiles without emissive response. */
-    public BodySpaceVisualProfile(Optional<String> texture,
-                                  Optional<String> materialMask,
-                                  float atmosphereRed,
-                                  float atmosphereGreen,
-                                  float atmosphereBlue,
-                                  float atmospherePeak,
-                                  float orientationTilt,
-                                  float orientationYaw,
-                                  float orientationRoll,
-                                  int pointColor,
-                                  float terminatorWidth,
-                                  float spinRate,
-                                  float nightFloor,
-                                  float specularStrength,
-                                  float roughness,
-                                  float fresnelStrength,
-                                  Optional<String> ringTexture)
-    {
-        this(texture, materialMask, 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
-                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
-                terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
-                fresnelStrength, ringTexture, DEFAULT_ATMOSPHERE_SHELL_SCALE,
-                DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F);
-    }
-
-    /** Backward-compatible constructor for profiles without a material mask. */
-    public BodySpaceVisualProfile(Optional<String> texture,
-                                  float atmosphereRed,
-                                  float atmosphereGreen,
-                                  float atmosphereBlue,
-                                  float atmospherePeak,
-                                  float orientationTilt,
-                                  float orientationYaw,
-                                  float orientationRoll,
-                                  int pointColor,
-                                  float terminatorWidth,
-                                  float spinRate,
-                                  float nightFloor,
-                                  float specularStrength,
-                                  float roughness,
-                                  float fresnelStrength,
-                                  Optional<String> ringTexture)
-    {
-        this(texture, Optional.empty(), 0.0F, atmosphereRed, atmosphereGreen, atmosphereBlue,
-                atmospherePeak, orientationTilt, orientationYaw, orientationRoll, pointColor,
-                terminatorWidth, spinRate, nightFloor, specularStrength, roughness,
-                fresnelStrength, ringTexture, DEFAULT_ATMOSPHERE_SHELL_SCALE,
-                DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F);
     }
 
     public BodySpaceVisualProfile

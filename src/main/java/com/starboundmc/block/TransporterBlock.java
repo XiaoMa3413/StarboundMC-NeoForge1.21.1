@@ -90,7 +90,7 @@ public class TransporterBlock extends Block {
 
     public static BlockPos basePos(BlockPos pos, BlockState state) { return pos.below(state.getValue(PART)); }
 
-    /** Called on placement and when legacy chunks load. Never replaces occupied space. */
+    /** Ensures the current three-part assembly after placement or a scheduled block tick. Never replaces occupied space. */
     public static boolean ensureAssembly(ServerLevel level, BlockPos base) {
         BlockState lower = level.getBlockState(base);
         if (!(lower.getBlock() instanceof TransporterBlock) || lower.getValue(PART) != 0

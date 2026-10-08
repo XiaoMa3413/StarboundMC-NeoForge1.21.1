@@ -12,7 +12,6 @@ import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.Stage6TravelService;
 import com.starboundmc.world.universe.BuiltInUniverse;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
-import com.starboundmc.world.universe.LegacyUniverseCompatibility;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
@@ -27,12 +26,6 @@ import java.util.List;
 /** Server authority for the fixed physical ship's virtual-space flight. */
 public final class ShipWarpManager
 {
-    /** Compatibility constants; flight duration now belongs to each controller. */
-    public static final int WARP_TICKS = ShipFlightController.LONG_ROUTE_MIN_TICKS;
-    public static final int TURN_TICKS = ShipFlightController.DEPART_TICKS;
-    public static final int MAX_FUEL = ShipFuelService.MAX_FUEL;
-    public static final int WARP_FUEL_COST = ShipFuelService.WARP_FUEL_COST;
-    public static final int CROSS_SYSTEM_FUEL_COST = ShipFuelService.CROSS_SYSTEM_FUEL_COST;
     private static final int SNAPSHOT_INTERVAL = 5;
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -67,8 +60,7 @@ public final class ShipWarpManager
                 // The curve is addressed by entry id on both ends, so a resumed
                 // flight replays exactly what the original one did.
                 flight = new ShipFlightController(state.getCurrentEntryId(), targetId,
-                        state.getShipUniversePosition(),
-                        state.getFlightElapsedTicks(), state.getFlightPhase(), state.getShipYaw(), state.getShipPitch(), state.getShipRoll());
+                        state.getFlightElapsedTicks());
                 targetEntryId = targetId;
             }
             else persistDock();
@@ -76,29 +68,10 @@ public final class ShipWarpManager
         else persistDock();
     }
 
-    /**
-     * Establishes where the ship is, and refuses to guess.
-     *
-     * <p>Three cases, in order:</p>
-     * <ul>
-     *   <li>The saved id names a navigable body: use it. Nothing to do.</li>
-     *   <li>The saved id is unknown to the loaded universe (a datapack was
-     *       removed): keep the raw id, warn, and leave the ship in the ship
-     *       dimension. The plan forbids rewriting it to the starter planet,
-     *       because that would silently destroy the player's location; keeping it
-     *       means restoring the datapack restores their position.</li>
-     *   <li>There is no id at all (a save from before the data layer): fall back
-     *       to the starter body, which is the only case where guessing is safe.</li>
-     * </ul>
-     */
+    /** Retains unresolved datapack identities and disables travel until their geometry returns. */
     private static void resolveCurrentLocation()
     {
         String saved = state.getCurrentEntryId();
-        if (saved == null)
-        {
-            state.setCurrentEntryId(BuiltInUniverse.STARTER_BODY_ID);
-            return;
-        }
         if (UniverseNavigation.isNavigable(saved))
             return;
 
@@ -134,8 +107,7 @@ public final class ShipWarpManager
      */
     public static String currentEntryId() {
         if (state == null) return BuiltInUniverse.STARTER_BODY_ID;
-        String entryId = state.getCurrentEntryId();
-        return entryId != null ? entryId : BuiltInUniverse.STARTER_BODY_ID;
+        return state.getCurrentEntryId();
     }
     /** Star-map entries visited so far, for the state sync. */
     public static java.util.Set<String> visitedEntries() {
@@ -143,14 +115,14 @@ public final class ShipWarpManager
     }
 
     public static boolean isWarping() { return flight != null; }
-    public static int getFuel() { return state == null ? MAX_FUEL : state.getFuel(); }
-    public static int getMaxFuel() { return MAX_FUEL; }
+    public static int getFuel() { return state == null ? ShipFuelService.MAX_FUEL : state.getFuel(); }
+    public static int getMaxFuel() { return ShipFuelService.MAX_FUEL; }
 
     public static int warpFuelCost(String currentEntryId, String targetEntryId)
     {
         // Ownership comes from the catalog, not from a prefix on the id string.
         return UniverseNavigation.sameSystem(currentEntryId, targetEntryId)
-                ? WARP_FUEL_COST : CROSS_SYSTEM_FUEL_COST;
+                ? ShipFuelService.WARP_FUEL_COST : ShipFuelService.CROSS_SYSTEM_FUEL_COST;
     }
 
     public static boolean startWarp(ServerPlayer player, String entryId)
@@ -208,11 +180,11 @@ public final class ShipWarpManager
         persistFlight();
         ship.playSound(null, Stage6TravelService.SHIP_POS, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0F, 1.0F);
         player.displayClientMessage(Component.translatable("message.starboundmc.warp.start", Component.translatable(entry.nameKey())), true);
-        // A compatibility cue only: snapshots own position and progression.
+        // Early visual/audio notification; flight snapshots own position and progression.
         ModNetwork.sendToPlayersInDimension(ship,
                 new WarpStartPacket(entryId, flight.getTotalTicks()));
         broadcastFlight(ship);
-        ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), MAX_FUEL));
+        ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), ShipFuelService.MAX_FUEL));
         return true;
     }
 
@@ -253,7 +225,7 @@ public final class ShipWarpManager
     public static void syncToPlayer(ServerPlayer player)
     {
         com.starboundmc.encounter.RelayEncounter.sync(player);
-        ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), MAX_FUEL));
+        ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), ShipFuelService.MAX_FUEL));
         ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
                 new ArrayList<>(state == null ? List.of() : state.getVisited()), state == null ? null : state.getCurrentEntryId()));
         ServerLevel ship = player.getServer() == null ? null
@@ -268,15 +240,14 @@ public final class ShipWarpManager
         state.setFuel(before + Math.max(0, amount));
         int added = getFuel() - before;
         if (added > 0 && ship != null)
-            ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), MAX_FUEL));
+            ModNetwork.sendToPlayersInDimension(ship, new SyncFuelPacket(getFuel(), ShipFuelService.MAX_FUEL));
         return added;
     }
 
     private static void finishWarp(ServerLevel ship)
     {
         String entry = targetEntryId;
-        // The entry id is the identity; the legacy planet is derived from it at
-        // save time, so there is only ever one authority to update.
+        // Persist the arrival identity before synchronizing clients.
         state.markVisited(entry); state.setCurrentEntryId(entry);
         flight = null; targetEntryId = null; revision++; persistDock(); broadcastFlight(ship);
         ModNetwork.sendToPlayersInDimension(ship,

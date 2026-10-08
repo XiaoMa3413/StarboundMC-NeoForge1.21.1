@@ -4,18 +4,8 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * How a player reaches a body's surface: everything a surface body needs that
- * is not its world generation.
- *
- * <p>{@code dimension} is the world the player is sent to, and
- * {@code landingPolicy} chooses the arrival algorithm. Keeping the policy in
- * data means the legacy behaviour stays selectable per body instead of being
- * implied by a {@code switch} over an enum.</p>
- *
- * <p>When this profile is absent the body is orbit-and-look-only, which is the
- * gas giant and the rocky moon today.</p>
- */
+/** Surface destination, landing policy and environment.
+ * Absence means orbit-only, as for the gas giant. Rocky Moon has its own landable surface. */
 public record BodySurfaceDefinition(ResourceLocation dimension,
                                     LandingPolicy landingPolicy,
                                     PlanetEnvironmentProfile environment)
