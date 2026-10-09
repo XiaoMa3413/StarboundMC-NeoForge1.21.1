@@ -128,7 +128,7 @@ class SpaceCoordinateFrameTest
     private static SpaceCoordinateFrame frame(double yaw, double pitch, double roll)
     {
         SpaceRenderContext context = new SpaceRenderContext(Vec3.ZERO,
-                UniversePosition.fromLegacy(Vec3.ZERO), Vec3.ZERO, yaw, pitch, roll,
+                UniversePosition.of(Vec3.ZERO.x, Vec3.ZERO.y, Vec3.ZERO.z), Vec3.ZERO, yaw, pitch, roll,
                 FlightPhase.DOCKED, false, 0.0F, 1, null, null,
                 null, null, 0.0F);
         return new SpaceCoordinateFrame(context);

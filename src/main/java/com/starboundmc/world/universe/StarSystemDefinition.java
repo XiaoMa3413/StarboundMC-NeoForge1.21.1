@@ -44,9 +44,7 @@ public record StarSystemDefinition(String systemId,
                             .forGetter(StarSystemDefinition::navigationCenter),
                     Codec.DOUBLE.fieldOf("influence_radius")
                             .forGetter(StarSystemDefinition::influenceRadius),
-                    // Optional so a hand-written system keeps working: leaving it out
-                    // means the field matches the influence radius, which is what the
-                    // one-argument legacy constructor did.
+                    // Omission selects the current influence-radius default.
                     Codec.DOUBLE.optionalFieldOf("planet_field_radius")
                             .forGetter(system -> Optional.of(system.planetFieldRadius())),
                     CelestialBodyDefinition.CODEC.listOf().fieldOf("bodies")
@@ -56,22 +54,7 @@ public record StarSystemDefinition(String systemId,
                                planetFieldRadius, bodies) ->
                     new StarSystemDefinition(systemId, nameKey, descriptionKey, starTypeKey,
                             stellarVisual, galaxyMapPosition, navigationCenter, influenceRadius,
-                            planetFieldRadius.orElse(null), bodies)));
-
-    /**
-     * A system whose body-rendering field matches its star influence: the shape
-     * the legacy one-argument constructor produced.
-     */
-    public StarSystemDefinition(String systemId, String nameKey, String descriptionKey,
-                                String starTypeKey, StellarVisualProfile stellarVisual,
-                                GalaxyMapPosition galaxyMapPosition,
-                                UniversePosition navigationCenter,
-                                double influenceRadius,
-                                List<CelestialBodyDefinition> bodies)
-    {
-        this(systemId, nameKey, descriptionKey, starTypeKey, stellarVisual, galaxyMapPosition,
-                navigationCenter, influenceRadius, Double.NaN, bodies);
-    }
+                            planetFieldRadius.orElse(influenceRadius), bodies)));
 
     public StarSystemDefinition
     {
@@ -98,7 +81,7 @@ public record StarSystemDefinition(String systemId,
      */
     public Vec3 lightingDirection()
     {
-        Vec3 delta = stellarVisual.getVirtualPosition().subtract(navigationCenter.toLocalVec3());
+        Vec3 delta = navigationCenter.deltaTo(stellarVisual.getUniversePosition()).toVec3();
         return delta.lengthSqr() < 1.0E-8 ? new Vec3(0.0, 0.0, 1.0) : delta.normalize();
     }
 

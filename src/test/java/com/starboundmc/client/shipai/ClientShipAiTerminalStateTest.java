@@ -86,12 +86,11 @@ class ClientShipAiTerminalStateTest
     void anUnrelatedReplyCannotClearThePendingRequest()
     {
         ClientShipAiTerminalState.Session session = ClientShipAiTerminalState.current();
-        long requestId = session.beginRequest(
-                ClientShipAiTerminalState.CompletionKind.MARK_SITUATION_READ);
+        long requestId = session.beginRequest(-1, ClientShipAiTerminalState.CompletionKind.MARK_SITUATION_READ);
 
-        assertFalse(session.acknowledge(requestId + 1L));
+        assertFalse(session.acknowledge(-1, requestId + 1L));
         assertTrue(session.pendingRequest() != null);
-        assertTrue(session.acknowledge(requestId));
+        assertTrue(session.acknowledge(-1, requestId));
         assertFalse(session.pendingRequest() != null);
     }
 

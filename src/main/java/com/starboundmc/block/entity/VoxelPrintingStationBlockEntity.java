@@ -35,14 +35,12 @@ import java.util.UUID;
 /**
  * Voxel printing station logic: reserves matched inventory materials directly
  * from the operator, deducts any wallet-backed voxel material up front, then
- * produces the recipe result after the print duration. The legacy material
- * storage indices remain for save compatibility; new print jobs do not read or
- * write them.
+ * produces the recipe result after the print duration. Only the output slot is
+ * machine storage; reserved materials belong to active and queued jobs.
  */
 public final class VoxelPrintingStationBlockEntity extends BlockEntity implements Container {
-    public static final int MATERIAL_SLOTS = 3;
-    public static final int TOTAL_SLOTS = MATERIAL_SLOTS + 1;
-    public static final int OUTPUT_SLOT = MATERIAL_SLOTS;
+    public static final int TOTAL_SLOTS = 1;
+    public static final int OUTPUT_SLOT = 0;
     public static final int MAX_OUTSTANDING_CRAFTS = 64;
 
     private final ItemStack[] items = new ItemStack[TOTAL_SLOTS];
@@ -237,8 +235,8 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
             if (!entry.requesterId.equals(requester.getUUID())) {
                 return QueueCancelResult.NOT_OWNER;
             }
-            iterator.remove();
             int refund = Math.multiplyExact(entry.voxelCost, entry.crafts.size());
+            iterator.remove();
             refundVoxels(requester, refund);
             for (ReservedCraft craft : entry.crafts) {
                 returnMaterials(requester, craft.materials);
@@ -299,8 +297,8 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
     private SyncPrintQueuePacket queueSnapshot(BlockPos pos) {
         List<SyncPrintQueuePacket.Entry> entries = new ArrayList<>();
         if (!pendingResult.isEmpty()) {
-            UUID taskId = activeTaskId == null ? new UUID(0L, 0L) : activeTaskId;
-            UUID requesterId = activeRequesterId == null ? new UUID(0L, 0L) : activeRequesterId;
+            UUID taskId = java.util.Objects.requireNonNull(activeTaskId, "activeTaskId");
+            UUID requesterId = java.util.Objects.requireNonNull(activeRequesterId, "activeRequesterId");
             entries.add(new SyncPrintQueuePacket.Entry(taskId, requesterId,
                     activeRequesterName.isBlank() ? "—" : activeRequesterName,
                     BuiltInRegistries.ITEM.getKey(pendingResult.getItem()),
@@ -366,24 +364,6 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
             Level level, double x, double y, double z, List<ItemStack> materials) {
         for (ItemStack stack : materials) {
             net.minecraft.world.Containers.dropItemStack(level, x, y, z, stack.copy());
-        }
-    }
-
-    /** Returns material stacks left by the retired manual-input UI. */
-    public void returnLegacyMaterials(Player player) {
-        boolean returnedAny = false;
-        for (int slot = 0; slot < MATERIAL_SLOTS; slot++) {
-            ItemStack legacy = items[slot];
-            if (legacy.isEmpty()) {
-                continue;
-            }
-            items[slot] = ItemStack.EMPTY;
-            player.getInventory().placeItemBackInInventory(legacy);
-            returnedAny = true;
-        }
-        if (returnedAny) {
-            player.getInventory().setChanged();
-            setChanged();
         }
     }
 
@@ -463,18 +443,8 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        ListTag list = new ListTag();
-        for (int slot = 0; slot < items.length; slot++) {
-            ItemStack stack = items[slot];
-            if (!stack.isEmpty()) {
-                Tag encoded = stack.save(registries, new CompoundTag());
-                if (encoded instanceof CompoundTag stackTag) {
-                    stackTag.putByte("slot", (byte) slot);
-                    list.add(stackTag);
-                }
-            }
-        }
-        tag.put("items", list);
+        tag.putInt("storage_version", 1);
+        if (!items[OUTPUT_SLOT].isEmpty()) tag.put("output", items[OUTPUT_SLOT].save(registries));
         if (printProgress > 0 || !pendingResult.isEmpty()) {
             tag.putInt("print_progress", printProgress);
             tag.putInt("print_total", printTotalTicks);
@@ -527,82 +497,103 @@ public final class VoxelPrintingStationBlockEntity extends BlockEntity implement
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
+        require(tag, "storage_version", Tag.TAG_INT);
+        if (tag.getInt("storage_version") != 1 || tag.contains("items"))
+            throw new IllegalArgumentException("Unsupported pre-release printer storage");
         Arrays.fill(items, ItemStack.EMPTY);
-        if (tag.contains("items")) {
-            ListTag list = tag.getList("items", Tag.TAG_COMPOUND);
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag stackTag = list.getCompound(i);
-                // Older development saves omitted slot ids and compacted non-empty
-                // stacks. Retain their previous sequential fallback while all new
-                // saves restore each stack to its exact material/output slot.
-                int slot = stackTag.contains("slot", Tag.TAG_BYTE)
-                        ? Byte.toUnsignedInt(stackTag.getByte("slot")) : i;
-                if (slot >= items.length) {
-                    continue;
-                }
-                items[slot] = ItemStack.parse(registries, stackTag).orElse(ItemStack.EMPTY);
-            }
-        }
-        printProgress = tag.getInt("print_progress");
-        printTotalTicks = tag.getInt("print_total");
-        pendingResult = tag.contains("pending_result")
-                ? ItemStack.parse(registries, tag.getCompound("pending_result")).orElse(ItemStack.EMPTY)
-                : ItemStack.EMPTY;
+        if (tag.contains("output")) items[OUTPUT_SLOT] = loadStack(tag, "output", registries);
+        printProgress = printTotalTicks = 0;
+        pendingResult = ItemStack.EMPTY;
         printQueue.clear();
         clearActiveTask();
-        if (!pendingResult.isEmpty()) {
-            activeTaskId = tag.hasUUID("active_task_id")
-                    ? tag.getUUID("active_task_id") : UUID.randomUUID();
-            activeRequesterId = tag.hasUUID("active_requester_id")
-                    ? tag.getUUID("active_requester_id") : new UUID(0L, 0L);
-            activeRequesterName = tag.getString("active_requester_name");
-            activeRecipeId = ResourceLocation.tryParse(tag.getString("active_recipe_id"));
-            if (activeRecipeId == null) {
-                activeRecipeId = ResourceLocation.withDefaultNamespace("air");
-            }
-            activeVoxelCost = Math.max(0, tag.getInt("active_voxel_cost"));
-            activeMaterials = loadStacks(tag.getList("active_materials", Tag.TAG_COMPOUND), registries);
+        if (tag.contains("pending_result")) {
+            pendingResult = loadStack(tag, "pending_result", registries);
+            printTotalTicks = positiveInt(tag, "print_total");
+            printProgress = nonNegativeInt(tag, "print_progress");
+            if (printProgress > printTotalTicks) throw new IllegalArgumentException("Invalid printer progress");
+            activeTaskId = uuid(tag, "active_task_id");
+            activeRequesterId = uuid(tag, "active_requester_id");
+            activeRequesterName = text(tag, "active_requester_name");
+            activeRecipeId = ResourceLocation.parse(text(tag, "active_recipe_id"));
+            activeVoxelCost = nonNegativeInt(tag, "active_voxel_cost");
+            activeMaterials = loadStacks(list(tag, "active_materials"), registries);
+        } else if (tag.contains("print_progress") || tag.contains("print_total") || tag.contains("active_task_id")) {
+            throw new IllegalArgumentException("Printer task is missing its reserved result");
         }
-        if (tag.contains("print_queue", Tag.TAG_LIST)) {
-            ListTag queueTag = tag.getList("print_queue", Tag.TAG_COMPOUND);
+        if (tag.contains("print_queue")) {
+            ListTag queueTag = list(tag, "print_queue");
             int loadedCrafts = pendingResult.isEmpty() ? 0 : 1;
-            for (int i = 0; i < queueTag.size() && loadedCrafts < MAX_OUTSTANDING_CRAFTS; i++) {
-                CompoundTag entryTag = queueTag.getCompound(i);
-                ResourceLocation recipeId = ResourceLocation.tryParse(entryTag.getString("recipe_id"));
-                ItemStack result = entryTag.contains("result")
-                        ? ItemStack.parse(registries, entryTag.getCompound("result")).orElse(ItemStack.EMPTY)
-                        : ItemStack.EMPTY;
-                if (!entryTag.hasUUID("id") || !entryTag.hasUUID("requester_id")
-                        || recipeId == null || result.isEmpty()) {
-                    continue;
-                }
+            for (int i = 0; i < queueTag.size(); i++) {
+                CompoundTag entry = queueTag.getCompound(i);
+                ListTag craftsTag = list(entry, "crafts");
+                loadedCrafts += craftsTag.size();
+                if (craftsTag.isEmpty() || loadedCrafts > MAX_OUTSTANDING_CRAFTS)
+                    throw new IllegalArgumentException("Invalid printer reservation count");
                 List<ReservedCraft> crafts = new ArrayList<>();
-                ListTag craftsTag = entryTag.getList("crafts", Tag.TAG_COMPOUND);
-                for (int craftIndex = 0; craftIndex < craftsTag.size()
-                        && loadedCrafts < MAX_OUTSTANDING_CRAFTS; craftIndex++) {
-                    List<ItemStack> materials = loadStacks(
-                            craftsTag.getCompound(craftIndex).getList("materials", Tag.TAG_COMPOUND), registries);
-                    crafts.add(new ReservedCraft(materials));
-                    loadedCrafts++;
-                }
-                if (!crafts.isEmpty()) {
-                    printQueue.addLast(new PrintQueueEntry(entryTag.getUUID("id"),
-                            entryTag.getUUID("requester_id"), entryTag.getString("requester_name"),
-                            recipeId, Math.max(0, entryTag.getInt("voxel_cost")),
-                            Math.max(1, entryTag.getInt("print_ticks")), result, crafts));
-                }
+                for (int j = 0; j < craftsTag.size(); j++)
+                    crafts.add(new ReservedCraft(loadStacks(list(craftsTag.getCompound(j), "materials"), registries)));
+                Math.multiplyExact(nonNegativeInt(entry, "voxel_cost"), crafts.size());
+                printQueue.addLast(new PrintQueueEntry(uuid(entry, "id"), uuid(entry, "requester_id"),
+                        text(entry, "requester_name"), ResourceLocation.parse(text(entry, "recipe_id")),
+                        nonNegativeInt(entry, "voxel_cost"), positiveInt(entry, "print_ticks"),
+                        loadStack(entry, "result", registries), crafts));
             }
         }
     }
 
+    private static void require(CompoundTag tag, String key, int type) {
+        if (!tag.contains(key, type)) throw new IllegalArgumentException("Missing or invalid printer field: " + key);
+    }
+
+    private static String text(CompoundTag tag, String key) {
+        require(tag, key, Tag.TAG_STRING);
+        String value = tag.getString(key);
+        if (value.isBlank()) throw new IllegalArgumentException("Empty printer field: " + key);
+        return value;
+    }
+
+    private static UUID uuid(CompoundTag tag, String key) {
+        if (!tag.hasUUID(key)) throw new IllegalArgumentException("Missing printer UUID: " + key);
+        return tag.getUUID(key);
+    }
+
+    private static int nonNegativeInt(CompoundTag tag, String key) {
+        require(tag, key, Tag.TAG_INT);
+        int value = tag.getInt(key);
+        if (value < 0) throw new IllegalArgumentException("Negative printer field: " + key);
+        return value;
+    }
+
+    private static int positiveInt(CompoundTag tag, String key) {
+        int value = nonNegativeInt(tag, key);
+        if (value == 0) throw new IllegalArgumentException("Zero printer field: " + key);
+        return value;
+    }
+
+    private static ListTag list(CompoundTag tag, String key) {
+        require(tag, key, Tag.TAG_LIST);
+        ListTag value = (ListTag) tag.get(key);
+        if (!value.isEmpty() && value.getElementType() != Tag.TAG_COMPOUND)
+            throw new IllegalArgumentException("Invalid printer list: " + key);
+        return value;
+    }
+
+    private static ItemStack loadStack(CompoundTag tag, String key, HolderLookup.Provider registries) {
+        require(tag, key, Tag.TAG_COMPOUND);
+        return parseStack(tag.getCompound(key), registries);
+    }
+
+    private static ItemStack parseStack(CompoundTag tag, HolderLookup.Provider registries) {
+        ItemStack stack = ItemStack.parse(registries, tag).orElseThrow(
+                () -> new IllegalArgumentException("Invalid reserved printer item: " + tag));
+        if (stack.isEmpty() || stack.getCount() > stack.getMaxStackSize())
+            throw new IllegalArgumentException("Invalid printer item count");
+        return stack;
+    }
+
     private static List<ItemStack> loadStacks(ListTag list, HolderLookup.Provider registries) {
         List<ItemStack> stacks = new ArrayList<>();
-        for (int i = 0; i < list.size(); i++) {
-            ItemStack stack = ItemStack.parse(registries, list.getCompound(i)).orElse(ItemStack.EMPTY);
-            if (!stack.isEmpty()) {
-                stacks.add(stack);
-            }
-        }
+        for (int i = 0; i < list.size(); i++) stacks.add(parseStack(list.getCompound(i), registries));
         return List.copyOf(stacks);
     }
 

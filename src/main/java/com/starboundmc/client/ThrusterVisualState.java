@@ -10,7 +10,7 @@ public final class ThrusterVisualState {
     public static float intensity(FlightPhase phase, double elapsed, int total, boolean held) {
         if (held || phase == null || phase == FlightPhase.DOCKED || total <= 0
                 || !Double.isFinite(elapsed) || elapsed <= 0 || elapsed >= total) return 0;
-        double departEnd = Math.min(ShipFlightController.DEPART_TICKS,
+        double departEnd = Math.min((ShipFlightController.TURN_TICKS + ShipFlightController.ACCEL_TICKS),
                 total - ShipFlightController.DECEL_TICKS - ShipFlightController.ARRIVE_TICKS);
         double turnEnd = Math.min(ShipFlightController.TURN_TICKS, departEnd);
         double arrivalStart = total - ShipFlightController.ARRIVE_TICKS;

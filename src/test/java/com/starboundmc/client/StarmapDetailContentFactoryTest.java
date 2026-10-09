@@ -52,7 +52,7 @@ class StarmapDetailContentFactoryTest
         CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:lush");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
-                entry, entry.entryId(), true, ShipWarpManager.WARP_FUEL_COST);
+                entry, entry.entryId(), true, com.starboundmc.warp.ShipFuelService.WARP_FUEL_COST);
 
         assertEquals(List.of("scan", "atmosphere", "navigation", "status"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.FUEL,
@@ -85,7 +85,7 @@ class StarmapDetailContentFactoryTest
         CelestialBodyDefinition entry = UniverseTestSupport.body("sys1:barren");
 
         StarmapDetailContent content = StarmapDetailContentFactory.buildEntry(
-                entry, "sys1:lush", false, ShipWarpManager.WARP_FUEL_COST);
+                entry, "sys1:lush", false, com.starboundmc.warp.ShipFuelService.WARP_FUEL_COST);
 
         assertEquals(List.of("scan", "atmosphere", "navigation"), sectionIds(content));
     }
@@ -95,7 +95,7 @@ class StarmapDetailContentFactoryTest
     {
         var entry = UniverseTestSupport.body("sys2:frozen");
         var content = StarmapDetailContentFactory.buildEntry(entry, "sys1:lush", false,
-                ShipWarpManager.CROSS_SYSTEM_FUEL_COST);
+                com.starboundmc.warp.ShipFuelService.CROSS_SYSTEM_FUEL_COST);
         assertEquals(List.of("scan", "atmosphere", "cold", "navigation"), sectionIds(content));
         assertEquals(StarmapDetailLine.Tone.DANGER, content.sections().get(2).lines().getFirst().tone());
         assertEquals(1, entry.surface().orElseThrow().environment().coldTier());

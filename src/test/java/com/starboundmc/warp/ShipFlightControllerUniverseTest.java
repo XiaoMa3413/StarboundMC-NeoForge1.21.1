@@ -111,9 +111,7 @@ class ShipFlightControllerUniverseTest
         int elapsed = controller.getTotalTicks() / 2;
         UniversePosition expectedPosition = ShipFlightController.sampleUniversePosition(
                 "sys1:lush", "sys2:frozen", controller.getTotalTicks(), elapsed);
-        ShipFlightController restored = new ShipFlightController(
-                "sys1:lush", "sys2:frozen", expectedPosition, elapsed,
-                FlightPhase.HYPERSPACE, 0.0, 0.0, 0.0);
+        ShipFlightController restored = new ShipFlightController("sys1:lush", "sys2:frozen", elapsed);
 
         assertEquals(expectedPosition, restored.getUniversePosition());
         assertEquals(expectedPosition.toLocalVec3(), restored.getPos());

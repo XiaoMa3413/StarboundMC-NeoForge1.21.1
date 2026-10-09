@@ -93,9 +93,11 @@
     },
     "flare_strength": 0.22,
     "glow_scale": 3.25,
-    "position_x": 38400.0,
-    "position_y": 7000.0,
-    "position_z": 31550.0,
+    "position": {
+      "x": 38400.0,
+      "y": 7000.0,
+      "z": 31550.0
+    },
     "pulse_speed": 0.037,
     "radiation_strength": 0.9,
     "starmap_glow_size": 18,

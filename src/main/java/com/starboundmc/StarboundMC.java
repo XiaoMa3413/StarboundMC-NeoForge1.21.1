@@ -9,7 +9,7 @@ import com.starboundmc.item.ModDataComponents;
 import com.starboundmc.loot.VoxelLootModifiers;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.network.ModNetwork;
-import com.starboundmc.network.Stage7ServerPayloadActions;
+import com.starboundmc.network.ServerGameplayPayloadActions;
 import com.starboundmc.recipe.ModRecipes;
 import com.starboundmc.sound.ModSounds;
 import com.starboundmc.story.ModAttachments;
@@ -55,7 +55,7 @@ public final class StarboundMC {
 
     private void commonSetup(FMLCommonSetupEvent event) {
         WorldgenRotationWarmup.initialize();
-        ModNetwork.installServerActions(new Stage7ServerPayloadActions());
+        ModNetwork.installServerActions(new ServerGameplayPayloadActions());
         LOGGER.info("{} NeoForge common setup complete.", MODID);
     }
 }

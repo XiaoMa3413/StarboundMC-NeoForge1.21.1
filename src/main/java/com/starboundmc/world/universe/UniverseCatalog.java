@@ -92,14 +92,14 @@ public final class UniverseCatalog
                     throw new IllegalArgumentException("Duplicate body entry id: " + body.entryId());
                 systemByBodyId.put(body.entryId(), system);
 
+                body.spaceVisual().ifPresent(visual -> {
+                    visual.texture().ifPresent(ResourceLocation::parse);
+                    visual.materialMask().ifPresent(ResourceLocation::parse);
+                    visual.cloudTexture().ifPresent(ResourceLocation::parse);
+                    visual.ringTexture().ifPresent(ResourceLocation::parse);
+                });
                 if (body.isNavigable())
                     navigable.add(body);
-                // Drawn in space needs BOTH a visual and flight geometry: the
-                // renderer asks for the body's position and radius, which come from
-                // the navigation profile. A body with a visual but no navigation
-                // would have no position, so including it here would crash the
-                // renderer with "Unknown navigable body" exactly as an unknown saved
-                // id crashed the warp manager.
                 if (body.isSpaceRendered() && body.isNavigable())
                     spaceRendered.add(body);
                 body.surface().ifPresent(definition -> {
@@ -145,14 +145,7 @@ public final class UniverseCatalog
         return Optional.ofNullable(entryId == null ? null : bodiesById.get(entryId));
     }
 
-    /**
-     * The system that owns the supplied body.
-     *
-     * <p>This replaces the legacy habit of splitting the entry id on {@code ':'}
-     * and comparing the prefix. Ownership is a property of the data, not of the
-     * string's shape, so a body whose id does not begin with its system id still
-     * resolves correctly.</p>
-     */
+    /** Owning system from the data relationship, independent of the body ID prefix. */
     public Optional<StarSystemDefinition> systemOfBody(String entryId)
     {
         return Optional.ofNullable(entryId == null ? null : systemByBodyId.get(entryId));
@@ -221,10 +214,7 @@ public final class UniverseCatalog
     /**
      * Sector-hash view over the catalog's systems.
      *
-     * <p>Deliberately a plain bucket lookup rather than the legacy
-     * {@code GalaxySpatialIndex}, which is typed to the old {@code StarSystem}.
-     * Keeping the shape (sector to systems) lets the free-flight resolver swap
-     * over without changing its query pattern.</p>
+     * <p>Immutable sector buckets let the resolver query nearby systems without scanning the universe.</p>
      */
     public static final class GalaxySpatialIndexView
     {

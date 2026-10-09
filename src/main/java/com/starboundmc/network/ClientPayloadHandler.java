@@ -49,39 +49,27 @@ public final class ClientPayloadHandler {
     }
 
     public static void handle(SyncStarStatePacket payload, IPayloadContext context) {
-        ClientNetworkState.apply(payload);
-        // This packet carries the ship's location, which is both the star map's
-        // "current" marker and the departure end of the next flight route. It
-        // replaced the legacy planet sync that used to be the only thing telling the
-        // client where the ship was (§22), so both have to be applied here.
         ClientPlanetState.setStarState(payload.visited(), payload.currentEntryId());
-        // The arrival cue is consumed here now. It used to be consumed by the
-        // legacy planet sync, which was deleted (§22); this packet is sent on
-        // arrival as well, so the sound still fires exactly once.
         if (ClientPlanetState.consumeArrivalCue()) {
             WarpSounds.onWarpFinished();
         }
     }
 
     public static void handle(WarpStartPacket payload, IPayloadContext context) {
-        ClientNetworkState.apply(payload);
         String targetEntryId = emptyToNull(payload.entryId());
-        ClientPlanetState.startWarp(targetEntryId, payload.durationTicks(), targetEntryId);
+        ClientPlanetState.startWarp(targetEntryId, payload.durationTicks());
         WarpSounds.onWarpStarted();
     }
 
     public static void handle(SyncFuelPacket payload, IPayloadContext context) {
         ClientNetworkState.apply(payload);
-        ClientPlanetState.setFuel(payload.fuel(), payload.maxFuel());
     }
 
     public static void handle(TeleporterListPacket payload, IPayloadContext context) {
-        ClientNetworkState.apply(payload);
         ClientTeleporterState.receive(payload.entries(), payload.currentName());
     }
 
     public static void handle(SyncFlightPacket payload, IPayloadContext context) {
-        ClientNetworkState.apply(payload);
         ClientPlanetState.applyFlightSnapshot(payload.revision(), payload.serverTick(),
                 payload.phase(), payload.position(), payload.velocity(),
                 payload.yaw(), payload.pitch(), payload.roll(),

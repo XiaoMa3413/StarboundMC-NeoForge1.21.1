@@ -20,14 +20,14 @@ public final class ModBlocks {
             "life_support_station", com.starboundmc.epp.LifeSupportStationBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(3.5F).noOcclusion());
 
-    public static final DeferredBlock<Stage2Blocks.Workbench> MATTER_MANIPULATOR_WORKBENCH = BLOCKS.registerBlock(
-            "matter_manipulator_workbench", Stage2Blocks.Workbench::new,
+    public static final DeferredBlock<GameplayBlocks.Workbench> MATTER_MANIPULATOR_WORKBENCH = BLOCKS.registerBlock(
+            "matter_manipulator_workbench", GameplayBlocks.Workbench::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE));
-    public static final DeferredBlock<Stage2Blocks.Teleporter> TELEPORTER = BLOCKS.registerBlock(
-            "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
+    public static final DeferredBlock<GameplayBlocks.Teleporter> TELEPORTER = BLOCKS.registerBlock(
+            "teleporter", GameplayBlocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .noOcclusion().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
-    public static final DeferredBlock<Stage2Blocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
-            Stage2Blocks.ShipConsole::new,
+    public static final DeferredBlock<GameplayBlocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
+            GameplayBlocks.ShipConsole::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
     public static final DeferredBlock<StarmapTerminalBlock> STARMAP_TERMINAL = BLOCKS.registerBlock(
             "starmap_terminal", StarmapTerminalBlock::new,
@@ -46,13 +46,13 @@ public final class ModBlocks {
                     .sound(SoundType.METAL).noOcclusion().lightLevel(state -> 8));
     public static final DeferredBlock<CaptainChairBlock> CAPTAIN_CHAIR = BLOCKS.registerBlock("captain_chair",
             CaptainChairBlock::new, BlockBehaviour.Properties.ofFullCopy(Blocks.QUARTZ_BLOCK).noOcclusion());
-    public static final DeferredBlock<Stage2Blocks.FuelController> FUEL_CONTROLLER = BLOCKS.registerBlock(
-            "fuel_controller", Stage2Blocks.FuelController::new,
+    public static final DeferredBlock<GameplayBlocks.FuelController> FUEL_CONTROLLER = BLOCKS.registerBlock(
+            "fuel_controller", GameplayBlocks.FuelController::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
-    public static final DeferredBlock<Stage2Blocks.ShipCrate> SHIP_CRATE = BLOCKS.registerBlock(
-            "ship_crate", Stage2Blocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
-    public static final DeferredBlock<Stage2Blocks.ShipDoor> SHIP_DOOR = BLOCKS.registerBlock(
-            "ship_door", Stage2Blocks.ShipDoor::new,
+    public static final DeferredBlock<GameplayBlocks.ShipCrate> SHIP_CRATE = BLOCKS.registerBlock(
+            "ship_crate", GameplayBlocks.ShipCrate::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
+    public static final DeferredBlock<GameplayBlocks.ShipDoor> SHIP_DOOR = BLOCKS.registerBlock(
+            "ship_door", GameplayBlocks.ShipDoor::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion());
     public static final DeferredBlock<Block> TUNGSTEN_ORE = BLOCKS.registerSimpleBlock("tungsten_ore",
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).requiresCorrectToolForDrops().strength(3.5F, 3.5F));
@@ -65,8 +65,8 @@ public final class ModBlocks {
     public static final DeferredBlock<Block> FUEL_CRYSTAL_ORE = BLOCKS.registerSimpleBlock("fuel_crystal_ore",
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).requiresCorrectToolForDrops().strength(3.0F, 3.0F)
                     .lightLevel(state -> 3));
-    public static final DeferredBlock<Stage2Blocks.AlloyFurnace> TITANIUM_ALLOY_FURNACE = BLOCKS.registerBlock(
-            "titanium_alloy_furnace", Stage2Blocks.AlloyFurnace::new,
+    public static final DeferredBlock<GameplayBlocks.AlloyFurnace> TITANIUM_ALLOY_FURNACE = BLOCKS.registerBlock(
+            "titanium_alloy_furnace", GameplayBlocks.AlloyFurnace::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(5.0F, 6.0F));
     public static final DeferredBlock<VoxelRefineryBlock> VOXEL_REFINERY = BLOCKS.registerBlock(
             "voxel_refinery", VoxelRefineryBlock::new,

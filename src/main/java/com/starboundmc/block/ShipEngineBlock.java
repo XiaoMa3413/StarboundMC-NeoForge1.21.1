@@ -3,16 +3,11 @@ package com.starboundmc.block;
 import com.mojang.serialization.MapCodec;
 import com.starboundmc.block.entity.ShipEngineBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
@@ -22,7 +17,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import org.jetbrains.annotations.Nullable;
 
-/** Historical ship_engine ID is a thruster. Retains its BE only to recover old debug-slot contents. */
+/** Exterior ship thruster. Its block entity supports dynamic thrust rendering; ignition belongs to ShipEngineUnitBlock. */
 public class ShipEngineBlock extends BaseEntityBlock
 {
     public static final MapCodec<ShipEngineBlock> CODEC = simpleCodec(ShipEngineBlock::new);
@@ -61,22 +56,6 @@ public class ShipEngineBlock extends BaseEntityBlock
     @Override
     protected RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
-    }
-
-    @Override
-    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
-                                               Player player, BlockHitResult hit) {
-        if (player.isSpectator()) return InteractionResult.PASS;
-        if (level.getBlockEntity(pos) instanceof ShipEngineBlockEntity legacy && !legacy.isEmpty()) {
-            if (player instanceof ServerPlayer serverPlayer) {
-                var recovered = legacy.removeItemNoUpdate(0);
-                if (!serverPlayer.getInventory().add(recovered)) serverPlayer.drop(recovered, false);
-                serverPlayer.displayClientMessage(Component.translatable(
-                        "message.starboundmc.thruster.module_recovered"), true);
-            }
-            return InteractionResult.sidedSuccess(level.isClientSide);
-        }
-        return InteractionResult.PASS;
     }
 
     @Override

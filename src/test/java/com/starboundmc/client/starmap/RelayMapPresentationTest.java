@@ -24,7 +24,7 @@ class RelayMapPresentationTest {
     }
 
     @Test void approachRequiresFuelPropulsionAndAllCrewAboard() {
-        int available = RelayData.Phase.AVAILABLE.ordinal();
+        var available = RelayData.Phase.AVAILABLE;
         assertTrue(RelayMapPresentation.canAct(available, 0, false, true, false, true, 10, 10));
         assertFalse(RelayMapPresentation.canAct(available, 0, false, true, false, true, 9, 10));
         assertFalse(RelayMapPresentation.canAct(available, 0, false, true, false, false, 10, 10));
@@ -35,13 +35,13 @@ class RelayMapPresentationTest {
     }
 
     @Test void departureDoesNotRequireFuelOrWorkingEnginesButDoesRequireCrew() {
-        int active = RelayData.Phase.ACTIVE.ordinal();
+        var active = RelayData.Phase.ACTIVE;
         assertTrue(RelayMapPresentation.canAct(active, 0, false, false, false, false, 0, 100));
         assertFalse(RelayMapPresentation.canAct(active, 1, false, false, false, false, 0, 100));
         for (var phase : RelayData.Phase.values())
             if (phase != RelayData.Phase.ACTIVE && phase != RelayData.Phase.AVAILABLE)
-                assertFalse(RelayMapPresentation.canAct(phase.ordinal(), 0, false, true, true, true, 100, 0));
-        assertEquals("error", RelayMapPresentation.phaseKey(-1));
-        assertEquals("error", RelayMapPresentation.phaseKey(999));
+                assertFalse(RelayMapPresentation.canAct(phase, 0, false, true, true, true, 100, 0));
+        assertEquals("error", RelayMapPresentation.phaseKey(RelayData.Phase.ERROR));
+        assertThrows(IllegalArgumentException.class, () -> RelayData.Phase.byNetworkId(999));
     }
 }

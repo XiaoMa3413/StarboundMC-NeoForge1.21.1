@@ -35,7 +35,7 @@ public final class ShipThrusterRenderer implements BlockEntityRenderer<ShipEngin
     public void render(ShipEngineBlockEntity engine, float partialTick, PoseStack pose,
                        MultiBufferSource buffers, int packedLight, int packedOverlay) {
         var level = engine.getLevel();
-        // The legacy BE type is also used by the separate, indoor ignition machine.
+        // The shared BE type is also used by the separate, indoor ignition machine.
         if (level == null || !level.dimension().equals(ShipDimensions.SHIP_LEVEL)
                 || !engine.getBlockState().is(ModBlocks.SHIP_ENGINE.get())) return;
         if (animationLevel.get() != level) {

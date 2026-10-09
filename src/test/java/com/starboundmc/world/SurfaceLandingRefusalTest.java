@@ -40,7 +40,7 @@ class SurfaceLandingRefusalTest
     {
         CelestialBodyDefinition body = UniverseTestSupport.body("sys1:barren");
 
-        assertNull(Stage6TravelService.landingRefusal(body, true),
+        assertNull(ShipTravelService.landingRefusal(body, true),
                 "a body with a surface and a loaded dimension must be landable");
     }
 
@@ -53,8 +53,8 @@ class SurfaceLandingRefusalTest
     {
         CelestialBodyDefinition gasGiant = UniverseTestSupport.body("sys1:gasgiant");
 
-        assertEquals(NO_SURFACE, Stage6TravelService.landingRefusal(gasGiant, false));
-        assertEquals(NO_SURFACE, Stage6TravelService.landingRefusal(gasGiant, true),
+        assertEquals(NO_SURFACE, ShipTravelService.landingRefusal(gasGiant, false));
+        assertEquals(NO_SURFACE, ShipTravelService.landingRefusal(gasGiant, true),
                 "the missing surface definition is the reason, not the dimension");
     }
 
@@ -65,8 +65,8 @@ class SurfaceLandingRefusalTest
     @Test
     void anUnknownBodyIsRefusedRatherThanRelocated()
     {
-        assertEquals(UNKNOWN, Stage6TravelService.landingRefusal(null, false));
-        assertEquals(UNKNOWN, Stage6TravelService.landingRefusal(null, true));
+        assertEquals(UNKNOWN, ShipTravelService.landingRefusal(null, false));
+        assertEquals(UNKNOWN, ShipTravelService.landingRefusal(null, true));
     }
 
     /**
@@ -79,7 +79,7 @@ class SurfaceLandingRefusalTest
     {
         CelestialBodyDefinition body = UniverseTestSupport.body("sys1:barren");
 
-        assertEquals(UNAVAILABLE, Stage6TravelService.landingRefusal(body, false),
+        assertEquals(UNAVAILABLE, ShipTravelService.landingRefusal(body, false),
                 "a declared surface with no loaded dimension must not relocate the player");
     }
 
@@ -98,16 +98,16 @@ class SurfaceLandingRefusalTest
         {
             if (body.isLandable())
             {
-                assertNull(Stage6TravelService.landingRefusal(body, true),
+                assertNull(ShipTravelService.landingRefusal(body, true),
                         body.entryId() + " declares a surface, so it must be landable");
             }
             else
             {
-                assertEquals(NO_SURFACE, Stage6TravelService.landingRefusal(body, true),
+                assertEquals(NO_SURFACE, ShipTravelService.landingRefusal(body, true),
                         body.entryId() + " declares no surface, so it must be refused");
             }
             // And with no dimension loaded nothing is landable, whatever the body says.
-            assertNotNull(Stage6TravelService.landingRefusal(body, false),
+            assertNotNull(ShipTravelService.landingRefusal(body, false),
                     body.entryId() + " must be refused when no surface dimension is loaded");
         }
     }
@@ -158,8 +158,8 @@ class SurfaceLandingRefusalTest
 
         assertEquals(true, declared.isLandable(),
                 "the definition itself claims a surface, which is what makes it a trap");
-        assertEquals(UNAVAILABLE, Stage6TravelService.landingRefusal(declared, false),
+        assertEquals(UNAVAILABLE, ShipTravelService.landingRefusal(declared, false),
                 "the loaded-dimension check is the only thing that catches this");
-        assertNull(Stage6TravelService.landingRefusal(declared, true));
+        assertNull(ShipTravelService.landingRefusal(declared, true));
     }
 }

@@ -15,7 +15,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ScrollerView;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.TextField;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import com.starboundmc.StarboundMC;
 import com.starboundmc.client.ClientPlanetState;
 import com.starboundmc.client.StarmapUniverse;
 import com.starboundmc.client.ClientShipEnvironmentState;
@@ -630,7 +629,7 @@ public final class TeleporterRoot extends UIElement {
                 // does not follow the built-in naming convention would otherwise
                 // point at a texture that does not exist.
                 ResourceLocation sprite = StarmapUniverse.bodySprite(
-                        ClientPlanetState.getCurrentEntryId());
+                        ClientPlanetState.getCurrent());
                 planet.style(style -> style.backgroundTexture(GuiTextureGroup.of(
                         SpriteTexture.of(sprite),
                         SDFRectTexture.of(0x00000000)

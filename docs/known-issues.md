@@ -62,32 +62,6 @@
 
 本问题目前没有改变功能正确性，也没有修改现有 UI 行为；在完成优化并通过实机验证前，不标记为已解决。
 
-## 宇宙数据驱动迁移后的客户端验收
-
-**状态：实现已落地；视觉、航行手感和旧存档仍待专项实机复核**
-
-**影响范围：** 星图、舱外行星渲染、飞行曲线、存档迁移。
-
-宇宙层迁移把星球数据从 Java 硬编码改为 datapack 定义，已在 `b12b7ec` 落地。当前自动化测试
-覆盖数值与行为：
-
-- 行星渲染参数（大气颜色/强度、朝向、点色、晨昏线、自转、夜面、贴图）由
-  `PlanetRendererTableEquivalenceTest` 逐值钉死。
-- 飞行曲线由 `RouteGeometryRegressionTest` 钉死：240 个采样点以 hex double 存储，
-  与迁移前实现的完整 708 行转储逐位一致。
-- 燃料消耗与剧情门禁由 `WarpBehaviourInvarianceTest` 覆盖。
-- 老存档迁移由 `ShipStateDataMigrationTest` 覆盖。
-
-**但这些测试断言的是「数值相同」，不是「画面相同」。** 以下必须进游戏确认：
-
-1. 舱外行星外观：大气辉光是否仍在、行星朝向是否正确、是否缺少天体。
-2. 星图观感：节点位置、连线、聚焦页构图是否与迁移前一致。
-3. 飞行手感：跃迁的加速/减速体感与转向是否自然。
-4. 老存档：建议用**存档副本**实测迁移（尤其是一份引用了已移除 datapack 的存档，
-   预期行为是保留原位置 ID、记录 WARN、并禁止跃迁离开）。
-
-**验收方式：** 使用当前项目的 `.\gradlew.bat test` 运行自动化测试；其余按上文逐项进游戏确认。
-
 ## Rocky Moon 抵达未触发地表任务钩子
 
 **状态：待修复**
@@ -95,7 +69,7 @@
 **影响范围：** Rocky Moon 首次登陆任务、NOVA 地表抵达广播、任务终端进度快照和相关教程提示。
 
 `ShipStoryService.isPlanetSurface` 当前只识别主世界、熔融、冰冻和荒芜地表，遗漏
-`RockyMoonPlanet.ROCKY_MOON_LEVEL`。`Stage6TravelService` 与 `TeleporterManager` 在抵达后会调用
+`RockyMoonPlanet.ROCKY_MOON_LEVEL`。飞船传送与已命名传送器在抵达后会调用
 `ShipStoryService.onPlanetSurfaceArrival`，但 Rocky Moon 因此不会进入该分支，玩家在 Rocky Moon
 着陆时不会触发地表任务完成、NOVA 抵达提示或任务进度刷新。
 

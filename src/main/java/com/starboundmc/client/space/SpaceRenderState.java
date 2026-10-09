@@ -16,7 +16,7 @@ public final class SpaceRenderState
         return SpaceRenderContext.capture(provider, animationTicks);
     }
 
-    /** Installs an alternate pose source such as a future {@link FreeFlightPoseProvider}. */
+    /** Installs a pose source for deterministic render tests. */
     public static void setPoseProvider(ShipPoseProvider poseProvider)
     {
         provider = Objects.requireNonNull(poseProvider);

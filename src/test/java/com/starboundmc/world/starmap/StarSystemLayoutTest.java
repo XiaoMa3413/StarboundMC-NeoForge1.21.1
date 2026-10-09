@@ -38,9 +38,9 @@ class StarSystemLayoutTest
     {
         Vec3 starterDock = UniverseNavigation.vDock("sys1:lush");
         double localStarDistance = UniverseTestSupport.system(BuiltInUniverse.MAIN_SYSTEM_ID)
-                .stellarVisual().getVirtualPosition().distanceTo(starterDock);
+                .stellarVisual().getUniversePosition().toLocalVec3().distanceTo(starterDock);
         double coldStarDistance = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID)
-                .stellarVisual().getVirtualPosition().distanceTo(starterDock);
+                .stellarVisual().getUniversePosition().toLocalVec3().distanceTo(starterDock);
 
         assertTrue(coldStarDistance >= localStarDistance * 1.9,
                 "the remote red dwarf must sit visibly behind the local star");
@@ -72,7 +72,7 @@ class StarSystemLayoutTest
     {
         StarSystemDefinition cold = UniverseTestSupport.system(BuiltInUniverse.COLD_SYSTEM_ID);
         Vec3 centre = cold.navigationCenter().toLocalVec3();
-        Vec3 star = cold.stellarVisual().getVirtualPosition();
+        Vec3 star = cold.stellarVisual().getUniversePosition().toLocalVec3();
 
         assertEquals(centre, UniverseNavigation.vDock("sys2:frozen"));
         assertEquals(new Vec3(6000.0, 6898.0, 11000.0), star.subtract(centre));

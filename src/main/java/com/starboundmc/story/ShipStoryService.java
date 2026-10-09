@@ -87,11 +87,6 @@ public final class ShipStoryService
         ShipStateData ship = ShipStateData.get(server);
         SharedShipProgress shared = ship.getStoryProgress();
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!terminalActionsSupported(shared, personal))
-        {
-            sendAcknowledgement(player, containerId, requestId);
-            return;
-        }
         boolean sharedChanged = false;
 
         switch (action)
@@ -125,10 +120,6 @@ public final class ShipStoryService
                 if (shared.core() == CoreState.ONLINE && personal.identityConfirmed()
                         && personal.hasReadAllRequiredTopics())
                     sharedChanged = ship.activateSurfaceMission();
-            }
-            case SUBMIT_SUBLIGHT_REPAIR ->
-            {
-                // Retain wire ID 4 for older clients, but never accept terminal repair requests.
             }
             case CLAIM_TASK_REWARD -> {
                 try { NovaTaskService.claim(player, NovaTask.fromId(argument)); }
@@ -191,7 +182,7 @@ public final class ShipStoryService
                 && ship.completeSurfaceMission();
 
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (personal.isWritable() && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
+        if (!personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             ShipStoryBroadcastService.scheduleMatterManipulatorTutorial(player);
 
         // Mission completion is shared, but the arrival confirmation is a
@@ -229,14 +220,6 @@ public final class ShipStoryService
     {
         if (updated != previous)
             player.setData(ModAttachments.PLAYER_STORY, updated);
-    }
-
-    static boolean terminalActionsSupported(SharedShipProgress shared,
-                                            PlayerStoryState personal)
-    {
-        return shared.isWritable()
-                && shared.schemaVersion() <= SharedShipProgress.CURRENT_SCHEMA_VERSION
-                && personal.schemaVersion() <= PlayerStoryState.CURRENT_SCHEMA_VERSION;
     }
 
     /** Called after a vanilla slot transaction, on the server thread. No inventory scanning for payment. */

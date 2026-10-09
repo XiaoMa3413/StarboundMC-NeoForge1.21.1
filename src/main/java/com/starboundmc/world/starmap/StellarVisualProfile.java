@@ -3,7 +3,6 @@ package com.starboundmc.world.starmap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.starboundmc.space.UniversePosition;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
 
@@ -14,20 +13,10 @@ import java.util.Objects;
  */
 public final class StellarVisualProfile
 {
-    /**
-     * Datapack form. The star position is authored as a plain {@code x/y/z}
-     * vector because it is virtual-space lighting geometry, not a navigable
-     * location; it is converted to a {@link UniversePosition} on construction,
-     * exactly as the legacy static definition did.
-     */
+    /** Datapacks use the same sector/local position contract as the rest of the universe. */
     public static final Codec<StellarVisualProfile> CODEC =
             RecordCodecBuilder.create(instance -> instance.group(
-                    Codec.DOUBLE.fieldOf("position_x")
-                            .forGetter(p -> p.getVirtualPosition().x),
-                    Codec.DOUBLE.fieldOf("position_y")
-                            .forGetter(p -> p.getVirtualPosition().y),
-                    Codec.DOUBLE.fieldOf("position_z")
-                            .forGetter(p -> p.getVirtualPosition().z),
+                    UniversePosition.CODEC.fieldOf("position").forGetter(StellarVisualProfile::getUniversePosition),
                     Codec.INT.fieldOf("core_color").forGetter(StellarVisualProfile::getCoreColor),
                     Codec.INT.fieldOf("surface_color").forGetter(StellarVisualProfile::getSurfaceColor),
                     Codec.INT.fieldOf("corona_color").forGetter(StellarVisualProfile::getCoronaColor),
@@ -41,21 +30,8 @@ public final class StellarVisualProfile
                     Codec.INT.fieldOf("starmap_glow_size").forGetter(StellarVisualProfile::getStarMapGlowSize),
                     Codec.INT.optionalFieldOf("starmap_radiation_radius", 0)
                             .forGetter(StellarVisualProfile::getStarMapRadiationRadius)
-            ).apply(instance, StellarVisualProfile::fromCodec));
+            ).apply(instance, StellarVisualProfile::new));
 
-    private static StellarVisualProfile fromCodec(double x, double y, double z,
-                                                  int coreColor, int surfaceColor, int coronaColor,
-                                                  StellarDistanceResponse distanceResponse,
-                                                  float glowScale, float flareStrength,
-                                                  float radiationStrength, float pulseSpeed,
-                                                  int starMapGlowSize, int starMapRadiationRadius)
-    {
-        return new StellarVisualProfile(new Vec3(x, y, z), coreColor, surfaceColor, coronaColor,
-                distanceResponse, glowScale, flareStrength, radiationStrength, pulseSpeed,
-                starMapGlowSize, starMapRadiationRadius);
-    }
-
-    private final Vec3 virtualPosition;
     private final UniversePosition universePosition;
     private final int coreColor;
     private final int surfaceColor;
@@ -68,14 +44,13 @@ public final class StellarVisualProfile
     private final int starMapGlowSize;
     private final int starMapRadiationRadius;
 
-    public StellarVisualProfile(Vec3 virtualPosition, int coreColor, int surfaceColor, int coronaColor,
+    public StellarVisualProfile(UniversePosition universePosition, int coreColor, int surfaceColor, int coronaColor,
                                 StellarDistanceResponse distanceResponse,
                                 float glowScale, float flareStrength,
                                 float radiationStrength, float pulseSpeed,
                                 int starMapGlowSize, int starMapRadiationRadius)
     {
-        this.virtualPosition = virtualPosition;
-        this.universePosition = UniversePosition.fromLegacy(virtualPosition);
+        this.universePosition = Objects.requireNonNull(universePosition, "universePosition");
         this.coreColor = coreColor;
         this.surfaceColor = surfaceColor;
         this.coronaColor = coronaColor;
@@ -88,12 +63,7 @@ public final class StellarVisualProfile
         this.starMapRadiationRadius = starMapRadiationRadius;
     }
 
-    public Vec3 getVirtualPosition()
-    {
-        return virtualPosition;
-    }
-
-    /** Continuous-universe adapter; current stellar coordinates remain unchanged. */
+    /** Canonical virtual-space position of the star. */
     public UniversePosition getUniversePosition()
     {
         return universePosition;
@@ -173,7 +143,7 @@ public final class StellarVisualProfile
                 && coronaColor == other.coronaColor
                 && starMapGlowSize == other.starMapGlowSize
                 && starMapRadiationRadius == other.starMapRadiationRadius
-                && virtualPosition.equals(other.virtualPosition)
+                && universePosition.equals(other.universePosition)
                 && distanceResponse.equals(other.distanceResponse)
                 && Float.compare(glowScale, other.glowScale) == 0
                 && Float.compare(flareStrength, other.flareStrength) == 0
@@ -184,7 +154,7 @@ public final class StellarVisualProfile
     @Override
     public int hashCode()
     {
-        return Objects.hash(virtualPosition, coreColor, surfaceColor, coronaColor,
+        return Objects.hash(universePosition, coreColor, surfaceColor, coronaColor,
                 distanceResponse, glowScale, flareStrength, radiationStrength, pulseSpeed,
                 starMapGlowSize, starMapRadiationRadius);
     }
@@ -192,7 +162,7 @@ public final class StellarVisualProfile
     @Override
     public String toString()
     {
-        return "StellarVisualProfile[" + virtualPosition
+        return "StellarVisualProfile[" + universePosition
                 + ", surface=0x" + Integer.toHexString(surfaceColor) + "]";
     }
 }

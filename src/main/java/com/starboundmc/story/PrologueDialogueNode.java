@@ -9,7 +9,6 @@ import java.util.Objects;
  */
 public enum PrologueDialogueNode
 {
-    INCOMPATIBLE,
     REBOOT_REQUIRED,
     REBOOTING,
     FIRST_CONTACT,
@@ -18,16 +17,12 @@ public enum PrologueDialogueNode
     LANDING_BRIEFING,
     CURRENT_OBJECTIVE;
 
-    public static PrologueDialogueNode derive(boolean sharedSchemaSupported,
-                                              boolean playerSchemaSupported,
-                                              CoreState core,
+    public static PrologueDialogueNode derive(CoreState core,
                                               SurfaceMissionState mission,
                                               boolean identityConfirmed)
     {
         Objects.requireNonNull(core, "core");
         Objects.requireNonNull(mission, "mission");
-        if (!sharedSchemaSupported || !playerSchemaSupported)
-            return INCOMPATIBLE;
         if (core == CoreState.OFFLINE)
             return REBOOT_REQUIRED;
         if (core == CoreState.REBOOTING)

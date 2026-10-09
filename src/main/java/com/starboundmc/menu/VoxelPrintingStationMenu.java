@@ -14,11 +14,10 @@ import net.minecraft.world.SimpleContainer;
 
 /**
  * Server boundary for the voxel printing station. Printing materials come
- * directly from the operator's inventory; the old material storage remains as
- * hidden menu slots only so existing block-entity saves keep their slot layout.
+ * directly from the operator's inventory. Client and server expose one output
+ * slot followed by the player's inventory.
  */
 public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
-    private static final int HIDDEN_SLOT_POSITION = -10_000;
     private static final int PLAYER_START = VoxelPrintingStationBlockEntity.TOTAL_SLOTS;
     private static final int PLAYER_INVENTORY_END = PLAYER_START + 27;
     private static final int PLAYER_END = PLAYER_START + 36;
@@ -54,28 +53,11 @@ public final class VoxelPrintingStationMenu extends AbstractContainerMenu {
         this.blockPos = blockPos.immutable();
         this.boundToBlock = boundToBlock;
 
-        if (station != null) {
-            station.returnLegacyMaterials(inventory.player);
-        }
-
         // The client-side menu is created without the server block entity.
         // Keep the same machine-slot count/order there so container content
         // packets cannot index past the client's slot list.
         net.minecraft.world.Container slotContainer = station != null
                 ? station : new SimpleContainer(VoxelPrintingStationBlockEntity.TOTAL_SLOTS);
-        for (int i = 0; i < VoxelPrintingStationBlockEntity.MATERIAL_SLOTS; i++) {
-            addSlot(new Slot(slotContainer, i, HIDDEN_SLOT_POSITION, HIDDEN_SLOT_POSITION) {
-                @Override
-                public boolean mayPlace(ItemStack stack) {
-                    return false;
-                }
-
-                @Override
-                public boolean isActive() {
-                    return false;
-                }
-            });
-        }
         addSlot(new Slot(slotContainer, VoxelPrintingStationBlockEntity.OUTPUT_SLOT, 151, 31) {
             @Override
             public boolean mayPlace(ItemStack stack) {

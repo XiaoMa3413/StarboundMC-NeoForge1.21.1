@@ -41,22 +41,50 @@ class ShipAiActionPacketTest
     }
 
     @Test
-    void decoderRejectsUnknownActionId()
+    void decoderRejectsRetiredAndUnknownActionIds()
     {
-        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
-        try
+        for (int id : new int[]{4, 255})
         {
-            buffer.writeVarInt(4);
-            buffer.writeVarLong(1L);
-            buffer.writeByte(255);
-            buffer.writeVarInt(0);
-            assertThrows(IllegalArgumentException.class,
-                    () -> ShipAiActionPacket.STREAM_CODEC.decode(buffer));
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try
+            {
+                buffer.writeVarInt(4);
+                buffer.writeVarLong(1L);
+                buffer.writeByte(id);
+                buffer.writeVarInt(0);
+                assertThrows(IllegalArgumentException.class,
+                        () -> ShipAiActionPacket.STREAM_CODEC.decode(buffer));
+            }
+            finally
+            {
+                buffer.release();
+            }
         }
-        finally
-        {
-            buffer.release();
-        }
+    }
+
+    @Test
+    void currentActionsKeepTheirExplicitWireIds()
+    {
+        var actions = java.util.Map.of(
+                0, ShipAiActionPacket.Action.BEGIN_CORE_REBOOT,
+                1, ShipAiActionPacket.Action.CONFIRM_IDENTITY,
+                2, ShipAiActionPacket.Action.MARK_SITUATION_READ,
+                3, ShipAiActionPacket.Action.ACTIVATE_SURFACE_MISSION,
+                5, ShipAiActionPacket.Action.CLAIM_TASK_REWARD,
+                6, ShipAiActionPacket.Action.TRACK_TASK);
+        actions.forEach((id, action) -> {
+            FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try {
+                int argument = action == ShipAiActionPacket.Action.MARK_SITUATION_READ ? SituationTopic.INCIDENT.mask() : 0;
+                var expected = new ShipAiActionPacket(4, 1L, action, argument);
+                ShipAiActionPacket.STREAM_CODEC.encode(buffer, expected);
+                assertEquals(4, buffer.readVarInt());
+                assertEquals(1L, buffer.readVarLong());
+                assertEquals(id.intValue(), buffer.readUnsignedByte());
+                buffer.readerIndex(0);
+                assertEquals(expected, ShipAiActionPacket.STREAM_CODEC.decode(buffer));
+            } finally { buffer.release(); }
+        });
     }
 
     @Test

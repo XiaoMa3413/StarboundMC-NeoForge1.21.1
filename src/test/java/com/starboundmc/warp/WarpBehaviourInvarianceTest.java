@@ -4,7 +4,6 @@ import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
 import com.starboundmc.story.SharedShipProgress;
 import com.starboundmc.world.universe.BuiltInUniverse;
-import com.starboundmc.world.universe.LegacyUniverseCompatibility;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
@@ -148,25 +147,6 @@ class WarpBehaviourInvarianceTest
     }
 
     /**
-     * A save from before the prologue keeps every ability, which is what stops the
-     * migration from stranding existing players behind a gate they already passed.
-     */
-    @Test
-    void aLegacySaveRetainsAllTravelAbilities()
-    {
-        SharedShipProgress legacy = SharedShipProgress.legacyUnlocked();
-        assertTrue(legacy.canTravelWithinSystem());
-        assertTrue(legacy.canTravelBetweenSystems());
-
-        // And it survives the save/load round trip the migration touched.
-        CompoundTag tag = new CompoundTag();
-        tag.put("Story", legacy.save());
-        ShipStateData restored = ShipStateData.load(tag);
-        assertTrue(restored.getStoryProgress().canTravelWithinSystem());
-        assertTrue(restored.getStoryProgress().canTravelBetweenSystems());
-    }
-
-    /**
      * Story progress must survive a save produced by the migrated schema, since
      * the save layout changed in A7.
      *
@@ -204,22 +184,6 @@ class WarpBehaviourInvarianceTest
                 "an unrepaired hyperdrive must stay gated after the layout change");
     }
 
-    /** A legacy save's unlocked drives must survive the migrated layout too. */
-    @Test
-    void aLegacyUnlockedSaveSurvivesTheMigratedLayout()
-    {
-        CompoundTag legacy = new CompoundTag();
-        legacy.putString("Planet", "frozen");
-        legacy.put("Story", SharedShipProgress.legacyUnlocked().save());
-
-        ShipStateData restored = ShipStateData.load(legacy);
-
-        assertEquals(FROZEN, restored.getCurrentEntryId(),
-                "the legacy planet name must migrate to its entry id");
-        assertTrue(restored.getStoryProgress().canTravelWithinSystem());
-        assertTrue(restored.getStoryProgress().canTravelBetweenSystems());
-    }
-
     // ------------------------------------------------- §33: travel behaviour
 
     /**
@@ -245,19 +209,4 @@ class WarpBehaviourInvarianceTest
         }
     }
 
-    /**
-     * The legacy save mapping must still resolve every released planet name, since
-     * that is what keeps existing saves loadable after the enum was deleted.
-     */
-    @Test
-    void everyLegacyPlanetNameStillResolves()
-    {
-        for (String name : new String[] {"lush", "molten", "barren", "frozen"})
-        {
-            assertTrue(LegacyUniverseCompatibility.parsePlanetId(name).isPresent(),
-                    "released save name '" + name + "' must still migrate");
-        }
-        assertEquals("sys1:lush", LegacyUniverseCompatibility.parsePlanetId("lush").orElseThrow());
-        assertEquals("sys2:frozen", LegacyUniverseCompatibility.parsePlanetId("frozen").orElseThrow());
-    }
 }

@@ -8,8 +8,7 @@ import java.util.Objects;
 /**
  * Immutable player-local knowledge and tutorial state. Shared ship progress is
  * deliberately excluded and remains in {@link com.starboundmc.warp.ShipStateData}.
- * The schema field supports forward migrations; opening newer player data in
- * an older mod build is not a supported, lossless downgrade path.
+ * Serialized attachments must match the current schema; new players use DEFAULT.
  */
 public record PlayerStoryState(int schemaVersion, long revision, boolean identityConfirmed,
                                int readSituationMask, int tutorialMask, int dismissedHintMask,
@@ -20,52 +19,31 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
             new PlayerStoryState(CURRENT_SCHEMA_VERSION, 0L, false, 0, 0, 0, 0);
 
     public static final Codec<PlayerStoryState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.INT.optionalFieldOf("schema_version", 1)
+            Codec.INT.fieldOf("schema_version")
                     .forGetter(PlayerStoryState::schemaVersion),
-            Codec.LONG.optionalFieldOf("revision", 0L)
+            Codec.LONG.fieldOf("revision")
                     .forGetter(PlayerStoryState::revision),
-            Codec.BOOL.optionalFieldOf("identity_confirmed", false)
+            Codec.BOOL.fieldOf("identity_confirmed")
                     .forGetter(PlayerStoryState::identityConfirmed),
-            Codec.INT.optionalFieldOf("read_situation_mask", 0)
+            Codec.INT.fieldOf("read_situation_mask")
                     .forGetter(PlayerStoryState::readSituationMask),
-            Codec.INT.optionalFieldOf("tutorial_mask", 0)
+            Codec.INT.fieldOf("tutorial_mask")
                     .forGetter(PlayerStoryState::tutorialMask),
-            Codec.INT.optionalFieldOf("dismissed_hint_mask", 0)
+            Codec.INT.fieldOf("dismissed_hint_mask")
                     .forGetter(PlayerStoryState::dismissedHintMask),
-            Codec.INT.optionalFieldOf("flags_mask", 0)
+            Codec.INT.fieldOf("flags_mask")
                     .forGetter(PlayerStoryState::flagsMask)
     ).apply(instance, PlayerStoryState::new));
 
-    /**
-     * Compatibility constructor for callers compiled against the original
-     * six-field attachment shape. New code should use the canonical
-     * constructor or the immutable helper methods below.
-     */
-    public PlayerStoryState(int schemaVersion, long revision, boolean identityConfirmed,
-                            int readSituationMask, int tutorialMask, int dismissedHintMask)
-    {
-        this(schemaVersion, revision, identityConfirmed, readSituationMask,
-                tutorialMask, dismissedHintMask, 0);
-    }
-
     public PlayerStoryState
     {
-        if (schemaVersion <= 0)
-            schemaVersion = CURRENT_SCHEMA_VERSION;
-        revision = Math.max(0L, revision);
-        readSituationMask = readSituationMask < 0
-                ? 0 : readSituationMask & SituationTopic.REQUIRED_MASK;
-        tutorialMask = tutorialMask < 0
-                ? 0 : tutorialMask & TutorialTopic.knownMask();
-        dismissedHintMask = Math.max(0, dismissedHintMask);
-        flagsMask = flagsMask < 0 ? 0 : flagsMask & PlayerStoryFlag.knownMask();
-        if (schemaVersion < CURRENT_SCHEMA_VERSION) {
-            // Existing players who already knew the online core should not receive a new
-            // introduction on upgrade. New schema-2 broadcasts are not presentation receipts.
-            if (identityConfirmed || (flagsMask & PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask()) != 0)
-                flagsMask |= PlayerStoryFlag.HUD_CORE_LINK_PRESENTED.mask();
-            schemaVersion = CURRENT_SCHEMA_VERSION;
-        }
+        if (schemaVersion != CURRENT_SCHEMA_VERSION)
+            throw new IllegalArgumentException("Unsupported pre-release player story schema: " + schemaVersion);
+        if (revision < 0 || readSituationMask < 0 || tutorialMask < 0 || dismissedHintMask < 0 || flagsMask < 0
+                || (readSituationMask & ~SituationTopic.REQUIRED_MASK) != 0
+                || (tutorialMask & ~TutorialTopic.knownMask()) != 0
+                || (flagsMask & ~PlayerStoryFlag.knownMask()) != 0)
+            throw new IllegalArgumentException("Invalid player story masks or revision");
     }
 
     public boolean hasRead(SituationTopic topic)
@@ -101,15 +79,9 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
         return hasFlag(flag);
     }
 
-    /** Returns whether this attachment may be changed by the current build. */
-    public boolean isWritable()
-    {
-        return schemaVersion <= CURRENT_SCHEMA_VERSION;
-    }
-
     public PlayerStoryState confirmIdentity()
     {
-        if (!isWritable() || identityConfirmed)
+        if (identityConfirmed)
             return this;
         return changed(true, readSituationMask, tutorialMask, dismissedHintMask);
     }
@@ -117,8 +89,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withReadTopic(SituationTopic topic)
     {
         Objects.requireNonNull(topic, "topic");
-        if (!isWritable())
-            return this;
         int updatedMask = readSituationMask | topic.mask();
         if (updatedMask == readSituationMask)
             return this;
@@ -128,8 +98,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withTutorialSeen(TutorialTopic topic)
     {
         Objects.requireNonNull(topic, "topic");
-        if (!isWritable())
-            return this;
         int updatedMask = tutorialMask | topic.mask();
         if (updatedMask == tutorialMask)
             return this;
@@ -138,7 +106,7 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
 
     public PlayerStoryState withDismissedHint(int stableHintBit)
     {
-        if (!isWritable() || stableHintBit <= 0 || Integer.bitCount(stableHintBit) != 1)
+        if (stableHintBit <= 0 || Integer.bitCount(stableHintBit) != 1)
             return this;
         int updatedMask = dismissedHintMask | stableHintBit;
         if (updatedMask == dismissedHintMask)
@@ -149,8 +117,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withFlag(PlayerStoryFlag flag)
     {
         Objects.requireNonNull(flag, "flag");
-        if (!isWritable())
-            return this;
         int updatedMask = flagsMask | flag.mask();
         if (updatedMask == flagsMask)
             return this;
@@ -166,9 +132,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     /** Marks the personal prologue as seen without granting any later task evidence. */
     public PlayerStoryState debugCompletePrologue()
     {
-        if (!isWritable())
-            return this;
-
         int prologueFlags = PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask()
                 | PlayerStoryFlag.TERMINAL_REMINDER_BROADCAST.mask()
                 | PlayerStoryFlag.TERMINAL_CONTACTED.mask()

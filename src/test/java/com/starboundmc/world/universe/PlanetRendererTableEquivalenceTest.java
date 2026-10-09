@@ -254,11 +254,7 @@ class PlanetRendererTableEquivalenceTest
     private static BodySpaceVisualProfile profileWithAtmosphereTuning(
             float shellScale, float nightFraction, float twilightStrength)
     {
-        return new BodySpaceVisualProfile(Optional.empty(), Optional.empty(), 0.0F,
-                0.0F, 0.0F, 0.0F, 0.0F,
-                0.0F, 0.0F, 0.0F, 0xFFFFFFFF,
-                0.20F, 0.00375F, 0.10F, 0.0F, 1.0F, 0.0F, Optional.empty(),
-                shellScale, nightFraction, twilightStrength);
+        return new BodySpaceVisualProfile(Optional.empty(), Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F, 0.0F, 1.0F, 0.0F, Optional.empty(), shellScale, nightFraction, twilightStrength, Optional.empty(), BodySpaceVisualProfile.DEFAULT_CLOUD_SHELL_SCALE, BodySpaceVisualProfile.DEFAULT_CLOUD_OPACITY, BodySpaceVisualProfile.DEFAULT_CLOUD_DRIFT_RATE);
     }
 
     @Test

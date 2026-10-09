@@ -10,9 +10,7 @@ import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.SpaceRenderState;
 import com.starboundmc.client.space.SpaceRenderClock;
 import com.starboundmc.client.space.StarSystemResolver;
-import com.starboundmc.client.space.StellarLod;
 import com.starboundmc.world.ShipDimensions;
-import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,7 +21,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.joml.Matrix4f;
-import org.joml.Vector3d;
 
 /** Coordinates the ship-space passes while keeping their drawing code separate. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT)
@@ -86,12 +83,11 @@ public final class SpaceRenderer
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.SYSTEM_STARS);
             try {
                 if (isolated) SpaceStellarRenderer.render(skyModelView, space, coordinateFrame, stars, false);
-                else renderSystemStars(skyPose, skyModelView, space, coordinateFrame, stars);
             }
             finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.SYSTEM_STARS); }
             SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.PLANETS);
             try {
-                PlanetRenderer.renderVisiblePlanets(skyPose, event.getCamera(), space, coordinateFrame, stars);
+                if (isolated) PlanetRenderer.renderVisiblePlanets(skyPose, event.getCamera(), space, coordinateFrame, stars);
             } finally { SpaceRenderProfiler.end(SpaceRenderProfiler.Pass.PLANETS); }
             if (isolated) {
                 SpaceRenderProfiler.begin(SpaceRenderProfiler.Pass.CORONA);
@@ -151,36 +147,4 @@ public final class SpaceRenderer
         return new Matrix4f(projection).mul(inverseWalkBob);
     }
 
-    private static void renderSystemStars(PoseStack pose, Matrix4f skyModelView,
-                                          SpaceRenderContext space,
-                                          SpaceCoordinateFrame coordinateFrame,
-                                          StarSystemResolver.ResolvedStarField stars)
-    {
-        // LOD-2 points are submitted first in one additive batch. Nearer
-        // simplified/full discs render afterwards and can cover aligned points.
-        StellarPointBatchRenderer.render(pose, stars, coordinateFrame);
-
-        Vector3d view = new Vector3d();
-        for (int i = 0; i < stars.count(); i++)
-        {
-            StarSystemResolver.VisibleStar star = stars.star(i);
-            float simplifiedWeight = star.simplifiedLodWeight();
-            float fullWeight = star.fullLodWeight();
-            if (simplifiedWeight <= 0.002F && fullWeight <= 0.002F)
-                continue;
-            coordinateFrame.toViewRelative(star.relativeX(), star.relativeY(), star.relativeZ(), view);
-            StellarVisualProfile profile = star.system().stellarVisual();
-            float apparentScale = star.projectedRadius() / profile.getApparentRadius();
-            if (simplifiedWeight > 0.002F)
-                StellarRenderer.renderWithModelView(skyModelView, profile, view.x, view.y, view.z,
-                        StellarRenderer.SHIP_SKY_DISTANCE, star.stellarBrightness() * simplifiedWeight,
-                        space.animationTicks(), apparentScale, star.coronaDetail(),
-                        star.effectDetail(), StellarLod.SIMPLIFIED);
-            if (fullWeight > 0.002F)
-                StellarRenderer.renderWithModelView(skyModelView, profile, view.x, view.y, view.z,
-                        StellarRenderer.SHIP_SKY_DISTANCE, star.stellarBrightness() * fullWeight,
-                        space.animationTicks(), apparentScale, star.coronaDetail(),
-                        star.effectDetail(), StellarLod.FULL);
-        }
-    }
 }

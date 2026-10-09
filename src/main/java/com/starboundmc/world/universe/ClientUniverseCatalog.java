@@ -2,21 +2,8 @@ package com.starboundmc.world.universe;
 
 import net.minecraft.core.RegistryAccess;
 
-/**
- * The client's view of the universe, and the only place client code should ask
- * universe questions (migration step A4).
- *
- * <p>Shares its implementation with {@link ServerUniverseCatalog} through
- * {@link UniverseCatalogStore}; see that class for why a baseline always exists
- * and why a registry replaces rather than merges.</p>
- *
- * <h2>Lifecycle</h2>
- *
- * <p>{@link #reset()} drops back to the baseline and is called on disconnect, so
- * one server's universe cannot leak into the next session. A stale catalog is
- * worse than a baseline one: the baseline is at least the universe the mod ships
- * with, whereas stale server data is a universe the player is no longer in.</p>
- */
+/** Client universe projection. A synchronized registry replaces the built-in session baseline.
+ * Disconnect resets the projection so one server's definitions cannot leak into the next session. */
 public final class ClientUniverseCatalog
 {
     private static final UniverseCatalogStore STORE = new UniverseCatalogStore("Client");

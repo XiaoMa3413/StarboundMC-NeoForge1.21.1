@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class VoxelWalletStateTest {
     private static final DynamicOps<JsonElement> OPS = JsonOps.INSTANCE;
@@ -18,8 +20,8 @@ class VoxelWalletStateTest {
     }
 
     @Test
-    void clampsNegativeBalancesToZero() {
-        assertEquals(0, new VoxelWalletState(-5).balance());
+    void constructorRejectsNegativeBalances() {
+        assertThrows(IllegalArgumentException.class, () -> new VoxelWalletState(-5));
     }
 
     @Test
@@ -45,7 +47,7 @@ class VoxelWalletStateTest {
         VoxelWalletState spent = wallet.spend(20);
         assertEquals(5, spent.balance());
         assertFalse(spent.canAfford(6));
-        assertEquals(5, spent.spend(6).balance(), "insufficient spend must not change state");
+        assertSame(spent, spent.spend(6), "insufficient spend must not change state");
         assertEquals(5, spent.spend(-1).balance());
     }
 
@@ -58,8 +60,10 @@ class VoxelWalletStateTest {
     }
 
     @Test
-    void codecDecodesEmptyObjectAsDefault() {
-        JsonElement empty = OPS.emptyMap();
-        assertEquals(VoxelWalletState.DEFAULT, VoxelWalletState.CODEC.parse(OPS, empty).getOrThrow());
+    void serializedWalletRequiresANonnegativeBalance() {
+        for (String json : new String[]{"{}", "{\"balance\":\"invalid\"}", "{\"balance\":-1}"}) {
+            var malformed = com.google.gson.JsonParser.parseString(json);
+            assertTrue(VoxelWalletState.CODEC.parse(OPS, malformed).error().isPresent(), json);
+        }
     }
 }

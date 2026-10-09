@@ -7,7 +7,6 @@ import com.starboundmc.warp.FlightPhase;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.world.phys.Vec3;
 
 /** Server -> client versioned, authoritative virtual-flight snapshot. */
 public final class SyncFlightPacket implements CustomPacketPayload {
@@ -29,17 +28,6 @@ public final class SyncFlightPacket implements CustomPacketPayload {
     private final boolean crewHold;
 
     public SyncFlightPacket(long revision, long serverTick, FlightPhase phase,
-                            double x, double y, double z,
-                            double vx, double vy, double vz,
-                            double yaw, double pitch, double roll,
-                            int elapsedTicks, int totalTicks, String targetEntryId) {
-        this(revision, serverTick, phase,
-                UniversePosition.fromLegacy(new Vec3(x, y, z)),
-                new UniverseDelta(vx, vy, vz), yaw, pitch, roll,
-                elapsedTicks, totalTicks, targetEntryId);
-    }
-
-    public SyncFlightPacket(long revision, long serverTick, FlightPhase phase,
                             UniversePosition position, UniverseDelta velocity,
                             double yaw, double pitch, double roll,
                             int elapsedTicks, int totalTicks, String targetEntryId) {
@@ -50,7 +38,7 @@ public final class SyncFlightPacket implements CustomPacketPayload {
                             UniversePosition position, UniverseDelta velocity,
                             double yaw, double pitch, double roll,
                             int elapsedTicks, int totalTicks, String targetEntryId, boolean crewHold) {
-        this(revision, serverTick, phase.ordinal(), position, velocity,
+        this(revision, serverTick, phase.networkId(), position, velocity,
                 (float) yaw, (float) pitch, (float) roll,
                 elapsedTicks, totalTicks, targetEntryId, crewHold);
     }
@@ -63,9 +51,7 @@ public final class SyncFlightPacket implements CustomPacketPayload {
         if (revision < 0 || serverTick < 0) {
             throw new IllegalArgumentException("Flight revision and server tick must be non-negative");
         }
-        if (phaseId < 0 || phaseId >= FlightPhase.values().length) {
-            throw new IllegalArgumentException("Unknown flight phase id " + phaseId);
-        }
+        FlightPhase.byNetworkId(phaseId);
         if (!Float.isFinite(yaw) || !Float.isFinite(pitch) || !Float.isFinite(roll)) {
             throw new IllegalArgumentException("Flight rotation must be finite");
         }

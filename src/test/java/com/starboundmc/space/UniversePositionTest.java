@@ -11,7 +11,7 @@ class UniversePositionTest
     @Test
     void legacyCoordinatesRemainInSectorZero()
     {
-        UniversePosition position = UniversePosition.fromLegacy(new Vec3(10.0, 20.0, 30.0));
+        UniversePosition position = UniversePosition.of(10.0, 20.0, 30.0);
         assertEquals(SectorCoordinate.ZERO, position.sector());
         assertEquals(10.0, position.localX());
         assertEquals(20.0, position.localY());
@@ -44,8 +44,8 @@ class UniversePositionTest
     {
         Vec3 fromLegacy = new Vec3(-5_000.0, 102.0, -2_000.0);
         Vec3 toLegacy = new Vec3(6_000.0, 102.0, 4_000.0);
-        UniversePosition from = UniversePosition.fromLegacy(fromLegacy);
-        UniversePosition to = UniversePosition.fromLegacy(toLegacy);
+        UniversePosition from = UniversePosition.of(fromLegacy.x, fromLegacy.y, fromLegacy.z);
+        UniversePosition to = UniversePosition.of(toLegacy.x, toLegacy.y, toLegacy.z);
         assertEquals(fromLegacy.distanceToSqr(toLegacy), from.distanceToSqr(to), 1.0E-9);
     }
 

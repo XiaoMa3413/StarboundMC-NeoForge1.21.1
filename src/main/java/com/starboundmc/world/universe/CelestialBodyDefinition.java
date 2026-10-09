@@ -7,20 +7,8 @@ import com.starboundmc.world.starmap.StarmapBodyVisual;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * One celestial body in the universe: everything the game needs to draw it on
- * the star map, fly to it, look at it from the ship, and land on it.
- *
- * <p>The three capability profiles are independent, which is the whole point of
- * this model. A body may be flyable but not landable (a future station), visible
- * but not flyable (the gas giant), or landable but not rendered (nothing yet).
- * The legacy model expressed all of this with a single nullable
- * {@code PlanetEntry.destination}, which conflated "has a dimension" with
- * "can be reached".</p>
- *
- * <p>{@code entryId} keeps the existing {@code system:name} format because the
- * value is already stored in saves, packets, the star map and tests.</p>
- */
+/** A body with independent star-map, navigation, space-visual and surface capabilities.
+ * Catalogs select the required capabilities for each consumer; a visible orbit-only body need not have a surface. */
 public record CelestialBodyDefinition(String entryId,
                                       String nameKey,
                                       String typeKey,
@@ -57,16 +45,12 @@ public record CelestialBodyDefinition(String entryId,
             throw new IllegalArgumentException("entryId must be a namespaced id, got: " + entryId);
         if (threatLevel < 0 || threatLevel > 10)
             throw new IllegalArgumentException("threatLevel must be within 0..10");
-        navigation = navigation == null ? Optional.empty() : navigation;
-        spaceVisual = spaceVisual == null ? Optional.empty() : spaceVisual;
-        surface = surface == null ? Optional.empty() : surface;
+        navigation = java.util.Objects.requireNonNull(navigation, "navigation");
+        spaceVisual = java.util.Objects.requireNonNull(spaceVisual, "spaceVisual");
+        surface = java.util.Objects.requireNonNull(surface, "surface");
     }
 
-    /**
-     * Whether the ship can plot a course here. Unlike the legacy
-     * {@code PlanetEntry.isReachable()}, this asks about flight geometry and
-     * says nothing about whether the body has a landable surface.
-     */
+    /** Whether flight geometry exists, independently of a landable surface. */
     public boolean isNavigable()
     {
         return navigation.isPresent();

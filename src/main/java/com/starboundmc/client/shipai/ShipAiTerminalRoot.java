@@ -490,8 +490,6 @@ public final class ShipAiTerminalRoot extends UIElement
         observedUpdateSequence = incoming.updateSequence();
 
         baseNode = PrologueDialogueNode.derive(
-                incoming.shared().schemaSupported(),
-                incoming.player().schemaSupported(),
                 incoming.shared().core(),
                 incoming.shared().surfaceMission(),
                 incoming.player().identityConfirmed());
@@ -519,11 +517,6 @@ public final class ShipAiTerminalRoot extends UIElement
 
         switch (baseNode)
         {
-            case INCOMPATIBLE -> session.enqueueCue(
-                    "schema_incompatible",
-                    ClientShipAiTerminalState.Speaker.SYSTEM,
-                    Component.translatable("gui.starboundmc.ship_ai.prologue.incompatible"),
-                    ClientShipAiTerminalState.CompletionIntent.NONE);
             case REBOOT_REQUIRED -> session.enqueueCue(
                     "core_offline",
                     ClientShipAiTerminalState.Speaker.SYSTEM,
@@ -674,7 +667,6 @@ public final class ShipAiTerminalRoot extends UIElement
                     containerId, requestId, topic);
             case ACTIVATE_SURFACE_MISSION -> ShipAiActionPacket.activateSurfaceMission(
                     containerId, requestId);
-            case SUBMIT_SUBLIGHT_REPAIR -> throw new IllegalArgumentException("Repair requires an engine socket");
             case CLAIM_TASK_REWARD, TRACK_TASK -> throw new IllegalArgumentException("Task requests use the command page");
         };
         ModNetwork.sendToServer(packet);
@@ -683,14 +675,14 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private boolean canBeginCoreReboot()
     {
-        return isCompatible() && session.pendingRequest() == null && !session.isTransmitting()
+        return authoritativeSnapshot != null && session.pendingRequest() == null && !session.isTransmitting()
                 && baseNode == PrologueDialogueNode.REBOOT_REQUIRED
                 && authoritativeSnapshot.shared().core() == CoreState.OFFLINE;
     }
 
     private boolean canSelectTopics()
     {
-        return isCompatible() && session.pendingRequest() == null && !session.isTransmitting()
+        return authoritativeSnapshot != null && session.pendingRequest() == null && !session.isTransmitting()
                 && authoritativeSnapshot.player().identityConfirmed()
                 && (baseNode == PrologueDialogueNode.SITUATION_HUB
                     || baseNode == PrologueDialogueNode.CURRENT_OBJECTIVE);
@@ -705,13 +697,6 @@ public final class ShipAiTerminalRoot extends UIElement
             return false;
         return mission != SurfaceMissionState.LOCKED
                 || hasReadAllRequiredTopics(authoritativeSnapshot.player().readSituationMask());
-    }
-
-    private boolean isCompatible()
-    {
-        return authoritativeSnapshot != null
-                && authoritativeSnapshot.shared().schemaSupported()
-                && authoritativeSnapshot.player().schemaSupported();
     }
 
     private void completeStream()
@@ -748,7 +733,7 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         syncTranscriptViews();
         boolean transmitting = session.isTransmitting();
-        portrait.setCoreState(isCompatible() ? authoritativeSnapshot.shared().core() : null);
+        portrait.setCoreState(authoritativeSnapshot != null ? authoritativeSnapshot.shared().core() : null);
         portrait.setActivity(portraitActivity());
         portrait.setSpeaking(transmitting);
         portraitState.setText(portraitStatusText(transmitting));
@@ -757,11 +742,6 @@ public final class ShipAiTerminalRoot extends UIElement
         if (authoritativeSnapshot == null)
         {
             showHint(Component.translatable("gui.starboundmc.ship_ai.prologue.syncing"));
-            return;
-        }
-        if (baseNode == PrologueDialogueNode.INCOMPATIBLE)
-        {
-            showHint(Component.translatable("gui.starboundmc.ship_ai.prologue.incompatible"));
             return;
         }
         if (baseNode == PrologueDialogueNode.REBOOT_REQUIRED)
@@ -880,8 +860,6 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         if (authoritativeSnapshot == null)
             return Component.translatable("gui.starboundmc.ship_ai.status.syncing");
-        if (!isCompatible())
-            return Component.translatable("gui.starboundmc.ship_ai.status.incompatible");
         return Component.translatable(switch (authoritativeSnapshot.shared().core())
         {
             case OFFLINE -> "gui.starboundmc.ship_ai.status.offline";
@@ -896,8 +874,6 @@ public final class ShipAiTerminalRoot extends UIElement
             return Component.translatable("gui.starboundmc.ship_ai.portrait.speaking");
         if (authoritativeSnapshot == null)
             return Component.translatable("gui.starboundmc.ship_ai.portrait.syncing");
-        if (!isCompatible())
-            return Component.translatable("gui.starboundmc.ship_ai.portrait.incompatible");
         return Component.translatable(switch (authoritativeSnapshot.shared().core())
         {
             case OFFLINE -> "gui.starboundmc.ship_ai.portrait.offline";
@@ -910,7 +886,7 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private NovaPortraitActivity portraitActivity()
     {
-        if (!isCompatible())
+        if (authoritativeSnapshot == null)
             return NovaPortraitActivity.IDLE;
         ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
         if (shared.core() != CoreState.ONLINE)

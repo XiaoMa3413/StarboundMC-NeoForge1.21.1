@@ -29,7 +29,7 @@ class EvaPacketsTest {
         ClientPlanetState.setCurrent("sys1:lush");
         var b = new FriendlyByteBuf(Unpooled.buffer());
         try {
-            var original = new SyncFlightPacket(10, 100, FlightPhase.TURN, UniversePosition.fromLegacy(net.minecraft.world.phys.Vec3.ZERO),
+            var original = new SyncFlightPacket(10, 100, FlightPhase.TURN, UniversePosition.of(net.minecraft.world.phys.Vec3.ZERO.x, net.minecraft.world.phys.Vec3.ZERO.y, net.minecraft.world.phys.Vec3.ZERO.z),
                     new UniverseDelta(0, 0, 0), 0, 0, 0, 50, 800, "sys1:rockymoon", true);
             SyncFlightPacket.STREAM_CODEC.encode(b, original);
             var decoded = SyncFlightPacket.STREAM_CODEC.decode(b);

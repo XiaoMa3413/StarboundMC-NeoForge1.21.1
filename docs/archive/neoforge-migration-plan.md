@@ -1,8 +1,10 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # StarboundMC Forge → NeoForge 迁移计划
 
 > **归档状态：已完成。** 迁移阶段 0–11 已于 2026-08-24 完成交付，后续跃迁修复与真人
 > 验收也已完成。本文仅保留迁移约束、决策和验证记录，不再作为当前工作清单；活动计划见
-> [`../machine-ui-ldlib2-plan.md`](../machine-ui-ldlib2-plan.md)。
+> [`../machine-ui-ldlib2-plan.md`](machine-ui-ldlib2-plan.md)。
 >
 > 最后整理：2026-08-27
 

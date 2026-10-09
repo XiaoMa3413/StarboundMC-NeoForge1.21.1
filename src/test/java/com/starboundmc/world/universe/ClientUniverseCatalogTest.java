@@ -78,7 +78,7 @@ class ClientUniverseCatalogTest
         for (var system : ClientUniverseCatalog.baseline().allSystems())
         {
             assertEquals(NavigableBodyExpectations.starPosition(system.systemId()),
-                    system.stellarVisual().getVirtualPosition(),
+                    system.stellarVisual().getUniversePosition().toLocalVec3(),
                     system.systemId() + " star position differs");
         }
     }
@@ -96,10 +96,7 @@ class ClientUniverseCatalogTest
     void installingACustomUniverseReplacesTheBaseline()
     {
         StarSystemDefinition original = BuiltInUniverse.systems().get(0);
-        StarSystemDefinition renamed = new StarSystemDefinition("sysCustom",
-                original.nameKey(), original.descriptionKey(), original.starTypeKey(),
-                original.stellarVisual(), original.galaxyMapPosition(),
-                original.navigationCenter(), original.influenceRadius(), original.bodies());
+        StarSystemDefinition renamed = new StarSystemDefinition("sysCustom", original.nameKey(), original.descriptionKey(), original.starTypeKey(), original.stellarVisual(), original.galaxyMapPosition(), original.navigationCenter(), original.influenceRadius(), original.influenceRadius(), original.bodies());
 
         ClientUniverseCatalog.setForTesting(UniverseCatalog.of(List.of(renamed)));
 

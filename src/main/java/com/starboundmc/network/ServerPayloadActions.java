@@ -5,9 +5,8 @@ import net.minecraft.server.level.ServerPlayer;
 
 /**
  * Server-authoritative business operations invoked only after the network
- * layer has validated the sender and relevant menu. Later migration stages
- * install the real implementations and must revalidate world state, fuel,
- * dimensions, targets and permissions at the point of mutation.
+ * layer has validated the sender and relevant menu. Implementations revalidate
+ * world state, fuel, dimensions, targets and permissions at the point of mutation.
  */
 public interface ServerPayloadActions {
     ServerPayloadActions NONE = new ServerPayloadActions() {

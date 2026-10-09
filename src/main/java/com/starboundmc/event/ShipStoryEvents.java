@@ -141,14 +141,6 @@ public final class ShipStoryEvents
 
         MinecraftServer server = source.getServer();
         ShipStateData ship = ShipStateData.get(server);
-        if (!ship.getStoryProgress().isWritable()
-                || !player.getData(com.starboundmc.story.ModAttachments.PLAYER_STORY).isWritable())
-        {
-            source.sendFailure(Component.translatable(
-                    "command.starboundmc.debug.prologue.incompatible"));
-            return 0;
-        }
-
         boolean sharedChanged = ship.debugCompletePrologue();
         boolean personalChanged = ShipStoryBroadcastService.debugSkipPrologue(player);
         ShipStoryService.syncOpenScreens(server);

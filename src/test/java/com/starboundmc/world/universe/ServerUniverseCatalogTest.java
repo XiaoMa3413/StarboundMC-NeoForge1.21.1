@@ -66,10 +66,7 @@ class ServerUniverseCatalogTest
     void installingAServerUniverseReplacesTheBaselineAndClearingRestoresIt()
     {
         StarSystemDefinition original = BuiltInUniverse.systems().get(0);
-        StarSystemDefinition renamed = new StarSystemDefinition("sysServer",
-                original.nameKey(), original.descriptionKey(), original.starTypeKey(),
-                original.stellarVisual(), original.galaxyMapPosition(),
-                original.navigationCenter(), original.influenceRadius(), original.bodies());
+        StarSystemDefinition renamed = new StarSystemDefinition("sysServer", original.nameKey(), original.descriptionKey(), original.starTypeKey(), original.stellarVisual(), original.galaxyMapPosition(), original.navigationCenter(), original.influenceRadius(), original.influenceRadius(), original.bodies());
 
         ServerUniverseCatalog.setForTesting(UniverseCatalog.of(List.of(renamed)));
         assertTrue(ServerUniverseCatalog.current().system("sysServer").isPresent(),
@@ -99,10 +96,7 @@ class ServerUniverseCatalogTest
     void aNullServerClearsRatherThanLeavingAStaleUniverse()
     {
         StarSystemDefinition original = BuiltInUniverse.systems().get(0);
-        StarSystemDefinition renamed = new StarSystemDefinition("sysStale",
-                original.nameKey(), original.descriptionKey(), original.starTypeKey(),
-                original.stellarVisual(), original.galaxyMapPosition(),
-                original.navigationCenter(), original.influenceRadius(), original.bodies());
+        StarSystemDefinition renamed = new StarSystemDefinition("sysStale", original.nameKey(), original.descriptionKey(), original.starTypeKey(), original.stellarVisual(), original.galaxyMapPosition(), original.navigationCenter(), original.influenceRadius(), original.influenceRadius(), original.bodies());
         ServerUniverseCatalog.setForTesting(UniverseCatalog.of(List.of(renamed)));
 
         ServerUniverseCatalog.initialize(null);
@@ -120,10 +114,7 @@ class ServerUniverseCatalogTest
     void clientAndServerCatalogsAreIndependent()
     {
         StarSystemDefinition original = BuiltInUniverse.systems().get(0);
-        StarSystemDefinition clientOnly = new StarSystemDefinition("sysClientOnly",
-                original.nameKey(), original.descriptionKey(), original.starTypeKey(),
-                original.stellarVisual(), original.galaxyMapPosition(),
-                original.navigationCenter(), original.influenceRadius(), original.bodies());
+        StarSystemDefinition clientOnly = new StarSystemDefinition("sysClientOnly", original.nameKey(), original.descriptionKey(), original.starTypeKey(), original.stellarVisual(), original.galaxyMapPosition(), original.navigationCenter(), original.influenceRadius(), original.influenceRadius(), original.bodies());
 
         ServerUniverseCatalog.clear();
         ClientUniverseCatalog.setForTesting(UniverseCatalog.of(List.of(clientOnly)));

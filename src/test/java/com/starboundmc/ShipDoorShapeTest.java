@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 final class ShipDoorShapeTest {
-    private static final Path BLOCKS = Path.of("src/main/java/com/starboundmc/block/Stage2Blocks.java");
+    private static final Path BLOCKS = Path.of("src/main/java/com/starboundmc/block/GameplayBlocks.java");
     private static final Path REGISTRY = Path.of("src/main/java/com/starboundmc/block/ModBlocks.java");
     private static final Path MODELS = Path.of("src/main/resources/assets/starboundmc/models/block");
 
@@ -28,7 +28,7 @@ final class ShipDoorShapeTest {
         assertTrue(blocks.contains("state.getValue(FACING).getAxis()"));
         assertTrue(blocks.contains("setOpen(level, pos, open)"));
         assertFalse(blocks.contains("ShipDoorBlockEntity::tick"));
-        assertTrue(registry.contains("Stage2Blocks.ShipDoor::new,"));
+        assertTrue(registry.contains("GameplayBlocks.ShipDoor::new,"));
         assertTrue(registry.contains("Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion()"));
     }
 

@@ -16,6 +16,46 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public final class RelayGameTests {
     private static BlockPos site(GameTestHelper h, int offset) { return h.absolutePos(new BlockPos(offset, 150, 80)); }
+    @GameTest(template = "shuttle_test_empty")
+    public static void semanticJournalTransitionsPersistBeforeReturning(GameTestHelper h) throws Exception {
+        var server = h.getLevel().getServer();
+        String name = "starboundmc_relay";
+        var storage = server.overworld().getDataStorage();
+        var previous = RelayData.get(server);
+        var data = new RelayData();
+        storage.set(name, data);
+        try {
+            data.discover("sys1:lush");
+            var snapshot = new CompoundTag(); snapshot.putString("marker", "reserved-structure");
+            data.beginApproach(BlockPos.ZERO, snapshot);
+            for (int i = 0; i < RelayEncounter.APPROACH_TICKS; i++) data.advanceApproach();
+            var path = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/" + name + ".dat");
+            storage.save(); // Queue an older SavedData snapshot before the synchronous journal write.
+            data.beginMaterialization(server);
+            net.neoforged.neoforge.common.IOUtilities.waitUntilIOWorkerComplete();
+            var persisted = net.minecraft.nbt.NbtIo.readCompressed(path, net.minecraft.nbt.NbtAccounter.unlimitedHeap()).getCompound("data");
+            var materializing = RelayData.load(persisted, h.getLevel().registryAccess());
+            h.assertTrue(materializing.phase() == RelayData.Phase.MATERIALIZING && materializing.transaction() == 1,
+                    "Materialization returned before journal persistence");
+            data.finishMaterialization(server);
+            data.beginDeparture(server, snapshot);
+            persisted = net.minecraft.nbt.NbtIo.readCompressed(path, net.minecraft.nbt.NbtAccounter.unlimitedHeap()).getCompound("data");
+            var leaving = RelayData.load(persisted, h.getLevel().registryAccess());
+            h.assertTrue(leaving.phase() == RelayData.Phase.LEAVING && leaving.transaction() == 2,
+                    "Departure returned before journal persistence");
+            data.finishDeparture(server);
+            persisted = net.minecraft.nbt.NbtIo.readCompressed(path, net.minecraft.nbt.NbtAccounter.unlimitedHeap()).getCompound("data");
+            var complete = RelayData.load(persisted, h.getLevel().registryAccess());
+            h.assertTrue(complete.phase() == RelayData.Phase.AVAILABLE && complete.transaction() == 0,
+                    "Journal completion was not persisted");
+        } finally {
+            storage.set(name, previous);
+            storage.save();
+            net.neoforged.neoforge.common.IOUtilities.waitUntilIOWorkerComplete();
+        }
+        h.succeed();
+    }
+
     @GameTest(template = "shuttle_test_empty", timeoutTicks = 200)
     public static void stationPreservesEditsAndConsumedLootAcrossSaveAndRevisit(GameTestHelper h) {
         var origin = site(h, 0); var level = h.getLevel();
@@ -28,11 +68,11 @@ public final class RelayGameTests {
         control.setItem(5, new ItemStack(Items.DIAMOND, 7));
         var edited = origin.offset(10, 6, 6); level.setBlockAndUpdate(edited, Blocks.GOLD_BLOCK.defaultBlockState());
         var snapshot = RelayStructure.capture(level, origin);
-        var saved = new RelayData(); saved.snapshot = snapshot;
+        var saved = new RelayData(); saved.discover("sys1:lush"); saved.beginApproach(origin, snapshot);
         saved = RelayData.load(saved.save(new CompoundTag(), level.registryAccess()), level.registryAccess());
         RelayStructure.clear(level, origin);
         h.assertTrue(level.getEntities(null, RelayGeometry.bounds(origin)).isEmpty(), "Clearing snapshotted barrels duplicated dropped contents");
-        h.assertTrue(RelayStructure.place(level, origin, saved.snapshot), "Revisit failed");
+        h.assertTrue(RelayStructure.place(level, origin, saved.snapshot()), "Revisit failed");
         control = (BarrelBlockEntity) level.getBlockEntity(origin.offset(11, 5, 21));
         supplies = (BarrelBlockEntity) level.getBlockEntity(origin.offset(20, 5, 10));
         h.assertTrue(control.getItem(0).isEmpty() && supplies.getItem(0).isEmpty(), "Revisit replenished taken loot");
@@ -44,9 +84,10 @@ public final class RelayGameTests {
     public static void lateObstacleCancelsMaterializationWithoutReplacingPlayerBlocks(GameTestHelper h) {
         var origin = site(h, 80); var level = h.getLevel(); var obstacle = origin.offset(-2, 6, 5);
         level.setBlockAndUpdate(obstacle, Blocks.DIAMOND_BLOCK.defaultBlockState());
-        var data = new RelayData(); data.origin = origin; data.phase = RelayData.Phase.APPROACHING;
+        var data = new RelayData(); data.discover("sys1:lush");
+        data.beginApproach(origin, RelayStructure.template(level, new CompoundTag()).save(new CompoundTag()));
         RelayEncounter.materialize(level, data);
-        h.assertTrue(data.phase == RelayData.Phase.AVAILABLE, "Late collision did not cancel approach");
+        h.assertTrue(data.phase() == RelayData.Phase.AVAILABLE, "Late collision did not cancel approach");
         h.assertTrue(level.getBlockState(obstacle).is(Blocks.DIAMOND_BLOCK), "Player obstacle overwritten");
         h.assertTrue(level.getBlockState(origin.offset(8, 4, 6)).isAir(), "Partial station created on collision");
         level.removeBlock(obstacle, false); h.succeed();

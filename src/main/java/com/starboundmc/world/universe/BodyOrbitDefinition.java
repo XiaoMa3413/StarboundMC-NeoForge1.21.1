@@ -5,14 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.util.Optional;
 
-/**
- * Where a body sits in its system, matching the legacy {@code PlanetEntry}
- * orbit fields exactly.
- *
- * <p>A body with a {@code parentEntryId} orbits that body instead of the star,
- * and its radius/angle are then relative to the parent. This is how the molten
- * moon and the rocky moon are placed.</p>
- */
+/** Star-map orbit radius/angle relative to the star or the explicitly named parent body. */
 public record BodyOrbitDefinition(int orbitRadius, float orbitAngle, Optional<String> parentEntryId)
 {
     public static final Codec<BodyOrbitDefinition> CODEC =

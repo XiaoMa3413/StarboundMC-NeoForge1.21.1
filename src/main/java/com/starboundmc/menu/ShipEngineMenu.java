@@ -85,7 +85,6 @@ public final class ShipEngineMenu extends AbstractContainerMenu {
                 - player.getServer().overworld().getGameTime(), 0L, ShipStoryService.SUBLIGHT_IGNITION_TICKS));
         Status value;
         if (!player.level().dimension().equals(ShipDimensions.SHIP_LEVEL)) value = Status.DISCONNECTED;
-        else if (!shared.isWritable()) value = Status.INCOMPATIBLE;
         else if (shared.sublightEngine() == EngineState.ONLINE) value = Status.ONLINE;
         else if (shared.sublightEngine() == EngineState.IGNITING) value = Status.IGNITING;
         else if (shared.core() != CoreState.ONLINE || shared.surfaceMission() != SurfaceMissionState.COMPLETE

@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 
-/** Minimal day/night lighting for the shared ship-space planet mesh. */
+/** Surface lighting and material uniforms for the shared isolated planet mesh. */
 final class PlanetSurfaceShader
 {
     static final float CLOUD_SHADOW_STRENGTH = 0.24F;
@@ -34,7 +34,7 @@ final class PlanetSurfaceShader
         }
         catch (IOException | RuntimeException exception)
         {
-            LOGGER.warn("Could not load the ship-space planet surface shader; using the unlit static mesh",
+            LOGGER.warn("Could not load the ship-space planet surface shader; using minimal space rendering",
                     exception);
         }
     }
@@ -82,13 +82,4 @@ final class PlanetSurfaceShader
         }
     }
 
-    static void disableAfterFailure(ShaderInstance failedShader, RuntimeException exception)
-    {
-        if (shader == failedShader)
-        {
-            shader = null;
-            LOGGER.warn("Ship-space planet surface shader failed while drawing; using the unlit static mesh",
-                    exception);
-        }
-    }
 }

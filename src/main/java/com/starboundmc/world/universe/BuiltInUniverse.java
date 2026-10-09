@@ -8,42 +8,19 @@ import com.starboundmc.world.starmap.StarmapBodyVisual;
 import com.starboundmc.world.starmap.StellarDistanceResponse;
 import com.starboundmc.world.starmap.StellarVisualProfile;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 import java.util.Optional;
 
-/**
- * The universe the mod ships with, as plain definitions.
- *
- * <p>Every value here is a transcription of the shipped {@code StarSystems} /
- * {@code ShipSpace} / {@code PlanetRenderer} constants. Nothing is rebalanced,
- * renamed or rounded: the point of the data layer is to give the existing
- * universe a data-shaped home whose contents are provably identical.
- * {@code LegacyUniverseSnapshotTest} pins the legacy side and the equivalence
- * tests compare the two, so a typo here fails the build instead of moving a
- * planet.</p>
- *
- * <p>This is runtime data, not a build artifact. Datagen turns it into the
- * shipped JSON, and the client falls back to it when no server registry has
- * been synced yet — which is why it lives outside {@link UniverseDatagen}.</p>
- *
- * <p>Entry ids keep the legacy {@code system:body} form. The registry key for a
- * system is {@code starboundmc:<systemId>}, but the {@code entry_id} inside a
- * body stays {@code sys1:lush} because that string is already in saves,
- * packets, the star map and tests.</p>
- */
+/** Built-in universe definitions used by datagen and by the client before registry synchronization.
+ * Runtime catalogs replace this baseline with the universe loaded by the server. */
 public final class BuiltInUniverse
 {
     /** The starter system. */
     public static final String MAIN_SYSTEM_ID = "sys1";
     /** The remote red-dwarf system. */
     public static final String COLD_SYSTEM_ID = "sys2";
-    /**
-     * The body the ship starts docked at, and the fallback whenever a location
-     * is missing or unreadable. Named here so client state does not need the
-     * legacy enum just to express "the starting planet".
-     */
+    /** The body used only when creating a new ship or initializing a client session. */
     public static final String STARTER_BODY_ID = "sys1:lush";
 
     /** Galaxy-map authoring canvas the current pixel positions were composed on. */
@@ -70,17 +47,13 @@ public final class BuiltInUniverse
 
     private static StarSystemDefinition mainSystem()
     {
-        StellarVisualProfile star = new StellarVisualProfile(
-                new Vec3(18000.0, 9000.0, -14000.0),
-                0xFFFFF9DD, 0xFFF2D98B, 0xFFFFB84A,
-                new StellarDistanceResponse(24478.0, 11.5F, 0.65F, 2.20F, 1.80F, 1.45F, 0.18F, 0.45F),
-                2.75F, 0.42F, 0.0F, 0.018F, 34, 0);
+        StellarVisualProfile star = new StellarVisualProfile(UniversePosition.of(18000.0, 9000.0, -14000.0), 0xFFFFF9DD, 0xFFF2D98B, 0xFFFFB84A, new StellarDistanceResponse(24478.0, 11.5F, 0.65F, 2.20F, 1.80F, 1.45F, 0.18F, 0.45F), 2.75F, 0.42F, 0.0F, 0.018F, 34, 0);
 
         return new StarSystemDefinition("sys1",
                 "starmap.system.sys1", "starmap.system.sys1.desc", "starmap.type.yellow_dwarf",
                 star,
                 GalaxyMapPosition.fromPixelCenter(62, 84, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
-                UniversePosition.fromLegacy(new Vec3(-1500.0, 102.0, -700.0)),
+                UniversePosition.of(-1500.0, 102.0, -700.0),
                 5500.0,
                 // The star's art-directed fade ends long before the outer berths:
                 // the gas giant parks at ~16000 and its moon at ~16500 from this
@@ -217,19 +190,9 @@ public final class BuiltInUniverse
 
     private static StarSystemDefinition coldSystem()
     {
-        StellarVisualProfile star = new StellarVisualProfile(
-                new Vec3(38400.0, 7000.0, 31550.0),
-                0xFFFFC090, 0xFFCC5A38, 0xFFFF3028,
-                new StellarDistanceResponse(14303.2, 7.5F, 0.60F, 2.40F, 1.60F, 1.45F, 0.15F, 0.38F),
-                3.25F, 0.22F, 0.90F, 0.037F, 18, 44);
+        StellarVisualProfile star = new StellarVisualProfile(UniversePosition.of(38400.0, 7000.0, 31550.0), 0xFFFFC090, 0xFFCC5A38, 0xFFFF3028, new StellarDistanceResponse(14303.2, 7.5F, 0.60F, 2.40F, 1.60F, 1.45F, 0.15F, 0.38F), 3.25F, 0.22F, 0.90F, 0.037F, 18, 44);
 
-        return new StarSystemDefinition("sys2",
-                "starmap.system.sys2", "starmap.system.sys2.desc", "starmap.type.red_dwarf",
-                star,
-                GalaxyMapPosition.fromPixelCenter(208, 152, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT),
-                UniversePosition.fromLegacy(new Vec3(32400.0, 102.0, 20550.0)),
-                4500.0,
-                List.of(
+        return new StarSystemDefinition("sys2", "starmap.system.sys2", "starmap.system.sys2.desc", "starmap.type.red_dwarf", star, GalaxyMapPosition.fromPixelCenter(208, 152, GALAXY_MAP_WIDTH, GALAXY_MAP_HEIGHT), UniversePosition.of(32400.0, 102.0, 20550.0), 4500.0, 4500.0, List.of(
                         body("sys2:frozen",
                                 "starmap.entry.sys2.frozen.name", "planet.starboundmc.frozen",
                                 "starmap.entry.sys2.frozen.desc", 4,
@@ -312,8 +275,8 @@ public final class BuiltInUniverse
                                                               double radius, double yawDock)
     {
         return Optional.of(new BodyNavigationProfile(
-                UniversePosition.fromLegacy(new Vec3(dockX, dockY, dockZ)),
-                UniversePosition.fromLegacy(new Vec3(bodyX, bodyY, bodyZ)),
+                UniversePosition.of(dockX, dockY, dockZ),
+                UniversePosition.of(bodyX, bodyY, bodyZ),
                 radius, yawDock));
     }
 
@@ -388,13 +351,7 @@ public final class BuiltInUniverse
                                                                 String materialMask,
                                                                 String ringTexture)
     {
-        return Optional.of(new BodySpaceVisualProfile(
-                Optional.ofNullable(texture), Optional.ofNullable(materialMask), 0.0F,
-                atmoRed, atmoGreen, atmoBlue, atmoPeak,
-                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
-                specularStrength, roughness, fresnelStrength,
-                Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
-                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F));
+        return Optional.of(new BodySpaceVisualProfile(Optional.ofNullable(texture), Optional.ofNullable(materialMask), 0.0F, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness, fresnelStrength, Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE, BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F, Optional.empty(), BodySpaceVisualProfile.DEFAULT_CLOUD_SHELL_SCALE, BodySpaceVisualProfile.DEFAULT_CLOUD_OPACITY, BodySpaceVisualProfile.DEFAULT_CLOUD_DRIFT_RATE));
     }
 
     /** Variant with a material mask, emissive response and optional ring texture. */
@@ -413,13 +370,7 @@ public final class BuiltInUniverse
                                                                 String materialMask,
                                                                 String ringTexture)
     {
-        return Optional.of(new BodySpaceVisualProfile(
-                Optional.ofNullable(texture), Optional.ofNullable(materialMask), emissiveStrength,
-                atmoRed, atmoGreen, atmoBlue, atmoPeak,
-                tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor,
-                specularStrength, roughness, fresnelStrength,
-                Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE,
-                BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F));
+        return Optional.of(new BodySpaceVisualProfile(Optional.ofNullable(texture), Optional.ofNullable(materialMask), emissiveStrength, atmoRed, atmoGreen, atmoBlue, atmoPeak, tilt, yaw, roll, pointColor, terminatorWidth, spinRate, nightFloor, specularStrength, roughness, fresnelStrength, Optional.ofNullable(ringTexture), BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_SHELL_SCALE, BodySpaceVisualProfile.DEFAULT_ATMOSPHERE_NIGHT_FRACTION, 0.0F, Optional.empty(), BodySpaceVisualProfile.DEFAULT_CLOUD_SHELL_SCALE, BodySpaceVisualProfile.DEFAULT_CLOUD_OPACITY, BodySpaceVisualProfile.DEFAULT_CLOUD_DRIFT_RATE));
     }
 
     private static Optional<BodySurfaceDefinition> surface(String dimension,

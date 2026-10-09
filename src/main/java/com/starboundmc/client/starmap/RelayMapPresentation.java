@@ -20,16 +20,15 @@ final class RelayMapPresentation {
         return new float[]{hostX + separation * .8f, hostY - separation * .6f};
     }
 
-    static boolean canAct(int phase, int outsideCrew, boolean warping, boolean sublight,
+    static boolean canAct(RelayData.Phase phase, int outsideCrew, boolean warping, boolean sublight,
                           boolean hyperdrive, boolean sameSystem, int fuel, int cost) {
         if (outsideCrew > 0 || warping) return false;
-        if (phase == RelayData.Phase.ACTIVE.ordinal()) return true;
-        return phase == RelayData.Phase.AVAILABLE.ordinal() && sublight
+        if (phase == RelayData.Phase.ACTIVE) return true;
+        return phase == RelayData.Phase.AVAILABLE && sublight
                 && (sameSystem || hyperdrive) && fuel >= cost;
     }
 
-    static String phaseKey(int phase) {
-        return phase >= 0 && phase < RelayData.Phase.values().length
-                ? RelayData.Phase.values()[phase].name().toLowerCase(Locale.ROOT) : "error";
+    static String phaseKey(RelayData.Phase phase) {
+        return phase.name().toLowerCase(Locale.ROOT);
     }
 }

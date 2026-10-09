@@ -11,7 +11,7 @@ import net.minecraft.world.phys.Vec3;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SyncFlightPacketTest
 {
@@ -19,6 +19,25 @@ class SyncFlightPacketTest
     void resetClientConnectionState()
     {
         ClientPlanetState.resetConnectionState();
+    }
+
+    @Test
+    void stablePhaseIdsAndUnknownWireValuesAreStrict() {
+        var phases = java.util.List.of(FlightPhase.DOCKED, FlightPhase.TURN, FlightPhase.ACCELERATE,
+                FlightPhase.HYPERSPACE, FlightPhase.CRUISE, FlightPhase.DECELERATE, FlightPhase.ARRIVE);
+        for (int id = 0; id < phases.size(); id++) {
+            assertEquals(id, phases.get(id).networkId());
+            assertEquals(phases.get(id), FlightPhase.byNetworkId(id));
+        }
+        assertThrows(IllegalArgumentException.class, () -> FlightPhase.byNetworkId(-1));
+        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            var valid = new SyncFlightPacket(1, 2, FlightPhase.DOCKED, UniversePosition.of(0, 0, 0),
+                    new UniverseDelta(0, 0, 0), 0, 0, 0, 0, 0, null);
+            SyncFlightPacket.STREAM_CODEC.encode(buffer, valid);
+            buffer.setByte(2, 99);
+            assertThrows(IllegalArgumentException.class, () -> SyncFlightPacket.STREAM_CODEC.decode(buffer));
+        } finally { buffer.release(); }
     }
 
     @Test
@@ -45,16 +64,16 @@ class SyncFlightPacketTest
     }
 
     @Test
-    void sectorZeroSnapshotKeepsExistingClientVec3Position()
+    void dockedSnapshotKeepsCanonicalPositionAndDerivesFrameView()
     {
         Vec3 expected = new Vec3(1234.5, 102.0, -678.25);
-        UniversePosition position = UniversePosition.fromLegacy(expected);
+        UniversePosition position = UniversePosition.of(expected.x, expected.y, expected.z);
 
         ClientPlanetState.applyFlightSnapshot(Long.MAX_VALUE, 0L, FlightPhase.DOCKED,
                 position, new UniverseDelta(1.0, 2.0, 3.0),
                 0.0F, 0.0F, 0.0F, 0, 1, null);
 
-        assertEquals(expected, ClientPlanetState.getShipPosition());
+        assertEquals(expected, ClientPlanetState.captureVisualSnapshot().position());
         assertEquals(position, ClientPlanetState.getShipUniversePosition());
     }
 

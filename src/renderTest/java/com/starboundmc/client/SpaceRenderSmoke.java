@@ -1,7 +1,7 @@
 package com.starboundmc.client;
 
 import com.starboundmc.StarboundMC;
-import com.starboundmc.client.space.FreeFlightPoseProvider;
+import com.starboundmc.client.space.ShipPoseProvider;
 import com.starboundmc.client.space.SpaceRenderState;
 import com.starboundmc.client.space.BackgroundStarCatalog;
 import com.starboundmc.space.UniverseDelta;
@@ -55,6 +55,31 @@ public final class SpaceRenderSmoke {
     private static float fixtureYaw, fixturePitch;
     private static CompletableFuture<?> setup;
     private static CompletableFuture<Void> reload;
+    private static String beforePass;
+    private static float beforeDepth;
+    private static long verifiedPasses, verifiedMinimalPasses;
+    private static boolean injectedFailure;
+
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
+    public static void beforeSpacePass(net.neoforged.neoforge.client.event.RenderLevelStageEvent event) {
+        var mc = Minecraft.getInstance();
+        if (!Boolean.getBoolean("starboundmc.debug.spaceSmoke") || mc.level == null
+                || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)
+                || event.getStage() != net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage.AFTER_SKY) return;
+        beforePass = SpaceDepthSmoke.stateSignature();
+        beforeDepth = SpaceDepthSmoke.readDepth();
+    }
+
+    @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.LOWEST)
+    public static void afterSpacePass(net.neoforged.neoforge.client.event.RenderLevelStageEvent event) {
+        if (beforePass == null || event.getStage() != net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage.AFTER_SKY) return;
+        if (!beforePass.equals(SpaceDepthSmoke.stateSignature()) || beforeDepth != SpaceDepthSmoke.readDepth())
+            throw new IllegalStateException("Production space event modified caller state/world depth");
+        beforePass = null;
+        verifiedPasses++;
+        if (Boolean.getBoolean("starboundmc.debug.spaceMinimal") || injectedFailure && reload == null)
+            verifiedMinimalPasses++;
+    }
 
     @SubscribeEvent
     public static void frame(RenderFrameEvent.Post event) throws Exception {
@@ -76,12 +101,6 @@ public final class SpaceRenderSmoke {
                     System.getProperty("starboundmc.debug.spaceSmokeQuality", "custom").toUpperCase(java.util.Locale.ROOT)));
             StarfieldClientConfig.SPACE_STARFIELD_BACKEND.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView")
                     ? StarfieldClientConfig.StarfieldBackend.STELLAR_VIEW : StarfieldClientConfig.StarfieldBackend.NATIVE);
-            StarfieldClientConfig.SPACE_PIPELINE_MODE.set(
-                    "direct".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokePipeline"))
-                    ? StarfieldClientConfig.PipelineMode.DIRECT : StarfieldClientConfig.PipelineMode.ISOLATED);
-            StarfieldClientConfig.SPACE_BACKGROUND_MODE.set(
-                    "legacy".equalsIgnoreCase(System.getProperty("starboundmc.debug.spaceSmokeBackground"))
-                    ? StarfieldClientConfig.BackgroundMode.LEGACY : StarfieldClientConfig.BackgroundMode.PROCEDURAL);
             String name = "space-fixture-" + System.currentTimeMillis();
             mc.createWorldOpenFlows().createFreshLevel(name,
                     new LevelSettings(name, GameType.CREATIVE, false, Difficulty.PEACEFUL,
@@ -115,7 +134,13 @@ public final class SpaceRenderSmoke {
             if (!reload.isDone()) return;
             reload.join();
         }
-        if (stageStart == 0) selectView(mc);
+        if (stageStart == 0) {
+            if ("@failure".equals(BODIES[stage])) {
+                SpaceSceneTarget.disableAfterFailure(new IllegalStateException("Injected smoke capability failure"));
+                injectedFailure = true;
+            }
+            selectView(mc);
+        }
         // Initial server teleport packets can otherwise overwrite the first
         // camera pose after selectView, producing a mislabeled reference image.
         mc.player.setYRot(fixtureYaw);
@@ -150,12 +175,26 @@ public final class SpaceRenderSmoke {
                 + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
                 + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
                 + SpaceRenderProfiler.report());
+        if ("@failure".equals(BODIES[stage]) && (SpaceSceneTarget.begin() || verifiedMinimalPasses == 0))
+            throw new IllegalStateException("Failure did not activate verified minimal rendering");
+        if (("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage]))
+                && !Boolean.getBoolean("starboundmc.debug.spaceMinimal")) {
+            var state = SpaceRenderPassState.capture();
+            try {
+                if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Resource reload did not recover the isolated target");
+                SpaceSceneTarget.finish();
+            } finally { state.restore(); }
+        }
         if (++stage == BODIES.length) {
             mc.options.keyUse.setDown(false);
             if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             SpaceRenderState.resetPoseProvider();
             if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
+            if (verifiedPasses == 0 || Boolean.getBoolean("starboundmc.debug.spaceMinimal") && verifiedMinimalPasses == 0)
+                throw new IllegalStateException("No production render passes were verified");
+            Files.writeString(output.resolve("pass-checks.txt"), "Production event state and world depth preserved: "
+                    + verifiedPasses + " frames; minimal=" + verifiedMinimalPasses + "\n");
             Files.writeString(output.resolve("complete.txt"), "Completed " + BODIES.length + " fixed space views.\n");
             finished = true;
             mc.stop();
@@ -294,11 +333,17 @@ public final class SpaceRenderSmoke {
     }
 
     private record FixturePose(UniversePosition universePosition, String currentBodyId, String hint)
-            implements FreeFlightPoseProvider {
+            implements ShipPoseProvider {
         public UniverseDelta universeVelocity() { return new UniverseDelta(0, 0, 0); }
         public double yaw() { return 0; }
         public double pitch() { return 0; }
         public double roll() { return 0; }
+        public com.starboundmc.warp.FlightPhase flightPhase() { return com.starboundmc.warp.FlightPhase.DOCKED; }
+        public boolean isWarping() { return false; }
+        public float warpProgress() { return 0; }
+        public int warpDurationTicks() { return 1; }
+        public String targetBodyId() { return null; }
+        public String targetSystemHint() { return null; }
         public String currentSystemHint() {
             return hint != null ? hint : currentBodyId == null ? null : StarmapUniverse.systemIdOfEntry(currentBodyId);
         }

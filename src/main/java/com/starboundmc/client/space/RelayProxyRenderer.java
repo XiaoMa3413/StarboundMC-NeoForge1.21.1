@@ -25,8 +25,8 @@ public final class RelayProxyRenderer {
         var mc = Minecraft.getInstance(); var state = RelayClientState.snapshot;
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_ENTITIES || mc.level == null
                 || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL) || state == null
-                || !(state.phase() == RelayData.Phase.APPROACHING.ordinal()
-                || state.phase() == RelayData.Phase.ACTIVE.ordinal())) {
+                || !(state.phase() == RelayData.Phase.APPROACHING
+                || state.phase() == RelayData.Phase.ACTIVE)) {
             if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) reset();
             return;
         }
@@ -37,7 +37,7 @@ public final class RelayProxyRenderer {
         }
         double elapsed = Double.isFinite(lastFrame) ? Math.clamp(now - lastFrame, 0, 2) : 0;
         lastFrame = now;
-        boolean active = state.phase() == RelayData.Phase.ACTIVE.ordinal();
+        boolean active = state.phase() == RelayData.Phase.ACTIVE;
         boolean blocksReady = active && footprintLoaded(mc.level, state.origin());
         localReadyTicks = blocksReady ? localReadyTicks + elapsed : 0;
         proxyAlpha = RelayProxyView.advanceAlpha(proxyAlpha,

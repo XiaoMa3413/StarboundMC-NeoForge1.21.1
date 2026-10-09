@@ -95,7 +95,7 @@ public final class TransporterRenderSmoke {
                 }
                 if (stage == 9) open(player,level,TARGET.above());
                 if (stage == 11) { player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(ModBlocks.TELEPORTER.get()));player.inventoryMenu.broadcastChanges(); }
-                if (stage == 12) { check(Stage6TravelService.teleportToShip(player),"Surface fixture ship travel");open(player,level,ShipStructure.SHIP_TELEPORTER_POS); }
+                if (stage == 12) { check(ShipTravelService.teleportToShip(player),"Surface fixture ship travel");open(player,level,ShipStructure.SHIP_TELEPORTER_POS); }
             });
             camera=null;return;
         }

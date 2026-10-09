@@ -3,13 +3,7 @@ package com.starboundmc.world.universe;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.data.worldgen.BootstrapContext;
 
-/**
- * Datagen for the built-in universe (migration step A2).
- *
- * <p>This class only turns {@link BuiltInUniverse} into datapack JSON. The data
- * itself lives in {@code BuiltInUniverse} because it is runtime data too: the
- * client falls back to it before a server registry has been synced.</p>
- */
+/** Generates the shipped datapack universe from the built-in definitions. */
 public final class UniverseDatagen
 {
     public static final RegistrySetBuilder BUILDER = applyTo(new RegistrySetBuilder());

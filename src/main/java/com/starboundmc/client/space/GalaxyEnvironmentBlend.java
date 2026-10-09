@@ -100,7 +100,7 @@ public final class GalaxyEnvironmentBlend
      *
      * <p>Matching on the system id rather than object identity lets a caller that
      * holds a {@link StarSystemDefinition} read the same blend the flight
-     * resolver produced, without the UI having to reach for the legacy registry
+     * resolver produced, without the UI querying a second universe source
      * just to find the matching instance.</p>
      */
     public float influence(StarSystemDefinition system)

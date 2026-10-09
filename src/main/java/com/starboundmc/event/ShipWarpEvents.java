@@ -2,7 +2,7 @@ package com.starboundmc.event;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.warp.ShipWarpManager;
-import com.starboundmc.world.Stage6TravelService;
+import com.starboundmc.world.ShipTravelService;
 import com.starboundmc.world.universe.ServerUniverseCatalog;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -44,7 +44,7 @@ public class ShipWarpEvents
     public static void onChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event)
     {
         if (event.getEntity() instanceof ServerPlayer player
-                && Stage6TravelService.SHIP_LEVEL.equals(event.getTo()))
+                && ShipTravelService.SHIP_LEVEL.equals(event.getTo()))
         {
             ShipWarpManager.syncToPlayer(player);
         }

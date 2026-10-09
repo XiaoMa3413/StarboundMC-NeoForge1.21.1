@@ -18,7 +18,6 @@ import com.starboundmc.client.space.CelestialTransparencyOrder;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
 import com.starboundmc.client.space.StarSystemResolver;
-import com.starboundmc.client.space.StellarLod;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.warp.ShipFlightController;
 import com.starboundmc.warp.UniverseNavigation;
@@ -35,7 +34,6 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-
 
 /**
  * Draws visible planets and moons in the ship's sky frame.
@@ -57,7 +55,7 @@ public class PlanetRenderer
     private static float[] frameDetails = new float[0];
     private static int[] transparentOrder = new int[0];
     private static double[] transparentKeys = new double[0];
-    private enum BodyPass { ALL, OPAQUE, TRANSPARENT }
+    private enum BodyPass { OPAQUE, TRANSPARENT }
     /**
      * Distance-driven body quality with a temporal blend to avoid popping.
      *
@@ -92,7 +90,6 @@ public class PlanetRenderer
     private static float moonSurfaceSunY = Float.NaN;
     private static float moonSurfaceSunZ = Float.NaN;
 
-
     /**
      * Rebuilds the draw arrays when the active universe changes.
      *
@@ -120,30 +117,18 @@ public class PlanetRenderer
         drawOrderCatalog = catalog;
     }
 
-    /**
-     * The cockpit-window visual for a body, or a neutral default.
-     *
-     * <p>Falls back rather than throwing: the renderer is called from the frame
-     * loop, and a body with no authored visual should draw plainly, not crash the
-     * client. The default is only reachable for a body whose definition omits the
-     * optional profile.</p>
-     */
+    /** Catalog-selected bodies always have an authored space visual. */
     private static BodySpaceVisualProfile visual(CelestialBodyDefinition body)
     {
-        return body.spaceVisual().orElse(FALLBACK_VISUAL);
+        return body.spaceVisual().orElseThrow(() -> new IllegalStateException(
+                "Rendered body has no space visual: " + body.entryId()));
     }
-
-    private static final BodySpaceVisualProfile FALLBACK_VISUAL = new BodySpaceVisualProfile(
-            java.util.Optional.empty(), 0.0F, 0.0F, 0.0F, 0.0F,
-            0.0F, 0.0F, 0.0F, 0xFFFFFFFF, 0.20F, 0.00375F, 0.10F,
-            0.0F, 1.0F, 0.0F,
-            java.util.Optional.empty());
 
     /**
      * The texture for a body's sphere.
      *
      * <p>Every body the renderer draws authors its own texture, so there is no
-     * fallback to the legacy per-planet naming. A body that somehow lacks one
+     * per-body naming fallback. A profile without a texture
      * draws as a visible missing-texture marker rather than silently borrowing
      * another body's art.</p>
      */
@@ -291,7 +276,7 @@ public class PlanetRenderer
             frameDetails[bodyIndex] = detail;
             if (detail > 0.001F)
                 renderVirtualPlanet(pose, camera, body, space, coordinateFrame, 1.0F, detail,
-                        SpaceSceneTarget.active() ? BodyPass.OPAQUE : BodyPass.ALL);
+                        BodyPass.OPAQUE);
         }
     }
 
@@ -329,7 +314,7 @@ public class PlanetRenderer
         for (int i = 0; i < stars.count(); i++)
         {
             StarSystemResolver.VisibleStar star = stars.star(i);
-            // The resolver still reports the legacy system type; compare by id so
+            // Compare owning systems by ID so
             // the two representations of "the same system" agree.
             if (star.system() != null && star.system().systemId().equals(system.systemId()))
                 return star.alpha();
@@ -387,9 +372,6 @@ public class PlanetRenderer
                     cx, cy, cz, (float)space.yaw(), (float)space.pitch(), space.animationTicks(), atmosphere);
             return;
         }
-        if (pass == BodyPass.ALL && atmosphere)
-            renderAtmosphereGlow(pose, body, bodyScale, alpha * fullWeight,
-                    cx, cy, cz, (float) space.yaw(), (float) space.pitch(), space.animationTicks());
         if (reducedWeight + fullWeight > 0.002F)
             renderPlanet(pose, camera, body, bodyScale, alpha * (reducedWeight + fullWeight),
                     alpha * fullWeight,
@@ -521,13 +503,13 @@ public class PlanetRenderer
             RenderSystem.enableBlend();
             RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE);
             RenderSystem.disableCull();
-            if (SpaceSceneTarget.active()) RenderSystem.enableDepthTest(); else RenderSystem.disableDepthTest();
+            RenderSystem.enableDepthTest();
             RenderSystem.depthMask(false);
-            if (SpaceSceneTarget.active()) {
+            {
                 var shader = SpaceRingShader.point();
                 RenderSystem.setShader(() -> shader);
                 SpaceSceneTarget.configure(shader);
-            } else RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            }
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             Matrix4f matrix = pose.last().pose();
@@ -559,30 +541,8 @@ public class PlanetRenderer
                                      float alpha, float fullAlpha, float cx, float cy, float cz,
                                      float shipYaw, float shipPitch, float animationTicks, BodyPass pass)
     {
-        // Safe local projection keeps float coordinates small. The isolated path reconstructs
-        // universe distance per fragment. Native transparent layers have a separate ordered submission.
-        BodySpaceVisualProfile profile = visual(body);
-        if (RingRenderer.hasRings(profile) && !SpaceSceneTarget.active())
-            RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
-                    shipYaw, shipPitch, alpha, false, fixedSunDirection(body), 0F);
-        if (pass != BodyPass.TRANSPARENT)
-            drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
-                    fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
-        if (pass == BodyPass.OPAQUE) return;
-        if (profile.hasClouds() && StarfieldClientConfig.cloudsEnabled() && fullAlpha > 0.002F)
-        {
-            float bodySpin = animationTicks * profile.spinRate();
-            float cloudSpin = bodySpin + animationTicks * profile.cloudDriftRate();
-            Matrix4f cloudModel = shipSpacePlanetModel(pose.last().pose(), body, cx, cy, cz, scale,
-                    shipYaw, shipPitch, cloudSpin).scale(profile.cloudShellScale());
-            Vector3f cloudSun = PlanetSurfaceLighting.toMeshSpaceSun(fixedSunDirection(body), cloudSpin,
-                    profile.orientationTilt(), profile.orientationYaw());
-            CloudShellRenderer.render(cloudModel, profile.cloudTexture().orElseThrow(), cloudSun,
-                    profile.cloudOpacity(), fullAlpha, profile);
-        }
-        if (RingRenderer.hasRings(profile))
-            RingRenderer.drawPlanetRings(pose, profile, cx, cy, cz, scale,
-                    shipYaw, shipPitch, alpha, true, fixedSunDirection(body), 0F);
+        drawOrientedPlanetSphere(pose.last().pose(), body, cx, cy, cz, scale,
+                fixedSunDirection(body), 1.0F, alpha, fullAlpha, shipYaw, shipPitch, animationTicks);
     }
 
     /** Draws a planet with a fixed body-space orientation, transformed by the ship view. */
@@ -613,7 +573,7 @@ public class PlanetRenderer
             RenderSystem.defaultBlendFunc();
             RenderSystem.enableDepthTest();
             RenderSystem.enableCull();
-            RenderSystem.depthMask(SpaceSceneTarget.active());
+            RenderSystem.depthMask(true);
             RenderSystem.setShaderTexture(0, diffuseTexture);
             // Bind a valid texture even for profiles without a mask; the shader's
             // MaterialMaskEnabled uniform controls whether this sampler is read.
@@ -628,8 +588,7 @@ public class PlanetRenderer
             Vector3f meshSpaceSun = PlanetSurfaceLighting.toMeshSpaceSun(worldSun, spinDegrees,
                     profile.orientationTilt(), profile.orientationYaw());
             VertexBuffer surface = getPlanetSurfaceBuffer();
-            ShaderInstance surfaceShader = PlanetSurfaceShader.current();
-            if (surfaceShader != null)
+            ShaderInstance surfaceShader = java.util.Objects.requireNonNull(PlanetSurfaceShader.current(), "Planet surface shader");
             {
                 if (cloudShadowEnabled)
                     RenderSystem.setShaderTexture(2, cloudTexture);
@@ -653,29 +612,10 @@ public class PlanetRenderer
                         surfaceToCloudRotation);
                 RingRenderer.configureShadow(surfaceShader,profile,spinDegrees,alpha);
             }
-            else
-            {
-                RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
-            }
             surface.bind();
             try
             {
-                try
-                {
-                    surface.drawWithShader(model, RenderSystem.getProjectionMatrix(),
-                            surfaceShader == null ? RenderSystem.getShader() : surfaceShader);
-                }
-                catch (RuntimeException shaderFailure)
-                {
-                    if (surfaceShader == null)
-                        throw shaderFailure;
-
-                    PlanetSurfaceShader.disableAfterFailure(surfaceShader, shaderFailure);
-                    RenderSystem.setShader(GameRenderer::getPositionTexShader);
-                    RenderSystem.setShaderColor(brightness, brightness, brightness, alpha);
-                    surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), RenderSystem.getShader());
-                }
+                surface.drawWithShader(model, RenderSystem.getProjectionMatrix(), surfaceShader);
             }
             finally
             {
@@ -694,14 +634,7 @@ public class PlanetRenderer
 
     private static ResourceLocation parseCloudTexture(BodySpaceVisualProfile profile)
     {
-        try
-        {
-            return ResourceLocation.parse(profile.cloudTexture().orElseThrow());
-        }
-        catch (RuntimeException invalidTexture)
-        {
-            return null;
-        }
+        return ResourceLocation.parse(profile.cloudTexture().orElseThrow());
     }
 
     private static VertexBuffer getPlanetSurfaceBuffer()

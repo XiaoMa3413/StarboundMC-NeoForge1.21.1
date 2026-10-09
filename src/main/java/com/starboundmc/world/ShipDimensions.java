@@ -105,7 +105,7 @@ public class ShipDimensions
 
     public static void teleportToShip(ServerPlayer player)
     {
-        Stage6TravelService.teleportToShip(player);
+        ShipTravelService.teleportToShip(player);
     }
 
     /** Destination for the teleporter UI's "ship" entry: on top of the ship's teleporter. */
@@ -123,6 +123,6 @@ public class ShipDimensions
      */
     public static void teleportToPlanetSurface(ServerPlayer player)
     {
-        Stage6TravelService.teleportToPlanetSurface(player);
+        ShipTravelService.teleportToPlanetSurface(player);
     }
 }

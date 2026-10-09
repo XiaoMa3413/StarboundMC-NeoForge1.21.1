@@ -16,8 +16,7 @@ base {
     archivesName = mod_id
 }
 
-// Stages 1-8 compile the migrated registry, gameplay, warp and worldgen
-// layers. Stage 9 adds client rendering in independently verified slices.
+// Production sources; runtime test fixtures are included only by explicit opt-in below.
 sourceSets {
     main {
         java {
@@ -68,7 +67,7 @@ sourceSets {
             include 'com/starboundmc/block/CaptainChairBlock.java'
             include 'com/starboundmc/block/ShipEngineBlock.java'
             include 'com/starboundmc/block/ShipEngineUnitBlock.java'
-            include 'com/starboundmc/block/Stage2Blocks.java'
+            include 'com/starboundmc/block/GameplayBlocks.java'
             include 'com/starboundmc/block/TransporterBlock.java'
             include 'com/starboundmc/block/StarmapTerminalBlock.java'
             include 'com/starboundmc/block/ShipAiTerminalBlock.java'
@@ -87,8 +86,7 @@ sourceSets {
             include 'com/starboundmc/menu/UpgradeMenu.java'
             include 'com/starboundmc/menu/FuelControllerMenu.java'
             include 'com/starboundmc/menu/AlloyFurnaceMenu.java'
-            include 'com/starboundmc/client/Stage2ClientRegistrar.java'
-            include 'com/starboundmc/client/Stage2MenuScreen.java'
+            include 'com/starboundmc/client/ClientRegistrar.java'
             include 'com/starboundmc/client/SeatRenderer.java'
             include 'com/starboundmc/client/ClientTeleporterState.java'
             include 'com/starboundmc/client/UpgradeScreen.java'
@@ -101,8 +99,6 @@ sourceSets {
             include 'com/starboundmc/client/ClientConnectionEvents.java'
             include 'com/starboundmc/client/ShipDimensionEffects.java'
             include 'com/starboundmc/client/FrozenDimensionEffects.java'
-            include 'com/starboundmc/client/PixelButton.java'
-            include 'com/starboundmc/client/UiStyle.java'
             include 'com/starboundmc/client/StarmapVisualTheme.java'
             include 'com/starboundmc/client/StarmapViewport.java'
             include 'com/starboundmc/client/StarmapUiDensity.java'
@@ -166,7 +162,7 @@ sourceSets {
             include 'com/starboundmc/world/FrozenPlanet.java'
             include 'com/starboundmc/world/MoltenPlanet.java'
             include 'com/starboundmc/world/TeleporterManager.java'
-            include 'com/starboundmc/world/Stage6TravelService.java'
+            include 'com/starboundmc/world/ShipTravelService.java'
             include 'com/starboundmc/world/starmap/*.java'
             include 'com/starboundmc/world/universe/*.java'
             include 'com/starboundmc/world/*.java'
@@ -272,11 +268,8 @@ neoForge {
                     systemProperty 'starboundmc.debug.spaceSmokeViews', project.property('spaceSmokeViews').toString()
                 }
                 systemProperty 'starboundmc.debug.spaceSmokeHidden', 'true'
-                systemProperty 'starboundmc.debug.spaceSmokeBackground',
-                        (project.findProperty('spaceSmokeBackground') ?: 'procedural').toString()
                 systemProperty 'starboundmc.debug.spaceTimeTicks', '600'
-                systemProperty 'starboundmc.debug.spaceSmokePipeline',
-                        (project.findProperty('spaceSmokePipeline') ?: 'isolated').toString()
+                systemProperty 'starboundmc.debug.spaceMinimal', project.hasProperty('spaceSmokeMinimal').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeStellarView',
                         (project.findProperty('spaceSmokeStellarView') ?: 'false').toString()
                 systemProperty 'starboundmc.debug.spaceSmokeQuality',

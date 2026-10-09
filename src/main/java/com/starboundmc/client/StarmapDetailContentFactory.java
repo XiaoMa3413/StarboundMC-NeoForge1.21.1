@@ -26,7 +26,7 @@ public final class StarmapDetailContentFactory
     {
         if (system == null)
             return SELECTION_HINT;
-        String currentEntryId = ClientPlanetState.getCurrentEntryId();
+        String currentEntryId = ClientPlanetState.getCurrent();
         boolean dockedHere = containsEntry(system, currentEntryId);
         if (matches(Kind.GALAXY, system, currentEntryId, dockedHere))
             return cachedContent;
@@ -47,7 +47,7 @@ public final class StarmapDetailContentFactory
     {
         if (entry == null)
             return SELECTION_HINT;
-        String currentEntryId = ClientPlanetState.getCurrentEntryId();
+        String currentEntryId = ClientPlanetState.getCurrent();
         boolean visited = ClientPlanetState.isVisited(entry.entryId());
         if (matches(Kind.ENTRY, entry, currentEntryId, visited))
             return cachedContent;
@@ -125,7 +125,7 @@ public final class StarmapDetailContentFactory
 
         if (entry.isNavigable())
         {
-            boolean crossSystem = fuelCost >= ShipWarpManager.CROSS_SYSTEM_FUEL_COST;
+            boolean crossSystem = fuelCost >= com.starboundmc.warp.ShipFuelService.CROSS_SYSTEM_FUEL_COST;
             sections.add(StarmapDetailSection.labeled("navigation",
                     Component.translatable("gui.starboundmc.starmap.detail.navigation"),
                     StarmapDetailLine.of(Component.translatable(

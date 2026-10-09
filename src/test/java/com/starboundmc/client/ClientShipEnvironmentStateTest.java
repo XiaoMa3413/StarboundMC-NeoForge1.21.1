@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ClientShipEnvironmentStateTest
 {
@@ -36,10 +37,10 @@ class ClientShipEnvironmentStateTest
     {
         ClientShipEnvironmentState.beginContainer(7);
         ClientShipEnvironmentState.apply(7, new ShipEnvironmentSnapshotPacket(
-                7, 1, 8L, CoreState.REBOOTING,
+                7, SharedShipProgress.CURRENT_SCHEMA_VERSION, 8L, CoreState.REBOOTING,
                 EngineState.DAMAGED, EngineState.DAMAGED, 40));
         ClientShipEnvironmentState.apply(7, new ShipEnvironmentSnapshotPacket(
-                7, 1, 8L, CoreState.REBOOTING,
+                7, SharedShipProgress.CURRENT_SCHEMA_VERSION, 8L, CoreState.REBOOTING,
                 EngineState.DAMAGED, EngineState.DAMAGED, 12));
 
         assertTrue(ClientShipEnvironmentState.isLocked(7));
@@ -66,18 +67,18 @@ class ClientShipEnvironmentStateTest
     }
 
     @Test
-    void aFutureSchemaRemainsLockedEvenIfAnOlderSnapshotArrivesLater()
+    void decoderRejectsOldAndFutureSchemas()
     {
-        ClientShipEnvironmentState.beginContainer(15);
-        ClientShipEnvironmentState.apply(15, new ShipEnvironmentSnapshotPacket(
-                15, SharedShipProgress.CURRENT_SCHEMA_VERSION + 1, 20L,
-                CoreState.ONLINE, EngineState.ONLINE, EngineState.ONLINE, 0));
-
-        assertTrue(ClientShipEnvironmentState.isLocked(15));
-        assertFalse(ClientShipEnvironmentState.hasSupportedSnapshot(15));
-
-        ClientShipEnvironmentState.apply(15, online(15, 21L, 0));
-        assertTrue(ClientShipEnvironmentState.isLocked(15));
+        for (int version : new int[]{SharedShipProgress.CURRENT_SCHEMA_VERSION - 1, SharedShipProgress.CURRENT_SCHEMA_VERSION + 1}) {
+            var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+            try {
+                ShipEnvironmentSnapshotPacket.STREAM_CODEC.encode(buffer, online(15, 20L, 0));
+                buffer.readVarInt(); // container
+                buffer.setByte(buffer.readerIndex(), version);
+                buffer.readerIndex(0);
+                assertThrows(IllegalArgumentException.class, () -> ShipEnvironmentSnapshotPacket.STREAM_CODEC.decode(buffer));
+            } finally { buffer.release(); }
+        }
     }
 
     @Test
@@ -85,7 +86,7 @@ class ClientShipEnvironmentStateTest
     {
         ClientShipEnvironmentState.beginContainer(18);
         ClientShipEnvironmentState.apply(18, new ShipEnvironmentSnapshotPacket(
-                18, 1, 3L, CoreState.ONLINE,
+                18, SharedShipProgress.CURRENT_SCHEMA_VERSION, 3L, CoreState.ONLINE,
                 EngineState.ONLINE, EngineState.DAMAGED, 0));
 
         assertFalse(ClientShipEnvironmentState.isLocked(18));
@@ -98,7 +99,7 @@ class ClientShipEnvironmentStateTest
     private static ShipEnvironmentSnapshotPacket online(int containerId, long revision,
                                                          int rebootTicks)
     {
-        return new ShipEnvironmentSnapshotPacket(containerId, 1, revision, CoreState.ONLINE,
+        return new ShipEnvironmentSnapshotPacket(containerId, SharedShipProgress.CURRENT_SCHEMA_VERSION, revision, CoreState.ONLINE,
                 EngineState.ONLINE, EngineState.ONLINE, rebootTicks);
     }
 }

@@ -1,6 +1,7 @@
 package com.starboundmc.warp;
 
 import com.starboundmc.space.UniverseDelta;
+import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.world.universe.BodyNavigationProfile;
 import com.starboundmc.world.universe.BodyOrbitDefinition;
@@ -74,8 +75,7 @@ class StrandedAtUnknownBodyTest
     @Test
     void theDockDecisionKeepsTheLastPoseWhenStranded()
     {
-        UniversePosition stored = UniversePosition.fromLegacy(
-                new net.minecraft.world.phys.Vec3(-15781.273564177154, 89.0, -7464.854196469775));
+        UniversePosition stored = UniversePosition.of(-15781.273564177154, 89.0, -7464.854196469775);
 
         UniversePosition position = ShipWarpManager.dockPositionFor(UNKNOWN, true, stored);
         assertEquals(stored, position,
@@ -118,35 +118,22 @@ class StrandedAtUnknownBodyTest
                 () -> UniverseNavigation.universeBodyPosition(UNKNOWN));
         assertThrows(IllegalArgumentException.class,
                 () -> UniverseNavigation.radius(UNKNOWN));
-        // yawDock is deliberately lenient; the guard covers it anyway so a stranded
-        // ship reports its stored heading rather than a fabricated zero.
-        assertTrue(Double.isFinite(UniverseNavigation.yawDock(UNKNOWN)));
+        assertThrows(IllegalArgumentException.class, () -> UniverseNavigation.yawDock(UNKNOWN));
     }
 
     // --------------------------------------------------------- the save itself
 
     /**
-     * The exact save shape that crashed: schema 2, an unresolvable current entry,
+     * Current canonical save with an unresolvable datapack current entry,
      * and a stored pose.
      */
     private static CompoundTag strandedSave()
     {
-        CompoundTag tag = new CompoundTag();
-        tag.putInt("SchemaVersion", ShipStateData.SCHEMA_VERSION);
-        tag.putString("CurrentEntry", UNKNOWN);
-        tag.putString("Planet", "");
-        tag.putInt("Fuel", 980);
-        // The sector keys are part of the position contract: without them the loader
-        // falls back to the legacy absolute fields, and without those to a default
-        // dock. The crashing save carried all of them.
-        tag.putLong("ShipSectorX", 0L);
-        tag.putLong("ShipSectorY", 0L);
-        tag.putLong("ShipSectorZ", 0L);
-        tag.putDouble("ShipLocalX", -15781.273564177154);
-        tag.putDouble("ShipLocalY", 89.0);
-        tag.putDouble("ShipLocalZ", -7464.854196469775);
-        tag.putDouble("ShipYaw", 306.0);
-        tag.put("Visited", new net.minecraft.nbt.ListTag());
+        var data = new ShipStateData();
+        data.setCurrentEntryId(UNKNOWN); data.setFuel(980);
+        data.setFlight(false, null, 0, 0, FlightPhase.DOCKED,
+                UniversePosition.of(-15781.273564177154,89,-7464.854196469775), UniverseDelta.ZERO,306,0,0);
+        CompoundTag tag = data.save(new CompoundTag(), RegistryAccess.EMPTY);
         return tag;
     }
 
@@ -172,7 +159,7 @@ class StrandedAtUnknownBodyTest
 
         assertEquals(UNKNOWN, second.getCurrentEntryId(),
                 "an unresolvable id must round-trip, not decay into the starter body");
-        assertEquals("", written.getString("Planet"),
+        assertFalse(written.contains("Planet"),
                 "and it must not claim a legacy planet name it does not have");
     }
 
@@ -280,8 +267,7 @@ class StrandedAtUnknownBodyTest
                 () -> new ShipFlightController(UNKNOWN, LUSH),
                 "a route from an unplaceable body must fail loudly, not silently");
         assertThrows(IllegalArgumentException.class,
-                () -> new ShipFlightController(UNKNOWN, LUSH,
-                        UniversePosition.of(0.0, 102.0, 0.0), 0, null, 0.0, 0.0, 0.0),
+                () -> new ShipFlightController(UNKNOWN, LUSH, 0),
                 "the resuming constructor must fail the same way");
         // And the reverse direction, for symmetry.
         assertThrows(IllegalArgumentException.class,

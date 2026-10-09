@@ -161,7 +161,7 @@ public final class UniverseRegistryGameTests
     }
 
     @GameTest(template = "shuttle_test_empty")
-    public static void catalogBuiltFromTheLiveRegistryMatchesLegacyGeometry(GameTestHelper helper)
+    public static void catalogBuiltFromTheLiveRegistryMatchesFlightGeometry(GameTestHelper helper)
     {
         var registry = helper.getLevel().registryAccess()
                 .registryOrThrow(ModUniverseRegistries.STAR_SYSTEM);
@@ -173,15 +173,9 @@ public final class UniverseRegistryGameTests
         // The gas giant is flyable but has no surface, so it is orbit-only.
         helper.assertTrue(catalog.surfaceBodies().size() == 5, "expected 5 landable bodies");
 
-        // Every navigable body must resolve to the dock the flight layer uses, so
-        // the refactor cannot move a ship parked at any of them. The body list is
-        // the catalog's own; the legacy enum it used to walk is gone (A10).
-        for (var entry : com.starboundmc.world.universe.LegacyUniverseCompatibility
-                .legacyNameMapping().entrySet())
+        for (var body : catalog.navigableBodies())
         {
-            String entryId = entry.getValue();
-            var body = catalog.body(entryId).orElse(null);
-            helper.assertTrue(body != null, "catalog missing " + entryId);
+            String entryId = body.entryId();
             var navigation = body.navigation().orElse(null);
             helper.assertTrue(navigation != null, entryId + " lost navigation in the catalog");
 

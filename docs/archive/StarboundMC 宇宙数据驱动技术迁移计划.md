@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # StarboundMC 宇宙数据驱动技术迁移计划
 
 > 状态：已完成并归档（基线提交 `b12b7ec`）。宇宙 Definition、Codec、数据包注册、UniverseCatalog、

@@ -47,13 +47,13 @@ final class GpuSpaceBackground {
             event.registerShader(new ShaderInstance(event.getResourceProvider(), id("space_background"),
                     DefaultVertexFormat.POSITION), shader -> backgroundShader = shader);
         } catch (java.io.IOException | RuntimeException failure) {
-            LOGGER.warn("Space direction background unavailable; using legacy background", failure);
+            LOGGER.warn("Space direction background unavailable; using minimal background", failure);
         }
         try {
             event.registerShader(new ShaderInstance(event.getResourceProvider(), id("background_stars"),
                     DefaultVertexFormat.POSITION_TEX_COLOR), shader -> starShader = shader);
         } catch (java.io.IOException | RuntimeException failure) {
-            LOGGER.warn("GPU background stars unavailable; using legacy stars", failure);
+            LOGGER.warn("GPU background stars unavailable; using CPU stars", failure);
         }
     }
 
@@ -91,7 +91,7 @@ final class GpuSpaceBackground {
             return true;
         } catch (RuntimeException failure) {
             backgroundFailed = true;
-            LOGGER.warn("Space direction background failed; using legacy until resource reload", failure);
+            LOGGER.warn("Space direction background failed; using minimal background until resource reload", failure);
             return false;
         } finally {
             VertexBuffer.unbind();
@@ -140,7 +140,7 @@ final class GpuSpaceBackground {
             return true;
         } catch (RuntimeException failure) {
             starsFailed = true;
-            LOGGER.warn("GPU background stars failed; using legacy until resource reload", failure);
+            LOGGER.warn("GPU background stars failed; using minimal background until resource reload", failure);
             return false;
         } finally {
             VertexBuffer.unbind();

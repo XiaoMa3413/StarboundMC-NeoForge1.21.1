@@ -15,8 +15,9 @@
 探索未知世界、采集资源、提炼体素、打印设备与升级模块——然后继续飞向更远的地方。
 
 > [!WARNING]
-> StarboundMC 目前处于 **Alpha 开发阶段**。  
+> StarboundMC 目前处于 **Alpha 开发阶段**。
 > 内容、平衡性、世界生成、剧情设定和存档格式仍可能发生变化。游玩开发版本时建议备份重要世界。
+> 首次公开 Playtest 前，内部开发版本的存档/API 不承诺向后兼容。一旦开始向真实玩家公开发行，玩家投入的数据将成为兼容设计的重要约束；届时 schema / ID migration 单独设计。
 
 ---
 
@@ -148,7 +149,7 @@ StarboundMC 拥有独立的飞船太空渲染系统，而不是简单使用 Mine
 
 相关设计与开发计划可查看：
 
-[`docs/ship-space-visual-enhancement-plan.md`](docs/ship-space-visual-enhancement-plan.md)
+[`docs/current-work.md`](docs/current-work.md)
 
 ---
 
@@ -372,13 +373,13 @@ Windows 下将 `./gradlew` 替换为 `.\gradlew.bat` 即可。
 StarboundMC 正在逐步形成一套比较明确的工程规则：
 
 - 服务端负责权威游戏状态
-- 尽可能保证世界存档兼容
-- 注册 ID 保持稳定
+- 存档/API 兼容政策遵循上方 Alpha 警告；当前 schema 与 failure policy 见[架构](docs/architecture.md)
+- 注册资源 ID 和数据驱动内容身份保持稳定；这不等于支持所有历史内部 save schema
 - 宇宙数据尽量数据驱动
 - 客户端视觉与服务端逻辑分离
 - 新功能应尽可能附带自动化测试
 - 大型系统先形成设计文档，再进入实现
-- 已完成计划归档，当前计划与历史记录分离
+- 已完成计划归档，稳定规则进入 current reference，剩余事项集中到 current-work；从[文档索引](docs/README.md)进入
 
 这也是为什么仓库中会保留较完整的 `docs/` 目录。
 

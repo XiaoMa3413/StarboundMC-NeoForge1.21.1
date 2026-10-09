@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # StarboundMC（星际边界）
 
 > 这是 Forge 1.20.1 的历史行为基线，不是当前 NeoForge 1.21.1 的实现说明；当前文档索引见

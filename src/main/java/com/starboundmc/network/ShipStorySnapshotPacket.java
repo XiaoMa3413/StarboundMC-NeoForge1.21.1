@@ -7,6 +7,8 @@ import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.story.TutorialTopic;
 import com.starboundmc.story.NovaTaskProgress;
+import com.starboundmc.story.PlayerStoryState;
+import com.starboundmc.story.SharedShipProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -42,9 +44,10 @@ public record ShipStorySnapshotPacket(
     public ShipStorySnapshotPacket
     {
         if (containerId < 0 || acknowledgedRequestId < 0L
-                || sharedSchemaVersion <= 0 || playerSchemaVersion <= 0
+                || sharedSchemaVersion != SharedShipProgress.CURRENT_SCHEMA_VERSION
+                || playerSchemaVersion != PlayerStoryState.CURRENT_SCHEMA_VERSION
                 || sharedRevision < 0L || playerRevision < 0L || rebootTicksRemaining < 0)
-            throw new IllegalArgumentException("Story snapshot contains a negative or missing version field");
+            throw new IllegalArgumentException("Story snapshot contains an unsupported schema or invalid version field");
         Objects.requireNonNull(core, "core");
         Objects.requireNonNull(surfaceMission, "surfaceMission");
         Objects.requireNonNull(sublightEngine, "sublightEngine");

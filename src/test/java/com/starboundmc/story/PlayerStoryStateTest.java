@@ -1,6 +1,7 @@
 package com.starboundmc.story;
 
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -8,9 +9,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PlayerStoryStateTest
 {
+    @Test
+    void internalSchemasAndMalformedCurrentStateAreRejected() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new PlayerStoryState(1, 0, false, 0, 0, 0, 0));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> new PlayerStoryState(PlayerStoryState.CURRENT_SCHEMA_VERSION, -1, false, 0, 0, 0, 0));
+        var partial = new com.google.gson.JsonObject();
+        partial.addProperty("schema_version", PlayerStoryState.CURRENT_SCHEMA_VERSION);
+        assertTrue(PlayerStoryState.CODEC.parse(com.mojang.serialization.JsonOps.INSTANCE, partial).error().isPresent());
+    }
+
     @Test
     void allFourTopicsAreRequiredInAnyOrder()
     {
@@ -60,6 +73,7 @@ class PlayerStoryStateTest
 
         assertEquals(expected, restored);
         assertTrue(restored.identityConfirmed());
+        assertSame(restored, restored.confirmIdentity());
         assertTrue(restored.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR));
         assertTrue(restored.hasDismissedHint(0x01));
         assertTrue(restored.hasSeenBroadcast(PlayerStoryFlag.INITIAL_WAKE_BROADCAST));
@@ -73,45 +87,17 @@ class PlayerStoryStateTest
     }
 
     @Test
-    void malformedNegativeMasksFailClosed()
+    void serializedStateRequiresTheCurrentSchema()
     {
-        PlayerStoryState malformed = new PlayerStoryState(0, -12L, false, -1, -1, -1, -1);
-
-        assertEquals(PlayerStoryState.CURRENT_SCHEMA_VERSION, malformed.schemaVersion());
-        assertEquals(0L, malformed.revision());
-        assertEquals(0, malformed.readSituationMask());
-        assertEquals(0, malformed.tutorialMask());
-        assertEquals(0, malformed.dismissedHintMask());
-        assertEquals(0, malformed.flagsMask());
-        assertFalse(malformed.hasReadAllRequiredTopics());
-    }
-
-    @Test
-    void futureSchemaCannotBeDowngradedByLocalFlagHelpers()
-    {
-        PlayerStoryState future = new PlayerStoryState(
-                PlayerStoryState.CURRENT_SCHEMA_VERSION + 1, 4L, false, 0, 0, 0,
-                PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask());
-
-        assertSame(future, future.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
-        assertSame(future, future.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
-    }
-
-    @Test
-    void legacyOnlineKnowledgeMigratesWithoutReplayingPersonalInitialization() {
-        var old = new net.minecraft.nbt.CompoundTag();
-        old.putInt("schema_version", 1);
-        old.putInt("flags_mask", PlayerStoryFlag.CORE_ONLINE_BROADCAST.mask());
-        var migrated = PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow();
-        assertEquals(PlayerStoryState.CURRENT_SCHEMA_VERSION, migrated.schemaVersion());
-        assertTrue(migrated.hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
-
-        old.remove("schema_version");
-        assertTrue(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow()
-                .hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
-        old.putInt("flags_mask", PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask());
-        assertFalse(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, old).getOrThrow()
-                .hasFlag(PlayerStoryFlag.HUD_CORE_LINK_PRESENTED));
+        var saved = (CompoundTag) PlayerStoryState.CODEC.encodeStart(NbtOps.INSTANCE, PlayerStoryState.DEFAULT).getOrThrow();
+        var missing = saved.copy();
+        missing.remove("schema_version");
+        assertTrue(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, missing).error().isPresent());
+        for (int version : new int[]{PlayerStoryState.CURRENT_SCHEMA_VERSION - 1, PlayerStoryState.CURRENT_SCHEMA_VERSION + 1}) {
+            var unsupported = saved.copy();
+            unsupported.putInt("schema_version", version);
+            assertThrows(IllegalArgumentException.class, () -> PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, unsupported));
+        }
     }
 
     @Test

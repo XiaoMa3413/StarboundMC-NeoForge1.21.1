@@ -202,8 +202,7 @@ final class NovaCommandLayout extends UIElement {
         }
         if (!ClientShipStoryState.hasSnapshot(containerId)) return;
         var snapshot = ClientShipStoryState.snapshot(containerId);
-        boolean ready = snapshot.shared().schemaSupported() && snapshot.player().schemaSupported()
-                && snapshot.shared().core() == CoreState.ONLINE
+        boolean ready = snapshot.shared().core() == CoreState.ONLINE
                 && snapshot.shared().surfaceMission() != SurfaceMissionState.LOCKED;
         if (ready != unlocked) { unlocked = ready; if (!ready) page = Page.COMMS; lastSequence = -1; }
         if (unlocked && !enteredOverview && !transmitting) { enteredOverview = true; page = Page.OVERVIEW; lastSequence = -1; }
@@ -285,7 +284,7 @@ final class NovaCommandLayout extends UIElement {
                 marker((progress.evidenceMask() & NovaTaskProgress.UPGRADED) != 0),
                 marker((progress.evidenceMask() & NovaTaskProgress.CORE_OBTAINED) != 0)));
         taskReward.setText(Component.translatable(selected.reward() == 0 ? "gui.starboundmc.tasks.unlock_reward" : "gui.starboundmc.tasks.module_reward", selected.reward()));
-        boolean canAct = pending == 0 && progress.writable() && unlocked;
+        boolean canAct = pending == 0 && unlocked;
         claim.setDisplay(selected.reward() > 0);
         claim.setActive(canAct && progress.claimable(selected) && rewardCapacity());
         claim.setText(Component.translatable(progress.claimed(selected) ? "gui.starboundmc.tasks.claimed" : "gui.starboundmc.tasks.claim"));
@@ -293,16 +292,15 @@ final class NovaCommandLayout extends UIElement {
         track.setActive(canAct && !progress.completed(selected) && selected.available(progress.completedMask()));
         track.setText(Component.translatable(progress.trackedTask() == selected.id() ? "gui.starboundmc.tasks.untrack" : "gui.starboundmc.tasks.track"));
         track.style(s -> s.tooltips(Component.translatable(progress.trackedTask() == selected.id() ? "gui.starboundmc.tasks.untrack" : "gui.starboundmc.tasks.track")));
-        feedback.setDisplay(!progress.writable() || pending > 0 || progress.claimable(selected) && !rewardCapacity());
-        feedback.setText(Component.translatable(!progress.writable() ? "gui.starboundmc.ship_ai.prologue.incompatible"
-                : pending > 0 ? "gui.starboundmc.tasks.waiting" : progress.claimable(selected) && !rewardCapacity()
+        feedback.setDisplay(pending > 0 || progress.claimable(selected) && !rewardCapacity());
+        feedback.setText(Component.translatable(pending > 0 ? "gui.starboundmc.tasks.waiting" : progress.claimable(selected) && !rewardCapacity()
                 ? "gui.starboundmc.tasks.inventory_full" : "gui.starboundmc.tasks.claim_hint"));
         novaContext.setText(Component.translatable(page == Page.COMMS ? "gui.starboundmc.command.comms_hint"
                 : (page == Page.OVERVIEW ? current : selected).translation("hint")));
         archives.forEach((task, entry) -> entry.setDisplay(task.available(progress.completedMask())));
     }
     private void request(boolean reward) {
-        if (pending > 0 || !progress.writable()) return;
+        if (pending > 0) return;
         pending = nextRequest++; pendingTicks = 0;
         ModNetwork.sendToServer(new ShipAiActionPacket(containerId, pending,
                 reward ? ShipAiActionPacket.Action.CLAIM_TASK_REWARD : ShipAiActionPacket.Action.TRACK_TASK,
