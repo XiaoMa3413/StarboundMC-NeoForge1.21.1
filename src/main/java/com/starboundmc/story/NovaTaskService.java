@@ -21,7 +21,7 @@ public final class NovaTaskService {
         PlayerStoryState story = player.getData(ModAttachments.PLAYER_STORY);
         boolean contacted = ship.core() == CoreState.ONLINE
                 && (ship.surfaceMission() != SurfaceMissionState.LOCKED
-                || story.identityConfirmed() && story.hasReadAllRequiredTopics());
+                || story.identityConfirmed());
         boolean visited = story.hasFlag(PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST)
                 || story.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR);
         boolean core = player.getInventory().contains(new ItemStack(ModItems.SUBLIGHT_IGNITION_CORE.get()));
@@ -34,10 +34,16 @@ public final class NovaTaskService {
         if (next != previous) {
             player.setData(ModAttachments.NOVA_TASKS, next);
             for (NovaTask task : NovaTask.values()) if (next.completed(task) && !previous.completed(task)
-                    && task.reward() > 0) ModNetwork.sendToPlayer(player,
+                    && task.reward() > 0 && shouldBroadcastTaskCompletion(task))
+                ModNetwork.sendToPlayer(player,
                     new NovaBroadcastPacket("message.starboundmc.nova.task." + task.key() + ".complete"));
         }
         return next;
+    }
+
+    static boolean shouldBroadcastTaskCompletion(NovaTask task) {
+        // Surface arrival and engine recovery already have dedicated story cues.
+        return task != NovaTask.SURFACE && task != NovaTask.REPAIR;
     }
 
     public static void onSurfaceArrival(ServerPlayer player) {
@@ -61,9 +67,7 @@ public final class NovaTaskService {
     /** Caller has already validated terminal binding, range, spectator. */
     public static void claim(ServerPlayer player, NovaTask task) {
         refresh(player);
-        if (grantReward(player, task)) {
-            ModNetwork.sendToPlayer(player, new NovaBroadcastPacket("message.starboundmc.nova.task.reward"));
-        } else if (player.getData(ModAttachments.NOVA_TASKS).claimable(task)) {
+        if (!grantReward(player, task) && player.getData(ModAttachments.NOVA_TASKS).claimable(task)) {
             player.sendSystemMessage(Component.translatable("gui.starboundmc.tasks.inventory_full"));
         }
     }

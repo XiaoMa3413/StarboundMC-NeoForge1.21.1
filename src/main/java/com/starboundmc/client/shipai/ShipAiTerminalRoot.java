@@ -88,6 +88,7 @@ public final class ShipAiTerminalRoot extends UIElement
         commandLayout = new NovaCommandLayout(containerId, portrait, buildConversationPane(), text -> {
             session.selectOption(Component.translatable("gui.starboundmc.tasks.ask_question"), text,
                     ClientShipAiTerminalState.CompletionIntent.NONE, null);
+            syncTranscriptViews();
             syncPresentation();
         });
         addChild(commandLayout);
@@ -548,8 +549,7 @@ public final class ShipAiTerminalRoot extends UIElement
                     session.enqueueCue(
                             "late_join_identity",
                             ClientShipAiTerminalState.Speaker.NOVA,
-                            Component.translatable(
-                                    "gui.starboundmc.ship_ai.prologue.late_join.summary"),
+                            currentStatusText(),
                             ClientShipAiTerminalState.CompletionIntent.confirmIdentity());
                 }
                 else
@@ -571,11 +571,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private void enqueueBootSequence()
     {
         String[] keys = {
-                "gui.starboundmc.ship_ai.prologue.boot.restarting",
-                "gui.starboundmc.ship_ai.prologue.boot.restore_power",
-                "gui.starboundmc.ship_ai.prologue.boot.navigation_index_failed",
-                "gui.starboundmc.ship_ai.prologue.boot.personality_matrix",
-                "gui.starboundmc.ship_ai.prologue.boot.nova_online"
+                "gui.starboundmc.ship_ai.prologue.boot.restarting"
         };
         for (int index = 0; index < keys.length; index++)
         {
@@ -692,11 +688,9 @@ public final class ShipAiTerminalRoot extends UIElement
     {
         if (!canSelectTopics())
             return false;
-        SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
         if (authoritativeSnapshot.shared().sublightEngine() == EngineState.IGNITING)
             return false;
-        return mission != SurfaceMissionState.LOCKED
-                || hasReadAllRequiredTopics(authoritativeSnapshot.player().readSituationMask());
+        return true;
     }
 
     private void completeStream()
@@ -822,13 +816,8 @@ public final class ShipAiTerminalRoot extends UIElement
         }
 
         SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
-        int readCount = Integer.bitCount(readMask & SituationTopic.REQUIRED_MASK);
-        boolean allRead = hasReadAllRequiredTopics(readMask);
         Component nextText = mission == SurfaceMissionState.LOCKED
-                ? allRead
-                        ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.next")
-                        : Component.translatable(
-                                "gui.starboundmc.ship_ai.prologue.option.next_locked", readCount)
+                ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.next")
                 : authoritativeSnapshot.shared().sublightEngine() == EngineState.DAMAGED
                         && authoritativeSnapshot.shared().mineralScan() == MineralScanState.COMPLETE
                         ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.repair")
@@ -907,35 +896,9 @@ public final class ShipAiTerminalRoot extends UIElement
     private Component currentStatusText()
     {
         ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
-        Component objective = shared.surfaceMission() == SurfaceMissionState.COMPLETE
+        return shared.surfaceMission() == SurfaceMissionState.COMPLETE
                 ? repairObjectiveText(shared)
                 : Component.translatable("gui.starboundmc.ship_ai.prologue.current_objective.summary");
-        Component sublight = Component.translatable(
-                switch (shared.sublightEngine())
-                {
-                    case ONLINE -> "gui.starboundmc.ship_ai.status.sublight.online";
-                    case IGNITING -> "gui.starboundmc.ship_ai.status.sublight.igniting";
-                    case DAMAGED -> "gui.starboundmc.ship_ai.status.sublight.damaged";
-                });
-        Component hyperdrive = Component.translatable(
-                shared.hyperdrive() == EngineState.ONLINE
-                        ? "gui.starboundmc.ship_ai.status.hyperdrive.online"
-                        : "gui.starboundmc.ship_ai.status.hyperdrive.damaged");
-        var summary = Component.empty().append(objective);
-        if (shared.surfaceMission() == SurfaceMissionState.COMPLETE)
-        {
-            Component mineralScan = Component.translatable(switch (shared.mineralScan())
-            {
-                case LOCKED -> "gui.starboundmc.ship_ai.status.mineral_scan.waiting";
-                case COMPLETE -> "gui.starboundmc.ship_ai.status.mineral_scan.complete";
-                default -> "gui.starboundmc.ship_ai.status.mineral_scan.in_progress";
-            });
-            summary = summary.append(Component.literal("\n")).append(mineralScan);
-        }
-        return summary.append(Component.literal("\n"))
-                .append(sublight)
-                .append(Component.literal("\n"))
-                .append(hyperdrive);
     }
 
     private Component repairObjectiveText(ClientShipStoryState.SharedView shared)
@@ -945,7 +908,8 @@ public final class ShipAiTerminalRoot extends UIElement
         if (shared.sublightEngine() == EngineState.ONLINE)
             return Component.translatable("gui.starboundmc.ship_ai.repair.complete");
         if (shared.mineralScan() != MineralScanState.COMPLETE)
-            return Component.translatable("gui.starboundmc.ship_ai.prologue.current_status.complete");
+            return Component.translatable(NovaTaskGuidance.translation(
+                    shared.mineralScan() == MineralScanState.LOCKED ? "repair.wood" : "repair.scanning", "help"));
         if (!hasUpgradedManipulator())
             return Component.translatable("gui.starboundmc.ship_ai.repair.need_upgrade");
         return Component.translatable(hasIgnitionCore()
@@ -1002,11 +966,6 @@ public final class ShipAiTerminalRoot extends UIElement
             case COMPLETE -> "complete";
             default -> "in_progress";
         };
-    }
-
-    private static boolean hasReadAllRequiredTopics(int readMask)
-    {
-        return (readMask & SituationTopic.REQUIRED_MASK) == SituationTopic.REQUIRED_MASK;
     }
 
     private void appendTranscriptView(int messageIndex)

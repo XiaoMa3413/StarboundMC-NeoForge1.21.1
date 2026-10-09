@@ -1,5 +1,6 @@
 package com.starboundmc.story;
 
+import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.network.ModNetwork;
 import com.starboundmc.network.NovaBroadcastPacket;
 import com.starboundmc.warp.ShipStateData;
@@ -25,11 +26,11 @@ public final class ShipStoryBroadcastService
 {
     /** A three-second grace period lets the player arrive and notice the quiet ship. */
     public static final long INITIAL_WAKE_DELAY_TICKS = 60L;
-    /** The locating hint is sent once, after roughly six seconds without contact. */
-    public static final long TERMINAL_REMINDER_DELAY_TICKS = 120L;
+    /** Give the player time to read the wake message and follow the marker. */
+    public static final long TERMINAL_REMINDER_DELAY_TICKS = 600L;
     /** Give the player time to arrive and orient before the surface tutorial appears. */
     public static final long SURFACE_TUTORIAL_DELAY_TICKS = 120L;
-    /** Leave a clear pause after the wood response before the shared survey begins. */
+    /** Start the shared survey after the first wood pickup; only its conclusion is spoken. */
     public static final long MINERAL_SCAN_START_DELAY_TICKS = 300L;
     /** The orbital survey needs a short, visible analysis interval. */
     public static final long MINERAL_SCAN_RESULT_DELAY_TICKS = 100L;
@@ -41,8 +42,6 @@ public final class ShipStoryBroadcastService
     private static final Map<UUID, Long> tutorialDueAt = new HashMap<>();
     private static final String VOXEL_INTRO_KEY =
             "message.starboundmc.nova.tutorial.voxel_intro";
-    private static final String VOXEL_USE_KEY =
-            "message.starboundmc.nova.tutorial.voxel_use";
 
     private ShipStoryBroadcastService()
     {
@@ -130,7 +129,7 @@ public final class ShipStoryBroadcastService
     }
 
     /**
-     * Sends the one-shot resource cue after the player picks up a wood log on
+     * Records the first resource pickup and begins a survey after a wood log on
      * the planet surface. The mission and dimension checks keep early ship
      * inventory actions from consuming the personal cue.
      */
@@ -146,14 +145,14 @@ public final class ShipStoryBroadcastService
         if (shared.surfaceMission() != SurfaceMissionState.COMPLETE)
             return false;
 
-        boolean personalCueSent = sendOnce(player, PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST,
-                "message.starboundmc.nova.tutorial.wood_acquired");
+        // Retain the saved flag without interrupting the player with a pickup announcement.
+        boolean firstPickup = markOnce(player, PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST);
         boolean scanStarted = ship.beginMineralScan(
                 player.getServer().overworld().getGameTime(),
                 MINERAL_SCAN_START_DELAY_TICKS);
         if (scanStarted)
             ShipStoryService.syncOpenScreens(player.getServer());
-        return personalCueSent || scanStarted;
+        return firstPickup || scanStarted;
     }
 
     /** Records the player's first voxel acquisition and introduces it once N.O.V.A. is online. */
@@ -172,14 +171,13 @@ public final class ShipStoryBroadcastService
         return shared.core() == CoreState.ONLINE && sendVoxelIntroductionOnce(player);
     }
 
-    /** Sends the immediate first-arrival confirmation once per player. */
+    /** Records arrival for the task ledger; the delayed tutorial combines arrival and guidance. */
     public static boolean sendSurfaceArrivalOnce(ServerPlayer player)
     {
         if (player == null || player.getServer() == null || player.isSpectator()
                 || !ShipStoryService.isPlanetSurface(player.level().dimension()))
             return false;
-        return sendOnce(player, PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST,
-                "message.starboundmc.nova.prologue.first_landing_complete");
+        return markOnce(player, PlayerStoryFlag.SURFACE_ARRIVAL_BROADCAST);
     }
 
     /** Marks the terminal as found and cancels only the locating reminder. */
@@ -256,8 +254,10 @@ public final class ShipStoryBroadcastService
         HudStateService.syncAll(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers())
         {
-            sendOnce(player, PlayerStoryFlag.CORE_ONLINE_BROADCAST,
-                    "message.starboundmc.nova.prologue.core_online");
+            // The terminal already presents first contact. Other crew still receive a short cue.
+            if (markOnce(player, PlayerStoryFlag.CORE_ONLINE_BROADCAST)
+                    && !(player.containerMenu instanceof ShipAiTerminalMenu))
+                sendNova(player, "message.starboundmc.nova.prologue.core_online");
             sendVoxelIntroductionOnce(player);
         }
     }
@@ -304,8 +304,6 @@ public final class ShipStoryBroadcastService
 
         String translationKey = switch (phase)
         {
-            case PENDING -> "message.starboundmc.nova.prologue.mineral_scan_started";
-            case SCANNING -> "message.starboundmc.nova.prologue.mineral_scan_result";
             case RESULT_REPORTED -> "message.starboundmc.nova.prologue.mineral_scan_sublight_hint";
             default -> null;
         };
@@ -325,11 +323,18 @@ public final class ShipStoryBroadcastService
 
     private static boolean sendOnce(ServerPlayer player, PlayerStoryFlag flag, String translationKey)
     {
+        if (!markOnce(player, flag))
+            return false;
+        sendNova(player, translationKey);
+        return true;
+    }
+
+    private static boolean markOnce(ServerPlayer player, PlayerStoryFlag flag)
+    {
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
         if (personal.hasFlag(flag))
             return false;
         player.setData(ModAttachments.PLAYER_STORY, personal.withFlag(flag));
-        sendNova(player, translationKey);
         return true;
     }
 
@@ -353,7 +358,6 @@ public final class ShipStoryBroadcastService
         player.setData(ModAttachments.PLAYER_STORY,
                 personal.withFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST));
         sendNova(player, VOXEL_INTRO_KEY);
-        sendNova(player, VOXEL_USE_KEY);
         return true;
     }
 

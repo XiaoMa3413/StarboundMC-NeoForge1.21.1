@@ -117,8 +117,7 @@ public final class ShipStoryService
             }
             case ACTIVATE_SURFACE_MISSION ->
             {
-                if (shared.core() == CoreState.ONLINE && personal.identityConfirmed()
-                        && personal.hasReadAllRequiredTopics())
+                if (canActivateSurfaceMission(shared, personal))
                     sharedChanged = ship.activateSurfaceMission();
             }
             case CLAIM_TASK_REWARD -> {
@@ -220,6 +219,12 @@ public final class ShipStoryService
     {
         if (updated != previous)
             player.setData(ModAttachments.PLAYER_STORY, updated);
+    }
+
+    /** Background topics are optional; identity and the online core still gate departure. */
+    static boolean canActivateSurfaceMission(SharedShipProgress shared, PlayerStoryState personal)
+    {
+        return shared.core() == CoreState.ONLINE && personal.identityConfirmed();
     }
 
     /** Called after a vanilla slot transaction, on the server thread. No inventory scanning for payment. */

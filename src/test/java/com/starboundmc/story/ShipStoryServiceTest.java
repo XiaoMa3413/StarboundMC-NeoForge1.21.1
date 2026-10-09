@@ -5,6 +5,8 @@ import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShipStoryServiceTest
 {
@@ -39,6 +41,22 @@ class ShipStoryServiceTest
                 Long.MIN_VALUE);
 
         assertEquals(0, snapshot.rebootTicksRemaining());
+    }
+
+    @Test
+    void identityUnlocksSurfaceMissionWithoutReadingOptionalSituationReports()
+    {
+        SharedShipProgress online = SharedShipProgress.newWorld()
+                .beginCoreReboot(100L, 50L)
+                .finishCoreRebootIfDue(150L);
+        PlayerStoryState identified = PlayerStoryState.DEFAULT.confirmIdentity();
+
+        assertEquals(CoreState.ONLINE, online.core());
+        assertEquals(0, identified.readSituationMask());
+        assertTrue(ShipStoryService.canActivateSurfaceMission(online, identified));
+        assertFalse(ShipStoryService.canActivateSurfaceMission(online, PlayerStoryState.DEFAULT));
+        assertFalse(ShipStoryService.canActivateSurfaceMission(
+                SharedShipProgress.newWorld(), identified));
     }
 
     @Test
