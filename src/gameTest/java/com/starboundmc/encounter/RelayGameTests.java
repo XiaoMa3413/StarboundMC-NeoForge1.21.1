@@ -30,7 +30,9 @@ public final class RelayGameTests {
             data.beginApproach(BlockPos.ZERO, snapshot);
             for (int i = 0; i < RelayEncounter.APPROACH_TICKS; i++) data.advanceApproach();
             var path = server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/" + name + ".dat");
+            storage.save(); // Queue an older SavedData snapshot before the synchronous journal write.
             data.beginMaterialization(server);
+            net.neoforged.neoforge.common.IOUtilities.waitUntilIOWorkerComplete();
             var persisted = net.minecraft.nbt.NbtIo.readCompressed(path, net.minecraft.nbt.NbtAccounter.unlimitedHeap()).getCompound("data");
             var materializing = RelayData.load(persisted, h.getLevel().registryAccess());
             h.assertTrue(materializing.phase() == RelayData.Phase.MATERIALIZING && materializing.transaction() == 1,

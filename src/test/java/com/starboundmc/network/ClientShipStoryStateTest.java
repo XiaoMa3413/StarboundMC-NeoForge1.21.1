@@ -5,12 +5,15 @@ import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
 import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SurfaceMissionState;
+import com.starboundmc.story.SharedShipProgress;
+import com.starboundmc.story.PlayerStoryState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ClientShipStoryStateTest
 {
@@ -134,13 +137,13 @@ class ClientShipStoryStateTest
     void equalSharedRevisionCannotReplaceSemanticStateButCanRefreshCountdown()
     {
         ClientShipStoryState.apply(7, new ShipStorySnapshotPacket(
-                7, 0L, 1, 5L, CoreState.REBOOTING, SurfaceMissionState.LOCKED,
+                7, 0L, SharedShipProgress.CURRENT_SCHEMA_VERSION, 5L, CoreState.REBOOTING, SurfaceMissionState.LOCKED,
                 EngineState.DAMAGED, EngineState.DAMAGED, MineralScanState.LOCKED, 20,
-                1, 1L, false, 0, 0, 0));
+                PlayerStoryState.CURRENT_SCHEMA_VERSION, 1L, false, 0, 0, 0));
         ClientShipStoryState.apply(7, new ShipStorySnapshotPacket(
-                7, 0L, 1, 5L, CoreState.OFFLINE, SurfaceMissionState.COMPLETE,
+                7, 0L, SharedShipProgress.CURRENT_SCHEMA_VERSION, 5L, CoreState.OFFLINE, SurfaceMissionState.COMPLETE,
                 EngineState.ONLINE, EngineState.ONLINE, MineralScanState.COMPLETE, 12,
-                1, 1L, true, 0, 0, 0));
+                PlayerStoryState.CURRENT_SCHEMA_VERSION, 1L, true, 0, 0, 0));
 
         ClientShipStoryState.SharedView shared = ClientShipStoryState.snapshot(7).shared();
         ClientShipStoryState.PlayerView player = ClientShipStoryState.snapshot(7).player();
@@ -154,11 +157,11 @@ class ClientShipStoryStateTest
                                                     CoreState core, long playerRevision,
                                                     boolean identityConfirmed)
     {
-        return new ShipStorySnapshotPacket(containerId, 0L, 1, sharedRevision, core,
+        return new ShipStorySnapshotPacket(containerId, 0L, SharedShipProgress.CURRENT_SCHEMA_VERSION, sharedRevision, core,
                 SurfaceMissionState.LOCKED, EngineState.DAMAGED, EngineState.DAMAGED,
                 MineralScanState.LOCKED,
                 core == CoreState.REBOOTING ? 20 : 0,
-                1, playerRevision, identityConfirmed, 0, 0, 0);
+                PlayerStoryState.CURRENT_SCHEMA_VERSION, playerRevision, identityConfirmed, 0, 0, 0);
     }
 
     private static ShipStorySnapshotPacket snapshotWithAck(int containerId, long ack,
@@ -167,10 +170,36 @@ class ClientShipStoryStateTest
                                                            long playerRevision,
                                                            boolean identityConfirmed)
     {
-        return new ShipStorySnapshotPacket(containerId, ack, 1, sharedRevision, core,
+        return new ShipStorySnapshotPacket(containerId, ack, SharedShipProgress.CURRENT_SCHEMA_VERSION, sharedRevision, core,
                 SurfaceMissionState.LOCKED, EngineState.DAMAGED, EngineState.DAMAGED,
                 MineralScanState.LOCKED,
                 core == CoreState.REBOOTING ? 20 : 0,
-                1, playerRevision, identityConfirmed, 0, 0, 0);
+                PlayerStoryState.CURRENT_SCHEMA_VERSION, playerRevision, identityConfirmed, 0, 0, 0);
+    }
+
+    @Test
+    void decoderRejectsUnsupportedSharedAndPersonalSchemas() {
+        for (boolean shared : new boolean[]{true, false}) {
+            int current = shared ? SharedShipProgress.CURRENT_SCHEMA_VERSION : PlayerStoryState.CURRENT_SCHEMA_VERSION;
+            for (int unsupported : new int[]{current - 1, current + 1}) {
+                var buffer = new net.minecraft.network.FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());
+                try {
+                    ShipStorySnapshotPacket.STREAM_CODEC.encode(buffer, snapshot(7, 0, CoreState.OFFLINE, 0, false));
+                    buffer.readVarInt(); // container
+                    buffer.readVarLong(); // acknowledgement
+                    int schemaOffset = buffer.readerIndex();
+                    if (!shared) {
+                        buffer.readVarInt(); // shared schema
+                        buffer.readVarLong(); // shared revision
+                        for (int state = 0; state < 5; state++) buffer.readUtf();
+                        buffer.readVarInt(); // reboot countdown
+                        schemaOffset = buffer.readerIndex();
+                    }
+                    buffer.setByte(schemaOffset, unsupported);
+                    buffer.readerIndex(0);
+                    assertThrows(IllegalArgumentException.class, () -> ShipStorySnapshotPacket.STREAM_CODEC.decode(buffer));
+                } finally { buffer.release(); }
+            }
+        }
     }
 }

@@ -138,7 +138,7 @@ public final class StarmapConsoleRenderSmoke {
         stageSetup.join();
         if (menuStage()) {
             if (!(mc.screen instanceof StarmapTerminalScreen)) return;
-            if (!ClientShipEnvironmentState.hasSupportedSnapshot(mc.player.containerMenu.containerId)) return;
+            if (!ClientShipEnvironmentState.hasSnapshot(mc.player.containerMenu.containerId)) return;
         } else if (mc.screen != null) return;
         if (camera == null) {
             double angle = (stage < 4 ? stage : 0) * Math.PI / 2;

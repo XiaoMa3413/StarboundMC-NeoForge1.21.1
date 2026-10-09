@@ -2,6 +2,7 @@ package com.starboundmc.network;
 
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
+import com.starboundmc.story.SharedShipProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -28,7 +29,7 @@ public record ShipEnvironmentSnapshotPacket(
 
     public ShipEnvironmentSnapshotPacket
     {
-        if (containerId < 0 || schemaVersion <= 0 || revision < 0L
+        if (containerId < 0 || schemaVersion != SharedShipProgress.CURRENT_SCHEMA_VERSION || revision < 0L
                 || rebootTicksRemaining < 0)
             throw new IllegalArgumentException("Environment snapshot contains an invalid version field");
         Objects.requireNonNull(core, "core");

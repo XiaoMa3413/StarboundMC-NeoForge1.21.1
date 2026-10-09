@@ -183,10 +183,10 @@ public record BodySpaceVisualProfile(Optional<String> texture,
 
     public BodySpaceVisualProfile
     {
-        texture = texture == null ? Optional.empty() : texture;
-        materialMask = materialMask == null ? Optional.empty() : materialMask;
-        ringTexture = ringTexture == null ? Optional.empty() : ringTexture;
-        cloudTexture = cloudTexture == null ? Optional.empty() : cloudTexture;
+        texture = java.util.Objects.requireNonNull(texture, "texture");
+        materialMask = java.util.Objects.requireNonNull(materialMask, "materialMask");
+        ringTexture = java.util.Objects.requireNonNull(ringTexture, "ringTexture");
+        cloudTexture = java.util.Objects.requireNonNull(cloudTexture, "cloudTexture");
         requireUnitRange("emissiveStrength", emissiveStrength);
         requireUnitRange("atmosphereRed", atmosphereRed);
         requireUnitRange("atmosphereGreen", atmosphereGreen);

@@ -1,6 +1,7 @@
 package com.starboundmc.story;
 
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PlayerStoryStateTest
 {
@@ -71,6 +73,7 @@ class PlayerStoryStateTest
 
         assertEquals(expected, restored);
         assertTrue(restored.identityConfirmed());
+        assertSame(restored, restored.confirmIdentity());
         assertTrue(restored.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR));
         assertTrue(restored.hasDismissedHint(0x01));
         assertTrue(restored.hasSeenBroadcast(PlayerStoryFlag.INITIAL_WAKE_BROADCAST));
@@ -84,14 +87,17 @@ class PlayerStoryStateTest
     }
 
     @Test
-    void futureSchemaCannotBeDowngradedByLocalFlagHelpers()
+    void serializedStateRequiresTheCurrentSchema()
     {
-        PlayerStoryState future = new PlayerStoryState(
-                PlayerStoryState.CURRENT_SCHEMA_VERSION + 1, 4L, false, 0, 0, 0,
-                PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask());
-
-        assertSame(future, future.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
-        assertSame(future, future.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
+        var saved = (CompoundTag) PlayerStoryState.CODEC.encodeStart(NbtOps.INSTANCE, PlayerStoryState.DEFAULT).getOrThrow();
+        var missing = saved.copy();
+        missing.remove("schema_version");
+        assertTrue(PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, missing).error().isPresent());
+        for (int version : new int[]{PlayerStoryState.CURRENT_SCHEMA_VERSION - 1, PlayerStoryState.CURRENT_SCHEMA_VERSION + 1}) {
+            var unsupported = saved.copy();
+            unsupported.putInt("schema_version", version);
+            assertThrows(IllegalArgumentException.class, () -> PlayerStoryState.CODEC.parse(NbtOps.INSTANCE, unsupported));
+        }
     }
 
     @Test

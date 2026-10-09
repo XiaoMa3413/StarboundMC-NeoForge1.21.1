@@ -8,11 +8,11 @@ public record VoxelWalletState(int balance) {
     public static final VoxelWalletState DEFAULT = new VoxelWalletState(0);
 
     public static final Codec<VoxelWalletState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.INT.optionalFieldOf("balance", 0).forGetter(VoxelWalletState::balance)
+            Codec.intRange(0, Integer.MAX_VALUE).fieldOf("balance").forGetter(VoxelWalletState::balance)
     ).apply(instance, VoxelWalletState::new));
 
     public VoxelWalletState {
-        balance = Math.max(0, balance);
+        if (balance < 0) throw new IllegalArgumentException("Wallet balance must be non-negative");
     }
 
     public VoxelWalletState add(int amount) {

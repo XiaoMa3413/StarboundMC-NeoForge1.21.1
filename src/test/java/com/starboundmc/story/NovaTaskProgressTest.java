@@ -6,13 +6,24 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NovaTaskProgressTest {
-    @Test void oldSaveStartsWithUnclaimedTasksAndMigratesFromExistingEvidence() {
-        var old = NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, new CompoundTag()).getOrThrow();
-        assertEquals(NovaTaskProgress.DEFAULT, old);
-        var migrated = old.observe(true, true, false, false, true);
-        assertTrue(migrated.claimable(NovaTask.SURFACE));
-        assertTrue(migrated.claimable(NovaTask.REPAIR));
-        assertFalse(migrated.completed(NovaTask.EXPLORATION));
+    @Test void defaultStartsWithNoAchievementsAndTracksContact() {
+        var fresh = NovaTaskProgress.DEFAULT;
+        assertEquals(NovaTaskProgress.SCHEMA, fresh.schemaVersion());
+        assertEquals(0, fresh.revision());
+        assertEquals(0, fresh.completedMask());
+        assertEquals(0, fresh.claimedMask());
+        assertEquals(0, fresh.evidenceMask());
+        assertEquals(NovaTask.CONTACT.id(), fresh.trackedTask());
+        assertEquals("", fresh.firstSurface());
+    }
+    @Test void everyPersistedFieldIsRequired() {
+        assertTrue(NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, new CompoundTag()).error().isPresent());
+        var saved = (CompoundTag) NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, NovaTaskProgress.DEFAULT).getOrThrow();
+        for (String field : new String[]{"schema", "revision", "completed", "claimed", "evidence", "tracked", "first_surface"}) {
+            var incomplete = saved.copy();
+            incomplete.remove(field);
+            assertTrue(NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, incomplete).error().isPresent(), field);
+        }
     }
     @Test void repairIsSharedButArrivalAndRewardsRemainPersonal() {
         var alice = NovaTaskProgress.DEFAULT.observe(true, true, true, true, true);
@@ -50,14 +61,35 @@ class NovaTaskProgressTest {
         assertThrows(IllegalArgumentException.class, () -> p.track(9));
         assertSame(p, p.claim(NovaTask.REPAIR));
     }
-    @Test void futureSchemaIsPreservedAndReadOnly() {
-        var future = new NovaTaskProgress(NovaTaskProgress.SCHEMA + 1, 42, 63, 63, 255, 5, "future:surface");
-        var restored = NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE,
-                NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, future).getOrThrow()).getOrThrow();
-        assertEquals(future, restored);
-        assertSame(restored, restored.observe(true, true, true, true, true));
-        assertSame(restored, restored.arrive("other", true));
-        assertSame(restored, restored.track(0));
-        assertSame(restored, restored.claim(NovaTask.SURFACE));
+    @Test void oldAndFutureSchemasAreRejected() {
+        for (int schema : new int[]{NovaTaskProgress.SCHEMA - 1, NovaTaskProgress.SCHEMA + 1}) {
+            var saved = (CompoundTag) NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, NovaTaskProgress.DEFAULT).getOrThrow();
+            saved.putInt("schema", schema);
+            assertThrows(IllegalArgumentException.class, () -> NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, saved));
+        }
+    }
+    @Test void invalidPersistedValuesAreRejectedWithoutNormalization() {
+        var saved = (CompoundTag) NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, NovaTaskProgress.DEFAULT).getOrThrow();
+        saved.putLong("revision", -1);
+        assertThrows(IllegalArgumentException.class, () -> NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, saved));
+        assertEquals(-1, saved.getLong("revision"));
+        for (int[] invalid : new int[][]{
+                {-1, 0, 0, 0}, {64, 0, 0, 0}, {0, -1, 0, 0}, {0, 64, 0, 0},
+                {0, NovaTask.SURFACE.mask(), 0, 0}, {0, 0, -1, 0}, {0, 0, 32, 0},
+                {0, 0, 0, -2}, {0, 0, 0, NovaTask.values().length}}) {
+            var malformed = (CompoundTag) NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, NovaTaskProgress.DEFAULT).getOrThrow();
+            malformed.putInt("completed", invalid[0]);
+            malformed.putInt("claimed", invalid[1]);
+            malformed.putInt("evidence", invalid[2]);
+            malformed.putInt("tracked", invalid[3]);
+            var original = malformed.copy();
+            assertThrows(IllegalArgumentException.class, () -> NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, malformed));
+            assertEquals(original, malformed);
+        }
+    }
+    @Test void constructorRejectsMalformedState() {
+        assertThrows(IllegalArgumentException.class, () -> new NovaTaskProgress(NovaTaskProgress.SCHEMA, -1, 0, 0, 0, 0, ""));
+        assertThrows(IllegalArgumentException.class, () -> new NovaTaskProgress(NovaTaskProgress.SCHEMA, 0, 0, 1, 0, 0, ""));
+        assertThrows(NullPointerException.class, () -> new NovaTaskProgress(NovaTaskProgress.SCHEMA, 0, 0, 0, 0, 0, null));
     }
 }

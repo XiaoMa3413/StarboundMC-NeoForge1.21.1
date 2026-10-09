@@ -24,6 +24,8 @@ import com.starboundmc.story.EngineState;
 import com.starboundmc.story.MineralScanState;
 import com.starboundmc.story.SituationTopic;
 import com.starboundmc.story.SurfaceMissionState;
+import com.starboundmc.story.SharedShipProgress;
+import com.starboundmc.story.PlayerStoryState;
 import com.starboundmc.warp.FlightPhase;
 import io.netty.buffer.Unpooled;
 import java.util.List;
@@ -138,16 +140,16 @@ final class Stage3PayloadCodecTest {
     @Test
     void roundTripsShipStorySnapshot() {
         assertRoundTrip(new ShipStorySnapshotPacket(
-                        17, 42L, 1, 9L, CoreState.ONLINE, SurfaceMissionState.ACTIVE,
+                        17, 42L, SharedShipProgress.CURRENT_SCHEMA_VERSION, 9L, CoreState.ONLINE, SurfaceMissionState.ACTIVE,
                         EngineState.DAMAGED, EngineState.DAMAGED, MineralScanState.LOCKED, 0,
-                        1, 12L, true, SituationTopic.REQUIRED_MASK, 1, 0),
+                        PlayerStoryState.CURRENT_SCHEMA_VERSION, 12L, true, SituationTopic.REQUIRED_MASK, 1, 0),
                 ShipStorySnapshotPacket.STREAM_CODEC);
     }
 
     @Test
     void roundTripsShipEnvironmentSnapshot() {
         assertRoundTrip(new ShipEnvironmentSnapshotPacket(
-                        17, 1, 9L, CoreState.REBOOTING,
+                        17, SharedShipProgress.CURRENT_SCHEMA_VERSION, 9L, CoreState.REBOOTING,
                         EngineState.DAMAGED, EngineState.DAMAGED, 23),
                 ShipEnvironmentSnapshotPacket.STREAM_CODEC);
     }

@@ -2,12 +2,9 @@ package com.starboundmc.story;
 
 import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.network.ShipEnvironmentSnapshotPacket;
-import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ShipStoryServiceTest
 {
@@ -42,24 +39,6 @@ class ShipStoryServiceTest
                 Long.MIN_VALUE);
 
         assertEquals(0, snapshot.rebootTicksRemaining());
-    }
-
-    @Test
-    void futureSharedOrPersonalSchemasDisableEveryTerminalMutation()
-    {
-        SharedShipProgress current = SharedShipProgress.newWorld();
-        PlayerStoryState futurePersonal = new PlayerStoryState(PlayerStoryState.CURRENT_SCHEMA_VERSION + 1, 0L, false, 0, 0, 0, 0);
-
-        CompoundTag futureTag = new CompoundTag();
-        futureTag.putInt("Version", SharedShipProgress.CURRENT_SCHEMA_VERSION + 1);
-        SharedShipProgress futureShared = SharedShipProgress.load(futureTag).state();
-
-        assertTrue(ShipStoryService.terminalActionsSupported(
-                current, PlayerStoryState.DEFAULT));
-        assertFalse(ShipStoryService.terminalActionsSupported(
-                current, futurePersonal));
-        assertFalse(ShipStoryService.terminalActionsSupported(
-                futureShared, PlayerStoryState.DEFAULT));
     }
 
     @Test

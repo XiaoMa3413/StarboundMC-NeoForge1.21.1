@@ -35,8 +35,6 @@ public final class HudStateService {
         if (player == null || player.getServer() == null)
             return;
         var shared = ShipStateData.get(player.getServer()).getStoryProgress();
-        if (!shared.isWritable())
-            return;
         var before = player.getData(ModAttachments.PLAYER_STORY);
         var after = acknowledgeCoreLink(shared.core(), before);
         if (after != before)

@@ -51,10 +51,4 @@ class HudStateServiceTest {
         } finally { buffer.release(); }
     }
 
-    @Test
-    void presentationReceiptDoesNotRewriteAFutureSchema() {
-        var future = new PlayerStoryState(PlayerStoryState.CURRENT_SCHEMA_VERSION + 1,
-                5L, false, 0, 0, 0, 0);
-        assertSame(future, HudStateService.acknowledgeCoreLink(CoreState.ONLINE, future));
-    }
 }

@@ -57,8 +57,8 @@ public final class ShipStoryBroadcastService
         MinecraftServer server = player.getServer();
         SharedShipProgress shared = ShipStateData.get(server).getStoryProgress();
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        boolean prologuePending = shared.isWritable() && shared.core() == CoreState.OFFLINE
-                && personal.isWritable() && !personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED);
+        boolean prologuePending = shared.core() == CoreState.OFFLINE
+                && !personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED);
         if (!prologuePending)
             clearPending(player.getUUID());
         else
@@ -80,7 +80,6 @@ public final class ShipStoryBroadcastService
         // personal tutorial. New players are teleported to the ship shortly
         // afterward, so the surface check below naturally cancels that case.
         if (ShipStoryService.isPlanetSurface(player.level().dimension())
-                && personal.isWritable()
                 && !personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             scheduleMatterManipulatorTutorial(player);
 
@@ -120,7 +119,7 @@ public final class ShipStoryBroadcastService
         if (player == null || player.getServer() == null || player.isSpectator())
             return false;
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
+        if (personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
         {
             tutorialDueAt.remove(player.getUUID());
             return false;
@@ -144,7 +143,7 @@ public final class ShipStoryBroadcastService
 
         ShipStateData ship = ShipStateData.get(player.getServer());
         SharedShipProgress shared = ship.getStoryProgress();
-        if (!shared.isWritable() || shared.surfaceMission() != SurfaceMissionState.COMPLETE)
+        if (shared.surfaceMission() != SurfaceMissionState.COMPLETE)
             return false;
 
         boolean personalCueSent = sendOnce(player, PlayerStoryFlag.WOOD_ACQUIRED_BROADCAST,
@@ -163,8 +162,6 @@ public final class ShipStoryBroadcastService
         if (player == null || amount <= 0 || player.getServer() == null || player.isSpectator())
             return false;
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable())
-            return false;
         if (!personal.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED))
         {
             personal = personal.withFlag(PlayerStoryFlag.VOXEL_DISCOVERED);
@@ -194,7 +191,7 @@ public final class ShipStoryBroadcastService
         reminderDueAt.remove(id);
 
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (personal.isWritable() && !personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
+        if (!personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
             player.setData(ModAttachments.PLAYER_STORY,
                     personal.withFlag(PlayerStoryFlag.TERMINAL_CONTACTED));
         sendHudBootstrapState(player);
@@ -223,8 +220,8 @@ public final class ShipStoryBroadcastService
                 sendMatterManipulatorTutorialOnce(player);
             }
 
-            if (!shared.isWritable() || shared.core() != CoreState.OFFLINE
-                    || !personal.isWritable() || personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
+            if (shared.core() != CoreState.OFFLINE
+                    || personal.hasFlag(PlayerStoryFlag.TERMINAL_CONTACTED))
             {
                 clearProloguePending(id);
                 continue;
@@ -329,7 +326,7 @@ public final class ShipStoryBroadcastService
     private static boolean sendOnce(ServerPlayer player, PlayerStoryFlag flag, String translationKey)
     {
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || personal.hasFlag(flag))
+        if (personal.hasFlag(flag))
             return false;
         player.setData(ModAttachments.PLAYER_STORY, personal.withFlag(flag));
         sendNova(player, translationKey);
@@ -339,7 +336,7 @@ public final class ShipStoryBroadcastService
     private static boolean sendMatterManipulatorTutorialOnce(ServerPlayer player)
     {
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
+        if (personal.hasSeenTutorial(TutorialTopic.MATTER_MANIPULATOR))
             return false;
         player.setData(ModAttachments.PLAYER_STORY,
                 personal.withTutorialSeen(TutorialTopic.MATTER_MANIPULATOR));
@@ -350,7 +347,7 @@ public final class ShipStoryBroadcastService
     private static boolean sendVoxelIntroductionOnce(ServerPlayer player)
     {
         PlayerStoryState personal = player.getData(ModAttachments.PLAYER_STORY);
-        if (!personal.isWritable() || !personal.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED)
+        if (!personal.hasFlag(PlayerStoryFlag.VOXEL_DISCOVERED)
                 || personal.hasFlag(PlayerStoryFlag.VOXEL_INTRO_BROADCAST))
             return false;
         player.setData(ModAttachments.PLAYER_STORY,

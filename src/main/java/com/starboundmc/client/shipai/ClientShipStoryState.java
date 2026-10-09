@@ -4,8 +4,6 @@ import com.starboundmc.network.ShipStorySnapshotPacket;
 import com.starboundmc.story.CoreState;
 import com.starboundmc.story.EngineState;
 import com.starboundmc.story.MineralScanState;
-import com.starboundmc.story.PlayerStoryState;
-import com.starboundmc.story.SharedShipProgress;
 import com.starboundmc.story.SurfaceMissionState;
 import com.starboundmc.story.NovaTaskProgress;
 
@@ -56,26 +54,19 @@ public final class ClientShipStoryState
             return false;
         if (snapshot.containerId() != containerId)
             beginContainer(snapshot.containerId());
-        if (tasks == null || snapshot.tasks().revision() > tasks.revision()
-                || snapshot.tasks().revision() == tasks.revision()
-                && snapshot.tasks().schemaVersion() > tasks.schemaVersion()) tasks = snapshot.tasks();
-        if (shared == null || snapshot.sharedRevision() > shared.revision()
-                || snapshot.sharedRevision() == shared.revision()
-                && snapshot.sharedSchemaVersion() > shared.schemaVersion())
+        if (tasks == null || snapshot.tasks().revision() > tasks.revision()) tasks = snapshot.tasks();
+        if (shared == null || snapshot.sharedRevision() > shared.revision())
         {
             shared = new SharedView(snapshot.sharedSchemaVersion(), snapshot.sharedRevision(),
                     snapshot.core(), snapshot.surfaceMission(), snapshot.sublightEngine(),
                     snapshot.hyperdrive(), snapshot.mineralScan(),
                     snapshot.rebootTicksRemaining());
         }
-        else if (snapshot.sharedRevision() == shared.revision()
-                && snapshot.sharedSchemaVersion() == shared.schemaVersion())
+        else if (snapshot.sharedRevision() == shared.revision())
         {
             shared = shared.withRebootTicksRemaining(snapshot.rebootTicksRemaining());
         }
-        if (player == null || snapshot.playerRevision() > player.revision()
-                || snapshot.playerRevision() == player.revision()
-                && snapshot.playerSchemaVersion() > player.schemaVersion())
+        if (player == null || snapshot.playerRevision() > player.revision())
         {
             player = new PlayerView(snapshot.playerSchemaVersion(), snapshot.playerRevision(),
                     snapshot.identityConfirmed(), snapshot.readSituationMask(),
@@ -137,11 +128,6 @@ public final class ClientShipStoryState
                              EngineState hyperdrive, MineralScanState mineralScan,
                              int rebootTicksRemaining)
     {
-        public boolean schemaSupported()
-        {
-            return schemaVersion <= SharedShipProgress.CURRENT_SCHEMA_VERSION;
-        }
-
         SharedView withRebootTicksRemaining(int remainingTicks)
         {
             return new SharedView(schemaVersion, revision, core, surfaceMission,
@@ -152,9 +138,5 @@ public final class ClientShipStoryState
     public record PlayerView(int schemaVersion, long revision, boolean identityConfirmed,
                              int readSituationMask, int tutorialMask, int dismissedHintMask)
     {
-        public boolean schemaSupported()
-        {
-            return schemaVersion <= PlayerStoryState.CURRENT_SCHEMA_VERSION;
-        }
     }
 }

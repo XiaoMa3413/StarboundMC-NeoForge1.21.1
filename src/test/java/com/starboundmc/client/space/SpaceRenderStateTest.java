@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FreeFlightPoseProviderTest
+class SpaceRenderStateTest
 {
     @AfterEach
     void restoreAutomaticFlightProvider()
@@ -22,11 +22,11 @@ class FreeFlightPoseProviderTest
     }
 
     @Test
-    void freeFlightProviderSuppliesNativeUniversePoseWithNeutralRouteDefaults()
+    void injectedProviderSuppliesOneFrameOfCanonicalPoseAndRouteData()
     {
         UniversePosition position = UniversePosition.of(250_125.0, -75_500.0, 610_250.0);
         UniverseDelta velocity = new UniverseDelta(18.5, -2.25, 42.0);
-        MutableFreeFlightProvider provider = new MutableFreeFlightProvider(
+        MutablePoseProvider provider = new MutablePoseProvider(
                 position, velocity, 35.0, -12.0, 4.5);
         SpaceRenderState.setPoseProvider(provider);
 
@@ -51,7 +51,7 @@ class FreeFlightPoseProviderTest
     @Test
     void floatingOriginRecentersLocalPositionWithoutJumpingRelativeStars()
     {
-        MutableFreeFlightProvider provider = new MutableFreeFlightProvider(
+        MutablePoseProvider provider = new MutablePoseProvider(
                 UniversePosition.of(49_999.75, 102.0, 0.0), UniverseDelta.ZERO,
                 0.0, 0.0, 0.0);
         SpaceRenderState.setPoseProvider(provider);
@@ -80,7 +80,7 @@ class FreeFlightPoseProviderTest
         throw new AssertionError("Missing star system " + systemId);
     }
 
-    private static final class MutableFreeFlightProvider implements FreeFlightPoseProvider
+    private static final class MutablePoseProvider implements ShipPoseProvider
     {
         private UniversePosition position;
         private final UniverseDelta velocity;
@@ -88,7 +88,7 @@ class FreeFlightPoseProviderTest
         private final double pitch;
         private final double roll;
 
-        private MutableFreeFlightProvider(UniversePosition position, UniverseDelta velocity,
+        private MutablePoseProvider(UniversePosition position, UniverseDelta velocity,
                                           double yaw, double pitch, double roll)
         {
             this.position = position;
@@ -127,5 +127,14 @@ class FreeFlightPoseProviderTest
         {
             return roll;
         }
+
+        public FlightPhase flightPhase() { return FlightPhase.DOCKED; }
+        public boolean isWarping() { return false; }
+        public float warpProgress() { return 0; }
+        public int warpDurationTicks() { return 1; }
+        public String currentBodyId() { return null; }
+        public String targetBodyId() { return null; }
+        public String currentSystemHint() { return null; }
+        public String targetSystemHint() { return null; }
     }
 }

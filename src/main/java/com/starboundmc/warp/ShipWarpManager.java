@@ -10,7 +10,6 @@ import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.story.ShipEnvironmentService;
 import com.starboundmc.world.Stage6TravelService;
-import com.starboundmc.world.universe.BuiltInUniverse;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -21,7 +20,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.sounds.SoundEvents;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /** Server authority for the fixed physical ship's virtual-space flight. */
 public final class ShipWarpManager
@@ -39,6 +37,11 @@ public final class ShipWarpManager
     private static boolean crewHold;
 
     private ShipWarpManager() {}
+
+    private static ShipStateData requireState() {
+        if (state == null) throw new IllegalStateException("Ship warp authority has not been initialized");
+        return state;
+    }
 
     public static void init(MinecraftServer server)
     {
@@ -95,10 +98,10 @@ public final class ShipWarpManager
      * <p>Exposed so the failure is visible to callers instead of being inferred
      * from a warp mysteriously not starting.</p>
      */
-    public static String unknownBodyEntryId() { return unknownBodyEntryId; }
+    public static String unknownBodyEntryId() { requireState(); return unknownBodyEntryId; }
 
     /** True when the ship is parked at a body the universe no longer provides. */
-    public static boolean isStrandedAtUnknownBody() { return unknownBodyEntryId != null; }
+    public static boolean isStrandedAtUnknownBody() { requireState(); return unknownBodyEntryId != null; }
 
     /**
      * The ship's current body as an entry id, which is the authoritative
@@ -106,16 +109,15 @@ public final class ShipWarpManager
      * {@link #isStrandedAtUnknownBody()}.
      */
     public static String currentEntryId() {
-        if (state == null) return BuiltInUniverse.STARTER_BODY_ID;
-        return state.getCurrentEntryId();
+        return requireState().getCurrentEntryId();
     }
     /** Star-map entries visited so far, for the state sync. */
     public static java.util.Set<String> visitedEntries() {
-        return state == null ? java.util.Set.of() : state.getVisited();
+        return requireState().getVisited();
     }
 
-    public static boolean isWarping() { return flight != null; }
-    public static int getFuel() { return state == null ? ShipFuelService.MAX_FUEL : state.getFuel(); }
+    public static boolean isWarping() { requireState(); return flight != null; }
+    public static int getFuel() { return requireState().getFuel(); }
     public static int getMaxFuel() { return ShipFuelService.MAX_FUEL; }
 
     public static int warpFuelCost(String currentEntryId, String targetEntryId)
@@ -127,8 +129,9 @@ public final class ShipWarpManager
 
     public static boolean startWarp(ServerPlayer player, String entryId)
     {
+        requireState();
         MinecraftServer server = player.getServer();
-        if (server == null || flight != null || state == null
+        if (server == null || flight != null
                 || !player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)) return false;
         // A ship parked at a body the universe no longer has may not travel: its
         // departure geometry is unknown, so a route could not be built.
@@ -224,10 +227,11 @@ public final class ShipWarpManager
 
     public static void syncToPlayer(ServerPlayer player)
     {
+        requireState();
         com.starboundmc.encounter.RelayEncounter.sync(player);
         ModNetwork.sendToPlayer(player, new SyncFuelPacket(getFuel(), ShipFuelService.MAX_FUEL));
         ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
-                new ArrayList<>(state == null ? List.of() : state.getVisited()), state == null ? null : state.getCurrentEntryId()));
+                new ArrayList<>(state.getVisited()), state.getCurrentEntryId()));
         ServerLevel ship = player.getServer() == null ? null
                 : player.getServer().getLevel(Stage6TravelService.SHIP_LEVEL);
         if (ship != null) ModNetwork.sendToPlayer(player, packet(ship));
@@ -235,7 +239,7 @@ public final class ShipWarpManager
 
     public static int addFuel(int amount, ServerLevel ship)
     {
-        if (state == null) return 0;
+        requireState();
         int before = getFuel();
         state.setFuel(before + Math.max(0, amount));
         int added = getFuel() - before;
@@ -268,7 +272,7 @@ public final class ShipWarpManager
 
     private static void persistDock()
     {
-        if (state == null) return;
+        requireState();
         state.setFlight(false, null, 0, 0, FlightPhase.DOCKED,
                 dockPositionFor(currentEntryId(), isStrandedAtUnknownBody(),
                         state.getShipUniversePosition()),

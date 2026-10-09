@@ -45,9 +45,9 @@ public record CelestialBodyDefinition(String entryId,
             throw new IllegalArgumentException("entryId must be a namespaced id, got: " + entryId);
         if (threatLevel < 0 || threatLevel > 10)
             throw new IllegalArgumentException("threatLevel must be within 0..10");
-        navigation = navigation == null ? Optional.empty() : navigation;
-        spaceVisual = spaceVisual == null ? Optional.empty() : spaceVisual;
-        surface = surface == null ? Optional.empty() : surface;
+        navigation = java.util.Objects.requireNonNull(navigation, "navigation");
+        spaceVisual = java.util.Objects.requireNonNull(spaceVisual, "spaceVisual");
+        surface = java.util.Objects.requireNonNull(surface, "surface");
     }
 
     /** Whether flight geometry exists, independently of a landable surface. */

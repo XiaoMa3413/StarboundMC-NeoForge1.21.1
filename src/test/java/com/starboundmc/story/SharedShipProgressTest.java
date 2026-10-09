@@ -236,17 +236,20 @@ class SharedShipProgressTest
     }
 
     @Test
-    void futureSchemaIsReadOnlyAndRoundTripsUntouched()
+    void onlyTheCurrentExplicitVersionCanBeLoaded()
     {
-        CompoundTag future = new CompoundTag();
-        future.putInt("Version", SharedShipProgress.CURRENT_SCHEMA_VERSION + 1);
-        future.putString("FutureField", "keep-me");
-
-        SharedShipProgress.LoadResult loaded = SharedShipProgress.load(future);
-
-        assertFalse(loaded.state().isWritable());
-        assertSame(loaded.state(), loaded.state().beginCoreReboot(0L, 1L));
-        assertEquals(future, loaded.state().save());
-        assertFalse(loaded.requiresSave());
+        CompoundTag saved = SharedShipProgress.newWorld().save();
+        assertEquals(saved, SharedShipProgress.load(saved).state().save());
+        CompoundTag missing = saved.copy();
+        missing.remove("Version");
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(missing));
+        CompoundTag wrongType = saved.copy();
+        wrongType.putString("Version", Integer.toString(SharedShipProgress.CURRENT_SCHEMA_VERSION));
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(wrongType));
+        for (int version : new int[]{SharedShipProgress.CURRENT_SCHEMA_VERSION - 1, SharedShipProgress.CURRENT_SCHEMA_VERSION + 1}) {
+            CompoundTag unsupported = saved.copy();
+            unsupported.putInt("Version", version);
+            org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> SharedShipProgress.load(unsupported));
+        }
     }
 }

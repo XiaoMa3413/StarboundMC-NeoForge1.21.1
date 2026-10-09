@@ -112,8 +112,10 @@ public final class RelayData extends SavedData {
 
     private void persistJournal(MinecraftServer server) {
         setDirty();
-        // NeoForge's normal SavedData save queues IO and logs write errors. Drain older
-        // snapshots, then synchronously write this journal so failure aborts the transition.
+        // Relay-specific crash recovery: placement/removal must not outrun its journal.
+        // These transitions and SavedData snapshots run on the server thread. Normal
+        // SavedData save queues IO and logs errors; drain older writes before using
+        // NeoForge's synchronous atomic writer so stale snapshots cannot overwrite this one.
         net.neoforged.neoforge.common.IOUtilities.waitUntilIOWorkerComplete();
         var envelope = new CompoundTag();
         envelope.put("data", save(new CompoundTag(), server.registryAccess()));
@@ -126,7 +128,7 @@ public final class RelayData extends SavedData {
         } catch (java.io.IOException failure) {
             throw new java.io.UncheckedIOException("Cannot persist relay transaction journal", failure);
         }
-        setDirty(false);
+        setDirty(false); // This exact server-thread snapshot is already on disk.
     }
     public static RelayData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(new Factory<>(RelayData::new, RelayData::load), "starboundmc_relay");

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 package com.starboundmc.story;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,12 +23,13 @@ class EppTaskProgressTest {
         assertTrue(progress.claimable(NovaTask.LUNAR_SORTIE));
         assertFalse(progress.claim(NovaTask.LUNAR_SORTIE).claimable(NovaTask.LUNAR_SORTIE));
     }
-    @Test void oldTaskLedgerKeepsClaimsDuringMigration() {
-        var tag = new CompoundTag(); tag.putInt("schema", 1); tag.putInt("completed", 15); tag.putInt("claimed", 6);
-        var old = NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE, tag).getOrThrow();
-        var migrated = old.observeEpp(true, false, false);
-        assertTrue(migrated.claimed(NovaTask.SURFACE)); assertTrue(migrated.claimed(NovaTask.REPAIR));
-        assertFalse(migrated.claimable(NovaTask.REPAIR)); assertTrue(migrated.claimable(NovaTask.LIFE_SUPPORT));
-        assertEquals(NovaTaskProgress.SCHEMA, migrated.schemaVersion());
+    @Test void currentLedgerKeepsClaimsWhenLifeSupportCompletes() {
+        var progress = NovaTaskProgress.DEFAULT.observe(true, true, false, false, true)
+                .claim(NovaTask.SURFACE).claim(NovaTask.REPAIR);
+        var restored = NovaTaskProgress.CODEC.parse(NbtOps.INSTANCE,
+                NovaTaskProgress.CODEC.encodeStart(NbtOps.INSTANCE, progress).getOrThrow()).getOrThrow();
+        var equipped = restored.observeEpp(true, false, false);
+        assertTrue(equipped.claimed(NovaTask.SURFACE)); assertTrue(equipped.claimed(NovaTask.REPAIR));
+        assertFalse(equipped.claimable(NovaTask.REPAIR)); assertTrue(equipped.claimable(NovaTask.LIFE_SUPPORT));
     }
 }

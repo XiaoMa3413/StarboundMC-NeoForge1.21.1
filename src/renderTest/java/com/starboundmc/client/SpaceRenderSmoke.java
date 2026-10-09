@@ -1,7 +1,7 @@
 package com.starboundmc.client;
 
 import com.starboundmc.StarboundMC;
-import com.starboundmc.client.space.FreeFlightPoseProvider;
+import com.starboundmc.client.space.ShipPoseProvider;
 import com.starboundmc.client.space.SpaceRenderState;
 import com.starboundmc.client.space.BackgroundStarCatalog;
 import com.starboundmc.space.UniverseDelta;
@@ -333,11 +333,17 @@ public final class SpaceRenderSmoke {
     }
 
     private record FixturePose(UniversePosition universePosition, String currentBodyId, String hint)
-            implements FreeFlightPoseProvider {
+            implements ShipPoseProvider {
         public UniverseDelta universeVelocity() { return new UniverseDelta(0, 0, 0); }
         public double yaw() { return 0; }
         public double pitch() { return 0; }
         public double roll() { return 0; }
+        public com.starboundmc.warp.FlightPhase flightPhase() { return com.starboundmc.warp.FlightPhase.DOCKED; }
+        public boolean isWarping() { return false; }
+        public float warpProgress() { return 0; }
+        public int warpDurationTicks() { return 1; }
+        public String targetBodyId() { return null; }
+        public String targetSystemHint() { return null; }
         public String currentSystemHint() {
             return hint != null ? hint : currentBodyId == null ? null : StarmapUniverse.systemIdOfEntry(currentBodyId);
         }

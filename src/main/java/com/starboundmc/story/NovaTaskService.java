@@ -16,10 +16,9 @@ public final class NovaTaskService {
 
     public static NovaTaskProgress refresh(ServerPlayer player) {
         NovaTaskProgress previous = player.getData(ModAttachments.NOVA_TASKS);
-        if (player.isSpectator() || player.getServer() == null || !previous.writable()) return previous;
+        if (player.isSpectator() || player.getServer() == null) return previous;
         SharedShipProgress ship = ShipStateData.get(player.getServer()).getStoryProgress();
         PlayerStoryState story = player.getData(ModAttachments.PLAYER_STORY);
-        if (!ship.isWritable() || !story.isWritable()) return previous;
         boolean contacted = ship.core() == CoreState.ONLINE
                 && (ship.surfaceMission() != SurfaceMissionState.LOCKED
                 || story.identityConfirmed() && story.hasReadAllRequiredTopics());
@@ -59,7 +58,7 @@ public final class NovaTaskService {
         }
     }
 
-    /** Caller has already validated terminal binding, range, spectator and story schemas. */
+    /** Caller has already validated terminal binding, range, spectator. */
     public static void claim(ServerPlayer player, NovaTask task) {
         refresh(player);
         if (grantReward(player, task)) {

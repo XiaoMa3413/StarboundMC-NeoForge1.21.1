@@ -38,6 +38,19 @@ public final class NovaTaskGameTests {
         return NovaTaskProgress.DEFAULT.observe(true, true, true, true, true);
     }
     @GameTest(template = "shuttle_test_empty")
+    public static void newPlayerAttachmentsUseTheirDefaultSuppliers(GameTestHelper h) {
+        try (var p = player(h, "NovaFresh")) {
+            h.assertTrue(!p.player.hasData(ModAttachments.NOVA_TASKS), "Task attachment already existed");
+            h.assertTrue(!p.player.hasData(ModAttachments.VOXEL_WALLET), "Wallet attachment already existed");
+            h.assertTrue(!p.player.hasData(ModAttachments.PLAYER_STORY), "Story attachment already existed");
+            h.assertTrue(p.player.getData(ModAttachments.NOVA_TASKS) == NovaTaskProgress.DEFAULT, "Task supplier did not initialize DEFAULT");
+            h.assertTrue(p.player.getData(ModAttachments.VOXEL_WALLET) == com.starboundmc.economy.VoxelWalletState.DEFAULT,
+                    "Wallet supplier did not initialize DEFAULT");
+            h.assertTrue(p.player.getData(ModAttachments.PLAYER_STORY) == PlayerStoryState.DEFAULT, "Story supplier did not initialize DEFAULT");
+        }
+        h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
     public static void personalClaimsSurvivePlayerSaveAndRejectReplay(GameTestHelper h) {
         try (var a = player(h, "NovaAlice"); var b = player(h, "NovaBob"); var reload = player(h, "NovaReload")) {
             a.player.setData(ModAttachments.NOVA_TASKS, completed());

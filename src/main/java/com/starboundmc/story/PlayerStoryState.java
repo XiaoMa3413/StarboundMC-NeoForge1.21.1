@@ -8,8 +8,7 @@ import java.util.Objects;
 /**
  * Immutable player-local knowledge and tutorial state. Shared ship progress is
  * deliberately excluded and remains in {@link com.starboundmc.warp.ShipStateData}.
- * The schema field supports forward migrations; opening newer player data in
- * an older mod build is not a supported, lossless downgrade path.
+ * Serialized attachments must match the current schema; new players use DEFAULT.
  */
 public record PlayerStoryState(int schemaVersion, long revision, boolean identityConfirmed,
                                int readSituationMask, int tutorialMask, int dismissedHintMask,
@@ -38,12 +37,12 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
 
     public PlayerStoryState
     {
-        if (schemaVersion < CURRENT_SCHEMA_VERSION)
+        if (schemaVersion != CURRENT_SCHEMA_VERSION)
             throw new IllegalArgumentException("Unsupported pre-release player story schema: " + schemaVersion);
         if (revision < 0 || readSituationMask < 0 || tutorialMask < 0 || dismissedHintMask < 0 || flagsMask < 0
                 || (readSituationMask & ~SituationTopic.REQUIRED_MASK) != 0
                 || (tutorialMask & ~TutorialTopic.knownMask()) != 0
-                || schemaVersion == CURRENT_SCHEMA_VERSION && (flagsMask & ~PlayerStoryFlag.knownMask()) != 0)
+                || (flagsMask & ~PlayerStoryFlag.knownMask()) != 0)
             throw new IllegalArgumentException("Invalid player story masks or revision");
     }
 
@@ -80,15 +79,9 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
         return hasFlag(flag);
     }
 
-    /** Returns whether this attachment may be changed by the current build. */
-    public boolean isWritable()
-    {
-        return schemaVersion <= CURRENT_SCHEMA_VERSION;
-    }
-
     public PlayerStoryState confirmIdentity()
     {
-        if (!isWritable() || identityConfirmed)
+        if (identityConfirmed)
             return this;
         return changed(true, readSituationMask, tutorialMask, dismissedHintMask);
     }
@@ -96,8 +89,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withReadTopic(SituationTopic topic)
     {
         Objects.requireNonNull(topic, "topic");
-        if (!isWritable())
-            return this;
         int updatedMask = readSituationMask | topic.mask();
         if (updatedMask == readSituationMask)
             return this;
@@ -107,8 +98,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withTutorialSeen(TutorialTopic topic)
     {
         Objects.requireNonNull(topic, "topic");
-        if (!isWritable())
-            return this;
         int updatedMask = tutorialMask | topic.mask();
         if (updatedMask == tutorialMask)
             return this;
@@ -117,7 +106,7 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
 
     public PlayerStoryState withDismissedHint(int stableHintBit)
     {
-        if (!isWritable() || stableHintBit <= 0 || Integer.bitCount(stableHintBit) != 1)
+        if (stableHintBit <= 0 || Integer.bitCount(stableHintBit) != 1)
             return this;
         int updatedMask = dismissedHintMask | stableHintBit;
         if (updatedMask == dismissedHintMask)
@@ -128,8 +117,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     public PlayerStoryState withFlag(PlayerStoryFlag flag)
     {
         Objects.requireNonNull(flag, "flag");
-        if (!isWritable())
-            return this;
         int updatedMask = flagsMask | flag.mask();
         if (updatedMask == flagsMask)
             return this;
@@ -145,9 +132,6 @@ public record PlayerStoryState(int schemaVersion, long revision, boolean identit
     /** Marks the personal prologue as seen without granting any later task evidence. */
     public PlayerStoryState debugCompletePrologue()
     {
-        if (!isWritable())
-            return this;
-
         int prologueFlags = PlayerStoryFlag.INITIAL_WAKE_BROADCAST.mask()
                 | PlayerStoryFlag.TERMINAL_REMINDER_BROADCAST.mask()
                 | PlayerStoryFlag.TERMINAL_CONTACTED.mask()

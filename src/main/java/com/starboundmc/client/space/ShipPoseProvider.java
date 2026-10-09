@@ -4,8 +4,7 @@ import com.starboundmc.warp.FlightPhase;
 import com.starboundmc.space.UniversePosition;
 
 /**
- * Source of a ship's virtual pose. A future manual flight controller can
- * implement this interface without coupling the sky renderer to its controls.
+ * Canonical virtual pose and route projection consumed by the space renderer.
  */
 public interface ShipPoseProvider
 {
