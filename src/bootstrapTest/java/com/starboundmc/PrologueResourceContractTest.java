@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Static wiring checks for the first playable prologue cue chain. */
-final class Stage8PrologueTest
+/** Translation and recipe resources supporting the first playable prologue. */
+final class PrologueResourceContractTest
 {
 
     @Test

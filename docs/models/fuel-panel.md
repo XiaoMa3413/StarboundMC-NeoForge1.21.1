@@ -27,8 +27,8 @@ fuel amounts and refuelling remain in the existing right-click interface.
 
 `starboundmc:fuel_controller`, its facing-only blockstate, block entity, five
 persistent fuel slots, loot, screen, capacity rules and network handlers are
-unchanged. The active implementation is `Stage2Blocks.FuelController`; the old
-excluded `FuelControllerBlock` has not been edited.
+unchanged. The registered fuel controller uses the current server-authoritative
+fuel inventory and menu implementation.
 
 Horizontal wall placement follows the clicked face. Top/bottom placement keeps
 the player-facing fallback. Selection and collision use a thin rotated envelope

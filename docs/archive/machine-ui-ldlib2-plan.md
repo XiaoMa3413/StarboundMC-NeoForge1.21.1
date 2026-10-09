@@ -1,8 +1,10 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/manufacturing.md)，未完成事项见[当前工作](../current-work.md)。
+
 # 普通机器界面 LDLib2 迁移计划
 
 > 状态：主要机器页面（含合金炉）已接入；人工交互、多人同步与视觉验收记录仍待补齐。
 >
-> 当前基线与存储政策见 [文档入口](README.md) 和 [architecture](architecture.md)；以下迁移阶段记录用于追溯。
+> 当前基线与存储政策见 [文档入口](../README.md) 和 [architecture](../architecture.md)；以下迁移阶段记录用于追溯。
 >
 > 建立日期：2026-08-27
 
@@ -53,7 +55,7 @@
 
 - [x] 迁移输入、燃料、输出槽和烧制/燃料进度显示。
 - [x] 保持配方、燃料消耗、Shift 移动规则与服务端菜单数据不变。
-- [x] 使用紧凑石墨机器面板，琥珀热量与青色加工通道；见[机器精修记录](ui-design-contracts/ship-machines-polish.md)。
+- [x] 使用紧凑石墨机器面板，琥珀热量与青色加工通道；见[机器精修记录](../ui-design-contracts/ship-machines-polish.md)。
 
 ### M4：燃料控制器（已实现，验收记录待补）
 

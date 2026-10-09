@@ -9,7 +9,7 @@ import com.starboundmc.network.WarpStartPacket;
 import com.starboundmc.space.UniverseDelta;
 import com.starboundmc.space.UniversePosition;
 import com.starboundmc.story.ShipEnvironmentService;
-import com.starboundmc.world.Stage6TravelService;
+import com.starboundmc.world.ShipTravelService;
 import com.starboundmc.world.universe.CelestialBodyDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -132,7 +132,7 @@ public final class ShipWarpManager
         requireState();
         MinecraftServer server = player.getServer();
         if (server == null || flight != null
-                || !player.level().dimension().equals(Stage6TravelService.SHIP_LEVEL)) return false;
+                || !player.level().dimension().equals(ShipTravelService.SHIP_LEVEL)) return false;
         // A ship parked at a body the universe no longer has may not travel: its
         // departure geometry is unknown, so a route could not be built.
         if (isStrandedAtUnknownBody())
@@ -162,7 +162,7 @@ public final class ShipWarpManager
                     "message.starboundmc.warp.hyperdrive_offline"), true);
             return false;
         }
-        ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
+        ServerLevel ship = server.getLevel(ShipTravelService.SHIP_LEVEL);
         if (ship == null) return false;
         if (ShipCrewSafety.hasOutsideCrew(ship.players())) {
             player.displayClientMessage(Component.translatable("message.starboundmc.warp.crew_outside"), true);
@@ -181,7 +181,7 @@ public final class ShipWarpManager
         revision++;
         broadcastAge = 0;
         persistFlight();
-        ship.playSound(null, Stage6TravelService.SHIP_POS, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0F, 1.0F);
+        ship.playSound(null, ShipTravelService.SHIP_POS, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 1.0F, 1.0F);
         player.displayClientMessage(Component.translatable("message.starboundmc.warp.start", Component.translatable(entry.nameKey())), true);
         // Early visual/audio notification; flight snapshots own position and progression.
         ModNetwork.sendToPlayersInDimension(ship,
@@ -194,7 +194,7 @@ public final class ShipWarpManager
     public static void tick(MinecraftServer server)
     {
         if (flight == null) return;
-        ServerLevel ship = server.getLevel(Stage6TravelService.SHIP_LEVEL);
+        ServerLevel ship = server.getLevel(ShipTravelService.SHIP_LEVEL);
         if (ship == null) return;
         boolean hold = ShipCrewSafety.hasOutsideCrew(ship.players());
         if (hold != crewHold) {
@@ -233,7 +233,7 @@ public final class ShipWarpManager
         ModNetwork.sendToPlayer(player, new SyncStarStatePacket(
                 new ArrayList<>(state.getVisited()), state.getCurrentEntryId()));
         ServerLevel ship = player.getServer() == null ? null
-                : player.getServer().getLevel(Stage6TravelService.SHIP_LEVEL);
+                : player.getServer().getLevel(ShipTravelService.SHIP_LEVEL);
         if (ship != null) ModNetwork.sendToPlayer(player, packet(ship));
     }
 

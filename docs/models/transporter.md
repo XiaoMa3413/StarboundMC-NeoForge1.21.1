@@ -26,8 +26,8 @@ runtime assets.
 
 ## Runtime behavior
 
-The registered ID remains `starboundmc:teleporter`. `Stage2Blocks.Teleporter`
-extends `TransporterBlock`, with `facing` and `part=0/1/2` state properties.
+The registered ID remains `starboundmc:teleporter`. The current transporter uses
+`facing` and `part=0/1/2` state properties and a server-authoritative destination registry.
 All parts occupy real block cells and have rotated collision/selection shapes.
 The front and passenger bay stay open. Placement requires two free, dry cells
 above the base and space for the upper collision shapes. Pistons cannot move it.

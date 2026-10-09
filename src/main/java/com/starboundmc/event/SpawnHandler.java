@@ -2,7 +2,7 @@ package com.starboundmc.event;
 
 import com.starboundmc.StarboundMC;
 import com.starboundmc.item.ModItems;
-import com.starboundmc.world.Stage6TravelService;
+import com.starboundmc.world.ShipTravelService;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -21,10 +21,10 @@ public class SpawnHandler
         {
             giveStarterKit(player);
             player.getPersistentData().putBoolean(STARTER_KEY, true);
-            Stage6TravelService.teleportToShip(player);
+            ShipTravelService.teleportToShip(player);
         }
         else if (event.getEntity() instanceof ServerPlayer player)
-            Stage6TravelService.syncState(player);
+            ShipTravelService.syncState(player);
     }
 
     @SubscribeEvent
@@ -41,7 +41,7 @@ public class SpawnHandler
             return;
         if (event.getEntity() instanceof ServerPlayer player && player.getRespawnPosition() == null)
         {
-            Stage6TravelService.teleportToShip(player);
+            ShipTravelService.teleportToShip(player);
         }
     }
 

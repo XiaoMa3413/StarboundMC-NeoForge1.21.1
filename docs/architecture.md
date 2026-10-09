@@ -1,6 +1,6 @@
 # 当前架构
 
-平台：Minecraft 1.21.1 / NeoForge 21.1.248 / Java 21。基线为 PR #20 合并后的 `21c4c349664351966aaf0c3d8a4c6f53eec1339a`。
+本文描述当前主线架构；发生冲突时以当前代码、测试和运行证据为准。平台：Minecraft 1.21.1 / NeoForge / Java 21。
 
 - 服务端拥有玩法、库存、燃料、剧情和事务 authority；客户端只接收投影与缓存。
 - `UniverseCatalog` 索引当前加载的宇宙定义，`UniverseNavigation` 提供航行几何。归属来自数据，不从 ID 前缀推断。Catalog 构建时拒绝重复身份和非法视觉资源名；space-rendered 列表只含同时具备视觉和导航的天体。
@@ -17,4 +17,6 @@
 
 首次公开 playtest 前不承诺内部开发快照兼容。Story 与 Nova task 只读取当前 schema，旧版和未来版本均拒绝；已序列化 attachment 必须包含全部必需字段并满足当前 invariant，钱包余额缺失或负值也拒绝。新玩家通过 attachment supplier 获得 DEFAULT，全新世界通过明确的新建路径初始化。缺失/损坏的既有 authoritative state 不解释为新世界，未初始化的航行 authority 不提供假位置或假燃料。
 
-当前渲染合同见 [pipeline](space-render-pipeline.md)，未完成工作见 [current-work](current-work.md)。`archive/` 只供明确的历史调查，不参与普通开发决策。
+注册资源 ID 与数据驱动身份应保持稳定，但这不等于维护所有历史内部 schema。开始向真实玩家公开发行后，玩家投入的数据成为兼容设计的重要约束；届时 schema / ID migration 单独设计，不提前加入迁移、降级或适配层。
+
+专题合同从[文档入口](README.md)进入，当前渲染合同见 [pipeline](space-render-pipeline.md)，未完成工作见 [current-work](current-work.md)。`archive/` 与 `legacy-forge/` 只供明确的历史调查，不参与普通开发决策。

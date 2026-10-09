@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # 飞船维度太空视觉增强计划
 
 > 2026-09-30：`refactor/space-render-v2` 的渲染技术路线已由 [新版路线](space-render-roadmap.md) 接替。本文件保留航行尺度、节奏和过渡的历史依据，不再规定渲染重构顺序。

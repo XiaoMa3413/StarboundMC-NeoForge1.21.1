@@ -42,8 +42,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** Shared facing, interaction and shape implementations for the shipboard blocks. */
-public final class Stage2Blocks {
-    private Stage2Blocks() {
+public final class GameplayBlocks {
+    private GameplayBlocks() {
     }
 
     private abstract static class FacingBlock extends Block {

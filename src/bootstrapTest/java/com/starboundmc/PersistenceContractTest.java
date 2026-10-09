@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class Stage5PersistenceTest {
+final class PersistenceContractTest {
     @Test
     void flightSnapshotRoundTripsAtomically() {
         UniversePosition position = UniversePosition.of(

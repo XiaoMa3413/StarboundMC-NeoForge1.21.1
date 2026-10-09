@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-final class Stage4DataComponentTest {
+final class DataComponentContractTest {
     @Test
     void persistentCodecRoundTripsAllTracks() {
         MatterManipulatorUpgrades original = new MatterManipulatorUpgrades(3, 2, 1, 3);

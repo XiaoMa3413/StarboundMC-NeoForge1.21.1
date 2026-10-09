@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class Stage8WorldgenTest {
+final class WorldgenResourceContractTest {
     private static final Path MAIN_DATA = Path.of("src/main/resources/data/starboundmc");
     private static final Path GENERATED_DATA = Path.of("src/generated/resources/data/starboundmc");
 

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-final class Stage6GameplayTest {
+final class FuelAcceptanceTest {
     @Test
     void fuelAcceptanceIsClampedAndNeverPartialBeyondCapacity() {
         assertEquals(20, ShipFuelService.acceptedAmount(900, 20));

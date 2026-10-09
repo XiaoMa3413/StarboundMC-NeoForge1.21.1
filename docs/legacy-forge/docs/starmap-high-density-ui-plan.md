@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../../README.md)。
+
 # 星图高密度 UI 渐进式重构计划
 
 > 状态：HD-0～HD-5 已完成并通过实机验收

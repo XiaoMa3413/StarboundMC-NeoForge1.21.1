@@ -13,7 +13,7 @@ The sealed whitebox was approved before texturing. All 43 approved meshes retain
 ## Runtime and compatibility
 
 - Existing block/item/entity IDs and the original facing-only block state are retained.
-- The shipped implementation is Stage2Blocks.ShipCrate; the legacy ShipCrateBlock is excluded from compilation.
+- The registered ship locker uses the current shared inventory and server-owned viewer lifecycle.
 - Chassis is a static NeoForge OBJ model. Left and right doors are standalone baked models rendered by ShipLockerRenderer.
 - The complete item model contains the closed doors and both flat hologram layers.
 - Selection/collision is a thin cabinet shape rotated for all four directions.

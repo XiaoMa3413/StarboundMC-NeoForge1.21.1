@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-final class Stage3NetworkWiringTest {
+final class NetworkingApiBoundaryTest {
 
     @Test
     void removesLegacyForgeChannelCallsFromAllSources() throws IOException {
         try (var paths = Files.walk(Path.of("src/main/java"))) {
             String sources = paths.filter(path -> path.toString().endsWith(".java"))
-                    .map(Stage3NetworkWiringTest::readUnchecked)
+                    .map(NetworkingApiBoundaryTest::readUnchecked)
                     .reduce("", String::concat);
             assertFalse(sources.contains("net.minecraftforge.network"));
             assertFalse(sources.contains("SimpleChannel"));

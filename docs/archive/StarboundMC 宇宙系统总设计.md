@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/universe.md)，未完成事项见[当前工作](../current-work.md)。
+
 # StarboundMC 宇宙系统总设计
 
 > 项目：StarboundMC-NeoForge1.21.1
@@ -338,7 +340,7 @@ CurrentEntry = sys1:barren
 
 `CurrentEntry` 保存唯一 body 身份，位置保存 sector + local，phase 保存稳定名称。当前 schema 3 不支持此前内部开发格式；不读取旧 `Planet` 或绝对 `ShipX/Y/Z`，不双写兼容字段。未知 datapack ID 保留原值与 pose，并关闭缺少导航几何的航行。损坏存档明确拒绝，不能初始化为 starter。
 
-新增天体与规则通过 `UniverseCatalog`、`UniverseNavigation` 和 entry ID。公开发布后的 ID/schema 演进须单独设计；首次公开版本前不承诺内部快照兼容。稳定 authority 见 [architecture](architecture.md)。
+新增天体与规则通过 `UniverseCatalog`、`UniverseNavigation` 和 entry ID。公开发布后的 ID/schema 演进须单独设计；首次公开版本前不承诺内部快照兼容。稳定 authority 见 [architecture](../architecture.md)。
 
 ---
 

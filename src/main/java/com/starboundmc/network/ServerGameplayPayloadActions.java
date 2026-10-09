@@ -2,17 +2,22 @@ package com.starboundmc.network;
 
 import com.starboundmc.block.ModBlocks;
 import com.starboundmc.menu.FuelControllerMenu;
+import com.starboundmc.menu.ShipAiTerminalMenu;
 import com.starboundmc.menu.TeleporterMenu;
 import com.starboundmc.menu.UpgradeMenu;
+import com.starboundmc.menu.WarpControlMenu;
 import com.starboundmc.story.ShipEnvironmentService;
-import com.starboundmc.world.Stage6TravelService;
+import com.starboundmc.story.ShipStoryService;
+import com.starboundmc.warp.ShipWarpManager;
+import com.starboundmc.world.ShipTravelService;
 import com.starboundmc.world.TeleporterManager;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
-/** Stage 6 gameplay actions attached to the payload authority boundary. */
-public class Stage6ServerPayloadActions implements ServerPayloadActions {
+/** Current gameplay operations behind the server payload authority boundary. */
+public final class ServerGameplayPayloadActions implements ServerPayloadActions {
     @Override
     public void upgradeMatterManipulator(ServerPlayer player, int track) {
         if (player.containerMenu instanceof UpgradeMenu menu && menu.stillValid(player)) {
@@ -30,9 +35,9 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
             return;
         }
         if (destinationKey.equals("ship")) {
-            Stage6TravelService.teleportToShip(player);
+            ShipTravelService.teleportToShip(player);
         } else if (destinationKey.equals("planet")) {
-            Stage6TravelService.teleportToPlanetSurface(player);
+            ShipTravelService.teleportToPlanetSurface(player);
         } else if (destinationKey.startsWith("n|")) {
             TeleporterManager.teleportToNamed(player, destinationKey.substring(2));
         }
@@ -65,7 +70,7 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
             return;
         }
         if (!player.isSpectator() && ShipEnvironmentService.isCoreOnline(player.getServer())) {
-            Stage6TravelService.teleportToShip(player);
+            ShipTravelService.teleportToShip(player);
         } else if (!player.isSpectator()) {
             player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
                     "message.starboundmc.warp.core_offline"), true);
@@ -86,5 +91,49 @@ public class Stage6ServerPayloadActions implements ServerPayloadActions {
                 && menu.pos.equals(source)
                 && menu.stillValid(player)
                 && player.level().getBlockState(source).is(ModBlocks.TELEPORTER.get());
+    }
+
+    @Override
+    public void startWarp(ServerPlayer player, String entryId) {
+        if (player.containerMenu instanceof WarpControlMenu menu && menu.stillValid(player)) {
+            ShipWarpManager.startWarp(player, entryId);
+        }
+    }
+
+    @Override
+    public void shipAiAction(ServerPlayer player, int containerId, long requestId,
+                             ShipAiActionPacket.Action action, int argument) {
+        if (!player.isSpectator()
+                && player.containerMenu instanceof ShipAiTerminalMenu menu
+                && menu.containerId == containerId
+                && menu.stillValid(player)) {
+            ShipStoryService.handleTerminalAction(
+                    player, containerId, requestId, action, argument);
+        }
+    }
+
+    @Override
+    public void startRefinement(ServerPlayer player, BlockPos pos) {
+        VoxelMachineActions.startRefinement(player, pos);
+    }
+
+    @Override
+    public void stopRefinement(ServerPlayer player, BlockPos pos) {
+        VoxelMachineActions.stopRefinement(player, pos);
+    }
+
+    @Override
+    public void claimRefinedVoxels(ServerPlayer player, BlockPos pos) {
+        VoxelMachineActions.claimRefinedVoxels(player, pos);
+    }
+
+    @Override
+    public void startPrint(ServerPlayer player, BlockPos pos, ResourceLocation recipeId, int quantity) {
+        VoxelMachineActions.startPrint(player, pos, recipeId, quantity);
+    }
+
+    @Override
+    public void cancelPrintQueue(ServerPlayer player, BlockPos pos, java.util.UUID queueId) {
+        VoxelMachineActions.cancelPrintQueue(player, pos, queueId);
     }
 }

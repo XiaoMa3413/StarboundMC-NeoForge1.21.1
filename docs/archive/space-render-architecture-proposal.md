@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # 太空渲染架构改进提案
 
 > 分支：`refactor/space-render-v2`

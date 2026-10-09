@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class Stage10ResourcesTest {
+final class ResourceIntegrityTest {
     private static final Path ASSETS = Path.of("src/main/resources/assets/starboundmc");
     private static final Path DATA = Path.of("src/main/resources/data/starboundmc");
     private static final Path GENERATED = Path.of("src/generated/resources/data/starboundmc");

@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/hud.md)，未完成事项见[当前工作](../current-work.md)。
+
 # HUD / AR 动画交付与验证
 
 日期：2026-09-23。分支：`codex/hud-ar-refactor`。接续 `agentrouter2`、`agentrouter3` 的工作，对照用户提供的《StarboundMC HUD - AR 动画与视效增强 — Astra 完整指导 Plan》完成。范围为 HUD 表现；不扩展 H6 任务内容、Scanner、EPP 规则或飞船玩法。

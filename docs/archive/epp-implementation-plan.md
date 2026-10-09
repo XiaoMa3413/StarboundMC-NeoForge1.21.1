@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/epp.md)，未完成事项见[当前工作](../current-work.md)。
+
 # EPP 环境生存实施计划
 
 基线：`codex/epp-mechanisms` / `e11661e`。2026-09-18。

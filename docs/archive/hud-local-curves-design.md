@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/hud.md)，未完成事项见[当前工作](../current-work.md)。
+
 # HUD 全屏双曲线设计
 
 2026-09-23 补充：本文保留共享曲线的设计与历史验证。后续动画、Boot 和 N.O.V.A. 的最终表现见 [动画交付与验证](hud-animation-validation.md)；其中旧右上日志、中央框及 H5 Compass 下移已被替换，曲线本身未变。

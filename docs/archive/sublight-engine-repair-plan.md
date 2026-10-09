@@ -1,4 +1,6 @@
-> 当前存储政策以 [architecture](architecture.md) 为准。以下 dated 验证段落是历史证据，不要求恢复已删除的内部兼容。
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/nova.md)，未完成事项见[当前工作](../current-work.md)。
+
+> 当前存储政策以 [architecture](../architecture.md) 为准。以下 dated 验证段落是历史证据，不要求恢复已删除的内部兼容。
 
 # 亚光速引擎维修闭环实施计划
 

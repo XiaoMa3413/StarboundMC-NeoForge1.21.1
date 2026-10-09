@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/hud.md)，未完成事项见[当前工作](../current-work.md)。
+
 # HUD 动画语言与实施记录
 
 基线：`codex/hud-ar-refactor`，`7cfc2ce`。2026-09-22 按用户完整动画计划实施；具体节奏授权实现方确定。此任务不是 H6 任务内容开发。

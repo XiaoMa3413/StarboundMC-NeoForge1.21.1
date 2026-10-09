@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class Stage3PayloadCodecTest {
+final class PayloadCodecContractTest {
     @Test
     void payloadTypesAreUniqueAndNamespaced() {
         List<CustomPacketPayload.Type<?>> types = List.of(

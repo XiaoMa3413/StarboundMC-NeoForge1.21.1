@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 可能引用已删除 API 和已结束的迁移假设；不自动作为当前实施合同。当前入口见[文档索引](../README.md)。
+
 # 太空渲染技术路线与执行记录
 
 > 负责分支：`refactor/space-render-v2`。2026-09-30 接手基线：`2ff090d`。

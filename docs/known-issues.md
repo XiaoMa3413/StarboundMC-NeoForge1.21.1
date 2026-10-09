@@ -62,12 +62,6 @@
 
 本问题目前没有改变功能正确性，也没有修改现有 UI 行为；在完成优化并通过实机验证前，不标记为已解决。
 
-## 当前宇宙与存档验证边界
-
-当前 canonical 船存档严格读取 schema 3，早期内部开发 schema 不受支持。未知 datapack body ID 与 pose 原样保留并阻止缺少几何的航行；恢复相应 datapack 后才能重新解析位置。这是当前数据健壮性，不是历史迁移。
-
-数学、encode/decode、save/load 与 GameTests 覆盖当前行为；固定视点/GPU smoke 覆盖本机画面和数值，不能替代星图人工交互、航行手感、双客户端专服和跨 GPU/shaderpack 验收。实际执行结果保存在本轮构建日志和 smoke 输出，不用历史测试数量代表当前通过情况。
-
 ## Rocky Moon 抵达未触发地表任务钩子
 
 **状态：待修复**
@@ -75,7 +69,7 @@
 **影响范围：** Rocky Moon 首次登陆任务、NOVA 地表抵达广播、任务终端进度快照和相关教程提示。
 
 `ShipStoryService.isPlanetSurface` 当前只识别主世界、熔融、冰冻和荒芜地表，遗漏
-`RockyMoonPlanet.ROCKY_MOON_LEVEL`。`Stage6TravelService` 与 `TeleporterManager` 在抵达后会调用
+`RockyMoonPlanet.ROCKY_MOON_LEVEL`。飞船传送与已命名传送器在抵达后会调用
 `ShipStoryService.onPlanetSurfaceArrival`，但 Rocky Moon 因此不会进入该分支，玩家在 Rocky Moon
 着陆时不会触发地表任务完成、NOVA 抵达提示或任务进度刷新。
 

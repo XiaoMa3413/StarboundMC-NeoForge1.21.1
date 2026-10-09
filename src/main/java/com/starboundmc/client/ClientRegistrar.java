@@ -19,8 +19,8 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Client-only registrations for menus, entity renderers and dimension effects. */
 @EventBusSubscriber(modid = StarboundMC.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
-public final class Stage2ClientRegistrar {
-    private Stage2ClientRegistrar() {
+public final class ClientRegistrar {
+    private ClientRegistrar() {
     }
 
     @SubscribeEvent

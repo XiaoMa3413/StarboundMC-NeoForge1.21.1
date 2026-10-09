@@ -1,3 +1,5 @@
+> **Historical — not current requirements.** 本文保留施工过程与当时判断，可能引用已删除 API、旧 UI 和已结束的迁移假设。当前规则见[专题 reference](../reference/manufacturing.md)，未完成事项见[当前工作](../current-work.md)。
+
 # 体素提炼与打印合成站计划
 
 > 状态：M0–M5 已完成；M4 客户端视觉/交互及主操作按钮文字修复、M5 专服行为均于
@@ -8,7 +10,7 @@
 >
 > 目标版本：Minecraft 1.21.1 / NeoForge 21.1.x / LDLib2 2.2.36.a
 >
-> 当前基线见 [文档入口](README.md)。存储政策以 [architecture](architecture.md) 为准：打印站只有输出槽，材料从请求者背包预留，体素从钱包预扣；不支持内部旧材料槽存档。以下 dated 阶段记录只供追溯。
+> 当前基线见 [文档入口](../README.md)。存储政策以 [architecture](../architecture.md) 为准：打印站只有输出槽，材料从请求者背包预留，体素从钱包预扣；不支持内部旧材料槽存档。以下 dated 阶段记录只供追溯。
 >
 > 建立日期：2026-08-31
 >

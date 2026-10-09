@@ -20,11 +20,11 @@ import net.minecraft.world.level.Level;
 
 /** Server-authoritative surface travel. Destination and landing policy come from the body definition.
  * An unavailable destination refuses travel, so a failed landing cannot award arrival progress elsewhere. */
-public final class Stage6TravelService {
+public final class ShipTravelService {
     public static final ResourceKey<Level> SHIP_LEVEL = ShipDimensions.SHIP_LEVEL;
     public static final BlockPos SHIP_POS = ShipDimensions.SHIP_POS;
 
-    private Stage6TravelService() {
+    private ShipTravelService() {
     }
 
     public static boolean teleportToShip(ServerPlayer player) {

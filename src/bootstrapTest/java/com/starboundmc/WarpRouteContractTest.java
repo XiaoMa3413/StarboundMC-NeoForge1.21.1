@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class Stage7WarpTest {
+final class WarpRouteContractTest {
     @Test
     void everyRouteAdvancesThroughTheExpectedDeterministicPhases() {
         for (String from : UniverseTestSupport.navigableEntryIds()) {
