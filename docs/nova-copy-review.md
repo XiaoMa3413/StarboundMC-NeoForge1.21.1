@@ -3,7 +3,7 @@
 > 本稿从中英文语言资源中汇总 N.O.V.A. 相关广播、终端对话、任务引导和界面文案，保留资源键，方便逐条批注和修改。
 > 修改本稿不会自动改动游戏资源；确认后的文案可据此回写 `zh_cn.json` / `en_us.json`。
 
-共整理 **195 条文案**。中文与英文并列展示；带有“资源遗留”标签的条目目前没有接入当前流程，带有“交互原型”标签的条目属于终端交互原型。
+共整理 **189 条文案**。中文与英文并列展示；带有“资源遗留”标签的条目目前没有接入当前流程，带有“交互原型”标签的条目属于终端交互原型。
 
 资源来源：`src/main/resources/assets/starboundmc/lang/zh_cn.json`、`en_us.json`。动态任务分支也按资源键逐条列出，括号占位符保持原样。
 
@@ -61,13 +61,13 @@
 
 ### `message.starboundmc.nova.prologue.core_online`
 
-- **中文：** 核心系统已恢复。我正在评估飞船的整体状态。
-- **English:** Core systems are back online. I am assessing the ship's overall status.
+- **中文：** 我回来了。核心供电已恢复，传送器可以用了。
+- **English:** I'm back. Core power is restored, and the teleporter is ready.
 
 ### `message.starboundmc.nova.prologue.emergency`
 
-- **中文：** 检测到你已经苏醒。飞船仍有多项系统离线，我目前只能维持短暂通信。抬头显示恢复后，请跟随定位标记前往舰载人工智能终端。
-- **English:** I have detected that you are awake. Several ship systems remain offline, and I can only maintain this link briefly. Once your display returns, follow the marker to the shipboard AI terminal.
+- **中文：** 你醒了。我只能短暂维持通信，跟随定位标记来终端找我。
+- **English:** You're awake. I can only keep this link open briefly. Follow the marker to my terminal.
 
 ### `message.starboundmc.nova.prologue.first_landing_complete` 【资源遗留：当前流程未触发】
 
@@ -76,8 +76,8 @@
 
 ### `message.starboundmc.nova.prologue.locate_terminal`
 
-- **中文：** 定位标记已经启用。请前往舰载人工智能终端，我将协助你恢复飞船系统。
-- **English:** The locator is now active. Proceed to the shipboard AI terminal; I will assist you in restoring the ship's systems.
+- **中文：** 终端的位置已经标出来了。我在这里等你。
+- **English:** I've marked the terminal's location. I'll be waiting here.
 
 ### `message.starboundmc.nova.prologue.mineral_scan_result` 【资源遗留：当前流程未触发】
 
@@ -91,73 +91,73 @@
 
 ### `message.starboundmc.nova.prologue.mineral_scan_sublight_hint`
 
-- **中文：** 钻石晶体可以替代损坏的聚焦阵列。请将物质枪采矿等级提升到 1，打印亚光速引擎点火核心，然后放入飞船引擎的维修模块槽。
-- **English:** Diamond crystals can replace the damaged focusing array. Upgrade your Matter Manipulator to mining tier 1, print a Sublight Ignition Core, and insert it into the ship engine's module socket.
+- **中文：** 找到钻石信号了。它能替代损坏的聚焦阵列。先把物质枪采矿等级升到 1，再采集钻石打印点火核心。
+- **English:** I've found diamond traces. Diamond can replace the damaged focusing array. Upgrade your Matter Manipulator to mining tier 1, then mine some and print an ignition core.
 
 ### `message.starboundmc.nova.prologue.sublight_engine_online`
 
-- **中文：** 亚光速引擎已上线，恒星系内导航恢复；超空间引擎仍处于损坏状态。
-- **English:** Sublight engine online. In-system navigation is restored. The hyperspace engine remains damaged.
+- **中文：** 亚光速引擎恢复了。打开星图，我们可以在这个恒星系内航行了。
+- **English:** The sublight engine is back. Open the Starmap; we can travel within this star system now.
 
 ### `message.starboundmc.nova.prologue.sublight_ignition_started`
 
-- **中文：** 聚焦阵列校准已确认。反应室开始点火，亚光速引擎将自动完成启动。
-- **English:** Focusing array calibration accepted. Reactor ignition is beginning; sublight engine startup will complete automatically.
+- **中文：** 点火核心已接入。正在启动引擎。
+- **English:** The ignition core is connected. Starting the engine.
 
 ### `message.starboundmc.nova.relay.approaching`
 
-- **中文：** 正在接近废弃中继站。目标全域真空，建议准备 Mk.II 和备用氧气。
-- **English:** Approaching abandoned relay. Vacuum throughout; prepare Mk.II and spare oxygen.
+- **中文：** 正在接近中继站，那里全域真空。带上 Mk.II EPP 和备用氧气。
+- **English:** We're approaching the relay station. It's a vacuum throughout. Bring a Mk.II EPP and spare oxygen.
 
 ### `message.starboundmc.nova.relay.arrived`
 
-- **中文：** 已抵达中继站。沿信标从破损入口进入，回收控制室数据核心；储藏室有应急氧气。
-- **English:** On station. Follow the beacon through the broken entrance. Recover the control-room core; oxygen is in storage.
+- **中文：** 到了。沿信标找到破损入口，去控制室取回数据核心。储藏室里有应急氧气。
+- **English:** We're here. Follow the beacon to the breached entrance and retrieve the data core from the control room. There's emergency oxygen in storage.
 
 ### `message.starboundmc.nova.relay.completed`
 
-- **中文：** 已回收数据核心并完成返航。中继站可再次访问。
-- **English:** Data recovered and crew returned. The relay remains available for revisits.
+- **中文：** 数据核心已带回飞船。中继站的位置也记下了，以后还能再来。
+- **English:** The data core is aboard. I've recorded the relay station's location so we can visit again.
 
 ### `message.starboundmc.nova.relay.departed`
 
-- **中文：** 中继站已保存，之后可通过星图再次访问。
-- **English:** Relay saved. You can revisit it from the starmap.
+- **中文：** 我记住了中继站的位置，之后还能再来。
+- **English:** I've recorded the relay station's location. We can come back later.
 
 ### `message.starboundmc.nova.relay.discovered`
 
-- **中文：** N.O.V.A. 检测到附近轨道的异常信号。星图已标记一座废弃中继站。
-- **English:** N.O.V.A. detected an anomalous signal in nearby orbit. An abandoned relay is marked on the starmap.
+- **中文：** 附近轨道有异常信号。我在星图上标出了一座废弃中继站。
+- **English:** There's an unusual signal in a nearby orbit. I've marked a derelict relay station on the Starmap.
 
-### `message.starboundmc.nova.relay.interrupted`
+### `message.starboundmc.nova.relay.interrupted` 【资源遗留：当前流程未触发】
 
-- **中文：** 中继站操作异常中断。现场与快照已保留，请联系管理员检查。
-- **English:** Relay operation interrupted. The site and snapshot were preserved; contact an operator for inspection.
+- **中文：** 中继站接近程序中断。我已暂停展开，暂时不要进入。
+- **English:** The relay approach was interrupted. I've halted deployment. Keep clear of the station for now.
 
 ### `message.starboundmc.nova.relay.no_space`
 
-- **中文：** 未找到安全接近位置，或目标位置已被占用。请检查飞船周边空间后重试。
-- **English:** No safe approach position, or the reserved area is now occupied. Check space around the ship and retry.
+- **中文：** 找不到接近中继站的空位。清理飞船周围的障碍后再试。
+- **English:** I can't find room to approach the relay station. Clear the obstacles around the ship and try again.
 
 ### `message.starboundmc.nova.relay.recovered`
 
-- **中文：** 数据核心已回收。请全员返回飞船，完成本次探索。
-- **English:** Data core recovered. Return all crew to the ship to complete the expedition.
+- **中文：** 数据核心到手了。所有人返回飞船，我们准备离开。
+- **English:** We've got the data core. Everyone back to the ship; we're ready to leave.
 
 ### `message.starboundmc.nova.task.exploration.complete`
 
-- **中文：** 新的探索记录已收录。回来时记得领取奖励。
-- **English:** New expedition recorded. Your reward will be waiting when you return.
+- **中文：** 新的地表记录收到了。回来时，记得领走你的物质枪模块。
+- **English:** I've received the new surface records. Pick up your Matter Manipulator Modules when you're back.
 
 ### `message.starboundmc.nova.task.life_support.complete`
 
-- **中文：** 生命维持设备已就绪。前往岩石卫星前，可以再准备一只应急氧气罐。
-- **English:** Life support is ready. Consider taking an emergency oxygen canister before visiting Rocky Moon.
+- **中文：** EPP 准备好了。出发前，记得在舱内补满氧气。
+- **English:** Your EPP is ready. Top up its oxygen in the cabin before you leave.
 
 ### `message.starboundmc.nova.task.lunar_sortie.complete`
 
-- **中文：** 已返回飞船。你的第一次无氧远征完成了，舱内供氧会补充 EPP 储量。
-- **English:** Welcome back. Your first airless expedition is complete. Cabin life support will replenish your EPP.
+- **中文：** 欢迎回来。让 EPP 补满氧气，歇一会儿吧。
+- **English:** Welcome back. Let your EPP refill, and take a moment to rest.
 
 ### `message.starboundmc.nova.task.repair.complete` 【资源遗留：当前流程未触发】
 
@@ -176,13 +176,13 @@
 
 ### `message.starboundmc.nova.tutorial.matter_manipulator`
 
-- **中文：** 建议先探索附近区域，并使用物质枪收集基础资源。按住右键即可启动采矿激光。
-- **English:** Explore the surrounding area and use the Matter Manipulator to gather basic resources. Hold right-click to activate the mining laser.
+- **中文：** 先收集些木材。拿起物质枪，按住右键采集。
+- **English:** Let's gather some wood first. Equip your Matter Manipulator and hold right-click to collect it.
 
 ### `message.starboundmc.nova.tutorial.voxel_intro`
 
-- **中文：** 检测到新的可用资源：体素。它是一种经过标准化编码的基础物质单位，也是星际社会常用的交换媒介。
-- **English:** New usable resource detected: voxel. It is a standardized unit of matter and a common medium of exchange across settled space.
+- **中文：** 这是体素。打印站用它补全精密结构，星际交易也用它结算。
+- **English:** Those are voxels. The printer uses them to build fine structures, and they're also used as interstellar currency.
 
 ### `message.starboundmc.nova.tutorial.voxel_use` 【资源遗留：当前流程未触发】
 
@@ -233,28 +233,23 @@
 
 ### `gui.starboundmc.ship_ai.prologue.current_objective.summary`
 
-- **中文：** 当前目标：通过飞船传送器前往星球表面。抵达后，我会继续提供环境分析与行动建议。
-- **English:** Current objective: use the ship teleporter to reach the planet surface. I will provide further environmental analysis and guidance after you arrive.
+- **中文：** 带上物质枪，用飞船传送器登陆。我们得找些修船的材料。
+- **English:** Take your Matter Manipulator and use the ship teleporter to land. We need materials to repair the ship.
 
 ### `gui.starboundmc.ship_ai.prologue.first_contact.greeting`
 
-- **中文：** 舰载系统已恢复。你的生命体征稳定。很高兴再次与你取得联系。
-- **English:** Shipboard systems are back online. Your vital signs are stable. It is good to be in contact with you again.
-
-### `gui.starboundmc.ship_ai.prologue.incompatible`
-
-- **中文：** 该世界使用了更新的剧情状态格式。请更新模组后再操作终端。
-- **English:** This world uses a newer story-state format. Update the mod before operating this terminal.
+- **中文：** 连接恢复了。你的生命体征正常。很高兴再见到你。
+- **English:** We're connected again. Your vital signs are normal. It's good to see you.
 
 ### `gui.starboundmc.ship_ai.prologue.landing.briefing`
 
-- **中文：** 传送器仍可使用。先前往地表，再用物质枪采集一块原木，我就能启动矿物扫描。
-- **English:** The teleporter is ready. Reach the surface and use the Matter Manipulator to collect a log; that will let me begin the mineral survey.
+- **中文：** 先用传送器登陆，采集一块原木。我会启动轨道矿物扫描，找找能修船的材料。
+- **English:** Take the teleporter down and collect a log. I'll start an orbital mineral survey to look for ship repair materials.
 
 ### `gui.starboundmc.ship_ai.prologue.late_join.summary`
 
-- **中文：** 核心系统已经恢复。我正在整理飞船现状和当前可执行的任务。
-- **English:** Core systems are back online. I am compiling the ship's current status and the tasks available to you.
+- **中文：** 你来了。传送器还能用，地表应该能找到修船的材料。
+- **English:** There you are. The teleporter still works. We should be able to find repair materials on the surface.
 
 ### `gui.starboundmc.ship_ai.prologue.option.back_to_summary` 【资源遗留：当前流程未触发】
 
@@ -288,8 +283,8 @@
 
 ### `gui.starboundmc.ship_ai.prologue.topic.current_location.response`
 
-- **中文：** 定位已经完成。幸运的是，我们目前位于一颗宜居星球的轨道上。初步扫描表明地表环境适合活动，尚未发现会立即威胁生命的因素。
-- **English:** Our position is confirmed. Fortunately, we are currently in orbit around a habitable planet. Preliminary scans indicate a viable surface, with no immediate threats to life detected.
+- **中文：** 我们停在了一颗宜居星球的轨道上。地表有可呼吸的大气，可以在那里寻找补给。
+- **English:** We ended up in orbit around a habitable planet. There's breathable air on the surface, and we can look for supplies there.
 
 ### `gui.starboundmc.ship_ai.prologue.topic.flight_capability.option`
 
@@ -298,8 +293,8 @@
 
 ### `gui.starboundmc.ship_ai.prologue.topic.flight_capability.response`
 
-- **中文：** 推进系统已经离线，飞船暂时无法依靠自身动力离开轨道。传送系统仍可使用；建议优先恢复亚光速引擎。
-- **English:** The propulsion systems are offline, and the ship cannot leave orbit under its own power. The teleporter remains operational; I recommend restoring the sublight engine first.
+- **中文：** 推进系统离线了，但传送器还能用。先修好亚光速引擎，我们就能离开这条轨道。
+- **English:** Propulsion is offline, but the teleporter still works. Once we repair the sublight engine, we can leave this orbit.
 
 ### `gui.starboundmc.ship_ai.prologue.topic.incident.option`
 
@@ -308,8 +303,8 @@
 
 ### `gui.starboundmc.ship_ai.prologue.topic.incident.response`
 
-- **中文：** 飞船遭遇了一场高强度宇宙风暴，随后偏离原定航线。部分导航数据在事故中丢失，我仍在分析具体原因。
-- **English:** The ship encountered a high-intensity cosmic storm and was forced off its original course. Part of the navigation data was lost during the incident. I am still determining the exact cause.
+- **中文：** 一场宇宙风暴让我们偏离了航线。部分导航记录在事故中丢失，我还在重建事情的经过。
+- **English:** A cosmic storm knocked us off course. Some navigation records were lost in the accident. I'm still piecing together what happened.
 
 ### `gui.starboundmc.ship_ai.prologue.topic.nova_identity.option`
 
@@ -318,8 +313,8 @@
 
 ### `gui.starboundmc.ship_ai.prologue.topic.nova_identity.response`
 
-- **中文：** 我是 N.O.V.A.，全称 Navigation, Operations & Vessel Assistant（导航、运行与舰船助理）。我负责飞船导航、运行协调与舰载系统监测。
-- **English:** I am N.O.V.A.: Navigation, Operations & Vessel Assistant. I coordinate navigation, vessel operations, and onboard system monitoring.
+- **中文：** 我是 N.O.V.A.，你的舰载人工智能。我负责导航，也会帮你把这艘船重新开起来。
+- **English:** I'm N.O.V.A., your shipboard AI. I handle navigation, and I'll help you get this ship moving again.
 
 ### `gui.starboundmc.ship_ai.prologue.topic.read_marker`
 
@@ -328,65 +323,65 @@
 
 ### `gui.starboundmc.ship_ai.repair.complete`
 
-- **中文：** 亚光速引擎已上线，恒星系内航行可用；超空间引擎仍处于损坏状态。
-- **English:** Sublight engine online. In-system travel is available; the hyperspace engine remains damaged.
+- **中文：** 亚光速引擎恢复了。打开星图，我们可以在这个恒星系内航行了。
+- **English:** The sublight engine is back. Open the Starmap; we can travel within this star system now.
 
 ### `gui.starboundmc.ship_ai.repair.igniting`
 
-- **中文：** 亚光速引擎正在点火，序列会自动完成。
-- **English:** Sublight ignition in progress. The sequence will finish automatically.
+- **中文：** 点火序列已经开始。很快就能启程了。
+- **English:** Ignition has started. We'll be ready to leave shortly.
 
 ### `gui.starboundmc.ship_ai.repair.install_core`
 
-- **中文：** 请将亚光速引擎点火核心放入飞船引擎的维修模块槽。消耗一个核心，即可为全船启动点火序列。
-- **English:** Take the Sublight Ignition Core to the ship engine and insert it into the module socket. One core starts ignition for the entire ship.
+- **中文：** 把点火核心放进飞船引擎的维修槽。我来启动引擎。
+- **English:** Put the ignition core in the ship engine's repair slot. I'll start the engine.
 
 ### `gui.starboundmc.ship_ai.repair.need_upgrade`
 
-- **中文：** 请先在打印出的物质枪升级工作台，将你自己的物质枪采矿等级提升到 1。
-- **English:** Upgrade your own Matter Manipulator to mining tier 1 at the printed upgrade workbench.
+- **中文：** 先制作升级工作台，把物质枪的采矿等级升到 1。我们需要它开采钻石。
+- **English:** Print an upgrade workbench and raise your Matter Manipulator to mining tier 1. We'll need it to mine diamonds.
 
 ### `gui.starboundmc.ship_ai.repair.print_core`
 
-- **中文：** 请在体素打印站制作亚光速引擎点火核心，然后放入飞船引擎的维修模块槽。
-- **English:** Print a Sublight Ignition Core at the voxel printer, then insert it into the ship engine's module socket.
+- **中文：** 到体素打印站制作亚光速引擎点火核心，做好后带回飞船。
+- **English:** Print a Sublight Ignition Core at the voxel printer, then bring it back to the ship.
 
 ## 任务引导与阶段提示
 
-### `gui.starboundmc.guidance.claim.help`
+### `gui.starboundmc.guidance.claim.help` 【资源遗留：当前流程未触发】
 
-- **中文：** 目标已完成，物质枪模块可在已完成任务中领取。
-- **English:** This objective is complete. Its Matter Manipulator Module is ready to claim in Completed Missions.
+- **中文：** 你的物质枪模块准备好了，到已完成任务里领取吧。
+- **English:** Your Matter Manipulator Modules are ready. Pick them up under Completed Missions.
 
 ### `gui.starboundmc.guidance.claim.next`
 
 - **中文：** 领取物质枪模块奖励。
 - **English:** Claim the Matter Manipulator Module reward.
 
-### `gui.starboundmc.guidance.complete.help`
+### `gui.starboundmc.guidance.complete.help` 【资源遗留：当前流程未触发】
 
-- **中文：** 已完成，无需再执行操作。
-- **English:** Complete. No further action is required.
+- **中文：** 这项工作做完了。
+- **English:** That job is done.
 
 ### `gui.starboundmc.guidance.complete.next`
 
-- **中文：** 该任务已完成。
-- **English:** This mission is complete.
+- **中文：** 已完成。
+- **English:** Complete.
 
 ### `gui.starboundmc.guidance.contact.help`
 
-- **中文：** 找到舰载终端，在通讯页重启核心并确认身份。四份状况报告均为可选。
-- **English:** Find the shipboard terminal, open Comms, reboot the core, and confirm your identity. The four situation reports are optional.
+- **中文：** 在通讯页重启核心。我恢复连接后，会带你了解飞船的状况。
+- **English:** Reboot the core on the Comms page. Once we're connected, I'll help you assess the ship.
 
 ### `gui.starboundmc.guidance.contact.next`
 
-- **中文：** 重启 N.O.V.A.，并确认身份。
-- **English:** Reboot N.O.V.A. and confirm your identity.
+- **中文：** 在舰载终端重启 N.O.V.A.。
+- **English:** Reboot N.O.V.A. at the shipboard terminal.
 
 ### `gui.starboundmc.guidance.exploration.help`
 
-- **中文：** 选择与首次登陆不同类型的星球；引擎修复后，新的登陆记录会推进此任务。
-- **English:** Choose a type different from your first landing. A new surface visit counts after the engine is repaired.
+- **中文：** 选一颗与首次登陆不同类型的星球。用星图前往它的轨道，再乘传送器去看看地表。
+- **English:** Choose a different planet type from your first landing. Navigate to its orbit with the Starmap, then take the teleporter down to explore.
 
 ### `gui.starboundmc.guidance.exploration.next`
 
@@ -395,8 +390,8 @@
 
 ### `gui.starboundmc.guidance.life_support.help`
 
-- **中文：** EPP 占用独立的环境装备位。氧气随 EPP 保存；飞船舱和补给站可以补氧。
-- **English:** An EPP uses its own environment slot and stores its oxygen. The ship cabin and life support stations can refill it.
+- **中文：** 把 EPP 穿在环境装备位，然后回舱内补满氧气。生命维持补给站也能补氧。
+- **English:** Wear your EPP in the environment equipment slot, then fill it with oxygen in the cabin. Life support stations can refill it too.
 
 ### `gui.starboundmc.guidance.life_support.next`
 
@@ -430,8 +425,8 @@
 
 ### `gui.starboundmc.guidance.lunar_sortie.help`
 
-- **中文：** 留意氧气储量并为返航留出余量。氧气罐需要两秒使用时间，请提前补氧。
-- **English:** Watch your oxygen reserve and save enough for the return trip. Canisters take two seconds to use, so refill early.
+- **中文：** 月面没有空气，记得给返航留出氧气。氧气罐要用两秒，别等到最后一口才打开。
+- **English:** There's no air on the moon. Save enough oxygen to get home. Canisters take two seconds to use; don't wait until your last breath.
 
 ### `gui.starboundmc.guidance.lunar_sortie.next`
 
@@ -440,38 +435,38 @@
 
 ### `gui.starboundmc.guidance.lunar_sortie.return.help`
 
-- **中文：** 你已抵达岩石卫星。留出氧气返航；安全返回后任务完成。
-- **English:** You have reached Rocky Moon. Keep enough oxygen for the return; the task completes when you return safely.
+- **中文：** 该回船了。留出返航的氧气，我们在舱内补给。
+- **English:** Time to head back. Keep enough oxygen for the trip; we'll refill your pack in the cabin.
 
 ### `gui.starboundmc.guidance.lunar_sortie.return.next`
 
-- **中文：** 带着仍可工作的 EPP 返回飞船舱内。
-- **English:** Return to the ship cabin with your EPP still working.
+- **中文：** 穿着有氧气的 EPP 返回飞船舱内。
+- **English:** Return to the ship cabin wearing an EPP with oxygen remaining.
 
-### `gui.starboundmc.guidance.repair.igniting.help`
+### `gui.starboundmc.guidance.repair.igniting.help` 【资源遗留：当前流程未触发】
 
-- **中文：** 点火序列正在自动运行，完成后即可进行恒星系内航行。
-- **English:** Ignition runs automatically. When it finishes, in-system travel will be available.
+- **中文：** 点火已经开始。很快就能在这个恒星系内航行了。
+- **English:** Ignition has started. We'll be able to travel within this star system shortly.
 
 ### `gui.starboundmc.guidance.repair.igniting.next`
 
-- **中文：** 引擎点火中。等待序列自动完成。
-- **English:** The engine is igniting. Wait for the sequence to finish.
+- **中文：** 引擎点火中。
+- **English:** Engine ignition in progress.
 
 ### `gui.starboundmc.guidance.repair.install.help`
 
-- **中文：** 安装时必须携带采矿等级 1 的物质枪。插入一个核心后，引擎会为全船启动点火。
-- **English:** You must carry a mining tier 1 Matter Manipulator to install the core. One core starts ignition for the whole ship.
+- **中文：** 带上采矿 1 级的物质枪和点火核心。到飞船引擎的维修槽安装，我来接手点火。
+- **English:** Bring your mining tier 1 Matter Manipulator and ignition core to the ship engine. Put the core in its repair slot; I'll handle ignition.
 
 ### `gui.starboundmc.guidance.repair.install.next`
 
-- **中文：** 带上采矿等级 1 的物质枪和点火核心，到飞船引擎模块槽安装。
-- **English:** Carry a mining tier 1 Matter Manipulator and the ignition core to the ship engine module socket.
+- **中文：** 带上采矿 1 级的物质枪，将点火核心装入飞船引擎维修槽。
+- **English:** Carry a mining tier 1 Matter Manipulator and insert the ignition core into the ship engine's repair slot.
 
 ### `gui.starboundmc.guidance.repair.print.help`
 
-- **中文：** 查看打印站配方并准备材料；扫描结果已指出所需矿物。
-- **English:** Check the printer recipe and gather its materials; the survey result identifies the required ore.
+- **中文：** 准备好钻石和体素，在打印站选择亚光速引擎点火核心。做好后带回飞船。
+- **English:** Gather diamonds and voxels, then select the Sublight Ignition Core at the printer. Bring it back to the ship when it's ready.
 
 ### `gui.starboundmc.guidance.repair.print.next`
 
@@ -480,18 +475,18 @@
 
 ### `gui.starboundmc.guidance.repair.scanning.help`
 
-- **中文：** 扫描正在分析地层。完成后会报告钻石信号和修复建议。
-- **English:** The survey is analyzing the planetary strata. Its result will report diamond traces and repair guidance.
+- **中文：** 我还在分析地层。这会儿可以继续收集木材和石料。
+- **English:** I'm still analyzing the strata. You can gather more wood and stone while I work.
 
 ### `gui.starboundmc.guidance.repair.scanning.next`
 
-- **中文：** 等待矿物扫描完成，然后查看结果。
-- **English:** Wait for the mineral survey to finish, then check its result.
+- **中文：** 矿物扫描中。
+- **English:** Mineral survey in progress.
 
 ### `gui.starboundmc.guidance.repair.upgrade.help`
 
-- **中文：** 点火核心需要钻石。先制作升级工作台，再将自己的物质枪升级到采矿等级 1。
-- **English:** The ignition core requires diamonds. Print an upgrade workbench, then raise your own Matter Manipulator to mining tier 1.
+- **中文：** 钻石得用采矿 1 级的物质枪开采。先在体素打印站制作升级工作台，再去升级物质枪。
+- **English:** You'll need a mining tier 1 Matter Manipulator for diamond. Print an upgrade workbench at the voxel printer, then upgrade your manipulator.
 
 ### `gui.starboundmc.guidance.repair.upgrade.next`
 
@@ -500,8 +495,8 @@
 
 ### `gui.starboundmc.guidance.repair.wood.help`
 
-- **中文：** 首次采集原木后会开始扫描；无需先阅读状况报告。
-- **English:** The survey begins after your first log pickup. You do not need to read the situation reports first.
+- **中文：** 先采集一块原木。我会启动轨道矿物扫描，找找附近的矿藏。
+- **English:** Collect a log first. I'll start an orbital mineral survey to locate nearby deposits.
 
 ### `gui.starboundmc.guidance.repair.wood.next`
 
@@ -510,8 +505,8 @@
 
 ### `gui.starboundmc.guidance.surface.help`
 
-- **中文：** 在传送器选择星球表面。登陆后按提示使用物质枪采集木材，启动矿物扫描。
-- **English:** Select the planet surface at the teleporter. After landing, follow the Matter Manipulator prompt to collect wood and start the mineral survey.
+- **中文：** 在飞船传送器选择星球表面。带上物质枪，我们得找些修船的材料。
+- **English:** Select the planet surface at the ship teleporter. Bring your Matter Manipulator; we need repair materials.
 
 ### `gui.starboundmc.guidance.surface.next`
 
@@ -562,8 +557,8 @@
 
 ### `gui.starboundmc.task.life_support.archive`
 
-- **中文：** EPP 使用独立装备位，氧气随设备保存。普通可呼吸环境停止耗氧；飞船舱内自动补氧。补给站可为 EPP 和氧气罐补氧。
-- **English:** EPPs have a separate equipment slot. Oxygen stays with the device. Breathable environments stop consumption; the ship cabin refills the pack. Life support stations refill packs and canisters.
+- **中文：** EPP 穿戴在独立的环境装备位，每台设备都有自己的氧气储量。在可呼吸环境中不耗氧；船舱和生命维持补给站可以补氧。补给站还能灌装氧气罐。
+- **English:** Wear an EPP in the separate environment equipment slot. Each pack holds its own oxygen reserve. Breathable air stops oxygen use; the ship cabin and life support stations refill the pack. Stations also fill canisters.
 
 ### `gui.starboundmc.task.life_support.scope`
 
@@ -592,8 +587,8 @@
 
 ### `gui.starboundmc.task.repair.archive`
 
-- **中文：** 点火核心需要 3 颗钻石和 50 体素，打印耗时 5 秒。安装时需携带采矿等级 1 的物质枪。将核心放入飞船引擎维修槽，等待 3 秒完成点火。全体船员共用修复后的引擎。
-- **English:** Printing an ignition core costs 3 diamonds and 50 voxels and takes 5 seconds. Carry a mining tier 1 Matter Manipulator when installing it in the ship engine repair slot. Ignition takes 3 seconds. The restored engine serves the whole crew.
+- **中文：** 点火核心需要 3 颗钻石和 50 体素。带上采矿等级 1 的物质枪，把核心装入飞船引擎的维修槽。一枚核心就能恢复整艘船的亚光速航行。
+- **English:** An ignition core costs 3 diamonds and 50 voxels. Carry a mining tier 1 Matter Manipulator and insert the core into the ship engine's repair slot. One core restores sublight travel for the whole ship.
 
 ### `gui.starboundmc.task.repair.archive_title`
 
@@ -644,8 +639,8 @@
 
 ### `gui.starboundmc.tasks.ask_question`
 
-- **中文：** 这个任务我该怎么做？
-- **English:** How should I approach this mission?
+- **中文：** 我该怎么做？
+- **English:** What should I do?
 
 ### `gui.starboundmc.tasks.chapter_done`
 
@@ -656,11 +651,6 @@
 
 - **中文：** 领取奖励
 - **English:** Claim reward
-
-### `gui.starboundmc.tasks.claim_hint`
-
-- **中文：** 完成任务后可领取奖励。
-- **English:** Complete this mission to claim its reward.
 
 ### `gui.starboundmc.tasks.claimed`
 
@@ -764,11 +754,6 @@
 - **中文：** 档案
 - **English:** Archive
 
-### `gui.starboundmc.command.archive_intro`
-
-- **中文：** 探索中收集的资料与设备说明。
-- **English:** Field notes and equipment references.
-
 ### `gui.starboundmc.command.close`
 
 - **中文：** ×
@@ -778,11 +763,6 @@
 
 - **中文：** 通讯
 - **English:** Comms
-
-### `gui.starboundmc.command.comms_hint`
-
-- **中文：** 点击对话可立即显示全文。
-- **English:** Click a message to reveal the full text.
 
 ### `gui.starboundmc.command.empty_tasks`
 
@@ -861,11 +841,6 @@
 - **中文：** 信号稳定
 - **English:** SIGNAL STABLE
 
-### `gui.starboundmc.ship_ai.portrait.incompatible`
-
-- **中文：** 接口锁定
-- **English:** INTERFACE LOCKED
-
 ### `gui.starboundmc.ship_ai.portrait.offline`
 
 - **中文：** 信号中断
@@ -930,11 +905,6 @@
 
 - **中文：** 超空间引擎：在线，跨恒星系航行已恢复。
 - **English:** Hyperspace engine: online. Interstellar travel is restored.
-
-### `gui.starboundmc.ship_ai.status.incompatible`
-
-- **中文：** 版本不兼容
-- **English:** INCOMPATIBLE
 
 ### `gui.starboundmc.ship_ai.status.mineral_scan.complete` 【资源遗留：当前流程未触发】
 

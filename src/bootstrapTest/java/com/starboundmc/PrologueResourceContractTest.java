@@ -1,5 +1,7 @@
 package com.starboundmc;
 
+import com.google.gson.JsonParser;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,14 +16,10 @@ final class PrologueResourceContractTest
 {
 
     @Test
-    void novaBroadcastsHaveBothLanguageEntries()
+    void novaMessagesHaveBothLanguageEntries()
             throws IOException
     {
-        String english = Files.readString(Path.of(
-                "src/main/resources/assets/starboundmc/lang/en_us.json"));
-        String chinese = Files.readString(Path.of(
-                "src/main/resources/assets/starboundmc/lang/zh_cn.json"));
-        for (String key : new String[]{
+        String[] keys = {
                 "message.starboundmc.nova.prologue.emergency",
                 "message.starboundmc.nova.prologue.locate_terminal",
                 "message.starboundmc.nova.prologue.core_online",
@@ -30,33 +28,26 @@ final class PrologueResourceContractTest
                 "message.starboundmc.nova.tutorial.wood_acquired",
                 "message.starboundmc.nova.prologue.mineral_scan_started",
                 "message.starboundmc.nova.prologue.mineral_scan_result",
-                "message.starboundmc.nova.prologue.mineral_scan_sublight_hint"})
+                "message.starboundmc.nova.prologue.mineral_scan_sublight_hint",
+                "gui.starboundmc.ship_ai.prologue.boot.restarting",
+                "gui.starboundmc.ship_ai.prologue.first_contact.greeting",
+                "gui.starboundmc.ship_ai.prologue.topic.nova_identity.response",
+                "gui.starboundmc.ship_ai.prologue.topic.incident.response",
+                "gui.starboundmc.ship_ai.prologue.topic.current_location.response",
+                "gui.starboundmc.ship_ai.prologue.topic.flight_capability.response"};
+        for (String language : new String[]{"en_us", "zh_cn"})
         {
-            assertTrue(english.contains("\"" + key + "\""), key + " en_us");
-            assertTrue(chinese.contains("\"" + key + "\""), key + " zh_cn");
+            var entries = JsonParser.parseString(Files.readString(Path.of(
+                    "src/main/resources/assets/starboundmc/lang/" + language + ".json"))).getAsJsonObject();
+            for (String key : keys)
+            {
+                String context = key + " " + language;
+                assertTrue(entries.has(key), context);
+                String text = entries.get(key).getAsString();
+                assertFalse(text.isBlank(), context);
+                assertFalse(text.startsWith("[N.O.V.A.]"), context);
+            }
         }
-        assertFalse(english.contains("message.starboundmc.nova.tutorial.matter_manipulator\": \"[N.O.V.A.]"));
-        assertFalse(chinese.contains("message.starboundmc.nova.tutorial.matter_manipulator\": \"[N.O.V.A.]"));
-        assertFalse(english.contains("left-click does not perform normal mining"));
-        assertFalse(chinese.contains("左键不会执行普通挖掘"));
-        assertFalse(english.contains("Left-click mining is disabled"));
-        assertFalse(chinese.contains("左键无法挖掘"));
-        assertTrue(chinese.contains("通信链路现已恢复"));
-        assertTrue(chinese.contains("生存概率提高了 17 个百分点"));
-        assertTrue(chinese.contains("地层矿物扫描中................"));
-        assertTrue(english.contains("Mineral survey in progress................"));
-        assertTrue(chinese.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
-                + "核心系统重启中…\""));
-        assertTrue(english.contains("\"gui.starboundmc.ship_ai.prologue.boot.restarting\": \""
-                + "Restarting core systems…\""));
-        assertTrue(chinese.contains("少量钻石"));
-        assertTrue(chinese.contains("幸运的是，我们目前位于一颗宜居星球的轨道上"));
-        assertTrue(chinese.contains("检测到你已经苏醒"));
-        assertTrue(chinese.contains("我将协助你恢复飞船系统"));
-        assertTrue(english.contains("I have detected that you are awake"));
-        assertTrue(english.contains("I will assist you in restoring the ship's systems"));
-        assertFalse(chinese.contains("确认你仍然存活"));
-        assertFalse(chinese.contains("恭喜你获得了木材"));
     }
 
     @Test
