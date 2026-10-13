@@ -43,7 +43,7 @@ public final class ShipAiTerminalRoot extends UIElement
     private static final int NOVA_COLOR = 0xFF8CF5F2;
     private static final int PLAYER_COLOR = 0xFFE4E7E8;
     private static final int SYSTEM_COLOR = 0xFF7E939A;
-    private static final int BODY_COLOR = 0xFFFFFFFF;
+    private static final int BODY_COLOR = 0xFFD8EDF0;
 
     private static final String TOPIC_READ_CLASS = "ship-ai-topic-read";
     private static final String TOPIC_CURRENT_CLASS = "ship-ai-topic-current";
@@ -52,9 +52,16 @@ public final class ShipAiTerminalRoot extends UIElement
     private final NovaPortraitElement portrait = new NovaPortraitElement();
     private final NovaDialogueSounds dialogueSounds = new NovaDialogueSounds();
     private final Label portraitState = new Label();
-    private final Label linkStatus = new Label();
     private final ScrollerView history = new ScrollerView();
-    private final Button returnLatest = new NovaTerminalButton();
+    private final Button transcriptToggle = new NovaTerminalButton();
+    private final ScrollerView reply = NovaCommandLayout.scroll();
+    private final Label replySpeaker = NovaCommandLayout.label("", "ship-ai-message-speaker");
+    private final Label replyBody = NovaCommandLayout.label("", "ship-ai-reply-text");
+    private final UIElement replyHeader = NovaCommandLayout.row("ship-ai-reply-header");
+    private final UIElement optionSection = NovaCommandLayout.column("ship-ai-options");
+    private final UIElement topicGrid = NovaCommandLayout.column("ship-ai-topic-grid");
+    private final Button topicToggle = new NovaTerminalButton();
+    private boolean topicsExpanded = !NovaCommandLayout.compact();
     private final Label optionHint = new Label();
     private final Button singleAction = new NovaTerminalButton();
     private final UIElement topicControls = new UIElement();
@@ -85,370 +92,177 @@ public final class ShipAiTerminalRoot extends UIElement
                 .alignItems(AlignItems.CENTER)
                 .justifyContent(AlignContent.CENTER));
 
-        commandLayout = new NovaCommandLayout(containerId, portrait, buildConversationPane(), text -> {
+        commandLayout = new NovaCommandLayout(containerId, buildPortraitPane(), buildConversationPane(), text -> {
+            showCurrentReply();
             session.selectOption(Component.translatable("gui.starboundmc.tasks.ask_question"), text,
                     ClientShipAiTerminalState.CompletionIntent.NONE, null);
             syncTranscriptViews();
             syncPresentation();
         });
         addChild(commandLayout);
+        MachineUiSkin.shell(commandLayout);
         MachineUiSkin.scrollbars(this);
 
         addEventListener(UIEvents.TICK, event -> tickTerminal());
+        commandLayout.tick(session.isTransmitting() || session.pendingRequest() != null);
         refreshAuthoritativeSnapshot();
-        restoreSessionView();
+        syncTranscriptViews();
         syncPresentation();
     }
 
-    private UIElement buildHeader()
-    {
-        UIElement header = new UIElement().addClass("ship-ai-header");
-        header.layout(layout -> layout
-                .widthPercent(100)
-                .height(21)
-                .paddingHorizontal(5)
-                .gapAll(4)
-                .alignItems(AlignItems.CENTER)
-                .flexDirection(FlexDirection.ROW));
-
-        Label title = new Label();
-        title.setText(Component.translatable("gui.starboundmc.ship_ai.title"));
-        title.addClass("ship-ai-title");
-        title.setAllowHitTest(false);
-        title.setOverflowVisible(false);
-        title.layout(layout -> layout
-                .width(40)
-                .minWidth(30)
-                .height(10)
-                .flexShrink(1));
-        title.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
-        Label subtitle = new Label();
-        subtitle.setText(Component.translatable("gui.starboundmc.ship_ai.subtitle"));
-        subtitle.addClass("ship-ai-subtitle");
-        subtitle.setAllowHitTest(false);
-        subtitle.setOverflowVisible(false);
-        subtitle.layout(layout -> layout.flex(1).minWidth(0).height(9));
-        subtitle.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
-        linkStatus.addClass("ship-ai-link-status");
-        linkStatus.setAllowHitTest(false);
-        linkStatus.setOverflowVisible(false);
-        linkStatus.layout(layout -> layout
-                .width(48)
-                .minWidth(38)
-                .height(9)
-                .flexShrink(1));
-        linkStatus.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.RIGHT)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
-        header.addChildren(title, subtitle, linkStatus);
-        return header;
-    }
-
-    private UIElement buildBody()
-    {
-        UIElement body = new UIElement().addClass("ship-ai-body");
-        body.layout(layout -> layout
-                .widthPercent(100)
-                .flex(1)
-                .flexDirection(FlexDirection.ROW));
-        body.addChildren(buildPortraitPane(), buildConversationPane());
-        return body;
-    }
-
-    private UIElement buildPortraitPane()
-    {
-        UIElement pane = new UIElement().addClass("ship-ai-portrait-pane");
-        pane.setOverflowVisible(false);
-        pane.layout(layout -> layout
-                .widthPercent(34)
-                .heightPercent(100)
-                .paddingAll(7)
-                .gapAll(3)
-                .alignItems(AlignItems.CENTER)
-                .flexDirection(FlexDirection.COLUMN));
-
-        UIElement portraitStage = new UIElement().addClass("ship-ai-portrait-stage");
-        portraitStage.setOverflowVisible(false);
-        portraitStage.layout(layout -> layout
-                .widthPercent(100)
-                .flex(1)
-                .alignItems(AlignItems.CENTER)
+    private UIElement buildPortraitPane() {
+        UIElement pane = NovaCommandLayout.column("ship-ai-portrait-pane");
+        pane.layout(l -> l.alignItems(AlignItems.CENTER).gapAll(6).paddingRight(10));
+        pane.style(s -> s.overlay((g, mx, my, x, y, w, h, partial) ->
+                g.fill(Math.round(x + w - 1), Math.round(y), Math.round(x + w), Math.round(y + h), 0xff233a44)));
+        UIElement stage = NovaCommandLayout.column("ship-ai-portrait-stage");
+        stage.layout(l -> l.widthPercent(100).flex(1).minHeight(0).alignItems(AlignItems.CENTER)
                 .justifyContent(AlignContent.CENTER));
-
-        portrait.layout(layout -> layout
-                .widthPercent(88)
-                .maxWidth(96)
-                .maxHeight(112)
-                .aspectRatio(6F / 7F));
-        portraitStage.addChild(portrait);
-
-        Label identity = new Label();
-        identity.setText(Component.translatable("gui.starboundmc.ship_ai.portrait.identity"));
-        identity.addClass("ship-ai-portrait-identity");
-        identity.setAllowHitTest(false);
-        identity.setOverflowVisible(false);
-        identity.layout(layout -> layout.widthPercent(100).height(8));
-        identity.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
+        portrait.layout(l -> l.widthPercent(100).maxWidth(144).maxHeight(168)
+                .aspectRatio(6F / 7F).flexShrink(1));
+        stage.addChild(portrait);
         portraitState.addClass("ship-ai-portrait-state");
         portraitState.setAllowHitTest(false);
         portraitState.setOverflowVisible(false);
-        portraitState.layout(layout -> layout.widthPercent(100).height(8));
-        portraitState.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
-        pane.addChildren(portraitStage, identity, portraitState);
+        portraitState.layout(l -> l.widthPercent(100).minHeight(12).flexShrink(0).marginBottom(18));
+        portraitState.textStyle(s -> s.adaptiveWidth(false).adaptiveHeight(true).textWrap(TextWrap.WRAP)
+                .textAlignHorizontal(Horizontal.CENTER).textAlignVertical(Vertical.TOP).lineSpacing(2));
+        pane.addChildren(stage, portraitState);
         return pane;
     }
 
-    private UIElement buildConversationPane()
-    {
-        UIElement pane = new UIElement().addClass("ship-ai-conversation-pane");
-        pane.setOverflowVisible(false);
-        pane.layout(layout -> layout
-                .flex(1)
-                .heightPercent(100)
-                .paddingAll(6)
-                .gapAll(3)
-                .flexDirection(FlexDirection.COLUMN));
-
-        UIElement logHeader = new UIElement().addClass("ship-ai-log-header");
-        logHeader.layout(layout -> layout
-                .widthPercent(100)
-                .height(18)
-                .flexShrink(0)
-                .gapAll(4)
-                .alignItems(AlignItems.CENTER)
-                .flexDirection(FlexDirection.ROW));
-
-        Label logTitle = new Label();
-        logTitle.setText(Component.translatable("gui.starboundmc.ship_ai.log"));
-        logTitle.addClass("ship-ai-section-title");
-        logTitle.setAllowHitTest(false);
-        logTitle.setOverflowVisible(false);
-        logTitle.layout(layout -> layout.flex(1).minWidth(0).height(8));
-        logTitle.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textWrap(TextWrap.HIDE));
-
-        returnLatest.setText(Component.translatable("gui.starboundmc.ship_ai.return_latest"));
-        returnLatest.addClass("ship-ai-return-button");
-        returnLatest.setDisplay(false);
-        returnLatest.setOverflowVisible(false);
-        returnLatest.layout(layout -> layout.width(72).height(16));
-        MachineUiSkin.button(returnLatest);
-        returnLatest.text.layout(l -> l.widthPercent(100).heightPercent(100).marginHorizontal(0));
-        returnLatest.text.setAllowHitTest(false);
-        returnLatest.textStyle(style -> style
-                .adaptiveWidth(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-        returnLatest.addEventListener(UIEvents.CLICK, event ->
-        {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && returnLatest.isActive())
-            {
-                scrollToLatest();
+    private UIElement buildConversationPane() {
+        UIElement pane = NovaCommandLayout.column("ship-ai-conversation-pane");
+        pane.layout(l -> l.flex(1).minHeight(0).widthPercent(100).gapAll(8));
+        replyHeader.layout(l -> l.widthPercent(100).minHeight(18).flexShrink(0).gapAll(6));
+        replySpeaker.layout(l -> l.flex(1).widthAuto().minWidth(0));
+        configureButton(transcriptToggle, "command-link", Horizontal.RIGHT);
+        transcriptToggle.layout(l -> l.width(NovaCommandLayout.compact() ? 70 : 84).height(18).paddingHorizontal(2).flexShrink(0));
+        ((NovaTerminalButton) transcriptToggle).onActivate(() -> {
+            preserveManualScroll();
+            session.view().historyOpen(!session.view().historyOpen());
+            syncPresentation();
+        });
+        replyHeader.addChildren(replySpeaker, transcriptToggle);
+        reply.addClass("ship-ai-reply");
+        reply.layout(l -> l.widthPercent(100).flex(1).minHeight(0));
+        reply.addScrollViewChild(replyBody);
+        reply.viewPort.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && session.isStreaming()) {
+                completeStream();
                 event.stopPropagation();
             }
         });
-        logHeader.addChildren(logTitle, returnLatest);
-
         configureHistory();
-        pane.addChildren(logHeader, history, buildOptions());
+        pane.addChildren(replyHeader, reply, history, buildOptions());
         return pane;
     }
 
-    private void configureHistory()
-    {
-        history.addClass("ship-ai-history");
+    private void configureHistory() {
+        history.addClasses("ship-ai-history", "command-scroll");
         history.setOverflowVisible(false);
-        history.layout(layout -> layout.widthPercent(100).flex(1));
-        history.scrollerStyle(style -> style
-                .mode(ScrollerMode.VERTICAL)
-                .verticalScrollDisplay(ScrollDisplay.AUTO)
-                .horizontalScrollDisplay(ScrollDisplay.NEVER)
-                .minScrollPixel(8)
-                .maxScrollPixel(22));
-        history.viewPort(view -> view
-                .layout(layout -> layout.paddingAll(9))
-                .style(style -> style.backgroundTexture(IGuiTexture.EMPTY)));
-        history.viewContainer(view -> view.layout(layout -> layout
-                .widthPercent(100)
-                .gapAll(12)
-                .flexDirection(FlexDirection.COLUMN)));
-
-        history.viewContainer.addEventListener(UIEvents.LAYOUT_CHANGED, event ->
-        {
-            if (session.autoFollow())
-                applyAutoScroll();
-            else
-                restoreManualScroll();
+        history.layout(l -> l.widthPercent(100).flex(1).minHeight(0));
+        history.scrollerStyle(s -> s.mode(ScrollerMode.VERTICAL).verticalScrollDisplay(ScrollDisplay.AUTO)
+                .horizontalScrollDisplay(ScrollDisplay.NEVER).minScrollPixel(8).maxScrollPixel(22));
+        history.viewPort(v -> v.layout(l -> l.paddingAll(0)).style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
+        history.viewContainer(v -> v.layout(l -> l.widthPercent(100).gapAll(14).flexDirection(FlexDirection.COLUMN)));
+        history.viewContainer.addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
+            if (session.autoFollow()) applyAutoScroll(); else restoreManualScroll();
         });
-        history.verticalScroller.setOnValueChanged(value ->
-        {
-            if (applyingAutoScroll)
-                return;
+        history.verticalScroller.setOnValueChanged(value -> {
+            if (applyingAutoScroll || !session.view().historyOpen()
+                    || session.view().page() != NovaTerminalViewState.Page.COMMS || currentScrollRange() <= 0) return;
             boolean atLatest = isAtLatest(value);
             session.setAutoFollow(atLatest);
-            if (!atLatest)
-                session.setManualScrollPixels(value * currentScrollRange());
-            returnLatest.setDisplay(!atLatest);
+            if (!atLatest) session.setManualScrollPixels(value * currentScrollRange());
         });
-        history.viewPort.addEventListener(UIEvents.CLICK, event ->
-        {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && session.isStreaming())
-            {
+        history.viewPort.addEventListener(UIEvents.CLICK, event -> {
+            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && session.isStreaming()) {
                 completeStream();
                 event.stopPropagation();
             }
         });
     }
 
-    private UIElement buildOptions()
-    {
-        UIElement section = new UIElement().addClass("ship-ai-options");
-        section.setOverflowVisible(false);
-        section.layout(layout -> layout
-                .widthPercent(100)
-                .height(80)
-                .minHeight(40)
-                .flexShrink(1)
-                .justifyContent(AlignContent.CENTER)
-                .flexDirection(FlexDirection.COLUMN));
-
+    private UIElement buildOptions() {
+        optionSection.layout(l -> l.widthPercent(100).flexShrink(0).gapAll(5));
         optionHint.addClass("ship-ai-option-hint");
         optionHint.setAllowHitTest(false);
         optionHint.setOverflowVisible(false);
-        optionHint.layout(layout -> layout.widthPercent(100).heightPercent(100));
-        optionHint.textStyle(style -> style
-                .adaptiveWidth(false)
-                .adaptiveHeight(false)
-                .textAlignHorizontal(Horizontal.CENTER)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE));
-
-        configureButton(singleAction, "ship-ai-primary-action", Horizontal.LEFT);
-        singleAction.setDisplay(false);
-        singleAction.layout(layout -> layout.widthPercent(100).height(22));
-        singleAction.addEventListener(UIEvents.CLICK, event ->
-        {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && singleAction.isActive())
-            {
-                beginCoreReboot();
-                event.stopPropagation();
-            }
-        });
-
+        optionHint.layout(l -> l.widthPercent(100).minHeight(16).flexShrink(0));
+        optionHint.textStyle(s -> s.adaptiveWidth(false).adaptiveHeight(true).textWrap(TextWrap.WRAP)
+                .textAlignHorizontal(Horizontal.LEFT).lineSpacing(2));
+        configureButton(singleAction, "command-primary", Horizontal.LEFT);
+        singleAction.layout(l -> l.widthPercent(100).minHeight(26).heightAuto().paddingLeft(14).flexShrink(0));
+        singleAction.text.layout(l -> l.heightAuto());
+        singleAction.textStyle(s -> s.adaptiveHeight(true));
+        ((NovaTerminalButton) singleAction).onActivate(this::beginCoreReboot);
         topicControls.addClass("ship-ai-option-controls");
         topicControls.setOverflowVisible(false);
-        topicControls.setDisplay(false);
-        topicControls.layout(layout -> layout
-                .widthPercent(100)
-                .heightPercent(100)
-                .minHeight(38)
-                .flexShrink(1)
-                .gapAll(3)
-                .flexDirection(FlexDirection.COLUMN));
-
-        UIElement topicGrid = new UIElement().addClass("ship-ai-topic-grid");
-        topicGrid.setOverflowVisible(false);
-        topicGrid.layout(layout -> layout
-                .widthPercent(100)
-                .flex(1)
-                .minHeight(21)
-                .flexShrink(1)
-                .gapAll(3)
-                .flexDirection(FlexDirection.COLUMN));
-
+        topicControls.layout(l -> l.widthPercent(100).gapAll(5).flexDirection(FlexDirection.COLUMN));
+        configureButton(progressionButton, "command-primary", Horizontal.LEFT);
+        progressionButton.layout(l -> l.widthPercent(100).maxWidth(150).heightAuto().minHeight(26).paddingLeft(14).flexShrink(0));
+        progressionButton.text.layout(l -> l.heightAuto());
+        progressionButton.textStyle(s -> s.adaptiveHeight(true));
+        ((NovaTerminalButton) progressionButton).onActivate(this::selectProgression);
+        configureButton(topicToggle, "command-link", Horizontal.LEFT);
+        topicToggle.layout(l -> l.widthPercent(100).height(18).paddingHorizontal(0).flexShrink(0));
+        ((NovaTerminalButton) topicToggle).onActivate(() -> {
+            topicsExpanded = !topicsExpanded;
+            syncPresentation();
+        });
+        topicGrid.layout(l -> l.widthPercent(100).gapAll(4).flexShrink(0));
         SituationTopic[] topics = SituationTopic.values();
-        for (int rowIndex = 0; rowIndex < 2; rowIndex++)
-        {
-            UIElement row = new UIElement().addClass("ship-ai-topic-row");
-            row.setOverflowVisible(false);
-            row.layout(layout -> layout
-                    .widthPercent(100)
-                    .flex(1)
-                    .minHeight(14)
-                    .flexShrink(1)
-                    .gapAll(3)
-                    .flexDirection(FlexDirection.ROW));
-            for (int columnIndex = 0; columnIndex < 2; columnIndex++)
-            {
+        for (int rowIndex = 0; rowIndex < 2; rowIndex++) {
+            UIElement row = NovaCommandLayout.row("ship-ai-topic-row");
+            row.layout(l -> l.widthPercent(100).heightAuto().minHeight(26).gapAll(4).flexShrink(0)
+                    .alignItems(AlignItems.STRETCH));
+            for (int columnIndex = 0; columnIndex < 2; columnIndex++) {
                 SituationTopic topic = topics[rowIndex * 2 + columnIndex];
-                Button button = new NovaTerminalButton();
+                NovaTerminalButton button = new NovaTerminalButton().onActivate(() -> selectTopic(topic));
                 configureButton(button, "ship-ai-topic-button", Horizontal.LEFT);
-                button.layout(layout -> layout.flex(1).heightPercent(100).minHeight(14));
-                button.addEventListener(UIEvents.CLICK, event ->
-                {
-                    if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && button.isActive())
-                    {
-                        selectTopic(topic);
-                        event.stopPropagation();
-                    }
-                });
+                button.layout(l -> l.flex(1).minWidth(0).heightAuto().minHeight(26));
+                button.text.layout(l -> l.heightAuto());
+                button.textStyle(s -> s.adaptiveHeight(true));
                 topicButtons.put(topic, button);
                 row.addChild(button);
             }
             topicGrid.addChild(row);
         }
-
-        configureButton(progressionButton, "ship-ai-next-button", Horizontal.LEFT);
-        progressionButton.addEventListener(UIEvents.CLICK, event ->
-        {
-            if (event.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && progressionButton.isActive())
-            {
-                selectProgression();
-                event.stopPropagation();
-            }
-        });
-        progressionButton.layout(layout -> layout
-                .widthPercent(100)
-                .height(17)
-                .minHeight(14)
-                .flexShrink(1));
-
-        topicControls.addChildren(topicGrid, progressionButton);
-        section.addChildren(optionHint, singleAction, topicControls);
-        return section;
+        topicControls.addChildren(progressionButton, topicToggle, topicGrid);
+        optionSection.addChildren(optionHint, singleAction, topicControls);
+        return optionSection;
     }
 
-    private static void configureButton(Button button, String styleClass, Horizontal alignment)
-    {
-        button.addClass(styleClass);
-        button.setOverflowVisible(false);
-        button.text.setAllowHitTest(false);
-        button.text.setOverflowVisible(false);
-        button.textStyle(style -> style
-                .adaptiveWidth(false)
-                .adaptiveHeight(false)
-                .textAlignHorizontal(alignment)
-                .textAlignVertical(Vertical.CENTER)
-                .textWrap(TextWrap.HIDE)
-                .lineSpacing(1));
+    private static void configureButton(Button button, String styleClass, Horizontal alignment) {
+        button.addClasses("command-button", styleClass);
+        button.textStyle(s -> s.textAlignHorizontal(alignment));
+    }
+
+    private void showCurrentReply() {
+        session.view().historyOpen(false);
+        if (NovaCommandLayout.compact()) topicsExpanded = false;
+        reply.verticalScroller.setNormalizedValue(0);
+    }
+
+    private void updateConversationLayout() {
+        boolean transcript = session.view().historyOpen();
+        boolean selectingTopics = NovaCommandLayout.compact() && topicsExpanded && topicControls.isDisplayed() && !transcript;
+        replyHeader.setDisplay(!selectingTopics);
+        reply.setDisplay(!transcript && !selectingTopics);
+        history.setDisplay(transcript);
+        optionSection.setDisplay(!transcript);
+        topicGrid.setDisplay(topicsExpanded);
+        progressionButton.setDisplay(!selectingTopics);
+        optionSection.layout(l -> l.flexGrow(selectingTopics ? 1 : 0).flexShrink(0));
+        topicToggle.setText(Component.translatable(selectingTopics ? "gui.starboundmc.ship_ai.back_to_dialogue"
+                : topicsExpanded ? "gui.starboundmc.ship_ai.topics_hide" : "gui.starboundmc.ship_ai.topics_show"));
+        transcriptToggle.setText(Component.translatable(transcript ? "gui.starboundmc.ship_ai.back_to_dialogue" : "gui.starboundmc.ship_ai.transcript"));
     }
 
     private void tickTerminal()
     {
-        commandLayout.tick(session.isTransmitting());
+        commandLayout.tick(session.isTransmitting() || session.pendingRequest() != null);
         boolean snapshotChanged = refreshAuthoritativeSnapshot();
         int repairInventoryState = localRepairInventoryState();
         boolean repairInventoryChanged = repairInventoryState != observedRepairInventoryState;
@@ -596,6 +410,7 @@ public final class ShipAiTerminalRoot extends UIElement
         if (!canSelectTopics())
             return;
 
+        showCurrentReply();
         Component option = Component.translatable(topic.optionTranslationKey());
         int firstNewIndex = session.selectOption(
                 option,
@@ -613,6 +428,7 @@ public final class ShipAiTerminalRoot extends UIElement
         if (!canSelectProgression())
             return;
 
+        showCurrentReply();
         SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
         ClientShipAiTerminalState.CompletionIntent completion =
                 mission == SurfaceMissionState.LOCKED
@@ -711,16 +527,11 @@ public final class ShipAiTerminalRoot extends UIElement
         syncPresentation();
     }
 
-    private void restoreSessionView()
-    {
-        syncTranscriptViews();
-        returnLatest.setDisplay(!session.autoFollow());
-    }
-
     private void syncTranscriptViews()
     {
         while (transcriptLabels.size() < session.messageCount())
             appendTranscriptView(transcriptLabels.size());
+        updateCurrentReply();
     }
 
     private void syncPresentation()
@@ -731,7 +542,8 @@ public final class ShipAiTerminalRoot extends UIElement
         portrait.setActivity(portraitActivity());
         portrait.setSpeaking(transmitting);
         portraitState.setText(portraitStatusText(transmitting));
-        linkStatus.setText(linkStatusText());
+        setClass(portraitState, "command-fault", authoritativeSnapshot != null && authoritativeSnapshot.shared().core() == CoreState.OFFLINE);
+        updateConversationLayout();
 
         if (authoritativeSnapshot == null)
         {
@@ -768,6 +580,7 @@ public final class ShipAiTerminalRoot extends UIElement
         optionHint.setDisplay(true);
         singleAction.setDisplay(false);
         topicControls.setDisplay(false);
+        updateConversationLayout();
     }
 
     private void showSingleAction()
@@ -780,6 +593,7 @@ public final class ShipAiTerminalRoot extends UIElement
         singleAction.setText(actionText);
         singleAction.setActive(canBeginCoreReboot());
         singleAction.style(style -> style.tooltips(TooltipLines.split(actionText)));
+        updateConversationLayout();
     }
 
     private void showTopicControls()
@@ -795,12 +609,7 @@ public final class ShipAiTerminalRoot extends UIElement
             Button button = topicButtons.get(topic);
             boolean read = (readMask & topic.mask()) != 0;
             Component option = Component.translatable(topic.optionTranslationKey());
-            Component label = read
-                    ? Component.translatable("gui.starboundmc.ship_ai.prologue.topic.read_marker")
-                            .append(Component.literal(" · "))
-                            .append(option.copy())
-                    : option.copy();
-            button.setText(label);
+            button.setText(option);
             Component tooltip = interactive
                     ? option
                     : session.isTransmitting()
@@ -815,19 +624,14 @@ public final class ShipAiTerminalRoot extends UIElement
             setClass(button, TOPIC_CURRENT_CLASS, topic == session.selectedTopic());
         }
 
-        SurfaceMissionState mission = authoritativeSnapshot.shared().surfaceMission();
-        Component nextText = mission == SurfaceMissionState.LOCKED
-                ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.next")
-                : authoritativeSnapshot.shared().sublightEngine() == EngineState.DAMAGED
-                        && authoritativeSnapshot.shared().mineralScan() == MineralScanState.COMPLETE
-                        ? Component.translatable("gui.starboundmc.ship_ai.prologue.option.repair")
-                        : Component.translatable(
-                                "gui.starboundmc.ship_ai.prologue.option.current_status");
+        Component nextText = Component.translatable("gui.starboundmc.ship_ai.prologue.option.next");
         boolean progressionActive = canSelectProgression();
         progressionButton.setText(nextText);
         Component progressionTooltip = progressionActive ? nextText : currentStatusText();
         progressionButton.style(style -> style.tooltips(TooltipLines.split(progressionTooltip)));
         progressionButton.setActive(progressionActive);
+        topicToggle.setActive(interactive);
+        updateConversationLayout();
     }
 
     private static void setClass(UIElement element, String className, boolean enabled)
@@ -843,18 +647,6 @@ public final class ShipAiTerminalRoot extends UIElement
         return Component.translatable(session.pendingRequest() == null
                 ? "gui.starboundmc.ship_ai.receiving"
                 : "gui.starboundmc.ship_ai.prologue.action_pending");
-    }
-
-    private Component linkStatusText()
-    {
-        if (authoritativeSnapshot == null)
-            return Component.translatable("gui.starboundmc.ship_ai.status.syncing");
-        return Component.translatable(switch (authoritativeSnapshot.shared().core())
-        {
-            case OFFLINE -> "gui.starboundmc.ship_ai.status.offline";
-            case REBOOTING -> "gui.starboundmc.ship_ai.status.rebooting";
-            case ONLINE -> "gui.starboundmc.ship_ai.status.online";
-        });
     }
 
     private Component portraitStatusText(boolean transmitting)
@@ -896,6 +688,8 @@ public final class ShipAiTerminalRoot extends UIElement
     private Component currentStatusText()
     {
         ClientShipStoryState.SharedView shared = authoritativeSnapshot.shared();
+        if (shared.core() == CoreState.ONLINE && shared.surfaceMission() != SurfaceMissionState.LOCKED)
+            return commandLayout.currentGuidance();
         return shared.surfaceMission() == SurfaceMissionState.COMPLETE
                 ? repairObjectiveText(shared)
                 : Component.translatable("gui.starboundmc.ship_ai.prologue.current_objective.summary");
@@ -976,10 +770,10 @@ public final class ShipAiTerminalRoot extends UIElement
         UIElement row = new UIElement();
         row.setAllowHitTest(false);
         row.layout(l -> l.widthPercent(100).flexShrink(0).flexDirection(FlexDirection.ROW)
-                .justifyContent(fromPlayer ? AlignContent.FLEX_END : AlignContent.FLEX_START));
+                .justifyContent(AlignContent.FLEX_START));
         UIElement entry = new UIElement().addClass(fromPlayer ? "ship-ai-message-player" : "ship-ai-message-nova");
         entry.setAllowHitTest(false);
-        entry.layout(l -> l.widthPercent(92).flexShrink(0).gapAll(4).flexDirection(FlexDirection.COLUMN));
+        entry.layout(l -> l.widthPercent(100).flexShrink(0).gapAll(4).flexDirection(FlexDirection.COLUMN));
         Label speaker = new Label();
         speaker.addClass("ship-ai-message-speaker");
         speaker.setAllowHitTest(false);
@@ -987,7 +781,7 @@ public final class ShipAiTerminalRoot extends UIElement
         speaker.setText(Component.translatable(message.speaker().translationKey())
                 .withStyle(style -> style.withColor(speakerColor(message.speaker()))));
         speaker.textStyle(s -> s.adaptiveWidth(false).textWrap(TextWrap.HIDE)
-                .textAlignHorizontal(fromPlayer ? Horizontal.RIGHT : Horizontal.LEFT));
+                .textAlignHorizontal(Horizontal.LEFT));
         Label label = new Label();
         label.addClass("ship-ai-history-text");
         label.setAllowHitTest(false);
@@ -997,7 +791,7 @@ public final class ShipAiTerminalRoot extends UIElement
                 .adaptiveWidth(false)
                 .adaptiveHeight(true)
                 .textWrap(TextWrap.WRAP)
-                .textAlignHorizontal(fromPlayer ? Horizontal.RIGHT : Horizontal.LEFT)
+                .textAlignHorizontal(Horizontal.LEFT)
                 .lineSpacing(3));
 
         transcriptLabels.add(label);
@@ -1016,6 +810,19 @@ public final class ShipAiTerminalRoot extends UIElement
         transcriptLabels.get(messageIndex).setText(body.copy().withStyle(style -> style.withColor(BODY_COLOR)));
     }
 
+    private void updateCurrentReply() {
+        int index = session.latestReplyIndex();
+        if (index < 0) {
+            replySpeaker.setText(Component.translatable("gui.starboundmc.ship_ai.speaker.nova"));
+            replyBody.setText(Component.translatable("gui.starboundmc.ship_ai.prologue.syncing"));
+            return;
+        }
+        var message = session.message(index);
+        replySpeaker.setText(Component.translatable(message.speaker().translationKey())
+                .withStyle(s -> s.withColor(speakerColor(message.speaker()))));
+        replyBody.setText(session.isStreamingLine(index) ? Component.literal(session.visibleStreamingText()) : message.body().copy());
+    }
+
     private static int speakerColor(ClientShipAiTerminalState.Speaker speaker)
     {
         return switch (speaker)
@@ -1024,13 +831,6 @@ public final class ShipAiTerminalRoot extends UIElement
             case NOVA -> NOVA_COLOR;
             case PLAYER -> PLAYER_COLOR;
         };
-    }
-
-    private void scrollToLatest()
-    {
-        session.setAutoFollow(true);
-        returnLatest.setDisplay(false);
-        applyAutoScroll();
     }
 
     private void applyAutoScroll()
@@ -1042,7 +842,7 @@ public final class ShipAiTerminalRoot extends UIElement
 
     private void preserveManualScroll()
     {
-        if (!session.autoFollow())
+        if (!session.autoFollow() && session.view().historyOpen())
         {
             session.setManualScrollPixels(history.verticalScroller.getNormalizedValue()
                     * currentScrollRange());

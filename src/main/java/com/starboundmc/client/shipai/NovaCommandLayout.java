@@ -1,5 +1,7 @@
 package com.starboundmc.client.shipai;
 
+import com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture;
+import com.lowdragmc.lowdraglib2.gui.texture.ItemStackTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.*;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
@@ -16,323 +18,359 @@ import dev.vfyjxf.taffy.style.FlexDirection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-/** Retained four-page command terminal. All task actions are server requests; guidance is text only. */
+import static com.starboundmc.client.shipai.NovaTerminalViewState.Page;
+
+/** Three-mode terminal shell. All gameplay actions remain server requests. */
 final class NovaCommandLayout extends UIElement {
-    private enum Page { OVERVIEW, TASKS, ARCHIVE, COMMS }
     private final int containerId;
     private final Consumer<Component> explain;
+    private final NovaTerminalViewState reading = ClientShipAiTerminalState.current().view();
     private final Map<Page, UIElement> pages = new EnumMap<>(Page.class);
     private final Map<Page, Button> navigation = new EnumMap<>(Page.class);
     private final Map<NovaTask, Button> tasks = new EnumMap<>(NovaTask.class);
+    private final Map<NovaTask, Label> taskStates = new EnumMap<>(NovaTask.class);
     private final Map<NovaTask, UIElement> taskEntries = new EnumMap<>(NovaTask.class);
     private final Map<NovaTask, UIElement> archives = new EnumMap<>(NovaTask.class);
-    private final Label pageTitle = label("gui.starboundmc.command.overview", "command-page-title");
-    private final Label overviewTitle = label("", "command-title");
-    private final Label overviewGuide = label("", "command-copy");
-    private final Label overviewRewards = label("", "command-muted");
+    private final Label contextTitle = label("", "command-context-title");
+    private final Button contextOpen = button("gui.starboundmc.tasks.view", this::openContext);
     private final Label taskGuide = label("", "command-copy");
     private final Label taskSteps = label("", "command-muted");
-    private final Label taskScope = label("", "command-muted");
-    private final Label taskStatus = label("", "command-accent");
-    private final Label taskReward = label("", "command-copy");
+    private final Label taskCost = label("gui.starboundmc.tasks.repair_cost", "command-cost");
+    private final Label taskReward = label("", "command-muted");
+    private final Label claimed = label("gui.starboundmc.tasks.claimed", "command-complete");
     private final Label feedback = label("", "command-muted");
     private final Label taskEmpty = label("gui.starboundmc.command.empty_tasks", "command-muted");
-    private final Label mainTasks = label("gui.starboundmc.tasks.main", "command-accent");
-    private final Label preparationTasks = label("gui.starboundmc.tasks.preparation", "command-accent");
+    private final Label mainTasks = label("gui.starboundmc.tasks.main", "command-section");
+    private final Label preparationTasks = label("gui.starboundmc.tasks.preparation", "command-section");
     private final UIElement taskDetails = column("command-task-details");
-    private final UIElement rewardPanel = column("command-reward-panel");
-    private final Map<NovaTask, UIElement> milestones = new EnumMap<>(NovaTask.class);
+    private final UIElement rewardLine = row("command-reward-line");
+    private final UIElement actions = row("command-actions");
     private final Button track = button("gui.starboundmc.tasks.track", () -> request(false));
     private final Button claim = button("gui.starboundmc.tasks.claim", () -> request(true));
-    private final Button overviewOpen = button("gui.starboundmc.tasks.open", () -> show(Page.TASKS));
-    private Page page = Page.COMMS;
-    private NovaTask selected = NovaTask.CONTACT;
+    private final Button ask = button("gui.starboundmc.tasks.ask", this::askSelected);
+    private final Button activeFilter = button("gui.starboundmc.tasks.active", () -> filter(false));
+    private final Button doneFilter = button("gui.starboundmc.tasks.completed", () -> filter(true));
+    private ScrollerView taskScroller;
     private NovaTaskProgress progress = NovaTaskProgress.DEFAULT;
     private boolean unlocked;
-    private boolean enteredOverview;
-    private boolean completedFilter;
-    private boolean taskExpanded = true;
-    private long nextRequest = 1_000_000_000L;
+    private boolean transmitting;
     private long pending;
     private int pendingTicks;
+    private NovaTask pendingTask;
+    private boolean pendingReward;
+    private int expectedTracked;
+    private boolean requestNotApplied;
     private long lastSequence = -1;
     private boolean lastCapacity;
     private int inventoryState;
-    private Button ask;
-    private final Button activeFilter = button("gui.starboundmc.tasks.active", () -> filter(false));
-    private final Button doneFilter = button("gui.starboundmc.tasks.completed", () -> filter(true));
 
-    NovaCommandLayout(int containerId, NovaPortraitElement portrait, UIElement communications, Consumer<Component> explain) {
+    NovaCommandLayout(int containerId, UIElement portraitPane, UIElement communications, Consumer<Component> explain) {
         this.containerId = containerId;
         this.explain = explain;
         addClass("command-shell");
         setOverflowVisible(false);
-        boolean compact = Minecraft.getInstance().getWindow().getGuiScaledWidth() < 440;
-        layout(l -> l.widthPercent(96).heightPercent(94).maxWidth(640).maxHeight(340)
+        layout(l -> l.widthPercent(96).heightPercent(94).maxWidth(560).maxHeight(330)
                 .flexDirection(FlexDirection.COLUMN));
         UIElement header = row("command-header");
-        header.layout(l -> l.height(29).flexShrink(0).paddingHorizontal(10).gapAll(10));
+        header.layout(l -> l.height(32).flexShrink(0).paddingLeft(12));
         Label brand = label("gui.starboundmc.ship_ai.title", "command-brand");
-        brand.layout(l -> l.width(47));
-        pageTitle.layout(l -> l.flex(1));
-        Button close = button("gui.starboundmc.command.close", () -> {
-            if (Minecraft.getInstance().screen != null) Minecraft.getInstance().screen.onClose();
-        });
-        close.layout(l -> l.width(20).height(16));
-        header.addChildren(brand, pageTitle, close);
-        UIElement body = row("command-body");
-        body.layout(l -> l.flex(1).minHeight(0).alignItems(AlignItems.STRETCH));
-        UIElement nav = column("command-nav");
-        nav.layout(l -> l.width(compact ? 51 : 74).flexShrink(0).paddingAll(6).gapAll(7));
+        brand.layout(l -> l.flex(1).minWidth(50).widthAuto());
+        header.addChild(brand);
         for (Page value : Page.values()) {
             Button tab = button("gui.starboundmc.command." + value.name().toLowerCase(java.util.Locale.ROOT), () -> show(value));
             tab.addClass("command-nav-button");
-            tab.layout(l -> l.widthPercent(100).height(28).flexShrink(0));
-            navigation.put(value, tab); nav.addChild(tab);
+            tab.layout(l -> l.width(68).heightPercent(100).flexShrink(0));
+            tab.textStyle(s -> s.textAlignHorizontal(Horizontal.CENTER));
+            navigation.put(value, tab);
+            header.addChild(tab);
         }
-        UIElement center = column("command-center");
-        center.layout(l -> l.flex(1).minWidth(0).minHeight(0));
-        pages.put(Page.OVERVIEW, overview()); pages.put(Page.TASKS, taskPage());
-        pages.put(Page.ARCHIVE, archive()); pages.put(Page.COMMS, communications);
-        for (UIElement view : pages.values()) { view.layout(l -> l.widthPercent(100).heightPercent(100).minHeight(0)); center.addChild(view); }
-        UIElement nova = column("command-nova");
-        nova.layout(l -> l.width(compact ? 76 : 110).flexShrink(0).paddingAll(7).gapAll(7));
-        Label identity = label("gui.starboundmc.ship_ai.title", "command-accent");
-        UIElement portraitStage = column("command-portrait-stage");
-        portraitStage.layout(l -> l.widthPercent(100).paddingAll(5).alignItems(AlignItems.CENTER).flexShrink(0));
-        portrait.layout(l -> l.widthPercent(100).maxWidth(90).maxHeight(compact ? 80 : 105).aspectRatio(6F / 7F).flexShrink(1));
-        portraitStage.addChild(portrait);
-        UIElement spacer = new UIElement();
-        spacer.layout(l -> l.flex(1).minHeight(20));
-        ask = button("gui.starboundmc.tasks.ask", () -> {
-            if (!canAskForGuidance()) return;
-            explain.accept(guidance(selected, "help")); show(Page.COMMS);
+        Button close = button("gui.starboundmc.command.close", () -> {
+            if (Minecraft.getInstance().screen != null) Minecraft.getInstance().screen.onClose();
         });
-        ask.layout(l -> l.widthPercent(100).height(19).flexShrink(0));
-        nova.addChildren(identity, portraitStage, spacer, ask);
-        body.addChildren(nova, nav, center);
+        close.addClass("command-link");
+        close.layout(l -> l.width(34).heightPercent(100).flexShrink(0));
+        close.textStyle(s -> s.textAlignHorizontal(Horizontal.CENTER));
+        close.style(s -> s.tooltips(Component.translatable("gui.starboundmc.command.close_tooltip")));
+        header.addChild(close);
+        UIElement body = column("command-body");
+        body.layout(l -> l.flex(1).minHeight(0).widthPercent(100));
+        UIElement comms = row("command-comms");
+        boolean compact = compact();
+        comms.layout(l -> l.widthPercent(100).heightPercent(100).paddingAll(compact ? 10 : 16)
+                .gapAll(compact ? 12 : 20).alignItems(AlignItems.STRETCH));
+        portraitPane.layout(l -> l.widthPercent(30).heightPercent(100).flexShrink(0));
+        UIElement conversation = column("command-conversation");
+        conversation.layout(l -> l.flex(1).minWidth(0).minHeight(0).gapAll(compact ? 6 : 10));
+        UIElement context = row("command-context");
+        context.layout(l -> l.widthPercent(100).minHeight(21).flexShrink(0).gapAll(6));
+        contextTitle.layout(l -> l.flex(1).minWidth(0).widthAuto());
+        contextOpen.addClass("command-link");
+        contextOpen.layout(l -> l.width(compact ? 67 : 84).height(21).flexShrink(0).paddingHorizontal(2));
+        divider(context);
+        context.addChildren(contextTitle, contextOpen);
+        conversation.addChildren(context, communications);
+        comms.addChildren(portraitPane, conversation);
+        pages.put(Page.COMMS, comms);
+        pages.put(Page.TASKS, taskPage());
+        pages.put(Page.ARCHIVE, archive());
+        for (UIElement view : pages.values()) {
+            view.layout(l -> l.widthPercent(100).heightPercent(100).minHeight(0));
+            body.addChild(view);
+        }
         addChildren(header, body);
         applyPage();
     }
 
-    private UIElement overview() {
-        ScrollerView view = scroll();
-        UIElement hero = column("command-objective");
-        hero.layout(l -> l.widthPercent(100).paddingAll(10).gapAll(9).flexShrink(0));
-        hero.addChildren(label("gui.starboundmc.command.welcome", "command-eyebrow"), overviewTitle, overviewGuide);
-        UIElement route = row("command-route");
-        route.layout(l -> l.widthPercent(100).height(3).gapAll(4).flexShrink(0));
-        for (NovaTask task : NovaTask.values()) {
-            if (task.id() > NovaTask.EXPLORATION.id()) continue;
-            UIElement segment = new UIElement().addClass("command-milestone");
-            segment.setAllowHitTest(false);
-            segment.layout(l -> l.flex(1).heightPercent(100));
-            milestones.put(task, segment); route.addChild(segment);
-        }
-        hero.addChild(route);
-        overviewOpen.addClass("command-primary");
-        overviewOpen.layout(l -> l.widthPercent(100).height(22).flexShrink(0));
-        hero.addChild(overviewOpen);
-        view.addScrollViewChild(hero);
-        rewardPanel.layout(l -> l.widthPercent(100).paddingAll(9).gapAll(6).flexShrink(0));
-        rewardPanel.addChildren(label("gui.starboundmc.tasks.rewards", "command-reward-heading"), overviewRewards);
-        Button rewards = button("gui.starboundmc.tasks.review_rewards", () -> { filter(true); show(Page.TASKS); });
-        rewards.layout(l -> l.widthPercent(100).height(21)); rewardPanel.addChild(rewards);
-        view.addScrollViewChild(rewardPanel);
-        return view;
+    static boolean compact() {
+        var window = Minecraft.getInstance().getWindow();
+        return window.getGuiScaledWidth() < 440 || window.getGuiScaledHeight() < 300;
     }
 
     private UIElement taskPage() {
+        UIElement page = column("command-task-page");
+        page.layout(l -> l.paddingAll(compact() ? 10 : 16).gapAll(10));
+        UIElement heading = row("command-page-heading");
+        heading.layout(l -> l.widthPercent(100).minHeight(22).flexShrink(0).gapAll(6));
+        Label title = label("gui.starboundmc.command.tasks", "command-title");
+        title.layout(l -> l.flex(1).widthAuto().minWidth(0));
+        activeFilter.addClass("command-filter"); doneFilter.addClass("command-filter");
+        activeFilter.layout(l -> l.width(compact() ? 56 : 64).height(22).flexShrink(0).paddingHorizontal(2));
+        doneFilter.layout(l -> l.width(compact() ? 108 : 130).height(22).flexShrink(0).paddingHorizontal(2));
+        divider(heading);
+        heading.addChildren(title, activeFilter, doneFilter);
         ScrollerView view = scroll();
-        UIElement filters = row("command-filters"); filters.layout(l -> l.height(19).gapAll(5).flexShrink(0));
-        activeFilter.layout(l -> l.flex(1).heightPercent(100)); doneFilter.layout(l -> l.flex(1).heightPercent(100));
-        filters.addChildren(activeFilter, doneFilter); view.addScrollViewChild(filters);
+        taskScroller = view;
+        view.layout(l -> l.widthPercent(100).flex(1).minHeight(0));
+        bindReadingPosition(view, Page.TASKS, reading::taskScroll, reading::taskScroll);
         for (NovaTask task : NovaTask.values()) {
             if (task == NovaTask.CONTACT) view.addScrollViewChild(mainTasks);
             if (task == NovaTask.LIFE_SUPPORT) view.addScrollViewChild(preparationTasks);
             UIElement entry = column("command-task-entry");
             entry.layout(l -> l.widthPercent(100).flexShrink(0));
             Button b = button(task.translation("title"), () -> {
-                taskExpanded = selected != task || !taskExpanded;
-                selected = task;
+                reading.select(task);
+                requestNotApplied = false;
                 refresh();
             });
             b.addClass("command-task-row");
-            b.layout(l -> l.widthPercent(100).height(24).flexShrink(0));
-            tasks.put(task, b);
-            taskEntries.put(task, entry);
-            entry.addChild(b);
-            view.addScrollViewChild(entry);
+            b.layout(l -> l.widthPercent(100).heightAuto().minHeight(28).paddingAll(7)
+                    .gapAll(6).alignItems(AlignItems.CENTER).flexShrink(0));
+            b.text.layout(l -> l.flex(1).minWidth(0).heightAuto());
+            b.textStyle(s -> s.adaptiveHeight(true));
+            Label status = label("", "command-task-state");
+            status.layout(l -> l.width(compact() ? 48 : 62).flexShrink(0));
+            status.textStyle(s -> s.textAlignHorizontal(Horizontal.RIGHT));
+            b.addChild(status);
+            tasks.put(task, b); taskStates.put(task, status); taskEntries.put(task, entry);
+            entry.addChild(b); view.addScrollViewChild(entry);
         }
         view.addScrollViewChild(taskEmpty);
-        taskDetails.layout(l -> l.widthPercent(100).paddingAll(9).gapAll(8).flexShrink(0));
-        taskReward.addClass("command-reward-heading");
-        taskDetails.addChildren(taskStatus, taskScope, taskGuide, taskSteps, taskReward);
-        UIElement actions = row("command-actions"); actions.layout(l -> l.height(22).gapAll(5).flexShrink(0));
-        track.layout(l -> l.widthPercent(48).maxWidth(110).heightPercent(100));
-        claim.layout(l -> l.widthPercent(48).maxWidth(125).heightPercent(100));
-        claim.addClass("command-primary"); actions.addChildren(track, claim); taskDetails.addChild(actions);
-        taskDetails.addChild(feedback);
-        taskEntries.get(selected).addChild(taskDetails);
-        return view;
+        taskDetails.layout(l -> l.widthPercent(100).paddingHorizontal(compact() ? 10 : 16)
+                .paddingVertical(compact() ? 6 : 8).gapAll(6).flexShrink(0));
+        rewardLine.layout(l -> l.widthPercent(100).minHeight(16).gapAll(5).flexShrink(0));
+        UIElement icon = new UIElement();
+        icon.setAllowHitTest(false);
+        icon.layout(l -> l.width(12).height(12).flexShrink(0));
+        icon.style(s -> s.backgroundTexture(new ItemStackTexture(new ItemStack(ModItems.MATTER_MANIPULATOR_MODULE.get()))));
+        taskReward.layout(l -> l.flex(1).minWidth(0).widthAuto());
+        rewardLine.addChildren(icon, taskReward);
+        actions.layout(l -> l.widthPercent(100).gapAll(8).minHeight(22).flexShrink(0));
+        track.addClass("command-primary");
+        track.layout(l -> l.width(compact() ? 110 : 132).height(23).paddingLeft(14).flexShrink(0));
+        ask.addClass("command-link");
+        ask.layout(l -> l.width(compact() ? 82 : 100).height(23).flexShrink(0));
+        claim.addClass("command-primary");
+        claim.layout(l -> l.width(compact() ? 110 : 132).height(23).paddingLeft(14).flexShrink(0));
+        actions.addChildren(track, ask, claim);
+        taskDetails.addChildren(taskGuide, taskSteps, taskCost, rewardLine, claimed, actions, feedback);
+        taskEntries.get(reading.selected()).addChild(taskDetails);
+        page.addChildren(heading, view);
+        return page;
     }
 
     private UIElement archive() {
+        UIElement page = column("command-archive-page");
+        page.layout(l -> l.paddingAll(compact() ? 10 : 16).gapAll(10));
+        Label title = label("gui.starboundmc.command.archive", "command-title");
         ScrollerView view = scroll();
+        view.layout(l -> l.widthPercent(100).flex(1).minHeight(0));
+        bindReadingPosition(view, Page.ARCHIVE, reading::archiveScroll, reading::archiveScroll);
         for (NovaTask task : NovaTask.values()) {
             UIElement entry = column("command-archive-entry");
-            entry.layout(l -> l.widthPercent(100).gapAll(8).paddingAll(10).flexShrink(0));
-            entry.addChildren(label(task.translation("archive_title"), "command-accent"),
-                    label(task.translation("archive"), "command-copy"));
-            Button related = button("gui.starboundmc.tasks.related", () -> { selected = task; completedFilter = progress.completed(task); show(Page.TASKS); });
-            related.layout(l -> l.height(19).widthPercent(100)); entry.addChild(related);
-            archives.put(task, entry); view.addScrollViewChild(entry);
+            entry.layout(l -> l.widthPercent(100).gapAll(8).paddingVertical(10).flexShrink(0));
+            divider(entry);
+            entry.addChildren(label(task.translation("archive_title"), "command-accent"), label(task.translation("archive"), "command-copy"));
+            Button related = button("gui.starboundmc.tasks.related", () -> {
+                reading.taskScroll(0);
+                reading.openTask(task, progress);
+                refresh();
+            });
+            related.addClass("command-link");
+            related.layout(l -> l.height(22).width(110).paddingHorizontal(2));
+            entry.addChild(related); archives.put(task, entry); view.addScrollViewChild(entry);
         }
-        return view;
+        page.addChildren(title, view);
+        return page;
     }
 
     void tick(boolean transmitting) {
-        boolean canAsk = canAskForGuidance();
-        ask.setDisplay(canAsk);
-        ask.setActive(canAsk && !transmitting);
-        if (pending > 0) {
-            pendingTicks++;
-            if (ClientShipStoryState.consumeAcknowledgement(containerId, pending) || pendingTicks > 100) {
-                pending = 0; lastSequence = -1;
-            }
-        }
+        revealSelectedTask();
+        boolean activityChanged = this.transmitting != transmitting;
+        this.transmitting = transmitting;
         if (!ClientShipStoryState.hasSnapshot(containerId)) return;
         var snapshot = ClientShipStoryState.snapshot(containerId);
-        boolean ready = snapshot.shared().core() == CoreState.ONLINE
-                && snapshot.shared().surfaceMission() != SurfaceMissionState.LOCKED;
-        if (ready != unlocked) { unlocked = ready; if (!ready) page = Page.COMMS; lastSequence = -1; }
-        if (unlocked && !enteredOverview && !transmitting) { enteredOverview = true; page = Page.OVERVIEW; lastSequence = -1; }
+        progress = ClientShipStoryState.tasks(containerId);
+        if (requestNotApplied && (pendingReward ? progress.claimed(pendingTask) : progress.trackedTask() == expectedTracked))
+            requestNotApplied = false;
+        if (pending > 0 && (ClientShipStoryState.consumeAcknowledgement(containerId, pending) || ++pendingTicks > 100)) {
+            requestNotApplied = pendingReward ? !progress.claimed(pendingTask) : progress.trackedTask() != expectedTracked;
+            pending = 0;
+            lastSequence = -1;
+        }
+        boolean ready = snapshot.shared().core() == CoreState.ONLINE && snapshot.shared().surfaceMission() != SurfaceMissionState.LOCKED;
+        if (ready != unlocked) { unlocked = ready; lastSequence = -1; }
+        reading.synchronize(progress, unlocked);
         boolean capacity = rewardCapacity();
         int currentInventory = repairInventoryState();
-        if (snapshot.updateSequence() == lastSequence && capacity == lastCapacity && inventoryState == currentInventory) return;
+        if (!activityChanged && snapshot.updateSequence() == lastSequence && capacity == lastCapacity && inventoryState == currentInventory) return;
         inventoryState = currentInventory;
         lastSequence = snapshot.updateSequence(); lastCapacity = capacity;
-        progress = ClientShipStoryState.tasks(containerId);
-        if (page == Page.OVERVIEW) selected = recommended();
         refresh();
     }
 
-    private NovaTask recommended() {
-        if (progress.trackedTask() >= 0 && progress.trackedTask() < NovaTask.values().length) return NovaTask.fromId(progress.trackedTask());
-        for (NovaTask task : NovaTask.values()) if (!progress.completed(task) && task.available(progress.completedMask())) return task;
-        return NovaTask.LUNAR_SORTIE;
-    }
     private void filter(boolean complete) {
-        completedFilter = complete;
-        taskExpanded = true;
-        for (NovaTask task : NovaTask.values()) if (progress.completed(task) == complete) {
-            selected = task;
-            if (progress.claimable(task) || !complete) break;
-        }
+        reading.filter(complete, progress);
+        requestNotApplied = false;
         refresh();
     }
+
     private void show(Page target) {
         if (!unlocked && target != Page.COMMS) return;
-        page = target;
-        if (target == Page.OVERVIEW) selected = recommended();
-        if (target == Page.TASKS) {
-            completedFilter = progress.completed(selected);
-            taskExpanded = true;
+        reading.show(target);
+        refresh();
+    }
+
+    private void applyPage() {
+        Page activePage = unlocked ? reading.page() : Page.COMMS;
+        pages.forEach((p, view) -> view.setDisplay(p == activePage));
+        navigation.forEach((p, b) -> {
+            b.setActive(unlocked || p == Page.COMMS);
+            setClass(b, "command-selected", p == activePage);
+        });
+    }
+
+    private void openContext() {
+        if (!unlocked) return;
+        if (reading.inquiry() != null) reading.returnToTask(progress);
+        else {
+            reading.taskScroll(0);
+            reading.openTask(NovaTerminalViewState.recommended(progress), progress);
         }
         refresh();
     }
-    private void applyPage() {
-        pages.forEach((p, view) -> view.setDisplay(p == page));
-        navigation.forEach((p, b) -> { b.setActive(unlocked || p == Page.COMMS); setClass(b, "command-selected", p == page); });
-        pageTitle.setText(Component.translatable("gui.starboundmc.command." + page.name().toLowerCase(java.util.Locale.ROOT)));
+
+    private void askSelected() {
+        var session = ClientShipAiTerminalState.current();
+        if (!canAskForGuidance() || session.isTransmitting() || session.pendingRequest() != null) return;
+        reading.askSelected();
+        refresh();
+        explain.accept(guidance(reading.selected(), "help"));
     }
+
     private void refresh() {
+        reading.synchronize(progress, unlocked);
         applyPage();
-        if (page == Page.TASKS && progress.completed(selected) != completedFilter) {
-            for (NovaTask task : NovaTask.values()) if (progress.completed(task) == completedFilter) {
-                selected = task; break;
-            }
-        }
-        boolean hasSelection = progress.completed(selected) == completedFilter;
+        NovaTask selected = reading.selected();
+        boolean hasSelection = progress.completed(selected) == reading.completedFilter();
         UIElement selectedEntry = taskEntries.get(selected);
         if (taskDetails.getParent() != selectedEntry) selectedEntry.addChild(taskDetails);
-        taskDetails.setDisplay(hasSelection && taskExpanded);
+        taskDetails.setDisplay(hasSelection && reading.expanded());
         taskEmpty.setDisplay(!hasSelection);
-        NovaTask current = recommended();
-        milestones.forEach((task, segment) -> {
-            setClass(segment, "command-milestone-done", progress.completed(task));
-            setClass(segment, "command-milestone-current", task == current && !progress.completed(task));
-        });
-        overviewTitle.setText(Component.translatable(current.translation("title")));
-        overviewGuide.setText(progress.completedMask() == NovaTask.KNOWN_MASK
-                ? Component.translatable("gui.starboundmc.tasks.chapter_done") : guidance(current, "next"));
-        int pendingRewards = 0;
-        for (NovaTask task : NovaTask.values()) if (progress.claimable(task)) pendingRewards += task.reward();
-        overviewRewards.setText(Component.translatable("gui.starboundmc.tasks.pending_rewards", pendingRewards));
-        rewardPanel.setDisplay(pendingRewards > 0);
+        NovaTask context = reading.inquiry() != null ? reading.inquiry() : NovaTerminalViewState.recommended(progress);
+        contextTitle.setText(Component.translatable(unlocked ? context.translation("title") : "gui.starboundmc.ship_ai.log"));
+        contextOpen.setDisplay(unlocked);
+        contextOpen.setText(Component.translatable(reading.inquiry() == null ? "gui.starboundmc.tasks.view" : "gui.starboundmc.tasks.return"));
         mainTasks.setDisplay(hasFilteredTasks(false));
         preparationTasks.setDisplay(hasFilteredTasks(true));
         tasks.forEach((task, b) -> {
-            taskEntries.get(task).setDisplay(progress.completed(task) == completedFilter);
-            b.setActive(task.available(progress.completedMask()));
-            Component name = Component.literal((task == selected && taskExpanded ? "−  " : "+  ")
-                    + (progress.completed(task) ? "✓  " : ""))
-                    .append(Component.translatable(task.translation("title")));
-            b.setText(name); setClass(b, "command-selected", task == selected && taskExpanded);
-            b.style(s -> s.tooltips(task.available(progress.completedMask())
-                    ? Component.translatable(task.translation("title")) : guidance(task, "help")));
+            taskEntries.get(task).setDisplay(progress.completed(task) == reading.completedFilter());
+            boolean expanded = task == selected && reading.expanded();
+            b.setText(Component.literal(expanded ? "▾  " : "▸  ").append(Component.translatable(task.translation("title"))));
+            setClass(b, "command-selected", expanded);
+            String status = progress.claimable(task) ? "claimable" : progress.completed(task) ? "done"
+                    : !task.available(progress.completedMask()) ? "locked" : progress.trackedTask() == task.id() ? "tracked" : "active";
+            taskStates.get(task).setText(Component.translatable("gui.starboundmc.tasks.state." + status));
+            setClass(taskStates.get(task), "command-complete", progress.completed(task));
+            setClass(taskStates.get(task), "command-cost", progress.claimable(task));
+            b.style(s -> s.tooltips(Component.translatable(task.translation("title"))));
         });
-        setClass(activeFilter, "command-selected", !completedFilter); setClass(doneFilter, "command-selected", completedFilter);
-        taskScope.setText(Component.translatable(selected.translation("scope")));
-        String status = progress.completed(selected) ? "complete" : selected.available(progress.completedMask()) ? "in_progress" : "locked";
-        taskStatus.setText(Component.translatable("gui.starboundmc.tasks." + status));
-        taskGuide.setDisplay(!progress.completed(selected));
-        taskGuide.setText(guidance(selected, "next"));
-        taskSteps.setDisplay(selected == NovaTask.REPAIR && !progress.completed(selected));
+        int active = 0, complete = 0, rewards = 0;
+        for (NovaTask task : NovaTask.values()) {
+            if (progress.completed(task)) complete++; else active++;
+            if (progress.claimable(task)) rewards++;
+        }
+        activeFilter.setText(Component.translatable("gui.starboundmc.tasks.active_count", active));
+        doneFilter.setText(Component.translatable(rewards > 0 ? "gui.starboundmc.tasks.completed_rewards_count" : "gui.starboundmc.tasks.completed_count", complete, rewards));
+        setClass(activeFilter, "command-selected", !reading.completedFilter());
+        setClass(doneFilter, "command-selected", reading.completedFilter());
+        boolean completed = progress.completed(selected);
+        boolean available = selected.available(progress.completedMask());
+        taskGuide.setDisplay(!completed);
+        taskGuide.setText(guidance(selected, available ? "next" : "help"));
+        boolean repair = selected == NovaTask.REPAIR && available && !completed;
+        taskSteps.setDisplay(repair);
         taskSteps.setText(Component.translatable("gui.starboundmc.tasks.repair_steps",
-                marker((progress.evidenceMask() & NovaTaskProgress.UPGRADED) != 0),
-                marker((progress.evidenceMask() & NovaTaskProgress.CORE_OBTAINED) != 0)));
-        taskReward.setText(Component.translatable(selected.reward() == 0 ? "gui.starboundmc.tasks.unlock_reward" : "gui.starboundmc.tasks.module_reward", selected.reward()));
+                marker((progress.evidenceMask() & NovaTaskProgress.UPGRADED) != 0), marker((progress.evidenceMask() & NovaTaskProgress.CORE_OBTAINED) != 0)));
+        taskCost.setDisplay(repair && ClientShipStoryState.hasSnapshot(containerId)
+                && ClientShipStoryState.snapshot(containerId).shared().sublightEngine() == EngineState.DAMAGED);
+        rewardLine.setDisplay(selected.reward() > 0 && !progress.claimed(selected));
+        taskReward.setText(Component.translatable("gui.starboundmc.tasks.module_reward", selected.reward()));
+        claimed.setDisplay(completed && (selected.reward() == 0 || progress.claimed(selected)));
+        claimed.setText(Component.translatable(selected.reward() == 0 ? "gui.starboundmc.tasks.contact_restored" : "gui.starboundmc.tasks.claimed"));
         boolean canAct = pending == 0 && unlocked;
-        claim.setDisplay(selected.reward() > 0 && progress.completed(selected));
+        claim.setDisplay(progress.claimable(selected));
         claim.setActive(canAct && progress.claimable(selected) && rewardCapacity());
-        claim.setText(Component.translatable(progress.claimed(selected) ? "gui.starboundmc.tasks.claimed" : "gui.starboundmc.tasks.claim"));
-        claim.style(s -> s.tooltips(Component.translatable(progress.claimed(selected) ? "gui.starboundmc.tasks.claimed" : "gui.starboundmc.tasks.claim")));
-        track.setActive(canAct && !progress.completed(selected) && selected.available(progress.completedMask()));
+        track.setDisplay(!completed && available);
+        track.setActive(canAct && !completed && available);
         track.setText(Component.translatable(progress.trackedTask() == selected.id() ? "gui.starboundmc.tasks.untrack" : "gui.starboundmc.tasks.track"));
-        track.style(s -> s.tooltips(Component.translatable(progress.trackedTask() == selected.id() ? "gui.starboundmc.tasks.untrack" : "gui.starboundmc.tasks.track")));
-        feedback.setDisplay(pending > 0 || progress.claimable(selected) && !rewardCapacity());
-        feedback.setText(Component.translatable(pending > 0
-                ? "gui.starboundmc.tasks.waiting" : "gui.starboundmc.tasks.inventory_full"));
         ask.setDisplay(canAskForGuidance());
+        ask.setActive(canAskForGuidance() && !transmitting);
+        actions.setDisplay(track.isDisplayed() || ask.isDisplayed() || claim.isDisplayed());
+        feedback.setDisplay(pending > 0 || requestNotApplied || progress.claimable(selected) && !rewardCapacity());
+        feedback.setText(Component.translatable(pending > 0 ? "gui.starboundmc.tasks.waiting" : requestNotApplied
+                ? "gui.starboundmc.tasks.request_not_applied" : "gui.starboundmc.tasks.inventory_full"));
         archives.forEach((task, entry) -> entry.setDisplay(task.available(progress.completedMask())));
     }
 
     private boolean canAskForGuidance() {
-        if (!unlocked || progress.completed(selected) || !selected.available(progress.completedMask())) return false;
-        return selected != NovaTask.REPAIR
-                || ClientShipStoryState.snapshot(containerId).shared().sublightEngine() == EngineState.DAMAGED;
+        NovaTask task = reading.selected();
+        if (!unlocked || progress.completed(task) || !task.available(progress.completedMask())) return false;
+        return task != NovaTask.REPAIR || ClientShipStoryState.snapshot(containerId).shared().sublightEngine() == EngineState.DAMAGED;
     }
 
     private boolean hasFilteredTasks(boolean preparation) {
         for (NovaTask task : NovaTask.values())
-            if ((task.id() >= NovaTask.LIFE_SUPPORT.id()) == preparation
-                    && progress.completed(task) == completedFilter) return true;
+            if ((task.id() >= NovaTask.LIFE_SUPPORT.id()) == preparation && progress.completed(task) == reading.completedFilter()) return true;
         return false;
     }
 
+    Component currentGuidance() {
+        if (progress.completedMask() == NovaTask.KNOWN_MASK)
+            return Component.translatable("gui.starboundmc.tasks.chapter_done");
+        NovaTask task = reading.inquiry() != null ? reading.inquiry() : NovaTerminalViewState.recommended(progress);
+        return guidance(task, "help");
+    }
+
     private Component guidance(NovaTask task, String kind) {
-        if (!ClientShipStoryState.hasSnapshot(containerId))
-            return Component.translatable("gui.starboundmc.ship_ai.prologue.syncing");
+        if (!ClientShipStoryState.hasSnapshot(containerId)) return Component.translatable("gui.starboundmc.ship_ai.prologue.syncing");
         var shared = ClientShipStoryState.snapshot(containerId).shared();
-        String stage = NovaTaskGuidance.stage(task, progress, shared.sublightEngine(), shared.mineralScan(),
-                (inventoryState & 1) != 0, (inventoryState & 2) != 0);
+        String stage = NovaTaskGuidance.stage(task, progress, shared.sublightEngine(), shared.mineralScan(), (inventoryState & 1) != 0, (inventoryState & 2) != 0);
         return Component.translatable(NovaTaskGuidance.translation(stage, kind));
     }
 
@@ -342,21 +380,26 @@ final class NovaCommandLayout extends UIElement {
         int state = 0;
         for (var stacks : java.util.List.of(player.getInventory().items, player.getInventory().offhand)) {
             for (ItemStack stack : stacks) {
-                if (stack.getItem() instanceof MatterManipulatorItem && MatterManipulatorItem.getMiningLevel(stack) >= 1)
-                    state |= 1;
+                if (stack.getItem() instanceof MatterManipulatorItem && MatterManipulatorItem.getMiningLevel(stack) >= 1) state |= 1;
                 if (stack.is(ModItems.SUBLIGHT_IGNITION_CORE.get())) state |= 2;
             }
         }
         return state;
     }
+
     private void request(boolean reward) {
-        if (pending > 0) return;
-        pending = nextRequest++; pendingTicks = 0;
+        NovaTask selected = reading.selected();
+        if (pending > 0 || !unlocked || (reward ? !progress.claimable(selected) || !rewardCapacity()
+                : progress.completed(selected) || !selected.available(progress.completedMask()))) return;
+        pending = ClientShipAiTerminalState.current().nextActionRequestId(); pendingTicks = 0;
+        pendingTask = selected; pendingReward = reward; requestNotApplied = false;
+        expectedTracked = progress.trackedTask() == selected.id() ? -1 : selected.id();
         ModNetwork.sendToServer(new ShipAiActionPacket(containerId, pending,
                 reward ? ShipAiActionPacket.Action.CLAIM_TASK_REWARD : ShipAiActionPacket.Action.TRACK_TASK,
-                reward || progress.trackedTask() != selected.id() ? selected.id() : -1));
+                reward ? selected.id() : expectedTracked));
         refresh();
     }
+
     private static boolean rewardCapacity() {
         var player = Minecraft.getInstance().player;
         if (player == null) return false;
@@ -365,20 +408,58 @@ final class NovaCommandLayout extends UIElement {
                 || ItemStack.isSameItemSameComponents(stack, reward) && stack.getCount() < stack.getMaxStackSize()) return true;
         return false;
     }
+
+    private void bindReadingPosition(ScrollerView scroller, Page page, Supplier<Float> position, Consumer<Float> save) {
+        boolean[] restoring = {false};
+        scroller.verticalScroller.setOnValueChanged(value -> {
+            if (!restoring[0] && reading.page() == page && displayed(scroller) && scrollRange(scroller) > 0)
+                save.accept(value * scrollRange(scroller));
+        });
+        scroller.viewContainer.addEventListener(UIEvents.LAYOUT_CHANGED, event -> {
+            if (reading.page() != page || !displayed(scroller)) return;
+            restoring[0] = true;
+            float range = scrollRange(scroller);
+            scroller.verticalScroller.setNormalizedValue(range <= 0 ? 0 : Math.min(1, position.get() / range));
+            restoring[0] = false;
+        });
+    }
+
+    private void revealSelectedTask() {
+        if (!reading.revealSelection() || reading.page() != Page.TASKS || !displayed(taskScroller)
+                || taskScroller.viewPort.getContentHeight() <= 0 || tasks.get(reading.selected()).getSizeHeight() <= 0) return;
+        // Adaptive text can reflow repeatedly during layout. Reveal on the following tick,
+        // using the completed layout rather than consuming the request on its first pass.
+        float top = taskEntries.get(reading.selected()).getLayoutY();
+        float range = scrollRange(taskScroller);
+        float pixels = reading.taskScroll();
+        if (top < pixels || top + tasks.get(reading.selected()).getSizeHeight() > pixels + taskScroller.viewPort.getContentHeight())
+            reading.taskScroll(Math.max(0, Math.min(range, top)));
+        taskScroller.verticalScroller.setNormalizedValue(range <= 0 ? 0 : Math.min(1, reading.taskScroll() / range));
+        reading.selectionRevealed();
+    }
+
+    private static boolean displayed(UIElement element) {
+        for (UIElement parent = element; parent != null; parent = parent.getParent())
+            if (!parent.isDisplayed() || !parent.isVisible()) return false;
+        return true;
+    }
+
+    private static float scrollRange(ScrollerView scroller) { return Math.max(0, scroller.getContainerHeight() - scroller.viewPort.getContentHeight()); }
     private static String marker(boolean complete) { return complete ? "✓" : "○"; }
-    private static UIElement column(String css) { UIElement e = new UIElement().addClass(css); e.setOverflowVisible(false); e.layout(l -> l.flexDirection(FlexDirection.COLUMN)); return e; }
-    private static UIElement row(String css) { UIElement e = new UIElement().addClass(css); e.setOverflowVisible(false); e.layout(l -> l.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)); return e; }
-    private static ScrollerView scroll() {
+    private static void divider(UIElement element) {
+        element.style(s -> s.overlay((g, mx, my, x, y, w, h, partial) ->
+                g.fill(Math.round(x), Math.round(y + h - 1), Math.round(x + w), Math.round(y + h), 0xff29414b)));
+    }
+    static UIElement column(String css) { UIElement e = new UIElement().addClass(css); e.setOverflowVisible(false); e.layout(l -> l.flexDirection(FlexDirection.COLUMN)); return e; }
+    static UIElement row(String css) { UIElement e = column(css); e.layout(l -> l.flexDirection(FlexDirection.ROW).alignItems(AlignItems.CENTER)); return e; }
+    static ScrollerView scroll() {
         ScrollerView view = new ScrollerView(); view.addClass("command-scroll"); view.setOverflowVisible(false);
         view.scrollerStyle(s -> s.mode(ScrollerMode.VERTICAL).verticalScrollDisplay(ScrollDisplay.AUTO).horizontalScrollDisplay(ScrollDisplay.NEVER));
-        view.viewPort(v -> {
-            v.layout(l -> l.paddingAll(9));
-            v.style(s -> s.backgroundTexture(com.lowdragmc.lowdraglib2.gui.texture.IGuiTexture.EMPTY));
-        });
-        view.viewContainer(v -> v.layout(l -> l.widthPercent(100).gapAll(9).flexDirection(FlexDirection.COLUMN)));
+        view.viewPort(v -> v.layout(l -> l.paddingAll(0)).style(s -> s.backgroundTexture(IGuiTexture.EMPTY)));
+        view.viewContainer(v -> v.layout(l -> l.widthPercent(100).gapAll(8).flexDirection(FlexDirection.COLUMN)));
         return view;
     }
-    private static Label label(String key, String css) {
+    static Label label(String key, String css) {
         Label label = new Label(); label.addClass(css); label.setAllowHitTest(false); label.setOverflowVisible(false);
         label.setText(key.isEmpty() ? Component.empty() : Component.translatable(key));
         label.layout(l -> l.widthPercent(100).minHeight(9).flexShrink(0));
@@ -386,12 +467,10 @@ final class NovaCommandLayout extends UIElement {
                 .textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.TOP).lineSpacing(2));
         return label;
     }
-    private static Button button(String key, Runnable action) {
-        Button b = new NovaTerminalButton(); b.addClass("command-button"); b.setText(Component.translatable(key)); b.setOverflowVisible(false);
-        b.text.setAllowHitTest(false); b.text.setOverflowVisible(false);
-        b.textStyle(s -> s.adaptiveWidth(false).textWrap(TextWrap.HIDE).textAlignHorizontal(Horizontal.LEFT).textAlignVertical(Vertical.CENTER));
+    static NovaTerminalButton button(String key, Runnable action) {
+        NovaTerminalButton b = new NovaTerminalButton().onActivate(action);
+        b.addClass("command-button"); b.setText(Component.translatable(key));
         b.style(s -> s.tooltips(Component.translatable(key)));
-        b.addEventListener(UIEvents.CLICK, e -> { if (e.button == GLFW.GLFW_MOUSE_BUTTON_LEFT && b.isActive()) { action.run(); e.stopPropagation(); } });
         return b;
     }
     private static void setClass(UIElement element, String css, boolean present) { if (present) element.addClass(css); else element.removeClass(css); }

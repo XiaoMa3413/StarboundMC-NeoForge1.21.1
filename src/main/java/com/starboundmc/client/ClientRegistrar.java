@@ -5,6 +5,7 @@ import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.entity.ModEntities;
 import com.starboundmc.menu.ModMenus;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
+import com.starboundmc.client.shipai.ShipAiTerminalScreen;
 import com.starboundmc.client.hud.StarboundHudLayer;
 import com.starboundmc.client.starmap.StarmapTerminalScreen;
 import net.neoforged.api.distmarker.Dist;
