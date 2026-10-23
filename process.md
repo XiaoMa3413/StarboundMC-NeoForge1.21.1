@@ -11,7 +11,7 @@
 - [x] 03 阅读项目说明、构建配置、代码和资源，检查缺项与问题（武器重点静态审查）。
 - [x] 04 尝试构建并记录实际结果，区分环境问题与代码问题（已有网络失败证据；构建成功另见 A05）。
 - [x] 05 整理后续修改优先级、依据和验收条件（W01-a 至 W01-d、W04）。
-- [ ] 06 核对本地文件与进度，交付结果。
+- [x] 06 核对本地文件、环境验证与进度；武器修改待后续执行。
 
 ## 记录规则
 
@@ -35,9 +35,10 @@
 - [x] A02 下载完整源码，记录分支、提交 SHA、文件数量及 git 状态。
 - [x] A03 配置工作区 JDK 21，验证 java 与 javac，记录来源及版本。
 - [x] A04 读取 Wrapper 版本，设置独立 Gradle 缓存和可复用启动脚本。
-- [ ] A05 原始版本执行 test/build，保存完整日志、测试统计和 JAR 路径。
-- [ ] A06 启动开发客户端，确认 NeoForge/模组加载成功，保存日志。
-- [ ] A07 进入独立测试世界，确认初始流程可运行；记录自动检查与人工检查的边界。
+- [x] A05 原始版本执行 test/build，保存完整日志、测试统计和 JAR 路径。
+- [x] A06 启动开发客户端，确认 NeoForge/模组加载成功，保存日志。
+- [x] A07 进入独立测试世界，确认世界、模组维度与渲染可运行；自动检查与人工检查的边界见 L015。
+- [ ] A08 完整序章、生存交互与武器人工实测（功能验收，环境配置完成不代表这些项目已经通过）。
 
 ## B. 武器盘点与逐件修改计划
 
@@ -215,3 +216,62 @@
 - Gradle 缓存位于仓库 `.gradle-home`，已被忽略；代理为本机现有的 127.0.0.1:17891，只记录于该缓存目录的 gradle.properties。换机器时应改为当地可用代理或移除代理设置。
 - 基线分支为 `feat/weapons-improvements`；源码来源提交见 L003。
 - 游戏自动场景只证明本机客户端/世界/渲染所覆盖行为；不代替求生小刀交互或两客户端联机测试。
+
+### L009 · 2026-10-23 · 本地提交检查点
+
+- 分支：`feat/weapons-improvements`。
+- 提交：`1d843cb`，`chore: record weapon work plan and local development environment`。
+- 内容：process 详细任务/日志、scripts/dev.ps1；生产源码未修改。
+- 首次 commit 因未配置 Git 作者身份失败；随后仅对该命令使用 `Codex <codex@localhost>` 自动化身份完成提交，没有修改用户全局 Git 身份，也未推送远端。
+- 后续每批功能修改单独记录 diff/提交与验证结果；本提交可作为环境与计划检查点。
+
+### L010 · 2026-10-23 14:28（北京时间）· Minecraft 客户端下载恢复
+
+- 第三次构建已完成开发依赖、映射与原版服务端下载，但原版客户端 `.dltmp` 长时间保持 0 字节。
+- curl 直连 Mojang 超时；通过系统代理下载成功，SHA1 与 Mojang 清单/官方 URL 一致：`30c73b1c5da787909b2f73340419fdf13b9def88`。
+- 终止本任务的 NeoForm 下载子进程；第三次构建因此以退出码 1 结束（10m5s），不是源码编译错误。
+- 把已校验文件复制到 `.gradle-home/caches/neoformruntime/artifacts/minecraft_1.21.1_client.jar`，保留所有原始日志。
+- 第四次运行：相同 test/build、4 workers、TLS 1.2；输出 `logs/baseline-build-04.log`。
+- 运行硬件记录：AMD Radeon 780M 与 NVIDIA RTX 4060 Laptop GPU；真实 OpenGL 使用哪张卡以客户端日志为准。
+
+### L011 · 2026-10-23 · 源码编译完成，修复测试启动环境
+
+- 第四次构建完成 Minecraft 开发环境、模组 Java 编译与 JAR 打包；产物 `build/libs/starboundmc-0.1-alpha.jar`，82,520,442 字节。
+- test 任务失败于启动 `GradleWorkerMain`（ClassNotFoundException），尚未成功执行测试用例；不能记成测试通过。
+- 启动参数文件和 classpath 包含中文工作区路径，判断为 Windows Java 参数文件编码问题；JAR 内 worker 类实际存在。
+- 处理：仅在忽略的 `.gradle-home/gradle.properties` 设置 Gradle JVM `-Dfile.encoding=GBK`，同时保留 4 workers 与 TLS 1.2；Java 源码编译仍由 build.gradle 显式使用 UTF-8。
+- 第五次运行：test/build，日志 `logs/baseline-build-05.log`。游戏验证仍待进行，未修改武器代码。
+
+### L012 · 2026-10-23 17:58（北京时间）· 基线构建与测试通过
+
+- 第五次 `test build` 退出码 0：`BUILD SUCCESSFUL in 25s`，7 个任务中 4 个执行、3 个已是最新。
+- 修改本地 Gradle 参数文件编码后，测试启动正常；JUnit XML 报告已生成，共 146 个测试套件报告，具体用例数量由 XML 汇总记录。
+- 日志：`logs/baseline-build-05.log`；测试报告：`build/reports/tests/test/index.html`；JAR：`build/libs/starboundmc-0.1-alpha.jar`。
+- 开始客户端验证：`./scripts/dev.ps1 -PspaceSmoke -PspaceSmokeLabel=baseline '-PspaceSmokeViews=sys1:lush' runClient --console=plain --stacktrace`。
+- 客户端日志：`logs/baseline-client-01.log`；场景使用独立新世界，尚未标记 A06/A07。
+
+### L013 · 2026-10-23 · 测试统计与客户端资源准备
+
+- XML 汇总：664 个测试，0 failures、0 errors、0 skipped（本次实际运行结果）。
+- 客户端验证额外编译了仓库自带 renderTest 夹具，进入 downloadAssets 阶段；正在首次下载 Minecraft 资源索引与游戏资源。
+- 本批没有修改生产代码；A06/A07 仍保持未完成，等待客户端和独立世界实际运行结果。
+
+### L014 · 2026-10-23 18:01（北京时间）· 游戏资源下载通道调整
+
+- Minecraft 资源索引包含 3911 项，合计约 826 MB；代理下载进展缓慢。
+- 已用实际索引中的文件验证 `resources.download.minecraft.net` 直连返回 HTTP 200。
+- 仅在本地 Gradle 配置的 http.nonProxyHosts 添加该域名，其他 Maven 下载继续使用已有代理。
+- 停止首轮资源下载子进程，客户端第 1 轮因此中止（2m32s）；日志 `logs/baseline-client-01.log` 保留。
+- 启动第 2 轮相同独立世界验证，日志 `logs/baseline-client-02.log`；已有资源缓存继续复用。
+
+### L015 · 2026-10-23 18:05（北京时间）· 环境配置与真实游戏验证完成
+
+- 客户端第 2 轮退出码 0：`BUILD SUCCESSFUL in 4m17s`。
+- 真实 Minecraft 1.21.1 / NeoForge 21.1.248 客户端成功加载 StarboundMC 与 LDLib2，创建并进入独立世界 `space-fixture-1792749906676`，玩家实际登录。
+- 已加载并正常保存主世界、飞船、Rocky Moon、Frozen、Barren、Molten 等维度；测试完成后客户端正常退出。
+- 渲染证据：`run-space-smoke/screenshots/baseline/complete.txt` 记录 1 个视点完成；`pass-checks.txt` 记录 298 帧生产事件状态与深度保持。
+- 实际截图：`run-space-smoke/screenshots/baseline/sys1-lush.png`，已打开检查，行星与星场正常显示。
+- GPU：NVIDIA GeForce RTX 4060 Laptop GPU，OpenGL 4.6 / NVIDIA 581.42；背景、星场、HDR 目标无失败标记。完整数值见同目录 `sys1-lush.txt` 与 `depth-checks.txt`。
+- 环境结论：JDK、Gradle、固定依赖、编译、664 项自动测试、真实客户端进入世界均已验证，可以开展后续武器修改与测试。
+- 验收边界：本次是独立自动场景和单机集成服务器，不代表完整序章、生存制作、武器交互、两客户端联机均已验收；这些保持待办。
+- 生产源码仍未修改。用户最新要求环境配置完成后回复 `1`，此处完成环境阶段检查点。
