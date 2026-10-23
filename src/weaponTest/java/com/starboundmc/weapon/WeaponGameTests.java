@@ -57,16 +57,27 @@ public final class WeaponGameTests {
             level.addFreshEntity(entity); targets.add(entity); return entity;
         }
         void ammo(Item item, int count) { player.getInventory().setItem(1, new ItemStack(item, count)); }
-        void fire() { player.getMainHandItem().getItem().use(level, player, InteractionHand.MAIN_HAND); }
+        void fire() {
+            if (player.getMainHandItem().getItem() instanceof EnergyGunItem) {
+                GunTrigger.input(player, GunTriggerPacket.PRESS); GunTrigger.input(player, GunTriggerPacket.RELEASE);
+            } else player.getMainHandItem().getItem().use(level, player, InteractionHand.MAIN_HAND);
+        }
+        void elapse(int ticks, boolean keepAlive) {
+            for (int i = 0; i < ticks; i++) {
+                ((net.minecraft.world.level.storage.ServerLevelData)level.getLevelData()).setGameTime(level.getGameTime() + 1);
+                player.getCooldowns().tick();
+                if (keepAlive && i % 5 == 0) GunTrigger.input(player, GunTriggerPacket.PRESS);
+                GunTrigger.tick(player);
+            }
+        }
         void charge(int ticks) {
-            fire();
-            player.getMainHandItem().releaseUsing(level, player, 72000 - ticks);
-            player.stopUsingItem();
+            GunTrigger.input(player, GunTriggerPacket.PRESS); elapse(ticks, true);
+            GunTrigger.input(player, GunTriggerPacket.RELEASE);
         }
         void wall(int z) {
             for (int y = 0; y < 3; y++) level.setBlockAndUpdate(player.blockPosition().offset(0, y, z), Blocks.STONE.defaultBlockState());
         }
-        public void close() { targets.forEach(Villager::discard); player.discard(); channel.finishAndReleaseAll(); }
+        public void close() { GunTrigger.input(player, GunTriggerPacket.CANCEL); targets.forEach(Villager::discard); player.discard(); channel.finishAndReleaseAll(); }
     }
 
     @GameTest(template = "shuttle_test_empty")
@@ -104,26 +115,27 @@ public final class WeaponGameTests {
     @GameTest(template = "shuttle_test_empty")
     public static void railgunCancellationAndInsufficientAmmoAreFree(GameTestHelper h) {
         try (var f = new Fixture(h, ModItems.STARCORE_RAILGUN.get())) {
-            var target = f.target(0, 3); f.ammo(Items.REDSTONE, 2); f.charge(19);
+            var target = f.target(0, 3); f.ammo(Items.REDSTONE, 2); f.charge(9);
             h.assertTrue(target.getHealth() == 20 && f.player.getInventory().getItem(1).getCount() == 2,
                     "Cancelled charge spent ammo or damaged target");
             h.assertTrue(f.player.getMainHandItem().getDamageValue() == 0
                     && !f.player.getCooldowns().isOnCooldown(ModItems.STARCORE_RAILGUN.get()), "Cancelled charge spent wear/cooldown");
-            f.ammo(Items.REDSTONE, 1); f.charge(40);
+            f.ammo(Items.REDSTONE, 1); f.charge(20);
             h.assertTrue(target.getHealth() == 20 && f.player.getInventory().getItem(1).getCount() == 1,
                     "Insufficient ammunition partially consumed or fired");
         } h.succeed();
     }
 
     @GameTest(template = "shuttle_test_empty")
-    public static void railgunPiercesOnlyThreeAndCombinesAmmoStacks(GameTestHelper h) {
+    public static void railgunExplodesAtFirstHitAndCombinesAmmoStacks(GameTestHelper h) {
         try (var f = new Fixture(h, ModItems.STARCORE_RAILGUN.get())) {
-            var first = f.target(0, 3); var second = f.target(0, 5);
+            var first = f.target(0, 3); var second = f.target(1.5, 3);
             var third = f.target(0, 7); var fourth = f.target(0, 9);
             f.ammo(Items.REDSTONE, 1); f.player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.REDSTONE));
-            f.charge(20);
-            h.assertTrue(first.getHealth() == 2 && second.getHealth() == 2 && third.getHealth() == 2
-                    && fourth.getHealth() == 20, "Minimum charge must deal 18 to at most three targets");
+            f.charge(10);
+            h.assertTrue(first.getHealth() == 2 && second.getHealth() < 20 && second.getHealth() > 2
+                    && third.getHealth() == 20 && fourth.getHealth() == 20,
+                    "Railgun must deal 18 once to direct target, falloff splash nearby, no infinite penetration");
             h.assertTrue(f.player.getInventory().getItem(1).isEmpty() && f.player.getOffhandItem().isEmpty(), "Split ammo not consumed");
             h.assertTrue(f.player.getMainHandItem().getDamageValue() == 4, "Railgun wear mismatch");
         } h.succeed();
@@ -178,9 +190,9 @@ public final class WeaponGameTests {
     public static void fullRailgunChargeStopsAtWall(GameTestHelper h) {
         try (var f = new Fixture(h, ModItems.STARCORE_RAILGUN.get())) {
             var near = f.target(0, 2); var far = f.target(0, 6);
-            f.wall(4); f.ammo(Items.REDSTONE, 4); f.charge(40);
+            f.wall(4); f.ammo(Items.REDSTONE, 4); f.charge(20);
             h.assertTrue(near.getHealth() == 0 && far.getHealth() == 20, "Full charge damage or wall clipping incorrect");
-            f.charge(40);
+            f.fire();
             h.assertTrue(f.player.getInventory().getItem(1).getCount() == 2, "Railgun bypassed post-shot cooldown");
         } h.succeed();
     }
@@ -196,6 +208,62 @@ public final class WeaponGameTests {
             f.player.getCooldowns().removeCooldown(ModItems.DURASTEEL_GLAIVE.get());
             f.player.recoverAttack(); f.wall(1); f.fire();
             h.assertTrue(fourth.getHealth() == 20, "Blade hit through a wall");
+        } h.succeed();
+    }
+
+    @GameTest(template = "shuttle_test_empty")
+    public static void heldLeftTriggerFiresAtFasterCadenceAndStops(GameTestHelper h) {
+        for (var gun : List.of(ModItems.COIL_PISTOL.get(), ModItems.PLASMA_CARBINE.get())) {
+            try (var f = new Fixture(h, gun)) {
+                var target = f.target(0, 3); f.ammo(gun.ammunition(), 16);
+                gun.use(f.level, f.player, InteractionHand.MAIN_HAND);
+                h.assertTrue(target.getHealth() == 20, "Right click still fires");
+                GunTrigger.input(f.player, GunTriggerPacket.PRESS);
+                f.elapse(gun.profile().cooldown, true);
+                h.assertTrue(target.getHealth() == 20 - gun.profile().damage * 2, "Fast shots swallowed by vanilla invulnerability");
+                h.assertTrue(f.player.getInventory().getItem(1).getCount() == 14, "Incorrect automatic fire cadence");
+                GunTrigger.input(f.player, GunTriggerPacket.RELEASE); f.elapse(10, false);
+                h.assertTrue(f.player.getInventory().getItem(1).getCount() == 14, "Trigger release did not stop firing");
+            }
+        } h.succeed();
+    }
+
+    @GameTest(template = "shuttle_test_empty")
+    public static void triggerSpamTimeoutAndSwapCannotBypassServerState(GameTestHelper h) {
+        try (var f = new Fixture(h, ModItems.STARCORE_RAILGUN.get())) {
+            var target = f.target(0, 3); f.ammo(Items.REDSTONE, 8);
+            GunTrigger.input(f.player, 255);
+            for (int i = 0; i < 100; i++) GunTrigger.input(f.player, GunTriggerPacket.PRESS);
+            GunTrigger.input(f.player, GunTriggerPacket.RELEASE);
+            h.assertTrue(target.getHealth() == 20, "Packet spam counted as server charge ticks");
+            GunTrigger.input(f.player, GunTriggerPacket.PRESS); f.elapse(20, false);
+            GunTrigger.input(f.player, GunTriggerPacket.RELEASE);
+            h.assertTrue(target.getHealth() == 20, "Timed-out charge fired");
+            GunTrigger.input(f.player, GunTriggerPacket.PRESS); f.elapse(10, true);
+            var stack = f.player.getMainHandItem();
+            f.player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY); GunTrigger.tick(f.player);
+            f.player.setItemInHand(InteractionHand.MAIN_HAND, stack); GunTrigger.input(f.player, GunTriggerPacket.RELEASE);
+            h.assertTrue(target.getHealth() == 20 && f.player.getInventory().getItem(1).getCount() == 8, "Swap retained charge or spent ammo");
+            GunTrigger.input(f.player, GunTriggerPacket.PRESS); f.elapse(10, true);
+            GunTrigger.input(f.player, GunTriggerPacket.CANCEL); GunTrigger.input(f.player, GunTriggerPacket.RELEASE);
+            h.assertTrue(target.getHealth() == 20, "Cancelled charge fired");
+        } h.succeed();
+    }
+
+    @GameTest(template = "shuttle_test_empty")
+    public static void railSplashRespectsWallsAlliesAndTerrain(GameTestHelper h) {
+        try (var f = new Fixture(h, ModItems.STARCORE_RAILGUN.get())) {
+            var blocked = f.target(0, 3); var friend = f.target(1, 1.5); var exposed = f.target(-1, 1.5);
+            f.wall(2);
+            var board = f.level.getScoreboard(); var team = board.addPlayerTeam("blast" + sequence);
+            board.addPlayerToTeam(f.player.getScoreboardName(), team); board.addPlayerToTeam(friend.getScoreboardName(), team);
+            try {
+                f.ammo(Items.REDSTONE, 4); f.charge(20);
+                h.assertTrue(blocked.getHealth() == 20 && friend.getHealth() == 20 && exposed.getHealth() < 20,
+                        "Explosion ignored wall/alliance or failed to splash");
+                h.assertTrue(f.player.getHealth() == 20, "Explosion damaged shooter");
+                h.assertTrue(f.level.getBlockState(f.player.blockPosition().offset(0, 1, 2)).is(Blocks.STONE), "Explosion destroyed terrain");
+            } finally { board.removePlayerTeam(team); }
         } h.succeed();
     }
 

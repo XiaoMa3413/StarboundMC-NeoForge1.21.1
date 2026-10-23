@@ -661,17 +661,17 @@
   "item.starboundmc.tungsten_sabre": "钨钢军刀",
   "item.starboundmc.tungsten_sabre.tooltip": "轻型近战武器；主手攻击，适合连续交锋。",
   "item.starboundmc.coil_pistol": "线圈手枪",
-  "item.starboundmc.coil_pistol.tooltip": "主手右键射击；消耗铁粒，弹道被墙体阻挡。",
+  "item.starboundmc.coil_pistol.tooltip": "主手按住左键连射；每秒 5 发，消耗铁粒。",
   "weapon.starboundmc.no_ammo": "需要 %s × %s",
   "weapon.starboundmc.ammo": "每发消耗：%s × %s",
   "weapon.starboundmc.gun_stats": "伤害上限 %s · 射程 %s 格 · 冷却 %s 秒",
   "weapon.starboundmc.recover": "等待攻击恢复后再发动技能",
   "item.starboundmc.durasteel_glaive": "耐钢战戟",
-  "item.starboundmc.durasteel_glaive.tooltip": "攻击恢复后主手右键：扇形震击；消耗 8 耐久，冷却 3 秒。",
+  "item.starboundmc.durasteel_glaive.tooltip": "攻击恢复后主手右键：青绿震击扇面；消耗 8 耐久，冷却 3 秒。",
   "item.starboundmc.plasma_carbine": "等离子卡宾枪",
-  "item.starboundmc.plasma_carbine.tooltip": "主手右键射击；消耗红石，命中后点燃 2 秒。",
+  "item.starboundmc.plasma_carbine.tooltip": "主手按住左键连射；每秒 10 发，消耗红石，点燃 2 秒。",
   "item.starboundmc.starcore_blade": "星核裁决刃",
-  "item.starboundmc.starcore_blade.tooltip": "攻击恢复后主手右键：星核弧斩；消耗 16 耐久，冷却 5 秒。",
+  "item.starboundmc.starcore_blade.tooltip": "攻击恢复后主手右键：蓝紫星核弧斩；消耗 16 耐久，冷却 5 秒。",
   "item.starboundmc.starcore_railgun": "星核轨道炮",
-  "item.starboundmc.starcore_railgun.tooltip": "主手按住右键蓄力，1 秒后可发射，2 秒满蓄；18–30 伤害，最多穿透 3 敌人。"
+  "item.starboundmc.starcore_railgun.tooltip": "按住左键蓄力，0.5 秒后松开发射，1 秒满蓄；蓝紫拖尾，落点 3.5 格范围爆炸。"
 }

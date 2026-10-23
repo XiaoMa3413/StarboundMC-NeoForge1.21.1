@@ -14,7 +14,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import com.starboundmc.item.ModItems;
@@ -70,10 +69,7 @@ public final class CombatBladeItem extends SwordItem {
                 if (target.hurt(level.damageSources().playerAttack(player), profile.damage + 2))
                     target.knockback(0.6, player.getX() - target.getX(), player.getZ() - target.getZ());
             }
-            for (int i = -2; i <= 2; i++) {
-                var pos = origin.add(look.yRot(i * 0.28f).scale(profile.range * 0.6));
-                server.sendParticles(ParticleTypes.SWEEP_ATTACK, pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
-            }
+            WeaponEffects.blade(server, origin, look, profile);
             level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1, 0.8f);
             stack.hurtAndBreak(profile == WeaponProfile.STARCORE_BLADE ? 16 : 8, player, EquipmentSlot.MAINHAND);
         }

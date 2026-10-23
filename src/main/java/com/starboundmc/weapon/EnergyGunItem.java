@@ -6,13 +6,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
-import net.minecraft.world.level.Level;
 
 public final class EnergyGunItem extends Item {
     private final WeaponProfile profile;
@@ -22,29 +18,7 @@ public final class EnergyGunItem extends Item {
     public WeaponProfile profile() { return profile; }
     public Item ammunition() { return profile == WeaponProfile.COIL_PISTOL ? Items.IRON_NUGGET : Items.REDSTONE; }
 
-    @Override public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        var stack = player.getItemInHand(hand);
-        if (hand != InteractionHand.MAIN_HAND || player.isSpectator() || player.getCooldowns().isOnCooldown(this))
-            return InteractionResultHolder.fail(stack);
-        if (!WeaponCombat.hasAmmo(player, ammunition(), profile.ammoCost)) {
-            if (!level.isClientSide) player.displayClientMessage(Component.translatable("weapon.starboundmc.no_ammo",
-                    profile.ammoCost, ammunition().getDescription()), true);
-            return InteractionResultHolder.fail(stack);
-        }
-        if (profile.chargeTicks > 0) player.startUsingItem(hand);
-        else if (!level.isClientSide) fire(player, stack, profile.damage);
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
-    }
-
-    @Override public int getUseDuration(ItemStack stack, LivingEntity entity) { return 72000; }
-    @Override public UseAnim getUseAnimation(ItemStack stack) { return UseAnim.BOW; }
-    @Override public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int remaining) {
-        if (level.isClientSide || profile.chargeTicks == 0 || !(entity instanceof Player player)) return;
-        float damage = profile.chargedDamage(getUseDuration(stack, entity) - remaining);
-        if (damage > 0) fire(player, stack, damage);
-    }
-
-    private boolean fire(Player player, ItemStack stack, float damage) {
+    boolean fire(Player player, ItemStack stack, float damage) {
         if (!(player.level() instanceof ServerLevel level) || !player.isAlive() || player.isSpectator()
                 || player.getMainHandItem() != stack || player.getCooldowns().isOnCooldown(this)
                 || !WeaponCombat.consumeAmmo(player, ammunition(), profile.ammoCost)) return false;
@@ -58,7 +32,12 @@ public final class EnergyGunItem extends Item {
         // Non-piercing shots stop visibly on the first body, even if invulnerable frames reject damage.
         if (profile.targets == 1 && !targets.isEmpty()) end = targets.getFirst().getBoundingBox()
                 .inflate(0.15).clip(player.getEyePosition(), end).orElse(end);
-        WeaponCombat.beam(level, player.getEyePosition(), end, profile.fireSeconds > 0);
+        if (profile == WeaponProfile.STARCORE_RAILGUN) {
+            var muzzle = player.getEyePosition().add(player.getLookAngle().scale(1.2)).add(0, -.2, 0);
+            WeaponEffects.railTrail(level, muzzle, end);
+            WeaponCombat.blast(level, player, end, damage, targets);
+            WeaponEffects.detonation(level, end);
+        } else WeaponCombat.beam(level, player.getEyePosition(), end, profile.fireSeconds > 0);
         level.playSound(null, player.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS,
                 0.45f, profile.chargeTicks > 0 ? 0.6f : 1.6f);
         stack.hurtAndBreak(profile.chargeTicks > 0 ? 4 : 1, player, EquipmentSlot.MAINHAND);

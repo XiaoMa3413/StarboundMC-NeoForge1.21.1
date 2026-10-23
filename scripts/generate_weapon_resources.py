@@ -10,16 +10,16 @@ WEAPONS = [
     ('tungsten_sabre', '钨钢军刀', 'Tungsten Sabre', 1, 'blade', 'iron_block',
      '轻型近战武器；主手攻击，适合连续交锋。', 'Light melee weapon for sustained close combat.'),
     ('coil_pistol', '线圈手枪', 'Coil Pistol', 1, 'pistol', 'copper_block',
-     '主手右键射击；消耗铁粒，弹道被墙体阻挡。', 'Fire in main hand. Uses iron nuggets; walls stop shots.'),
+     '主手按住左键连射；每秒 5 发，消耗铁粒。', 'Hold left attack in main hand: 5 shots/s. Uses iron nuggets.'),
     ('durasteel_glaive', '耐钢战戟', 'Durasteel Glaive', 2, 'glaive', 'emerald_block',
-     '攻击恢复后主手右键：扇形震击；消耗 8 耐久，冷却 3 秒。', 'Right-click at full attack recovery: shock sweep; costs 8 durability, 3s cooldown.'),
+     '攻击恢复后主手右键：青绿震击扇面；消耗 8 耐久，冷却 3 秒。', 'Right-click at attack recovery: teal shock fan; costs 8 durability, 3s cooldown.'),
     ('plasma_carbine', '等离子卡宾枪', 'Plasma Carbine', 2, 'carbine', 'emerald_block',
-     '主手右键射击；消耗红石，命中后点燃 2 秒。', 'Fire in main hand. Uses redstone; ignites targets for 2s.'),
+     '主手按住左键连射；每秒 10 发，消耗红石，点燃 2 秒。', 'Hold left attack: 10 shots/s. Uses redstone; ignites targets for 2s.'),
     ('starcore_blade', '星核裁决刃', 'Starcore Verdict', 3, 'greatblade', 'amethyst_block',
-     '攻击恢复后主手右键：星核弧斩；消耗 16 耐久，冷却 5 秒。', 'Right-click at full attack recovery: stellar arc; costs 16 durability, 5s cooldown.'),
+     '攻击恢复后主手右键：蓝紫星核弧斩；消耗 16 耐久，冷却 5 秒。', 'Right-click at attack recovery: blue-violet stellar arc; costs 16 durability, 5s cooldown.'),
     ('starcore_railgun', '星核轨道炮', 'Starcore Railgun', 3, 'railgun', 'amethyst_block',
-     '主手按住右键蓄力，1 秒后可发射，2 秒满蓄；18–30 伤害，最多穿透 3 敌人。',
-     'Hold in main hand: release after 1s, full charge at 2s; 18–30 damage, pierces up to 3 foes.'),
+     '按住左键蓄力，0.5 秒后松开发射，1 秒满蓄；蓝紫拖尾，落点 3.5 格范围爆炸。',
+     'Hold left attack: release after 0.5s, full charge at 1s; blue-violet trail, 3.5-block blast.'),
 ]
 
 def write(path, value):

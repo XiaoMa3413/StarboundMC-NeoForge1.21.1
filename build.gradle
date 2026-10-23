@@ -30,6 +30,7 @@ sourceSets {
             include 'com/starboundmc/block/entity/ShipEngineBlockEntity.java'
             include 'com/starboundmc/menu/ShipEngineMenu.java'
             include 'com/starboundmc/client/engine/*.java'
+            include 'com/starboundmc/client/weapon/*.java'
             include 'com/starboundmc/block/entity/ShipCrateBlockEntity.java'
             include 'com/starboundmc/block/entity/ShipDoorBlockEntity.java'
             include 'com/starboundmc/item/ModItems.java'
@@ -220,7 +221,7 @@ if (project.hasProperty('weaponGameTests')) {
     sourceSets.main.java.srcDir('src/weaponTest/java')
     sourceSets.main.resources.srcDir('src/gameTest/resources')
 }
-if (project.hasProperty('weaponSmoke')) {
+if (project.hasProperty('weaponSmoke') || project.hasProperty('weaponEffectsSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
 if (project.hasProperty('hudVisorSmoke')) {
@@ -267,6 +268,11 @@ neoForge {
     runs {
         client {
             client()
+            if (project.hasProperty('weaponEffectsSmoke')) {
+                gameDirectory = file('run-weapon-effects-smoke')
+                systemProperty 'starboundmc.debug.weaponEffectsSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
             if (project.hasProperty('weaponSmoke')) {
                 gameDirectory = file('run-weapon-smoke')
                 systemProperty 'starboundmc.debug.weaponSmoke', 'true'

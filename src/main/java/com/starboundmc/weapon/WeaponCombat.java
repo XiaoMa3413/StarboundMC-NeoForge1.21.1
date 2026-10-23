@@ -67,6 +67,27 @@ public final class WeaponCombat {
                         .clip(start, end).orElse(end).distanceToSqr(start))).limit(limit).toList();
     }
 
+    public static final double BLAST_RADIUS = 3.5;
+    public static void blast(ServerLevel level, Player player, Vec3 impact, float damage, List<LivingEntity> directHits) {
+        // Bias onto the incoming side of a solid surface; a wall shields entities behind it.
+        var origin = impact.subtract(player.getLookAngle().scale(.05));
+        var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DAMAGE_TYPE,
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("starboundmc", "weapon_blast"));
+        var source = new net.minecraft.world.damagesource.DamageSource(level.registryAccess()
+                .registryOrThrow(net.minecraft.core.registries.Registries.DAMAGE_TYPE).getHolderOrThrow(key), player);
+        for (var target : level.getEntitiesOfClass(LivingEntity.class, new AABB(origin, origin).inflate(BLAST_RADIUS),
+                entity -> canHit(player, entity) && !directHits.contains(entity))) {
+            var center = target.getBoundingBox().getCenter();
+            double distance = center.distanceTo(origin);
+            if (distance >= BLAST_RADIUS) continue;
+            if (level.clip(new ClipContext(origin, center, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player))
+                    .getType() != net.minecraft.world.phys.HitResult.Type.MISS) continue;
+            float splash = damage * (float)(1 - distance / BLAST_RADIUS);
+            if (target.hurt(source, splash)) target.knockback(.7 * (1 - distance / BLAST_RADIUS),
+                    origin.x - target.getX(), origin.z - target.getZ());
+        }
+    }
+
     public static void beam(ServerLevel level, Vec3 start, Vec3 end, boolean plasma) {
         var delta = end.subtract(start);
         int steps = Math.min(80, Math.max(1, (int) (delta.length() * 2)));
