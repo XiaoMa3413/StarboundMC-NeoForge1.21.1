@@ -1,0 +1,40 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:durasteel_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:diamond"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:echo_shard"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:fuel_crystal"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 200
+    }
+  ],
+  "print_seconds": 12,
+  "result": {
+    "id": "starboundmc:star_core_fragment",
+    "count": 2
+  }
+}

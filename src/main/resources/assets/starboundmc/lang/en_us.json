@@ -657,5 +657,21 @@
   "starboundmc.config.cloud_shadows_enabled": "Cloud Shadows",
   "starboundmc.config.atmosphere_enabled": "Atmosphere",
   "starboundmc.config.space_starfield_backend": "Background Starfield Backend",
-  "starboundmc.config.space_bloom_strength": "Space Bloom Strength"
+  "starboundmc.config.space_bloom_strength": "Space Bloom Strength",
+  "item.starboundmc.tungsten_sabre": "Tungsten Sabre",
+  "item.starboundmc.tungsten_sabre.tooltip": "Light melee weapon for sustained close combat.",
+  "item.starboundmc.coil_pistol": "Coil Pistol",
+  "item.starboundmc.coil_pistol.tooltip": "Fire in main hand. Uses iron nuggets; walls stop shots.",
+  "weapon.starboundmc.no_ammo": "Requires %s × %s",
+  "weapon.starboundmc.ammo": "Per shot: %s × %s",
+  "weapon.starboundmc.gun_stats": "Max damage %s · Range %s blocks · Cooldown %ss",
+  "weapon.starboundmc.recover": "Wait for your attack to recover before using the skill",
+  "item.starboundmc.durasteel_glaive": "Durasteel Glaive",
+  "item.starboundmc.durasteel_glaive.tooltip": "Right-click at full attack recovery: shock sweep; costs 8 durability, 3s cooldown.",
+  "item.starboundmc.plasma_carbine": "Plasma Carbine",
+  "item.starboundmc.plasma_carbine.tooltip": "Fire in main hand. Uses redstone; ignites targets for 2s.",
+  "item.starboundmc.starcore_blade": "Starcore Verdict",
+  "item.starboundmc.starcore_blade.tooltip": "Right-click at full attack recovery: stellar arc; costs 16 durability, 5s cooldown.",
+  "item.starboundmc.starcore_railgun": "Starcore Railgun",
+  "item.starboundmc.starcore_railgun.tooltip": "Hold in main hand: release after 1s, full charge at 2s; 18–30 damage, pierces up to 3 foes."
 }

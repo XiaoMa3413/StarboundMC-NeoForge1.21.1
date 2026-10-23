@@ -6,6 +6,13 @@
     "starboundmc:epp_mk3_upgrade_kit",
     "starboundmc:heating_module_1",
     "starboundmc:cooling_module_1",
-    "starboundmc:empty_oxygen_canister"
+    "starboundmc:empty_oxygen_canister",
+    "starboundmc:survival_knife",
+    "starboundmc:tungsten_sabre",
+    "starboundmc:coil_pistol",
+    "starboundmc:durasteel_glaive",
+    "starboundmc:plasma_carbine",
+    "starboundmc:starcore_blade",
+    "starboundmc:starcore_railgun"
   ]
 }

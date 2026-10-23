@@ -1,0 +1,34 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:durasteel_ingot"
+      },
+      "count": 6
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:titanium_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:basic_circuit_board"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 150
+    }
+  ],
+  "print_seconds": 8,
+  "result": {
+    "id": "starboundmc:durasteel_glaive",
+    "count": 1
+  }
+}

@@ -134,14 +134,26 @@ public final class ModItems {
             new Item.Properties().food(new FoodProperties(
                     8, FoodConstants.saturationByModifier(8, 1.6F), true, 1.2F, Optional.empty(), List.of())));
 
-    // Fixed 5 attack damage shown in the tooltip (4 modifier + 1 player base) and a spam-friendly
-    // 3 swings per second (-1.0 vs the sword's -2.4), fast enough for click-spam combat without
-    // eating the vanilla attack cooldown damage penalty. No durability component, so the knife
+    // Fixed 5 attack damage (4 modifier + 1 player base) and 3 swings per second.
+    // Vanilla attack recovery still applies. No durability component, so the knife
     // never takes damage; enchantment value stays 0, so it cannot be enchanted. The attack speed
     // modifier works in combat but is kept out of the tooltip by SurvivalKnifeItem.
     public static final DeferredItem<SurvivalKnifeItem> SURVIVAL_KNIFE = ITEMS.registerItem(
             "survival_knife", SurvivalKnifeItem::new,
-            new Item.Properties().attributes(survivalKnifeAttributes().withTooltip(false)));
+            new Item.Properties().stacksTo(1).attributes(survivalKnifeAttributes().withTooltip(false)));
+
+    public static final DeferredItem<com.starboundmc.weapon.CombatBladeItem> TUNGSTEN_SABRE = ITEMS.registerItem(
+            "tungsten_sabre", p -> new com.starboundmc.weapon.CombatBladeItem(p, com.starboundmc.weapon.WeaponProfile.TUNGSTEN_SABRE));
+    public static final DeferredItem<com.starboundmc.weapon.EnergyGunItem> COIL_PISTOL = ITEMS.registerItem(
+            "coil_pistol", p -> new com.starboundmc.weapon.EnergyGunItem(p, com.starboundmc.weapon.WeaponProfile.COIL_PISTOL));
+    public static final DeferredItem<com.starboundmc.weapon.CombatBladeItem> DURASTEEL_GLAIVE = ITEMS.registerItem(
+            "durasteel_glaive", p -> new com.starboundmc.weapon.CombatBladeItem(p, com.starboundmc.weapon.WeaponProfile.DURASTEEL_GLAIVE));
+    public static final DeferredItem<com.starboundmc.weapon.EnergyGunItem> PLASMA_CARBINE = ITEMS.registerItem(
+            "plasma_carbine", p -> new com.starboundmc.weapon.EnergyGunItem(p, com.starboundmc.weapon.WeaponProfile.PLASMA_CARBINE));
+    public static final DeferredItem<com.starboundmc.weapon.CombatBladeItem> STARCORE_BLADE = ITEMS.registerItem(
+            "starcore_blade", p -> new com.starboundmc.weapon.CombatBladeItem(p, com.starboundmc.weapon.WeaponProfile.STARCORE_BLADE));
+    public static final DeferredItem<com.starboundmc.weapon.EnergyGunItem> STARCORE_RAILGUN = ITEMS.registerItem(
+            "starcore_railgun", p -> new com.starboundmc.weapon.EnergyGunItem(p, com.starboundmc.weapon.WeaponProfile.STARCORE_RAILGUN));
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> STARBOUNDMC_TAB =
             CREATIVE_MODE_TABS.register("starboundmc", () -> CreativeModeTab.builder()
@@ -203,6 +215,12 @@ public final class ModItems {
                         output.accept(FUEL_CRYSTAL);
                         output.accept(EMERGENCY_FOOD_CAN);
                         output.accept(SURVIVAL_KNIFE);
+                        output.accept(TUNGSTEN_SABRE);
+                        output.accept(COIL_PISTOL);
+                        output.accept(DURASTEEL_GLAIVE);
+                        output.accept(PLASMA_CARBINE);
+                        output.accept(STARCORE_BLADE);
+                        output.accept(STARCORE_RAILGUN);
                     })
                     .build());
 

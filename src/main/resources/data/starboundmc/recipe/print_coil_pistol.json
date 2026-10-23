@@ -1,0 +1,34 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:tungsten_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:basic_circuit_board"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:copper_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 60
+    }
+  ],
+  "print_seconds": 5,
+  "result": {
+    "id": "starboundmc:coil_pistol",
+    "count": 1
+  }
+}

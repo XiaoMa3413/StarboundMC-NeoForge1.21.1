@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:coil_pistol",
+    "starboundmc:plasma_carbine",
+    "starboundmc:starcore_railgun"
+  ]
+}

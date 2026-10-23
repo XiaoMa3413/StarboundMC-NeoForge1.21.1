@@ -39,6 +39,7 @@ sourceSets {
             include 'com/starboundmc/item/MatterManipulatorModuleItem.java'
             include 'com/starboundmc/item/SublightIgnitionCoreItem.java'
             include 'com/starboundmc/item/SurvivalKnifeItem.java'
+            include 'com/starboundmc/weapon/*.java'
             include 'com/starboundmc/item/VoxelItem.java'
             include 'com/starboundmc/loot/VoxelDropLootModifier.java'
             include 'com/starboundmc/loot/VoxelLootModifiers.java'
@@ -178,6 +179,7 @@ sourceSets {
     test {
         java {
             setSrcDirs(['src/bootstrapTest/java', 'src/test/java'])
+            include 'com/starboundmc/weapon/*.java'
             include 'com/starboundmc/*.java'
             include 'com/starboundmc/warp/*.java'
             include 'com/starboundmc/world/*.java'
@@ -213,6 +215,13 @@ sourceSets {
 if (project.hasProperty('shipGameTests')) {
     sourceSets.main.java.srcDir('src/gameTest/java')
     sourceSets.main.resources.srcDir('src/gameTest/resources')
+}
+if (project.hasProperty('weaponGameTests')) {
+    sourceSets.main.java.srcDir('src/weaponTest/java')
+    sourceSets.main.resources.srcDir('src/gameTest/resources')
+}
+if (project.hasProperty('weaponSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
 }
 if (project.hasProperty('hudVisorSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
@@ -258,6 +267,11 @@ neoForge {
     runs {
         client {
             client()
+            if (project.hasProperty('weaponSmoke')) {
+                gameDirectory = file('run-weapon-smoke')
+                systemProperty 'starboundmc.debug.weaponSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             if (project.hasProperty('spaceSmoke')) {
                 gameDirectory = file('run-space-smoke')

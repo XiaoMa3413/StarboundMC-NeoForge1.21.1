@@ -1,0 +1,34 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:star_core_fragment"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:durasteel_ingot"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:basic_circuit_board"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 400
+    }
+  ],
+  "print_seconds": 15,
+  "result": {
+    "id": "starboundmc:starcore_blade",
+    "count": 1
+  }
+}

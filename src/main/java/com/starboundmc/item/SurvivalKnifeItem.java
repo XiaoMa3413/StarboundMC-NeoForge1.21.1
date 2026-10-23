@@ -24,7 +24,8 @@ public class SurvivalKnifeItem extends Item {
         tooltip.add(CommonComponents.EMPTY);
         tooltip.add(Component.translatable("item.modifiers.mainhand").withStyle(ChatFormatting.GRAY));
         stack.forEachModifier(EquipmentSlotGroup.MAINHAND, (attribute, modifier) -> {
-            if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
+            if (attribute.equals(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)
+                    && modifier.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) {
                 // Vanilla shows the combined value in tooltips: modifier plus the 1.0 player base.
                 double total = modifier.amount() + 1.0;
                 tooltip.add(CommonComponents.space().append(

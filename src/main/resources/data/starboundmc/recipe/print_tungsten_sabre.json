@@ -1,0 +1,28 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:tungsten_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:iron_ingot"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 30
+    }
+  ],
+  "print_seconds": 3,
+  "result": {
+    "id": "starboundmc:tungsten_sabre",
+    "count": 1
+  }
+}
