@@ -667,7 +667,7 @@
   "weapon.starboundmc.gun_stats": "Max damage %s · Range %s blocks · Cooldown %ss",
   "weapon.starboundmc.recover": "Wait for your attack to recover before using the skill",
   "item.starboundmc.durasteel_glaive": "Durasteel Glaive",
-  "item.starboundmc.durasteel_glaive.tooltip": "Right-click at attack recovery: teal shock fan; costs 8 durability, 3s cooldown.",
+  "item.starboundmc.durasteel_glaive.tooltip": "Right-click at attack recovery: 5.5-block teal shock fan; costs 8 durability, 3s cooldown.",
   "item.starboundmc.plasma_carbine": "Plasma Carbine",
   "item.starboundmc.plasma_carbine.tooltip": "Hold left attack: 10 shots/s. Uses redstone; ignites targets for 2s.",
   "item.starboundmc.starcore_blade": "Starcore Verdict",

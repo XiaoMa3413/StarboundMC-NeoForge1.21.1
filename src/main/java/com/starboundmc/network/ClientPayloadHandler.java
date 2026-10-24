@@ -18,6 +18,9 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  * {@link ServerPayloadHandler}.
  */
 public final class ClientPayloadHandler {
+    public static void handle(com.starboundmc.weapon.GunShotPacket payload, IPayloadContext context) {
+        com.starboundmc.client.weapon.GunMotion.shot(payload);
+    }
     public static void handle(TransporterEffectPacket payload, IPayloadContext context) {
         com.starboundmc.client.TransporterEffectRenderer.receive(payload);
     }

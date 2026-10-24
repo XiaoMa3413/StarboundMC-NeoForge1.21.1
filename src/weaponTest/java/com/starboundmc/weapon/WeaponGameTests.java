@@ -23,6 +23,34 @@ import java.util.*;
 @PrefixGameTestTemplate(false)
 public final class WeaponGameTests {
     private static int sequence;
+    @GameTest(template = "shuttle_test_empty")
+    public static void recoilAcknowledgesOnlySuccessfulShots(GameTestHelper h) {
+        try (var f = new Fixture(h, ModItems.COIL_PISTOL.get())) {
+            var gun = ModItems.COIL_PISTOL.get();
+            var oldStack = f.player.getMainHandItem().copy();
+            var wornStack = oldStack.copy(); wornStack.setDamageValue(1);
+            h.assertTrue(!gun.shouldCauseReequipAnimation(oldStack, wornStack, false), "Durability lowered the gun");
+            h.assertTrue(gun.shouldCauseReequipAnimation(oldStack, wornStack, true), "Real slot change lost equip animation");
+            f.fire();
+            h.assertTrue(f.shotAcks() == 0, "Empty gun acknowledged a shot");
+            f.ammo(Items.IRON_NUGGET, 2); f.fire();
+            h.assertTrue(f.shotAcks() == 1, "Successful shot must acknowledge exactly once");
+            f.fire();
+            h.assertTrue(f.shotAcks() == 0, "Cooldown produced recoil");
+            f.elapse(gun.profile().cooldown, false); f.fire();
+            h.assertTrue(f.shotAcks() == 1, "Next valid shot did not acknowledge");
+        } h.succeed();
+    }
+    @GameTest(template = "shuttle_test_empty")
+    public static void glaiveReachesNewOuterBandButNotBeyondFiveAndHalf(GameTestHelper h) {
+        try (var f = new Fixture(h, ModItems.DURASTEEL_GLAIVE.get())) {
+            var near = f.target(0, 4.5); var edge = f.target(0, 5.45); var outside = f.target(0, 5.6);
+            f.player.recoverAttack(); f.fire();
+            h.assertTrue(near.getHealth() == 8 && edge.getHealth() == 8,
+                    "Glaive did not reach its extended 5.5 block range");
+            h.assertTrue(outside.getHealth() == 20, "Glaive exceeded 5.5 blocks");
+        } h.succeed();
+    }
     private static final class CombatPlayer extends ServerPlayer {
         CombatPlayer(ServerLevel level) {
             super(level.getServer(), level, new GameProfile(UUID.randomUUID(), "WeaponTest"), ClientInformation.createDefault());
@@ -39,6 +67,11 @@ public final class WeaponGameTests {
             player = new CombatPlayer(level);
             var connection = new Connection(PacketFlow.SERVERBOUND);
             channel = new EmbeddedChannel(connection);
+            net.neoforged.neoforge.network.registration.ChannelAttributes.setPayloadSetup(connection,
+                    new net.neoforged.neoforge.network.registration.NetworkPayloadSetup(Map.of(
+                            net.minecraft.network.ConnectionProtocol.PLAY, Map.of(GunShotPacket.TYPE.id(),
+                            new net.neoforged.neoforge.network.registration.NetworkChannel(GunShotPacket.TYPE.id(),
+                                    com.starboundmc.network.ModNetwork.PROTOCOL_VERSION)))));
             player.connection = new ServerGamePacketListenerImpl(level.getServer(), connection, player,
                     CommonListenerCookie.createInitial(player.getGameProfile(), false));
             ++sequence;
@@ -57,6 +90,21 @@ public final class WeaponGameTests {
             level.addFreshEntity(entity); targets.add(entity); return entity;
         }
         void ammo(Item item, int count) { player.getInventory().setItem(1, new ItemStack(item, count)); }
+        int shotAcks() {
+            channel.runPendingTasks();
+            int count = 0; Object packet;
+            while ((packet = channel.readOutbound()) != null) {
+                if (packet instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket custom
+                        && custom.payload() instanceof GunShotPacket shot) {
+                    if (shot.slot() != player.getInventory().selected
+                            || !shot.item().equals(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(
+                                    player.getMainHandItem().getItem()))) throw new AssertionError("Wrong shot identity");
+                    count++;
+                }
+                io.netty.util.ReferenceCountUtil.release(packet);
+            }
+            return count;
+        }
         void fire() {
             if (player.getMainHandItem().getItem() instanceof EnergyGunItem) {
                 GunTrigger.input(player, GunTriggerPacket.PRESS); GunTrigger.input(player, GunTriggerPacket.RELEASE);

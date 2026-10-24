@@ -16,6 +16,10 @@ public final class EnergyGunItem extends Item {
         super(properties.durability(profile.durability)); this.profile = profile;
     }
     public WeaponProfile profile() { return profile; }
+    @Override public boolean shouldCauseReequipAnimation(ItemStack oldStack, ItemStack newStack, boolean slotChanged) {
+        // Durability arrives after every shot; it must not lower the gun as if switching weapons.
+        return slotChanged || oldStack.getItem() != newStack.getItem();
+    }
     public Item ammunition() { return profile == WeaponProfile.COIL_PISTOL ? Items.IRON_NUGGET : Items.REDSTONE; }
 
     boolean fire(Player player, ItemStack stack, float damage) {
@@ -40,6 +44,9 @@ public final class EnergyGunItem extends Item {
         } else WeaponCombat.beam(level, player.getEyePosition(), end, profile.fireSeconds > 0);
         level.playSound(null, player.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS,
                 0.45f, profile.chargeTicks > 0 ? 0.6f : 1.6f);
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)
+            com.starboundmc.network.ModNetwork.sendToPlayer(serverPlayer, new GunShotPacket(
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(this), player.getInventory().selected));
         stack.hurtAndBreak(profile.chargeTicks > 0 ? 4 : 1, player, EquipmentSlot.MAINHAND);
         return true;
     }

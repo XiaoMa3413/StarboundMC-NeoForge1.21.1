@@ -27,11 +27,12 @@ import java.util.concurrent.CompletableFuture;
 @EventBusSubscriber(modid = "starboundmc", value = Dist.CLIENT)
 public final class WeaponEffectsSmoke {
     private static final String[] NAMES = {"coil-left-auto", "plasma-left-auto", "glaive-fan", "starcore-arc", "rail-blast"};
-    private static int stage, phase, captureFrames;
+    private static int stage, phase, chargeCaptures, shotBaseline;
     private static long started, phaseTime;
     private static CompletableFuture<?> work;
     private static Villager target, splashTarget;
     private static boolean fired, finished;
+    private static double maxKick;
     private static Item weapon() {
         return switch(stage) {
             case 0 -> ModItems.COIL_PISTOL.get(); case 1 -> ModItems.PLASMA_CARBINE.get();
@@ -42,12 +43,12 @@ public final class WeaponEffectsSmoke {
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!Boolean.getBoolean("starboundmc.debug.weaponEffectsSmoke") || finished) return;
         var mc = Minecraft.getInstance();
-        Path output = mc.gameDirectory.toPath().resolve("screenshots/effects");
+        Path output = mc.gameDirectory.toPath().resolve("screenshots/handling-final");
         if (started == 0) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             started = System.nanoTime(); Files.createDirectories(output); Files.deleteIfExists(output.resolve("complete.txt"));
             mc.options.pauseOnLostFocus = false; mc.options.renderDistance().set(4); mc.options.fov().set(70);
-            mc.options.hideGui = true; mc.options.particles().set(net.minecraft.client.ParticleStatus.ALL);
+            mc.options.hideGui = false; mc.options.particles().set(net.minecraft.client.ParticleStatus.ALL);
             org.lwjgl.glfw.GLFW.glfwHideWindow(mc.getWindow().getWindow());
             var name = "weapon-effects-" + System.currentTimeMillis();
             mc.createWorldOpenFlows().createFreshLevel(name,
@@ -82,7 +83,7 @@ public final class WeaponEffectsSmoke {
                     var mob = EntityType.VILLAGER.create(level);
                     mob.setNoAi(true); mob.setNoGravity(true);
                     mob.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200); mob.setHealth(200);
-                    mob.setPos(1000.5 + i * 2, 101, 1000.5 + (stage == 2 || stage == 3 ? 3 : 8));
+                    mob.setPos(1000.5 + i * 2, 101, 1000.5 + (stage == 2 ? 5.25 : stage == 3 ? 3 : stage < 2 ? 2 : 8));
                     level.addFreshEntity(mob);
                     if (i == 0) target = mob; else splashTarget = mob;
                 }
@@ -94,12 +95,23 @@ public final class WeaponEffectsSmoke {
             if (!mc.level.dimension().equals(Level.OVERWORLD) || !mc.player.getMainHandItem().is(weapon())
                     || (System.nanoTime() - phaseTime) / 1e9 < 2) return;
             mc.player.setYRot(0); mc.player.setXRot(0); mc.player.yRotO = 0; mc.player.xRotO = 0;
+            try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(NAMES[stage] + "-idle.png")); }
+            shotBaseline = com.starboundmc.client.weapon.GunMotion.acknowledgedShots;
+            maxKick = 0; chargeCaptures = 0;
             if (stage == 2 || stage == 3) mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
             else mc.options.keyAttack.setDown(true);
             phaseTime = System.nanoTime(); phase = 2; fired = false; return;
         }
         if (phase == 2) {
             double elapsed = (System.nanoTime() - phaseTime) / 1e9;
+            maxKick = Math.max(maxKick, com.starboundmc.client.weapon.GunMotion.lastKick);
+            if (stage == 4 && chargeCaptures < 2 && elapsed >= (chargeCaptures == 0 ? .6 : 1.15)) {
+                double pull = com.starboundmc.client.weapon.GunMotion.lastPull;
+                if (pull <= (chargeCaptures == 0 ? .025 : .11)) throw new IllegalStateException("Charge model did not pull back: " + pull);
+                try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve("rail-charge-" + chargeCaptures + ".png")); }
+                Files.writeString(output.resolve("rail-charge-" + chargeCaptures + ".txt"), "pull=" + pull);
+                chargeCaptures++;
+            }
             if (stage == 4 && !fired && elapsed >= 1.3) {
                 mc.options.keyAttack.setDown(false); fired = true;
             }
@@ -109,10 +121,17 @@ public final class WeaponEffectsSmoke {
                 work = mc.getSingleplayerServer().submit(() -> target.getHealth() < 200); return;
             }
             // Hold the frame until server-triggered particle packets have reached the client.
-            phase = 3; captureFrames = 0; phaseTime = System.nanoTime(); return;
+            phase = 3; phaseTime = System.nanoTime(); return;
         }
         if (phase == 3) {
+            maxKick = Math.max(maxKick, com.starboundmc.client.weapon.GunMotion.lastKick);
             if ((System.nanoTime() - phaseTime) / 1e9 < .12) return;
+            if (stage < 2 || stage == 4) {
+                if (maxKick <= .001 || com.starboundmc.client.weapon.GunMotion.acknowledgedShots <= shotBaseline)
+                    throw new IllegalStateException("Missing server-acknowledged recoil " + maxKick);
+                Files.writeString(output.resolve(NAMES[stage] + "-motion.txt"), "maxKick=" + maxKick
+                        + " acknowledgedShots=" + (com.starboundmc.client.weapon.GunMotion.acknowledgedShots - shotBaseline));
+            }
             try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(NAMES[stage] + ".png")); }
             mc.options.keyAttack.setDown(false);
             work = mc.getSingleplayerServer().submit(() -> {

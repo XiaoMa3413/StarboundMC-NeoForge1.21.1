@@ -89,11 +89,17 @@ public final class WeaponCombat {
     }
 
     public static void beam(ServerLevel level, Vec3 start, Vec3 end, boolean plasma) {
+        // Keep eye-origin hit detection, but never spawn billboards immediately in front of the camera.
+        var direction = end.subtract(start);
+        if (direction.length() <= 1.25) return;
+        start = start.add(direction.normalize().scale(1.25));
+        var particle = new net.minecraft.core.particles.DustParticleOptions(
+                plasma ? new org.joml.Vector3f(1f, .45f, .08f) : new org.joml.Vector3f(.55f, .85f, 1f), .18f);
         var delta = end.subtract(start);
         int steps = Math.min(80, Math.max(1, (int) (delta.length() * 2)));
         for (int i = 0; i <= steps; i++) {
             var pos = start.add(delta.scale((double) i / steps));
-            level.sendParticles(plasma ? ParticleTypes.FLAME : ParticleTypes.ELECTRIC_SPARK,
+            level.sendParticles(particle,
                     pos.x, pos.y, pos.z, 1, 0, 0, 0, 0);
         }
     }

@@ -667,7 +667,7 @@
   "weapon.starboundmc.gun_stats": "伤害上限 %s · 射程 %s 格 · 冷却 %s 秒",
   "weapon.starboundmc.recover": "等待攻击恢复后再发动技能",
   "item.starboundmc.durasteel_glaive": "耐钢战戟",
-  "item.starboundmc.durasteel_glaive.tooltip": "攻击恢复后主手右键：青绿震击扇面；消耗 8 耐久，冷却 3 秒。",
+  "item.starboundmc.durasteel_glaive.tooltip": "攻击恢复后主手右键：5.5 格青绿震击扇面；消耗 8 耐久，冷却 3 秒。",
   "item.starboundmc.plasma_carbine": "等离子卡宾枪",
   "item.starboundmc.plasma_carbine.tooltip": "主手按住左键连射；每秒 10 发，消耗红石，点燃 2 秒。",
   "item.starboundmc.starcore_blade": "星核裁决刃",

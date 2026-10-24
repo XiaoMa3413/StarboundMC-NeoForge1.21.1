@@ -12,7 +12,7 @@ WEAPONS = [
     ('coil_pistol', '线圈手枪', 'Coil Pistol', 1, 'pistol', 'copper_block',
      '主手按住左键连射；每秒 5 发，消耗铁粒。', 'Hold left attack in main hand: 5 shots/s. Uses iron nuggets.'),
     ('durasteel_glaive', '耐钢战戟', 'Durasteel Glaive', 2, 'glaive', 'emerald_block',
-     '攻击恢复后主手右键：青绿震击扇面；消耗 8 耐久，冷却 3 秒。', 'Right-click at attack recovery: teal shock fan; costs 8 durability, 3s cooldown.'),
+     '攻击恢复后主手右键：5.5 格青绿震击扇面；消耗 8 耐久，冷却 3 秒。', 'Right-click at attack recovery: 5.5-block teal shock fan; costs 8 durability, 3s cooldown.'),
     ('plasma_carbine', '等离子卡宾枪', 'Plasma Carbine', 2, 'carbine', 'emerald_block',
      '主手按住左键连射；每秒 10 发，消耗红石，点燃 2 秒。', 'Hold left attack: 10 shots/s. Uses redstone; ignites targets for 2s.'),
     ('starcore_blade', '星核裁决刃', 'Starcore Verdict', 3, 'greatblade', 'amethyst_block',

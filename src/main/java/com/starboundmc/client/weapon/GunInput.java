@@ -16,13 +16,15 @@ public final class GunInput {
     private static ItemStack held;
     private static int heartbeat;
     private static int slot;
+    private static long pressedAt;
+    public static double chargeSeconds() { return held == null ? 0 : (System.nanoTime() - pressedAt) / 1e9; }
     private static boolean ready(Minecraft mc) {
         return mc.player != null && mc.level != null && mc.screen == null && mc.isWindowActive()
                 && !mc.player.isSpectator() && mc.player.isAlive()
                 && mc.player.getMainHandItem().getItem() instanceof EnergyGunItem;
     }
     private static void press(Minecraft mc) {
-        held = mc.player.getMainHandItem(); slot = mc.player.getInventory().selected; heartbeat = 0;
+        held = mc.player.getMainHandItem(); slot = mc.player.getInventory().selected; heartbeat = 0; pressedAt = System.nanoTime();
         ModNetwork.sendToServer(new GunTriggerPacket(GunTriggerPacket.PRESS));
     }
     @SubscribeEvent public static void attack(InputEvent.InteractionKeyMappingTriggered event) {
@@ -36,7 +38,7 @@ public final class GunInput {
         if (!ready(mc) || held != null && (mc.player.getMainHandItem().getItem() != held.getItem()
                 || mc.player.getInventory().selected != slot)) {
             if (held != null && mc.getConnection() != null) ModNetwork.sendToServer(new GunTriggerPacket(GunTriggerPacket.CANCEL));
-            held = null; return;
+            held = null; GunMotion.clear(); return;
         }
         if (mc.options.keyAttack.isDown()) {
             if (held == null) press(mc);
