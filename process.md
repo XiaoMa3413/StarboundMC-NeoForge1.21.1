@@ -9,7 +9,7 @@
 - [x] H03 耐钢战戟技能半径 4→5.5 格，同步判定、特效和说明。
 - [x] H04 轨道炮 1 秒渐进后移；三把枪加入服务端确认开火后的轻微后坐力。
 - [x] H05 单元测试、服务端边界验证、真实客户端截图与动作验证。
-- [ ] H06 正式构建、文档与过程证据、提交并推送功能分支。
+- [x] H06 正式构建、文档与过程证据、提交并推送功能分支。
 
 ### L035 · 开工与实现
 
@@ -44,6 +44,12 @@
 - 正式产物 `build/libs/starboundmc-0.1-alpha.jar`，82,565,302 字节，SHA-256 `88e2edc6cb76e875a049a7fe0e2d1781d8bf9f880c6d96b6afe7d3fea2f8569f`。
 - 检查 JAR 内含新枪身动作与开火回执类，不含 Smoke/GameTests 运行夹具。未覆盖 PCL 已安装文件，更新时退出游戏后替换同名 JAR；协议 21 要求联机双方同步更新。
 - `git diff --check` 通过。准备提交并推送本轮功能分支。
+
+### L040 · GitHub 同步回执
+
+- 功能提交 `d5c984c` 已推送到 `origin/feat/weapon-handling-polish`，以 `4348d36` 为基线；没有合并 main。
+- 六项 H01–H06 全部完成；源码、测试、规则、逐批过程均可由 Git 历史回溯。当前记录作为独立文档提交同步。
+- GitHub：https://github.com/XiaoMa3413/StarboundMC-NeoForge1.21.1/tree/feat/weapon-handling-polish
 
 ## 本轮：左键枪械与战斗特效（2026-10-23）
 
