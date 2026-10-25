@@ -20,6 +20,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
 public final class LifeSupportStationBlock extends BaseEntityBlock {
+    private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE = com.starboundmc.block.MachineryShapes.boxes(
+            new double[]{.7,0,.7,15.3,2.3,15.3}, new double[]{2,2.3,10.5,9,14.7,14.4},
+            new double[]{8.8,2.3,4.7,14.6,14.7,14.4}, new double[]{2.1,2.3,4.4,9.6,13.3,8},
+            new double[]{2.8,13.3,5.6,10.6,14.7,6.8}, new double[]{10.1,3.1,3,13.9,6.6,5.9});
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,
+            net.minecraft.world.level.BlockGetter level, BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPE;
+    }
     public static final MapCodec<LifeSupportStationBlock> CODEC = simpleCodec(LifeSupportStationBlock::new);
     public LifeSupportStationBlock(Properties properties) { super(properties); }
     @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }

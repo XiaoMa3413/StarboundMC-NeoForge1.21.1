@@ -76,6 +76,8 @@ public final class ModItems {
             ITEMS.registerSimpleBlockItem("ship_crate", ModBlocks.SHIP_CRATE);
     public static final DeferredItem<BlockItem> SHIP_DOOR_ITEM =
             ITEMS.registerSimpleBlockItem("ship_door", ModBlocks.SHIP_DOOR);
+    public static final DeferredItem<BlockItem> SHIP_LIGHT_ITEM =
+            ITEMS.registerSimpleBlockItem("ship_light", ModBlocks.SHIP_LIGHT);
     public static final DeferredItem<BlockItem> SHIP_ENGINE_ITEM =
             ITEMS.registerSimpleBlockItem("ship_engine", ModBlocks.SHIP_ENGINE);
     public static final DeferredItem<BlockItem> SHIP_ENGINE_UNIT_ITEM =
@@ -188,6 +190,7 @@ public final class ModItems {
                         output.accept(REINFORCED_HULL_ITEM);
                         output.accept(HULL_WINDOW_ITEM);
                         output.accept(INDUSTRIAL_LIGHT_ITEM);
+                        output.accept(SHIP_LIGHT_ITEM);
                         output.accept(HULL_HAZARD_ITEM);
                         output.accept(HULL_GRATE_ITEM);
                         output.accept(BEACON_EMITTER_ITEM);

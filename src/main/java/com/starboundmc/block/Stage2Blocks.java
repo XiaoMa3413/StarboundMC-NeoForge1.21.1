@@ -95,6 +95,15 @@ public final class Stage2Blocks {
 
     public static final class Workbench extends FacingBlock {
         public static final MapCodec<Workbench> CODEC = simpleCodec(Workbench::new);
+        private static final java.util.Map<Direction, VoxelShape> SHAPES = MachineryShapes.horizontal(MachineryShapes.boxes(
+                new double[]{.6,10,1,15.4,11.7,15}, new double[]{1.5,11.7,12.1,14.5,15.1,14.7},
+                new double[]{2,1.5,6.1,14,10,14.2}, new double[]{1,0,1,4,10,4},
+                new double[]{12,0,1,15,10,4}, new double[]{1,0,12,4,1.6,15},
+                new double[]{12,0,12,15,1.6,15}, new double[]{3,11.7,5.2,12.6,13.1,8}));
+
+        @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            return SHAPES.get(state.getValue(FACING));
+        }
 
         public Workbench(Properties properties) {
             super(properties);
@@ -120,6 +129,15 @@ public final class Stage2Blocks {
 
     public static final class ShipConsole extends FacingBlock {
         public static final MapCodec<ShipConsole> CODEC = simpleCodec(ShipConsole::new);
+        private static final java.util.Map<Direction, VoxelShape> SHAPES = MachineryShapes.horizontal(MachineryShapes.boxes(
+                new double[]{.7,0,.7,15.3,2.3,15.3}, new double[]{3,2.3,7.6,13,9.3,14.3},
+                new double[]{1,9.3,2.1,15,11.1,14.7}, new double[]{2,11.1,7,14,12.2,13.9},
+                new double[]{2,12.2,9.5,14,13.3,13.9}, new double[]{2,13.3,12,14,14.4,13.9},
+                new double[]{1.2,11,3,2,12.1,14.4}, new double[]{14,11,3,14.8,12.1,14.4}));
+
+        @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            return SHAPES.get(state.getValue(FACING));
+        }
 
         public ShipConsole(Properties properties) {
             super(properties);
@@ -380,6 +398,14 @@ public final class Stage2Blocks {
 
     public static final class AlloyFurnace extends FacingEntityBlock {
         public static final MapCodec<AlloyFurnace> CODEC = simpleCodec(AlloyFurnace::new);
+        private static final java.util.Map<Direction, VoxelShape> SHAPES = MachineryShapes.horizontal(MachineryShapes.boxes(
+                new double[]{.7,0,.7,15.3,2.3,15.3}, new double[]{1.05,2.3,3.4,14.95,15,14.5},
+                new double[]{2,3,1.5,14,13.9,4.2}, new double[]{3.5,2.3,1.75,10.7,4.1,3.4},
+                new double[]{4,15,6,12,15.75,12.3}));
+
+        @Override protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+            return SHAPES.get(state.getValue(FACING));
+        }
 
         public AlloyFurnace(Properties properties) {
             super(properties);

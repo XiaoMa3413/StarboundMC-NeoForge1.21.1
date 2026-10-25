@@ -22,13 +22,13 @@ public final class ModBlocks {
 
     public static final DeferredBlock<Stage2Blocks.Workbench> MATTER_MANIPULATOR_WORKBENCH = BLOCKS.registerBlock(
             "matter_manipulator_workbench", Stage2Blocks.Workbench::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE).noOcclusion());
     public static final DeferredBlock<Stage2Blocks.Teleporter> TELEPORTER = BLOCKS.registerBlock(
             "teleporter", Stage2Blocks.Teleporter::new, BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .noOcclusion().pushReaction(net.minecraft.world.level.material.PushReaction.BLOCK));
     public static final DeferredBlock<Stage2Blocks.ShipConsole> SHIP_CONSOLE = BLOCKS.registerBlock("ship_console",
             Stage2Blocks.ShipConsole::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).lightLevel(state -> 10));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().lightLevel(state -> 10));
     public static final DeferredBlock<StarmapTerminalBlock> STARMAP_TERMINAL = BLOCKS.registerBlock(
             "starmap_terminal", StarmapTerminalBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).noOcclusion().lightLevel(state -> 8));
@@ -67,7 +67,7 @@ public final class ModBlocks {
                     .lightLevel(state -> 3));
     public static final DeferredBlock<Stage2Blocks.AlloyFurnace> TITANIUM_ALLOY_FURNACE = BLOCKS.registerBlock(
             "titanium_alloy_furnace", Stage2Blocks.AlloyFurnace::new,
-            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(5.0F, 6.0F));
+            BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).requiresCorrectToolForDrops().strength(5.0F, 6.0F).noOcclusion());
     public static final DeferredBlock<VoxelRefineryBlock> VOXEL_REFINERY = BLOCKS.registerBlock(
             "voxel_refinery", VoxelRefineryBlock::new,
             BlockBehaviour.Properties.of()
@@ -103,6 +103,9 @@ public final class ModBlocks {
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .requiresCorrectToolForDrops().strength(3.0F, 6.0F)
                     .lightLevel(state -> 15));
+    public static final DeferredBlock<ShipLightBlock> SHIP_LIGHT = BLOCKS.registerBlock("ship_light",
+            ShipLightBlock::new, BlockBehaviour.Properties.of().strength(2.0F, 4.0F)
+                    .sound(SoundType.METAL).noOcclusion().lightLevel(state -> 15));
     public static final DeferredBlock<Block> HULL_HAZARD = BLOCKS.registerSimpleBlock("hull_hazard",
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .requiresCorrectToolForDrops().strength(4.0F, 8.0F));
@@ -129,7 +132,7 @@ public final class ModBlocks {
      * reads as a marker without flooding the surrounding regolith. It is a
      * shaped model, hence {@code noOcclusion}.
      */
-    public static final DeferredBlock<Block> BEACON_EMITTER = BLOCKS.registerSimpleBlock("beacon_emitter",
+    public static final DeferredBlock<BeaconEmitterBlock> BEACON_EMITTER = BLOCKS.registerBlock("beacon_emitter", BeaconEmitterBlock::new,
             BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK)
                     .requiresCorrectToolForDrops().strength(3.0F, 6.0F)
                     .noOcclusion()

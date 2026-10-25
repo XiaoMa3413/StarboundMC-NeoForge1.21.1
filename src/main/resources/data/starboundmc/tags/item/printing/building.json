@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "starboundmc:industrial_light"
+    "starboundmc:industrial_light",
+    "starboundmc:ship_light"
   ]
 }

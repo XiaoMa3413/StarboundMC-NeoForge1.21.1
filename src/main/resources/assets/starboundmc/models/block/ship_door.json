@@ -1,46 +1,14 @@
 {
   "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "starboundmc:models/block/ship_door.obj",
+  "automatic_culling": false,
+  "shade_quads": true,
+  "flip_v": true,
+  "emissive_ambient": true,
+  "render_type": "minecraft:solid",
+  "ambientocclusion": false,
   "textures": {
-    "panel": "starboundmc:block/ship_door",
-    "side": "starboundmc:block/ship_door_side",
-    "particle": "starboundmc:block/ship_door"
-  },
-  "elements": [
-    {
-      "from": [0, 0, 5],
-      "to": [2, 16, 11],
-      "faces": {
-        "north": { "uv": [0, 0, 2, 16], "texture": "#panel" },
-        "south": { "uv": [14, 0, 16, 16], "texture": "#panel" },
-        "east": { "uv": [0, 0, 16, 16], "texture": "#side" },
-        "west": { "uv": [0, 0, 16, 16], "texture": "#side" },
-        "up": { "uv": [0, 0, 2, 6], "texture": "#side" },
-        "down": { "uv": [0, 0, 2, 6], "texture": "#side" }
-      }
-    },
-    {
-      "from": [14, 0, 5],
-      "to": [16, 16, 11],
-      "faces": {
-        "north": { "uv": [14, 0, 16, 16], "texture": "#panel" },
-        "south": { "uv": [0, 0, 2, 16], "texture": "#panel" },
-        "east": { "uv": [0, 0, 16, 16], "texture": "#side" },
-        "west": { "uv": [0, 0, 16, 16], "texture": "#side" },
-        "up": { "uv": [14, 0, 16, 6], "texture": "#side" },
-        "down": { "uv": [14, 0, 16, 6], "texture": "#side" }
-      }
-    },
-    {
-      "from": [2, 0, 7],
-      "to": [14, 16, 9],
-      "faces": {
-        "north": { "uv": [0, 0, 16, 16], "texture": "#panel" },
-        "south": { "uv": [0, 0, 16, 16], "texture": "#panel" },
-        "east": { "uv": [0, 0, 2, 16], "texture": "#side" },
-        "west": { "uv": [0, 0, 2, 16], "texture": "#side" },
-        "up": { "uv": [0, 0, 16, 2], "texture": "#side" },
-        "down": { "uv": [0, 0, 16, 2], "texture": "#side" }
-      }
-    }
-  ]
+    "particle": "starboundmc:block/shipboard_surfaces"
+  }
 }

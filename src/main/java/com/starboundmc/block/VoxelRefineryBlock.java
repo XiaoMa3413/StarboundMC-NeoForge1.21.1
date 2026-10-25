@@ -34,6 +34,15 @@ import org.jetbrains.annotations.Nullable;
 public final class VoxelRefineryBlock extends BaseEntityBlock {
     public static final MapCodec<VoxelRefineryBlock> CODEC = simpleCodec(VoxelRefineryBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private static final java.util.Map<Direction, net.minecraft.world.phys.shapes.VoxelShape> SHAPES =
+            MachineryShapes.horizontal(MachineryShapes.boxes(
+                    new double[]{.7,0,.7,15.3,2.3,15.3}, new double[]{1.2,2.3,2.8,14.8,13.7,14.5},
+                    new double[]{4,2.3,1.6,12,4.5,4.2}, new double[]{4,13.7,5,12,15.72,12.8}));
+
+    @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,
+            net.minecraft.world.level.BlockGetter level, BlockPos pos, net.minecraft.world.phys.shapes.CollisionContext context) {
+        return SHAPES.get(state.getValue(FACING));
+    }
 
     public VoxelRefineryBlock(Properties properties) {
         super(properties);

@@ -68,6 +68,9 @@ sourceSets {
             include 'com/starboundmc/block/CaptainChairBlock.java'
             include 'com/starboundmc/block/ShipEngineBlock.java'
             include 'com/starboundmc/block/ShipEngineUnitBlock.java'
+            include 'com/starboundmc/block/ShipLightBlock.java'
+            include 'com/starboundmc/block/BeaconEmitterBlock.java'
+            include 'com/starboundmc/block/MachineryShapes.java'
             include 'com/starboundmc/block/Stage2Blocks.java'
             include 'com/starboundmc/block/TransporterBlock.java'
             include 'com/starboundmc/block/StarmapTerminalBlock.java'
@@ -237,6 +240,9 @@ if (project.hasProperty('chairSmoke')) {
 if (project.hasProperty('novaTerminalSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('machinerySmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 if (project.hasProperty('starmapConsoleSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
@@ -279,6 +285,11 @@ neoForge {
             if (project.hasProperty('novaTerminalSmoke')) {
                 gameDirectory = file('run-nova-terminal-smoke')
                 systemProperty 'starboundmc.debug.novaTerminalSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('machinerySmoke')) {
+                gameDirectory = file('run-machinery-smoke')
+                systemProperty 'starboundmc.debug.machinerySmoke', 'true'
                 programArguments.addAll '--width', '1440', '--height', '900'
             }
             if (project.hasProperty('starmapConsoleSmoke')) {

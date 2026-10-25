@@ -1,0 +1,57 @@
+{
+  "variants": {
+    "face=wall,facing=north": {
+      "model": "starboundmc:block/ship_light"
+    },
+    "face=wall,facing=east": {
+      "model": "starboundmc:block/ship_light",
+      "y": 90
+    },
+    "face=wall,facing=south": {
+      "model": "starboundmc:block/ship_light",
+      "y": 180
+    },
+    "face=wall,facing=west": {
+      "model": "starboundmc:block/ship_light",
+      "y": 270
+    },
+    "face=floor,facing=north": {
+      "model": "starboundmc:block/ship_light",
+      "x": 270
+    },
+    "face=floor,facing=east": {
+      "model": "starboundmc:block/ship_light",
+      "x": 270,
+      "y": 90
+    },
+    "face=floor,facing=south": {
+      "model": "starboundmc:block/ship_light",
+      "x": 270,
+      "y": 180
+    },
+    "face=floor,facing=west": {
+      "model": "starboundmc:block/ship_light",
+      "x": 270,
+      "y": 270
+    },
+    "face=ceiling,facing=north": {
+      "model": "starboundmc:block/ship_light",
+      "x": 90
+    },
+    "face=ceiling,facing=east": {
+      "model": "starboundmc:block/ship_light",
+      "x": 90,
+      "y": 90
+    },
+    "face=ceiling,facing=south": {
+      "model": "starboundmc:block/ship_light",
+      "x": 90,
+      "y": 180
+    },
+    "face=ceiling,facing=west": {
+      "model": "starboundmc:block/ship_light",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

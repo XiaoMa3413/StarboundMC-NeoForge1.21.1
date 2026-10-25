@@ -1,0 +1,16 @@
+# Blockbench materials; small signal surfaces use ambient emissivity.
+
+newmtl ship_engine_unit_core
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/ship_engine_unit_core
+
+newmtl shipboard_signals
+Ka 1 1 1
+Kd 1 1 1
+map_Kd starboundmc:block/shipboard_signals
+
+newmtl shipboard_surfaces
+Ka 0 0 0
+Kd 1 1 1
+map_Kd starboundmc:block/shipboard_surfaces

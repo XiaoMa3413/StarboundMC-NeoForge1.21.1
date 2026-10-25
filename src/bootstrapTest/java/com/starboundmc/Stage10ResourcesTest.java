@@ -30,7 +30,7 @@ final class Stage10ResourcesTest {
             "titanium_ore", "durasteel_ore", "star_core_ore", "titanium_alloy_furnace",
             "ship_ai_terminal", "voxel_refinery", "voxel_printing_station", "ship_engine_unit",
             "fuel_crystal_ore", "hull_plating", "reinforced_hull", "hull_window",
-            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
+            "industrial_light", "ship_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
 
     private static final List<String> ITEMS = List.of(
             "basic_circuit_board", "relay_data_core", "jump_thruster", "epp_mk1", "epp_mk2", "epp_mk2_upgrade_kit", "epp_mk3", "epp_mk3_upgrade_kit", "heating_module_1", "cooling_module_1", "oxygen_canister", "empty_oxygen_canister",
@@ -42,7 +42,7 @@ final class Stage10ResourcesTest {
             "durasteel_ingot", "star_core_fragment", "ship_ai_terminal", "voxel",
             "voxel_refinery", "voxel_printing_station", "sublight_ignition_core", "ship_engine_unit",
             "fuel_crystal_ore", "fuel_crystal", "hull_plating", "reinforced_hull", "hull_window",
-            "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
+            "industrial_light", "ship_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
 
     @Test
     void everyRegisteredBlockAndItemHasAClientDefinition() {
@@ -74,7 +74,7 @@ final class Stage10ResourcesTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(38, files.size());
+            assertEquals(39, files.size());
             int printingRecipes = 0;
             int decompositionRecipes = 0;
             for (Path path : files) {
@@ -95,7 +95,7 @@ final class Stage10ResourcesTest {
                     assertTrue(result.has("count"), path.toString());
                 }
             }
-            assertEquals(14, printingRecipes, "fourteen printing recipes");
+            assertEquals(15, printingRecipes, "fifteen printing recipes");
             assertEquals(14, decompositionRecipes, "fourteen decomposition recipes");
         }
     }
@@ -141,19 +141,14 @@ final class Stage10ResourcesTest {
     @Test
     void engineUnitHasIndependentModelAndAnimatedPixelTextures() throws IOException {
         var model = json(ASSETS.resolve("models/block/ship_engine_unit.json"));
-        assertTrue(model.getAsJsonArray("elements").size() > 10, "Engine needs an actual machine model");
-        for (var part : model.getAsJsonArray("elements")) {
-            for (String edge : List.of("from", "to"))
-                for (var coordinate : part.getAsJsonObject().getAsJsonArray(edge))
-                    assertTrue(coordinate.getAsDouble() >= 0 && coordinate.getAsDouble() <= 16);
-        }
-        for (String layer : List.of("casing", "metal", "vent", "panel", "coil", "core")) {
-            assertEquals("starboundmc:block/ship_engine_unit_" + layer,
-                    model.getAsJsonObject("textures").get(layer).getAsString());
-            var image = ImageIO.read(ASSETS.resolve("textures/block/ship_engine_unit_" + layer + ".png").toFile());
-            assertEquals(32, image.getWidth());
-            assertEquals(layer.equals("core") ? 128 : 32, image.getHeight());
-        }
+        assertEquals("neoforge:obj", model.get("loader").getAsString());
+        assertEquals("starboundmc:models/block/ship_engine_unit.obj", model.get("model").getAsString());
+        String obj = Files.readString(ASSETS.resolve("models/block/ship_engine_unit.obj"));
+        assertTrue(obj.contains("usemtl ship_engine_unit_core"), "Core animation must still be mapped");
+        assertTrue(obj.lines().filter(line -> line.startsWith("f ")).count() > 100);
+        var image = ImageIO.read(ASSETS.resolve("textures/block/ship_engine_unit_core.png").toFile());
+        assertEquals(32, image.getWidth());
+        assertEquals(128, image.getHeight());
         assertTrue(json(ASSETS.resolve("textures/block/ship_engine_unit_core.png.mcmeta"))
                 .getAsJsonObject("animation").get("interpolate").getAsBoolean());
         assertFalse(Files.exists(DATA.resolve("recipe/ship_engine_unit.json")));

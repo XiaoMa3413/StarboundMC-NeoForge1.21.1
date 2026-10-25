@@ -1,6 +1,5 @@
 package com.starboundmc;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -34,41 +33,36 @@ final class ShipDoorShapeTest {
 
     @Test
     void openModelContainsOnlySideCassettesAndNoOpaqueCenter() throws IOException {
-        JsonArray elements = model("ship_door_open.json").getAsJsonArray("elements");
-        assertEquals(2, elements.size());
-
-        for (var element : elements) {
-            JsonObject box = element.getAsJsonObject();
-            JsonArray from = box.getAsJsonArray("from");
-            JsonArray to = box.getAsJsonArray("to");
-            double minX = from.get(0).getAsDouble();
-            double maxX = to.get(0).getAsDouble();
-
-            assertTrue(maxX <= 2.0 || minX >= 14.0, "open model must leave its center empty");
-            assertFalse(isFullCube(from, to), "open model must not contain a full-cube element");
+        assertEquals("neoforge:obj", model("ship_door_open.json").get("loader").getAsString());
+        var vertices = vertices("ship_door_open.obj");
+        int faces = 0;
+        for (String line : Files.readAllLines(MODELS.resolve("ship_door_open.obj"))) {
+            if (!line.startsWith("f ")) continue;
+            double minX = 1, maxX = 0;
+            for (String corner : line.substring(2).split(" ")) {
+                double x = vertices.get(Integer.parseInt(corner.split("/")[0])-1)[0];
+                minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+            }
+            assertTrue(maxX <= .125001 || minX >= .874999, "Each face must stay inside a side cassette");
+            faces++;
         }
+        assertTrue(faces > 0);
     }
 
     @Test
     void closedModelIsAThinBulkheadInsteadOfAFullCube() throws IOException {
-        JsonArray elements = model("ship_door.json").getAsJsonArray("elements");
-        assertEquals(3, elements.size());
-        for (var element : elements) {
-            JsonObject box = element.getAsJsonObject();
-            assertFalse(isFullCube(box.getAsJsonArray("from"), box.getAsJsonArray("to")));
-        }
+        assertEquals("neoforge:obj", model("ship_door.json").get("loader").getAsString());
+        var vertices = vertices("ship_door.obj");
+        assertTrue(vertices.stream().anyMatch(v -> v[0] > .4 && v[0] < .6), "Closed door needs center panels");
+        for (var v : vertices) assertTrue(v[2] >= 4.75/16 && v[2] <= 11.01/16, "Bulkhead must remain thin");
+    }
+
+    private static java.util.List<double[]> vertices(String name) throws IOException {
+        return Files.readAllLines(MODELS.resolve(name)).stream().filter(line -> line.startsWith("v "))
+                .map(line -> java.util.Arrays.stream(line.substring(2).split(" ")).mapToDouble(Double::parseDouble).toArray()).toList();
     }
 
     private static JsonObject model(String name) throws IOException {
         return JsonParser.parseString(Files.readString(MODELS.resolve(name))).getAsJsonObject();
-    }
-
-    private static boolean isFullCube(JsonArray from, JsonArray to) {
-        return from.get(0).getAsDouble() == 0.0
-                && from.get(1).getAsDouble() == 0.0
-                && from.get(2).getAsDouble() == 0.0
-                && to.get(0).getAsDouble() == 16.0
-                && to.get(1).getAsDouble() == 16.0
-                && to.get(2).getAsDouble() == 16.0;
     }
 }

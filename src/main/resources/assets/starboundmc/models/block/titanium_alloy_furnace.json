@@ -1,8 +1,14 @@
 {
-  "parent": "minecraft:block/orientable",
+  "parent": "minecraft:block/block",
+  "loader": "neoforge:obj",
+  "model": "starboundmc:models/block/titanium_alloy_furnace.obj",
+  "automatic_culling": false,
+  "shade_quads": true,
+  "flip_v": true,
+  "emissive_ambient": true,
+  "render_type": "minecraft:solid",
+  "ambientocclusion": false,
   "textures": {
-    "top": "starboundmc:block/titanium_alloy_furnace_top",
-    "front": "starboundmc:block/titanium_alloy_furnace_front",
-    "side": "starboundmc:block/titanium_alloy_furnace_side"
+    "particle": "starboundmc:block/shipboard_surfaces"
   }
 }

@@ -1,0 +1,113 @@
+{
+  "ship_light": {
+    "meshes": 8,
+    "faces": 224,
+    "triangles": 352,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "a68aa3d4cedf7e26ea0ddbf3f6318b23bb04eaa44e4ed436619b9ae52ee5fe6a"
+  },
+  "voxel_refinery": {
+    "meshes": 22,
+    "faces": 559,
+    "triangles": 894,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "8af449a0d5b797885d44d0bada8d67d7b6492c27dcd25d4de1aec1d2cf673f06"
+  },
+  "titanium_alloy_furnace": {
+    "meshes": 22,
+    "faces": 570,
+    "triangles": 904,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "fa04f9dda88412c2818194e8e1c3565325bef6cf128819aa419aa3118c4aa7da"
+  },
+  "matter_manipulator_workbench": {
+    "meshes": 18,
+    "faces": 423,
+    "triangles": 666,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "663aaa7050b1dcf0fbe59c365e148518efce2aca2f4628237fb898ddb284e211"
+  },
+  "life_support_station": {
+    "meshes": 20,
+    "faces": 584,
+    "triangles": 964,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "a4b637b2c44db20df80d5e7d815c13432fa8b512354a9cde49f541213e43275a"
+  },
+  "epp_service_station": {
+    "meshes": 17,
+    "faces": 360,
+    "triangles": 564,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "4ae91eda151958c900998a5b6cd00b891d11e71efbfcf9b84780046ec5589b9d"
+  },
+  "ship_console": {
+    "meshes": 11,
+    "faces": 227,
+    "triangles": 358,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "e239dd2c14eab5dba4504f94e75c893ee4780421c15035d7643e639ec4bf0d4e"
+  },
+  "ship_door": {
+    "meshes": 15,
+    "faces": 312,
+    "triangles": 492,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "af00bc1b91a886eb02ef5e6cb81e0774042fc7b05043c5e1f8d783d04eb79933"
+  },
+  "ship_door_open": {
+    "meshes": 6,
+    "faces": 114,
+    "triangles": 180,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "74750fe2059f5ad1a7122520764c54da12e86dc5c0ca71095f6c4545e63cbdfe"
+  },
+  "ship_engine_unit": {
+    "meshes": 17,
+    "faces": 439,
+    "triangles": 726,
+    "materials": [
+      "ship_engine_unit_core",
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "9a0d173374658f3db28770c5bb0903f993e89f6e756fdd5afe93b0bcc8cf98b0"
+  },
+  "beacon_emitter": {
+    "meshes": 9,
+    "faces": 292,
+    "triangles": 468,
+    "materials": [
+      "shipboard_signals",
+      "shipboard_surfaces"
+    ],
+    "source_obj_sha256": "4739934006b1b89bbe33f0c3a6bd584ac6636d1a5ce5a7462bce82d7aa286d8a"
+  }
+}

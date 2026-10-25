@@ -29,6 +29,11 @@ public class ShipEngineUnitBlock extends BaseEntityBlock
 {
     public static final MapCodec<ShipEngineUnitBlock> CODEC = simpleCodec(ShipEngineUnitBlock::new);
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    private static final java.util.Map<Direction, net.minecraft.world.phys.shapes.VoxelShape> SHAPES =
+            MachineryShapes.horizontal(MachineryShapes.boxes(
+                    new double[]{.7,0,.7,15.3,2.3,15.3}, new double[]{1.1,2.3,4.5,14.9,14.9,14.5},
+                    new double[]{3.6,4.3,2.55,12.4,13.1,4.5}, new double[]{4.5,2.3,2.47,11.5,4.3,4.6},
+                    new double[]{5,14.9,6,11,16,12}));
 
     public ShipEngineUnitBlock(Properties properties)
     {
@@ -102,10 +107,7 @@ public class ShipEngineUnitBlock extends BaseEntityBlock
     protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,
             net.minecraft.world.level.BlockGetter level, BlockPos pos,
             net.minecraft.world.phys.shapes.CollisionContext context) {
-        return net.minecraft.world.phys.shapes.Shapes.or(
-                Block.box(1, 0, 1, 15, 3, 15),
-                Block.box(1.5, 3, 1.5, 14.5, 15, 14.5),
-                Block.box(5, 15, 5, 11, 16, 11));
+        return SHAPES.get(state.getValue(FACING));
     }
 
     @Override
