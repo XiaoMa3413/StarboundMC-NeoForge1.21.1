@@ -13,6 +13,22 @@
     "starboundmc:durasteel_glaive",
     "starboundmc:plasma_carbine",
     "starboundmc:starcore_blade",
-    "starboundmc:starcore_railgun"
+    "starboundmc:starcore_railgun",
+    "starboundmc:pioneer_helmet",
+    "starboundmc:pioneer_chestplate",
+    "starboundmc:pioneer_leggings",
+    "starboundmc:pioneer_boots",
+    "starboundmc:vanguard_helmet",
+    "starboundmc:vanguard_chestplate",
+    "starboundmc:vanguard_leggings",
+    "starboundmc:vanguard_boots",
+    "starboundmc:ranger_helmet",
+    "starboundmc:ranger_chestplate",
+    "starboundmc:ranger_leggings",
+    "starboundmc:ranger_boots",
+    "starboundmc:starwarden_helmet",
+    "starboundmc:starwarden_chestplate",
+    "starboundmc:starwarden_leggings",
+    "starboundmc:starwarden_boots"
   ]
 }

@@ -44,6 +44,7 @@ public final class StarboundMC {
         ModDataComponents.register(modEventBus);
         ModAttachments.register(modEventBus);
         ModItems.register(modEventBus);
+        com.starboundmc.armor.ModArmor.register(modEventBus);
         ModMenus.register(modEventBus);
         ModSounds.register(modEventBus);
         VoxelLootModifiers.register(modEventBus);

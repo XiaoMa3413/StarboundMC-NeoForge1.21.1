@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:pioneer_chestplate",
+    "starboundmc:vanguard_chestplate",
+    "starboundmc:ranger_chestplate",
+    "starboundmc:starwarden_chestplate"
+  ]
+}

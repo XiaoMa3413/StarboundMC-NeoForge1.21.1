@@ -1,0 +1,28 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:durasteel_ingot"
+      },
+      "count": 5
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 55
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:basic_circuit_board"
+      },
+      "count": 2
+    }
+  ],
+  "print_seconds": 6,
+  "result": {
+    "id": "starboundmc:vanguard_helmet",
+    "count": 1
+  }
+}

@@ -18,6 +18,7 @@
 - [EPP 与 EVA](reference/epp.md)：装备、生命支持、温控与 Relay 边界。
 - [制造与机器界面](reference/manufacturing.md)：钱包、提炼、打印队列与菜单 authority。
 - [武器与制造进度](reference/weapons.md)：三阶段武器、服务端命中、消耗、配方与测试入口。
+- [防具与套装](reference/armor.md)：四套十六件防具、部件与四件套效果、制造和测试入口。
 - [HUD / AR](reference/hud.md)：Visor、世界标记、Boot 与通信的当前合同。
 - [太空渲染管线](space-render-pipeline.md)与[美术方向](space-render-art-direction.md)：pass、坐标/颜色/深度、资源和回退。
 - [UI / 美术规范](ui-art-direction.md)、[制造终端风格](ui-fabrication-style.md)、[机器 UI 合同](ui-design-contracts/ship-machines-polish.md)、[UI 工作流](ui-refactor-workflow.md)。

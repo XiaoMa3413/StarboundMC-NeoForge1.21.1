@@ -1,0 +1,28 @@
+{
+  "type": "starboundmc:voxel_printing",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "starboundmc:titanium_ingot"
+      },
+      "count": 7
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:voxel"
+      },
+      "count": 90
+    },
+    {
+      "ingredient": {
+        "item": "starboundmc:basic_circuit_board"
+      },
+      "count": 2
+    }
+  ],
+  "print_seconds": 7,
+  "result": {
+    "id": "starboundmc:ranger_leggings",
+    "count": 1
+  }
+}

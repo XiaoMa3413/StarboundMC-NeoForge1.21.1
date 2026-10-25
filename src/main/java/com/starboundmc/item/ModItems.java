@@ -221,6 +221,7 @@ public final class ModItems {
                         output.accept(PLASMA_CARBINE);
                         output.accept(STARCORE_BLADE);
                         output.accept(STARCORE_RAILGUN);
+                        com.starboundmc.armor.ModArmor.creative(output);
                     })
                     .build());
 

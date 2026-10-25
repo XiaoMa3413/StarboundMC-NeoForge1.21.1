@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "starboundmc:pioneer_helmet",
+    "starboundmc:vanguard_helmet",
+    "starboundmc:ranger_helmet",
+    "starboundmc:starwarden_helmet"
+  ]
+}

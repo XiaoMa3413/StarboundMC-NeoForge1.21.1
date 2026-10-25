@@ -41,6 +41,7 @@ sourceSets {
             include 'com/starboundmc/item/SublightIgnitionCoreItem.java'
             include 'com/starboundmc/item/SurvivalKnifeItem.java'
             include 'com/starboundmc/weapon/*.java'
+            include 'com/starboundmc/armor/*.java'
             include 'com/starboundmc/item/VoxelItem.java'
             include 'com/starboundmc/loot/VoxelDropLootModifier.java'
             include 'com/starboundmc/loot/VoxelLootModifiers.java'
@@ -181,6 +182,7 @@ sourceSets {
         java {
             setSrcDirs(['src/bootstrapTest/java', 'src/test/java'])
             include 'com/starboundmc/weapon/*.java'
+            include 'com/starboundmc/armor/*.java'
             include 'com/starboundmc/*.java'
             include 'com/starboundmc/warp/*.java'
             include 'com/starboundmc/world/*.java'
@@ -213,13 +215,20 @@ sourceSets {
 
 // Minecraft 1.21.1 and NeoForge 21.1 require Java 21.
 // Opt-in runtime checks live outside the shipped mod sources/resources.
+if (['shipGameTests', 'armorGameTests', 'weaponGameTests'].any { project.hasProperty(it) }) {
+    sourceSets.main.resources.srcDir('src/gameTest/resources')
+}
 if (project.hasProperty('shipGameTests')) {
     sourceSets.main.java.srcDir('src/gameTest/java')
-    sourceSets.main.resources.srcDir('src/gameTest/resources')
+}
+if (project.hasProperty('armorGameTests')) {
+    sourceSets.main.java.srcDir('src/armorTest/java')
+}
+if (project.hasProperty('armorSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
 }
 if (project.hasProperty('weaponGameTests')) {
     sourceSets.main.java.srcDir('src/weaponTest/java')
-    sourceSets.main.resources.srcDir('src/gameTest/resources')
 }
 if (project.hasProperty('weaponSmoke') || project.hasProperty('weaponEffectsSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
@@ -268,6 +277,11 @@ neoForge {
     runs {
         client {
             client()
+            if (project.hasProperty('armorSmoke')) {
+                gameDirectory = file('run-armor-smoke')
+                systemProperty 'starboundmc.debug.armorSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '900'
+            }
             if (project.hasProperty('weaponEffectsSmoke')) {
                 gameDirectory = file('run-weapon-effects-smoke')
                 systemProperty 'starboundmc.debug.weaponEffectsSmoke', 'true'

@@ -33,6 +33,10 @@ final class ResourceIntegrityTest {
             "industrial_light", "hull_hazard", "hull_grate", "beacon_emitter", "life_support_station", "epp_service_station");
 
     private static final List<String> ITEMS = List.of(
+            "pioneer_helmet", "pioneer_chestplate", "pioneer_leggings", "pioneer_boots",
+            "vanguard_helmet", "vanguard_chestplate", "vanguard_leggings", "vanguard_boots",
+            "ranger_helmet", "ranger_chestplate", "ranger_leggings", "ranger_boots",
+            "starwarden_helmet", "starwarden_chestplate", "starwarden_leggings", "starwarden_boots",
             "survival_knife", "tungsten_sabre", "coil_pistol", "durasteel_glaive", "plasma_carbine", "starcore_blade", "starcore_railgun",
             "basic_circuit_board", "relay_data_core", "jump_thruster", "epp_mk1", "epp_mk2", "epp_mk2_upgrade_kit", "epp_mk3", "epp_mk3_upgrade_kit", "heating_module_1", "cooling_module_1", "oxygen_canister", "empty_oxygen_canister",
             "matter_manipulator", "matter_manipulator_module", "matter_manipulator_workbench",
@@ -75,7 +79,7 @@ final class ResourceIntegrityTest {
         }
         try (Stream<Path> recipes = Files.list(DATA.resolve("recipe"))) {
             List<Path> files = recipes.filter(path -> path.toString().endsWith(".json")).toList();
-            assertEquals(49, files.size());
+            assertEquals(65, files.size());
             int printingRecipes = 0;
             int decompositionRecipes = 0;
             for (Path path : files) {
@@ -96,7 +100,7 @@ final class ResourceIntegrityTest {
                     assertTrue(result.has("count"), path.toString());
                 }
             }
-            assertEquals(25, printingRecipes, "existing fourteen plus seven weapons and four material synthesis recipes");
+            assertEquals(41, printingRecipes, "existing twenty-five plus sixteen armor pieces");
             assertEquals(14, decompositionRecipes, "fourteen decomposition recipes");
         }
     }
