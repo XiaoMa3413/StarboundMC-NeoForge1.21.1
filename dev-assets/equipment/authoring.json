@@ -1,0 +1,94 @@
+{
+  "tool": "Blockbench",
+  "tool_version": "5.2.2",
+  "editing": "Native Cube/Group/Texture/Undo/Codecs APIs in the installed desktop application, called via localhost CDP",
+  "baseline": "2d17103",
+  "sources": [
+    {
+      "file": "coil_pistol.bbmodel",
+      "cubes": 81,
+      "sha256": "47ab3a4f5c10d9a862d28f337523387afdd642ca0a16f651ebf986b6114212bd",
+      "native_format": "5.0"
+    },
+    {
+      "file": "durasteel_glaive.bbmodel",
+      "cubes": 128,
+      "sha256": "ac8b0a76fe4caf71bc7b959707332da21c1d34b501d7b0ab3478774cc321265b",
+      "native_format": "5.0"
+    },
+    {
+      "file": "pioneer_inner.bbmodel",
+      "cubes": 23,
+      "sha256": "ce9c4f487d02bb243ee2ccc2d898ad301dfa115dddc242c86c93e6dc80b72b09",
+      "native_format": "5.0"
+    },
+    {
+      "file": "pioneer_outer.bbmodel",
+      "cubes": 79,
+      "sha256": "33a211460c4a7d108a526be017f1c40838f13248fc276a461367b4c3f1f7b25b",
+      "native_format": "5.0"
+    },
+    {
+      "file": "plasma_carbine.bbmodel",
+      "cubes": 89,
+      "sha256": "cef8158a7fa09c406d56c8a15d34b8d8c741f9242c6af2f00110089db13f2677",
+      "native_format": "5.0"
+    },
+    {
+      "file": "ranger_inner.bbmodel",
+      "cubes": 23,
+      "sha256": "6389d91d3e1c4eca5025da3937adfc86e8b8cd10d16ed7cc4b22a4a6215831b2",
+      "native_format": "5.0"
+    },
+    {
+      "file": "ranger_outer.bbmodel",
+      "cubes": 62,
+      "sha256": "60345abde0f04a3d3501ce6c56314c7486ad6e8e9b30e24a7d04ed198e36de19",
+      "native_format": "5.0"
+    },
+    {
+      "file": "starcore_blade.bbmodel",
+      "cubes": 81,
+      "sha256": "5e325cca556e80e1ddbede23dbddacdc137698bf8cbfdad1d55ffb044808fd88",
+      "native_format": "5.0"
+    },
+    {
+      "file": "starcore_railgun.bbmodel",
+      "cubes": 137,
+      "sha256": "3b5039618283f96d92414ed4c37c378f784030336d1df1ec559103ae8d643835",
+      "native_format": "5.0"
+    },
+    {
+      "file": "starwarden_inner.bbmodel",
+      "cubes": 29,
+      "sha256": "676ae6d7e14275fe729e21e5ac061ba15bf0f417d51e5b55191d48c5100fd700",
+      "native_format": "5.0"
+    },
+    {
+      "file": "starwarden_outer.bbmodel",
+      "cubes": 111,
+      "sha256": "7a2caf3b7c5acfd79eafe005d7ea7f96f2c84514aa4c82fe5604d78c577752c5",
+      "native_format": "5.0"
+    },
+    {
+      "file": "tungsten_sabre.bbmodel",
+      "cubes": 44,
+      "sha256": "ac7ee7faa39add222cd3a75c478e0c58e2980e65789621ca7c00cfb34614c5cb",
+      "native_format": "5.0"
+    },
+    {
+      "file": "vanguard_inner.bbmodel",
+      "cubes": 33,
+      "sha256": "555d011017977edb2f51d12ee15b6e49c46cc3882a5f7c5160f7026a7356d31e",
+      "native_format": "5.0"
+    },
+    {
+      "file": "vanguard_outer.bbmodel",
+      "cubes": 81,
+      "sha256": "7f5cf735e0f20184f3569fad331df02235ad66fdb10ec3f6b7c9744a76096b9a",
+      "native_format": "5.0"
+    }
+  ],
+  "native_previews": 72,
+  "assembled_inspection_copies": 4
+}

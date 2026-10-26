@@ -1,23 +1,18 @@
-"""Approved V01 equipment: exact pixel assets and shared cuboid authoring source.
+"""Equipment pixel icons and resource export from native Blockbench model sources.
 
 Run the weapon/armor resource generators. All production art is reproducible;
 concept illustrations are references, never resized into game textures.
 """
 from pathlib import Path
-import base64
-import copy
 import json
 import math
 import struct
-import uuid
 import zlib
-from equipment_armor_geometry import armor_geometry
+from equipment_models import armor_geometry, export_weapon
 
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT = PROJECT / 'src/main/resources'
 ASSETS = ROOT / 'assets/starboundmc'
-EDITABLE = PROJECT / 'dev-assets/equipment'
-FACES = ['north', 'south', 'east', 'west', 'up', 'down']
 PALETTES = {
     'pioneer': [(16, 23, 30), (42, 49, 58), (91, 104, 113), (151, 165, 173), (218, 226, 224), (193, 129, 43), (247, 185, 67), (255, 226, 133)],
     'vanguard': [(15, 22, 29), (32, 43, 55), (61, 79, 98), (119, 141, 155), (192, 208, 215), (165, 68, 34), (226, 108, 56), (255, 177, 91)],
@@ -33,10 +28,6 @@ WEAPON_PALETTE = [(17, 24, 32), (45, 54, 65), (111, 125, 135), (197, 207, 209),
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-
-
-def shade(color, amount):
-    return tuple(max(0, min(255, c + amount)) for c in color[:3])
 
 
 class Pixels:
@@ -92,17 +83,6 @@ class Pixels:
         path.write_bytes(self.png())
 
 
-def atlas(palette, tile, size):
-    image = Pixels(size, size)
-    for i, color in enumerate(palette):
-        ox, oy = i % 4 * tile, i // 4 * tile
-        for y in range(tile):
-            for x in range(tile):
-                delta = 8 if y == 0 or x == 0 else -10 if x == tile - 1 or y == tile - 1 else -5 if x % 8 == 0 or y % 8 == 0 else 3 if (x // 4 + y // 4) % 2 == 0 else 0
-                image.dot(ox + x, oy + y, shade(color, delta))
-    return image
-
-
 def weapon_icon(kind):
     im = Pixels(); p = WEAPON_PALETTE
     if kind in ('blade', 'glaive', 'greatblade'):
@@ -147,203 +127,13 @@ def weapon_icon(kind):
     return im
 
 
-def weapon_cubes(kind):
-    cubes = []
-    def box(name, a, b, material): cubes.append({'name': name, 'from': a, 'to': b, 'material': material})
-    if kind in ('blade', 'glaive', 'greatblade'):
-        box('wrapped_grip', [7, -3, 7], [9, 3, 9], 1)
-        for y in (-2, 0, 2): box('grip_band', [6.9, y, 6.9], [9.1, y + .4, 9.1], 2)
-        box('pommel', [6.5, -4, 6.5], [9.5, -3, 9.5], 3)
-        if kind == 'blade':
-            box('guard', [4, 3, 6.5], [12, 4, 9.5], 2)
-            box('tungsten_blade', [6.7, 4, 7.5], [9.3, 21, 8.5], 3)
-            box('silver_edge', [6.3, 4, 7.5], [6.7, 21.5, 8.5], 4)
-            box('clipped_tip', [6.3, 21, 7.5], [8.3, 22, 8.5], 3)
-            for y in (4.8, 6): box('amber_mark', [7, y, 7.35], [7.8, y + .65, 7.5], 6)
-        elif kind == 'glaive':
-            box('shaft', [7.4, -8, 7.4], [8.6, 23, 8.6], 1)
-            box('shaft_edge', [7.3, -8, 7.3], [7.6, 23, 7.6], 15)
-            for y in (-5, 3, 12, 21):
-                box('collar', [7, y, 7], [9, y + 1.2, 9], 3)
-                box('teal_collar', [6.9, y + .4, 6.9], [9.1, y + .7, 9.1], 9)
-            box('blade_root', [8.5, 21, 7.3], [13, 30, 8.7], 2)
-            box('blade_face', [13, 23, 7.3], [17, 31, 8.7], 3)
-            box('outer_edge', [17, 24, 7.3], [18, 31.5, 8.7], 4)
-            box('head_tip', [13, 30, 7.3], [17.5, 32, 8.7], 3)
-            box('short_rear_hook', [4, 28, 7.3], [7.5, 29.5, 8.7], 3)
-            box('hook_tip', [4, 26.5, 7.3], [5, 28.5, 8.7], 3)
-            box('teal_channel', [9, 25, 7.15], [15.5, 25.6, 7.3], 9)
-        else:
-            box('guard_center', [3, 3, 6], [13, 5, 10], 3)
-            box('guard_left', [2, 4, 6.5], [4, 7, 9.5], 11)
-            box('guard_right', [12, 4, 6.5], [14, 7, 9.5], 11)
-            box('starcore_blade', [4.5, 5, 7], [11.5, 24, 9], 11)
-            box('silver_edge', [4, 5, 7], [4.5, 24, 9], 3)
-            box('silver_spine', [11.5, 5, 7], [12, 23, 9], 3)
-            box('tip_step', [4, 24, 7], [10.5, 26, 9], 3)
-            box('clipped_tip', [4, 26, 7], [8, 27, 9], 4)
-            box('split_channel', [7.5, 8, 6.8], [8.5, 23, 7], 13)
-            box('core_mount', [6, 4, 6], [10, 8, 10], 2)
-            box('starcore', [6.7, 4.7, 5.6], [9.3, 7.3, 6], 13)
-            box('core_highlight', [7.3, 5.2, 5.4], [8.5, 6.4, 5.6], 14)
-    else:
-        box('angled_grip', [1.5, 1, 7], [4.5, 7, 9], 1)
-        box('grip_heel', [1, .5, 6.7], [5, 1.5, 9.3], 2)
-        box('receiver', [1, 7, 5.8], [11, 12, 10.2], 3)
-        box('receiver_top', [1, 11.5, 5.5], [11.5, 12.5, 10.5], 4)
-        box('top_sight', [5, 12.5, 7], [8, 14, 9], 1)
-        box('sight_lens', [7.8, 13, 7.3], [8.1, 13.7, 8.7], 10 if kind == 'pistol' else 9 if kind == 'carbine' else 13)
-        if kind == 'pistol':
-            box('coil_back_brace', [10.5, 7, 5.8], [12, 12.5, 10.2], 2)
-            box('coil_front_brace', [19, 7, 5.8], [20.5, 12.5, 10.2], 3)
-            for y in (7.8, 10.4):
-                box('copper_coil', [12, y, 6.7], [19, y + 1.4, 9.3], 6)
-                for x in (12.2, 14, 16, 17.8): box('coil_winding', [x, y - .1, 6.5], [x + .4, y + 1.5, 9.5], 5)
-            box('cage_upper', [11, 12, 5.8], [20, 12.6, 10.2], 1)
-            box('cage_lower', [11, 7, 5.8], [20, 7.6, 10.2], 1)
-            box('square_muzzle', [20.5, 8, 6.3], [22, 11.8, 9.7], 1)
-            box('muzzle_port', [22, 9, 7.3], [22.1, 10.5, 8.7], 0)
-            box('energy_well', [7, 3.5, 6.8], [9.5, 7, 9.2], 1)
-            box('cell_indicator', [7.6, 4.2, 6.65], [8.4, 6.4, 6.8], 10)
-            box('receiver_indicator', [5, 9, 5.6], [7.5, 10, 5.8], 10)
-        elif kind == 'carbine':
-            box('bullpup_stock', [-7, 4, 6], [0, 12, 10], 1)
-            box('stock_shell', [-7, 4, 5.8], [-5.5, 12, 10.2], 3)
-            box('rear_cell', [-5, 4.5, 5.6], [-3.8, 10.5, 5.8], 9)
-            box('handguard', [11, 7, 5.8], [22, 12, 10.2], 3)
-            box('plasma_window', [7.2, 8.2, 5.5], [14.7, 10.7, 5.8], 8)
-            box('plasma_core', [8, 9.5, 5.3], [14, 10.5, 5.5], 9)
-            for x in (17, 19, 21): box('vent', [x, 8, 5.5], [x + .8, 10.5, 5.8], 1)
-            box('emitter', [22, 8, 6.5], [24, 11, 9.5], 1)
-            box('lower_rail', [11, 6.5, 6.5], [21, 7, 9.5], 1)
-        else:
-            box('braced_stock_upper', [-8, 9, 6.5], [1, 11.5, 9.5], 11)
-            box('braced_stock_lower', [-8, 4, 6.5], [-1, 6.5, 9.5], 11)
-            box('stock_butt', [-8, 4, 6], [-6.5, 12, 10], 3)
-            box('core_chamber', [4, 7.5, 5.3], [11, 12.5, 10.7], 11)
-            box('core_window', [5.2, 8.3, 5], [9.8, 11.5, 5.3], 12)
-            box('starcore', [6, 9, 4.8], [9, 11, 5], 13)
-            box('starcore_light', [6.5, 9.5, 4.7], [8.5, 10.5, 4.8], 14)
-            for y in (7, 11):
-                box('accelerator_rail', [11, y, 6], [28, y + 2, 10], 11)
-                box('rail_channel', [12, y + .6, 5.8], [27, y + 1.2, 6], 13)
-                box('rail_end', [27.5, y - .2, 5.8], [29, y + 2.2, 10.2], 3)
-            box('rail_bridge', [10, 7, 6], [12, 13, 10], 2)
-    # Structural detail at a readable sub-voxel scale: insets, stepped edges and fasteners.
-    if kind == 'blade':
-        box('blade_fuller', [7.7, 7, 7.25], [8.15, 20, 7.5], 2)
-        box('beveled_spine', [9.3, 5, 7.6], [9.6, 20, 8.4], 2)
-        box('blade_socket', [6.4, 4, 7], [9.6, 6, 9], 2)
-        for x in (4.2, 10.8): box('guard_end', [x, 2.6, 6.3], [x + 1, 4.4, 9.7], 3)
-        for y in (-2.6, -1.2, .2, 1.6): box('grip_wrap_seam', [6.85, y, 6.85], [9.15, y + .18, 9.15], 0)
-        box('pommel_inset', [7.3, -3.8, 6.3], [8.7, -3.2, 6.5], 6)
-    elif kind == 'glaive':
-        for y in (-7, -3, 1, 5, 9, 13, 17):
-            box('shaft_socket', [7.15, y, 7.15], [8.85, y + .55, 8.85], 2)
-        box('blade_recess', [10, 26.5, 7.02], [15.8, 29.5, 7.3], 1)
-        box('blade_inset_plate', [10.4, 27, 6.9], [15.4, 29, 7.02], 2)
-        for x in (10, 15): box('head_rivet', [x, 22.3, 7], [x + .55, 22.85, 7.3], 4)
-        box('split_edge_lower', [13, 22.5, 7.6], [16.5, 23, 8.4], 4)
-        box('head_lock', [6.5, 20, 6.6], [10, 22, 9.4], 3)
-        box('head_lock_light', [7, 20.5, 6.3], [9, 21, 6.6], 9)
-    elif kind == 'greatblade':
-        for y in (9, 13, 17, 21):
-            box('blade_facet', [4.5, y, 6.8], [6.5, y + 2.6, 7], 2)
-            box('spine_facet', [9.5, y, 6.8], [11.5, y + 2.6, 7], 2)
-            box('channel_bridge', [6.6, y, 6.6], [9.4, y + .35, 6.8], 12)
-        box('edge_bevel', [3.65, 6, 7.5], [4, 23, 8.5], 4)
-        for x in (3, 11): box('guard_energy', [x, 4.5, 6.2], [x + 2, 5.2, 6.5], 13)
-        box('pommel_crystal', [7.2, -4.5, 7.2], [8.8, -4, 8.8], 13)
-    else:
-        accent = 10 if kind == 'pistol' else 9 if kind == 'carbine' else 13
-        box('receiver_seam', [1.6, 10.8, 5.5], [10.2, 11.15, 5.8], 2)
-        box('service_panel', [2, 8, 5.45], [4.5, 10.5, 5.8], 2)
-        box('panel_inset', [2.5, 8.5, 5.3], [4, 10, 5.45], 1)
-        for x in (1.5, 9.5):
-            for y in (7.6, 11.6): box('receiver_fastener', [x, y, 5.3], [x + .45, y + .45, 5.8], 1)
-        for y in (2, 3, 4, 5): box('grip_rib', [1.35, y, 6.8], [4.65, y + .25, 9.2], 0)
-        box('trigger_guard_front', [6, 3.8, 7.4], [6.5, 7, 8.6], 2)
-        box('trigger_guard_base', [3.5, 3.8, 7.4], [6.5, 4.25, 8.6], 2)
-        box('trigger', [4.8, 5.2, 7.7], [5.2, 6.8, 8.3], 1)
-        box('sight_rear_notch', [4.7, 13.8, 6.8], [5.3, 14.35, 9.2], 2)
-        box('receiver_charge_strip', [6, 8, 5.4], [8.5, 8.4, 5.8], accent)
-        if kind == 'pistol':
-            box('coil_inner_bore', [11, 9.3, 7.4], [22, 10.3, 8.6], 1)
-            for x in (11.3, 19.2):
-                for y in (7.4, 11.6): box('cage_bolt', [x, y, 5.5], [x + .5, y + .5, 5.8], 4)
-            for z in (6.3, 9.1): box('muzzle_cheek', [21.7, 8, z], [22.7, 11.8, z + .6], 2)
-            box('muzzle_top', [21.7, 11.3, 6.3], [22.7, 11.8, 9.7], 3)
-            box('cell_latch', [7, 3.3, 6.5], [9.5, 3.8, 9.5], 2)
-        elif kind == 'carbine':
-            for x in (11.5, 13.5, 15.5, 17.5, 19.5):
-                box('handguard_rib', [x, 7.3, 5.35], [x + .5, 8, 5.8], 2)
-                box('top_rail_tooth', [x, 12, 6.5], [x + .8, 12.8, 9.5], 1)
-            box('stock_cheek_rest', [-6, 12, 6], [-.5, 13, 10], 2)
-            for y in (5, 6.5, 8, 9.5): box('stock_pad', [-7.4, y, 6], [-7, y + .7, 10], 0)
-            box('cell_release', [-3, 5.5, 5.35], [-1, 6.4, 5.8], 2)
-            box('emitter_inset', [24, 8.5, 7], [24.2, 10.5, 9], 0)
-            box('emitter_core', [24.2, 9.1, 7.6], [24.3, 9.9, 8.4], 9)
-        else:
-            for x in (13, 18, 23):
-                for y in (6.5, 10.7):
-                    box('rail_clamp', [x, y, 5.65], [x + 1.2, y + 2.8, 10.35], 2)
-                    box('rail_clamp_inset', [x + .2, y + .7, 5.4], [x + 1, y + 2, 5.65], 12)
-            for x in (1, 2, 3, 4): box('capacitor_cooling_fin', [x, 7.5, 5.15], [x + .4, 11.5, 10.85], 1)
-            box('capacitor_lower_bank', [5, 4.8, 6], [11.5, 7.4, 10], 11)
-            for x in (5.5, 7.5, 9.5): box('capacitor_cell', [x, 5.2, 5.7], [x + 1.2, 6.8, 6], 12)
-            box('upper_reinforcement', [8, 13, 6], [16, 14, 10], 2)
-            box('rail_upper_bus', [12, 13, 7], [27, 13.35, 9], 12)
-            box('focusing_aperture_top', [28, 12, 5.5], [30, 13.6, 10.5], 3)
-            box('focusing_aperture_bottom', [28, 6.6, 5.5], [30, 8, 10.5], 3)
-            box('stock_shock_absorber', [-6, 7, 7], [0, 8.5, 9], 2)
-            for x in (-5, -3, -1): box('stock_damper_ring', [x, 6.8, 6.8], [x + .45, 8.7, 9.2], 1)
-            # Widen actual receiver/rails by 35%, not just the inventory thumbnail.
-            for cube in cubes:
-                for end in ('from', 'to'): cube[end][2] = round(8 + (cube[end][2] - 8) * 1.35, 4)
-    if kind in ('pistol', 'carbine', 'railgun'):
-        for cube in cubes:
-            if cube['name'] in ('angled_grip', 'grip_heel', 'grip_rib'):
-                cube['rotation'] = {'origin': [3, 7, 8], 'axis': 'z', 'angle': -22.5}
-    if kind == 'greatblade':
-        for cube in cubes:
-            if cube['name'] in ('starcore', 'core_highlight'):
-                cube['rotation'] = {'origin': [8, 6, 5.6], 'axis': 'z', 'angle': 45}
-    # Small surface details exist on both sides, so left-handed equipment remains authored.
-    for cube in list(cubes):
-        if cube['to'][2] <= 8 and cube['to'][2] - cube['from'][2] < .65:
-            opposite = copy.deepcopy(cube)
-            opposite['name'] += '_reverse'
-            opposite['from'][2], opposite['to'][2] = 16 - cube['to'][2], 16 - cube['from'][2]
-            if 'rotation' in opposite: opposite['rotation']['origin'][2] = 16 - opposite['rotation']['origin'][2]
-            cubes.append(opposite)
-    return cubes
-
-
 def generate_weapon(name, kind):
-    texture_name = 'item/equipment_palette'
-    image = atlas(WEAPON_PALETTE, 16, 64); image.save(ASSETS / f'textures/{texture_name}.png')
     weapon_icon(kind).save(ASSETS / f'textures/item/{name}.png')
-    elements = []
-    for cube in weapon_cubes(kind):
-        i = cube['material']; uv = [i % 4 * 4 + .25, i // 4 * 4 + .25, i % 4 * 4 + 3.75, i // 4 * 4 + 3.75]
-        element = {'name': cube['name'], 'from': cube['from'], 'to': cube['to'], 'faces': {f: {'texture': '#palette', 'uv': uv} for f in FACES}}
-        if 'rotation' in cube: element['rotation'] = cube['rotation']
-        elements.append(element)
-    gun = kind in ('pistol', 'carbine', 'railgun')
-    scale = .52 if kind == 'pistol' else .51 if kind == 'railgun' else .43 if gun else .38 if kind == 'glaive' else .55
-    hand = {'credit': 'StarboundMC approved V01 cuboid source', 'textures': {'palette': f'starboundmc:{texture_name}', 'particle': f'starboundmc:{texture_name}'},
-            'elements': elements, 'display': {
-                'firstperson_righthand': {'rotation': [0, 110, 0] if gun else [0, -90, 25], 'translation': [-1.5, 2.2, -2] if gun else [1.13, 3.2 if kind == 'glaive' else 4.2, 1.13], 'scale': [scale] * 3},
-                'firstperson_lefthand': {'rotation': [0, -70, 0] if gun else [0, 90, -25], 'translation': [-1.5, 2.2, -2] if gun else [1.13, 3.2 if kind == 'glaive' else 4.2, 1.13], 'scale': [scale] * 3},
-                'thirdperson_righthand': {'rotation': [0, 90, 0] if gun else [0, 0, 0], 'translation': [0, 1.5, -2] if gun else [0, 3, .5], 'scale': [.66 if kind == 'railgun' else .58] * 3},
-                'thirdperson_lefthand': {'rotation': [0, -90, 0] if gun else [0, 0, 0], 'translation': [0, 1.5, -2] if gun else [0, 3, .5], 'scale': [.66 if kind == 'railgun' else .58] * 3},
-                'ground': {'translation': [0, 3, 0], 'scale': [.35] * 3}, 'fixed': {'rotation': [0, 180, 0], 'scale': [.55] * 3}}}
-    write(ASSETS / f'models/item/{name}_hand.json', hand)
+    export_weapon(name)
     write(ASSETS / f'models/item/{name}.json', {'loader': 'neoforge:separate_transforms',
           'base': {'parent': f'starboundmc:item/{name}_hand'}, 'perspectives': {'gui': {
               'parent': 'minecraft:item/generated', 'loader': 'neoforge:item_layers',
               'textures': {'layer0': f'starboundmc:item/{name}'}}}})
-    export_blockbench(name, weapon_cubes(kind), image, 64, 'java_block')
 
 
 def armor_icon(profile, part):
@@ -392,13 +182,11 @@ def armor_icon(profile, part):
     # Inventory silhouettes reflect the differentiated wearable shells.
     if part == 'helmet':
         if profile == 'pioneer':
-            im.rect(3, 10, 26, 2, p[3]); im.rect(11, 20, 10, 6, p[2])
-            for y in (21, 23): im.rect(13, y, 6, 1, p[0])
-            for x in (8, 17): im.rect(x, 14, 7, 4, p[5])
+            im.rect(7, 13, 17, 7, p[5]); im.rect(8, 14, 1, 5, p[6])
         elif profile == 'ranger':
-            im.rect(3, 2, 1, 13, p[1]); im.rect(3, 1, 1, 2, p[6])
+            im.rect(4, 13, 2, 5, p[6])
         elif star:
-            for x in (5, 24): im.poly([(x, 1), (x + 3, 3), (x + 2, 15), (x - 1, 12)], p[4])
+            for x in (7, 23): im.rect(x, 17, 2, 6, p[4])
     elif part == 'chestplate':
         if profile == 'pioneer':
             for x in (9, 21): im.rect(x, 7, 2, 17, p[5])
@@ -421,40 +209,7 @@ def armor_icon(profile, part):
 
 
 def generate_armor(profile):
-    image = atlas(PALETTES[profile], 64, 256)
-    for layer in (1, 2): image.save(ASSETS / f'textures/models/armor/{profile}_layer_{layer}.png')
     for part in ('helmet', 'chestplate', 'leggings', 'boots'):
         armor_icon(profile, part).save(ASSETS / f'textures/item/{profile}_{part}.png')
     geometry = {name: {'outer': armor_geometry(name, False), 'inner': armor_geometry(name, True)} for name in PALETTES}
     write(ASSETS / 'equipment/armor_geometry.json', geometry)
-    for layer in ('outer', 'inner'):
-        export_blockbench(profile + '_' + layer, geometry[profile][layer], image, 256, 'modded_entity')
-
-
-def export_blockbench(name, geometry, image, size, model_format):
-    """Editable Blockbench exports share exact source coordinates and material UVs."""
-    elements, outliner = [], []
-    def uid(label): return str(uuid.uuid5(uuid.NAMESPACE_URL, 'starboundmc/equipment/' + name + '/' + label))
-    entries = {'root': geometry} if isinstance(geometry, list) else geometry
-    for part, cubes in entries.items():
-        children = []
-        pivot = {'right_arm': [-5, 22, 0], 'left_arm': [5, 22, 0],
-                 'right_leg': [-1.9, 12, 0], 'left_leg': [1.9, 12, 0]}.get(part, [0, 24, 0])
-        if model_format == 'java_block': pivot = [0, 0, 0]
-        for index, cube in enumerate(cubes):
-            start = cube['from']; end = cube.get('to') or [a + b for a, b in zip(start, cube['size'])]
-            if model_format == 'modded_entity':
-                start, end = [start[0] + pivot[0], pivot[1] - end[1], start[2]], [end[0] + pivot[0], pivot[1] - start[1], end[2]]
-            i = cube['material']; tile = size // 4; u, v = i % 4 * tile, i // 4 * tile
-            ident = uid(part + '/' + str(index)); children.append(ident)
-            elements.append({'name': cube['name'], 'uuid': ident, 'type': 'cube', 'from': start, 'to': end,
-                             'origin': pivot, 'box_uv': False, 'faces': {f: {'uv': [u + 1, v + 1, u + tile - 1, v + tile - 1], 'texture': 0} for f in FACES}})
-            if 'rotation' in cube:
-                rotation_origin = cube['rotation']['origin']
-                elements[-1]['origin'] = ([rotation_origin[0] + pivot[0], pivot[1] - rotation_origin[1], rotation_origin[2]]
-                                          if model_format == 'modded_entity' else rotation_origin)
-                elements[-1]['rotation'] = [0, 0, -cube['rotation']['angle'] if model_format == 'modded_entity' else cube['rotation']['angle']]
-        outliner.append({'name': part, 'uuid': uid(part), 'origin': pivot, 'children': children})
-    write(EDITABLE / f'{name}.bbmodel', {'meta': {'format_version': '4.10', 'model_format': model_format, 'box_uv': False},
-          'name': name, 'resolution': {'width': size, 'height': size}, 'elements': elements, 'outliner': outliner,
-          'textures': [{'name': name + '.png', 'id': '0', 'uuid': uid('texture'), 'source': 'data:image/png;base64,' + base64.b64encode(image.png()).decode(), 'width': size, 'height': size}]})
