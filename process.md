@@ -11,7 +11,7 @@
 - [x] R05 游骑套：传感头盔、轻型分段甲、机动护腿靴；四部件图标及穿戴模型。
 - [x] R06 守望套：蓝紫装甲、内嵌星核、背部导能与分段护甲；四部件图标及穿戴模型。
 - [x] R07 真实客户端检查物品栏/双手持握/穿戴、动画与资源重载；回归现有玩法。
-- [ ] R08 产物核验、详细记录、正式打包与 GitHub 功能分支同步。
+- [x] R08 产物核验、详细记录、正式打包与 GitHub 功能分支同步。
 
 ### L048 · 审查确认与技术落地
 
@@ -50,10 +50,18 @@
 ### L052 · 正式回归与打包核验
 
 - `equipment-art-gametest.log`：21/21 required tests passed，36 秒，武器/防具伤害、消耗、套装、制造与保存规则继续通过。
-- `equipment-art-final-build.log`：完整 test/build 成功；668 项单元测试，失败/错误/跳过均为 0。
+- `equipment-art-final-build.log`：完整 test/build 成功，27 秒；668 项单元测试，失败/错误/跳过均为 0。
 - 正式 JAR `build/libs/starboundmc-0.1-alpha.jar`，82,624,556 字节，SHA-256 `e25e8625dd11d80c3676495b58efae39fcf2d9086242bde0b46141965141ff22`。
 - 检查产物包含22张正式图标、六份分视角模型与手持模型、分件防具几何及客户端模型类；不含 Smoke/GameTests 或 Blockbench 开发源文件。
 - 所有生成器可确定性重建，git diff --check 通过。正式预览、14份可编辑模型与原概念审批记录均已整理；准备功能提交与 GitHub 同步。
+
+### L053 · 美术 GitHub 交付回执
+
+- 功能提交 `033deb1` 已推送到 `origin/feat/approved-equipment-art`，基线 `9aea0a8`；未合并 main。
+- R01–R08 全部完成。22 张独立32×32图标、六把武器双面立体模型、四套分件防具、14份可编辑bbmodel与可重复导出源均已交付。
+- 668项单元、21项服务端、14张左右手武器截图、16件防具/重载/EPP共穿及五个战斗场景通过；失败与视觉修正记录保留在 L048–L052。
+- 实际游戏内预览：`概念图/2026-10-26_游戏内美术落地预览_V01/index.html`。正式JAR使用本轮SHA核验产物，未覆盖PCL已安装文件。
+- GitHub：https://github.com/XiaoMa3413/StarboundMC-NeoForge1.21.1/tree/feat/approved-equipment-art；本回执独立提交同步。
 
 ## 本轮：四套分阶段防具（2026-10-25）
 
