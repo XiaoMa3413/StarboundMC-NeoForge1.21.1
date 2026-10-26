@@ -1,0 +1,598 @@
+{
+  "tungsten_sabre": {
+    "front": {
+      "components": [
+        {
+          "area": 63369,
+          "box": [
+            34,
+            224,
+            880,
+            377
+          ]
+        }
+      ],
+      "region": [
+        32,
+        222,
+        882,
+        380
+      ],
+      "bounds": [
+        34,
+        224,
+        880,
+        377
+      ],
+      "mask": "reference-masks\\tungsten_sabre-front.png"
+    }
+  },
+  "coil_pistol": {
+    "front": {
+      "components": [
+        {
+          "area": 132189,
+          "box": [
+            65,
+            133,
+            783,
+            498
+          ]
+        },
+        {
+          "area": 1139,
+          "box": [
+            387,
+            323,
+            418,
+            382
+          ]
+        }
+      ],
+      "region": [
+        62,
+        131,
+        785,
+        502
+      ],
+      "bounds": [
+        65,
+        133,
+        783,
+        498
+      ],
+      "mask": "reference-masks\\coil_pistol-front.png"
+    }
+  },
+  "durasteel_glaive": {
+    "front": {
+      "components": [
+        {
+          "area": 24128,
+          "box": [
+            520,
+            167,
+            930,
+            316
+          ]
+        },
+        {
+          "area": 1888,
+          "box": [
+            39,
+            220,
+            95,
+            269
+          ]
+        },
+        {
+          "area": 4286,
+          "box": [
+            86,
+            224,
+            279,
+            263
+          ]
+        },
+        {
+          "area": 5068,
+          "box": [
+            274,
+            224,
+            525,
+            263
+          ]
+        }
+      ],
+      "region": [
+        36,
+        165,
+        932,
+        318
+      ],
+      "bounds": [
+        39,
+        167,
+        930,
+        316
+      ],
+      "mask": "reference-masks\\durasteel_glaive-front.png"
+    }
+  },
+  "plasma_carbine": {
+    "front": {
+      "components": [
+        {
+          "area": 88286,
+          "box": [
+            36,
+            171,
+            769,
+            448
+          ]
+        },
+        {
+          "area": 994,
+          "box": [
+            70,
+            254,
+            84,
+            340
+          ]
+        }
+      ],
+      "region": [
+        34,
+        170,
+        772,
+        450
+      ],
+      "bounds": [
+        36,
+        171,
+        769,
+        448
+      ],
+      "mask": "reference-masks\\plasma_carbine-front.png"
+    }
+  },
+  "starcore_blade": {
+    "front": {
+      "components": [
+        {
+          "area": 77989,
+          "box": [
+            33,
+            163,
+            878,
+            371
+          ]
+        }
+      ],
+      "region": [
+        30,
+        162,
+        880,
+        373
+      ],
+      "bounds": [
+        33,
+        163,
+        878,
+        371
+      ],
+      "mask": "reference-masks\\starcore_blade-front.png"
+    }
+  },
+  "starcore_railgun": {
+    "front": {
+      "components": [
+        {
+          "area": 87245,
+          "box": [
+            35,
+            134,
+            858,
+            331
+          ]
+        }
+      ],
+      "region": [
+        34,
+        132,
+        861,
+        334
+      ],
+      "bounds": [
+        35,
+        134,
+        858,
+        331
+      ],
+      "mask": "reference-masks\\starcore_railgun-front.png"
+    }
+  },
+  "pioneer": {
+    "back": {
+      "components": [
+        {
+          "area": 132984,
+          "box": [
+            1031,
+            134,
+            1359,
+            730
+          ]
+        }
+      ],
+      "region": [
+        1010,
+        84,
+        1460,
+        731
+      ],
+      "bounds": [
+        1031,
+        134,
+        1359,
+        730
+      ],
+      "mask": "reference-masks\\pioneer-back.png"
+    },
+    "side": {
+      "components": [
+        {
+          "area": 80939,
+          "box": [
+            676,
+            134,
+            866,
+            731
+          ]
+        }
+      ],
+      "region": [
+        640,
+        94,
+        880,
+        731
+      ],
+      "bounds": [
+        676,
+        134,
+        866,
+        731
+      ],
+      "mask": "reference-masks\\pioneer-side.png"
+    },
+    "front": {
+      "components": [
+        {
+          "area": 129152,
+          "box": [
+            178,
+            131,
+            511,
+            727
+          ]
+        }
+      ],
+      "region": [
+        100,
+        84,
+        530,
+        730
+      ],
+      "bounds": [
+        178,
+        131,
+        511,
+        727
+      ],
+      "mask": "reference-masks\\pioneer-front.png"
+    }
+  },
+  "vanguard": {
+    "back": {
+      "components": [
+        {
+          "area": 12897,
+          "box": [
+            1136,
+            115,
+            1296,
+            219
+          ]
+        },
+        {
+          "area": 95336,
+          "box": [
+            1025,
+            220,
+            1407,
+            693
+          ]
+        },
+        {
+          "area": 1106,
+          "box": [
+            1202,
+            314,
+            1231,
+            355
+          ]
+        }
+      ],
+      "region": [
+        1010,
+        84,
+        1460,
+        731
+      ],
+      "bounds": [
+        1025,
+        115,
+        1407,
+        693
+      ],
+      "mask": "reference-masks\\vanguard-back.png"
+    },
+    "side": {
+      "components": [
+        {
+          "area": 15526,
+          "box": [
+            695,
+            115,
+            873,
+            252
+          ]
+        },
+        {
+          "area": 53106,
+          "box": [
+            676,
+            227,
+            880,
+            695
+          ]
+        }
+      ],
+      "region": [
+        640,
+        94,
+        880,
+        731
+      ],
+      "bounds": [
+        676,
+        115,
+        880,
+        695
+      ],
+      "mask": "reference-masks\\vanguard-side.png"
+    },
+    "front": {
+      "components": [
+        {
+          "area": 17547,
+          "box": [
+            243,
+            115,
+            402,
+            256
+          ]
+        },
+        {
+          "area": 80270,
+          "box": [
+            137,
+            227,
+            509,
+            670
+          ]
+        },
+        {
+          "area": 5503,
+          "box": [
+            149,
+            228,
+            246,
+            335
+          ]
+        },
+        {
+          "area": 5043,
+          "box": [
+            362,
+            611,
+            451,
+            694
+          ]
+        },
+        {
+          "area": 4635,
+          "box": [
+            195,
+            623,
+            284,
+            694
+          ]
+        }
+      ],
+      "region": [
+        100,
+        84,
+        530,
+        730
+      ],
+      "bounds": [
+        137,
+        115,
+        509,
+        694
+      ],
+      "mask": "reference-masks\\vanguard-front.png"
+    }
+  },
+  "ranger": {
+    "back": {
+      "components": [
+        {
+          "area": 118478,
+          "box": [
+            1074,
+            108,
+            1419,
+            720
+          ]
+        }
+      ],
+      "region": [
+        1010,
+        84,
+        1460,
+        731
+      ],
+      "bounds": [
+        1074,
+        108,
+        1419,
+        720
+      ],
+      "mask": "reference-masks\\ranger-back.png"
+    },
+    "side": {
+      "components": [
+        {
+          "area": 72621,
+          "box": [
+            680,
+            107,
+            866,
+            720
+          ]
+        }
+      ],
+      "region": [
+        640,
+        94,
+        880,
+        731
+      ],
+      "bounds": [
+        680,
+        107,
+        866,
+        720
+      ],
+      "mask": "reference-masks\\ranger-side.png"
+    },
+    "front": {
+      "components": [
+        {
+          "area": 125898,
+          "box": [
+            116,
+            108,
+            469,
+            723
+          ]
+        }
+      ],
+      "region": [
+        100,
+        84,
+        530,
+        730
+      ],
+      "bounds": [
+        116,
+        108,
+        469,
+        723
+      ],
+      "mask": "reference-masks\\ranger-front.png"
+    }
+  },
+  "starwarden": {
+    "back": {
+      "components": [
+        {
+          "area": 129983,
+          "box": [
+            1035,
+            85,
+            1364,
+            689
+          ]
+        }
+      ],
+      "region": [
+        1010,
+        84,
+        1460,
+        731
+      ],
+      "bounds": [
+        1035,
+        85,
+        1364,
+        689
+      ],
+      "mask": "reference-masks\\starwarden-back.png"
+    },
+    "side": {
+      "components": [
+        {
+          "area": 87342,
+          "box": [
+            675,
+            94,
+            880,
+            689
+          ]
+        }
+      ],
+      "region": [
+        640,
+        94,
+        880,
+        731
+      ],
+      "bounds": [
+        675,
+        94,
+        880,
+        689
+      ],
+      "mask": "reference-masks\\starwarden-side.png"
+    },
+    "front": {
+      "components": [
+        {
+          "area": 125254,
+          "box": [
+            169,
+            88,
+            500,
+            684
+          ]
+        }
+      ],
+      "region": [
+        100,
+        84,
+        530,
+        730
+      ],
+      "bounds": [
+        169,
+        88,
+        500,
+        684
+      ],
+      "mask": "reference-masks\\starwarden-front.png"
+    }
+  }
+}

@@ -1,0 +1,346 @@
+{
+  "tungsten_sabre": {
+    "front": {
+      "iou": 0.9828819581523884,
+      "intersection": 62241,
+      "union": 63325,
+      "model_bounds": [
+        278,
+        474,
+        1122,
+        626
+      ],
+      "reference_bounds": [
+        2,
+        2,
+        848,
+        155
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "coil_pistol": {
+    "front": {
+      "iou": 0.8758292995200504,
+      "intersection": 127921,
+      "union": 146057,
+      "model_bounds": [
+        278,
+        336,
+        1122,
+        763
+      ],
+      "reference_bounds": [
+        3,
+        2,
+        721,
+        367
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "durasteel_glaive": {
+    "front": {
+      "iou": 0.848523340743093,
+      "intersection": 34736,
+      "union": 40937,
+      "model_bounds": [
+        278,
+        480,
+        1122,
+        620
+      ],
+      "reference_bounds": [
+        3,
+        2,
+        894,
+        151
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "plasma_carbine": {
+    "front": {
+      "iou": 0.8024872819447623,
+      "intersection": 91177,
+      "union": 113618,
+      "model_bounds": [
+        278,
+        391,
+        1122,
+        709
+      ],
+      "reference_bounds": [
+        2,
+        1,
+        735,
+        278
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "starcore_blade": {
+    "front": {
+      "iou": 0.9455914439581783,
+      "intersection": 74975,
+      "union": 79289,
+      "model_bounds": [
+        278,
+        447,
+        1121,
+        652
+      ],
+      "reference_bounds": [
+        3,
+        1,
+        848,
+        209
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "starcore_railgun": {
+    "front": {
+      "iou": 0.817444284803768,
+      "intersection": 75670,
+      "union": 92569,
+      "model_bounds": [
+        278,
+        449,
+        1122,
+        651
+      ],
+      "reference_bounds": [
+        1,
+        2,
+        824,
+        199
+      ],
+      "alignment": "uniform scale by length + center"
+    }
+  },
+  "pioneer": {
+    "back": {
+      "iou": 0.8828445158698273,
+      "intersection": 120857,
+      "union": 136895,
+      "model_bounds": [
+        461,
+        128,
+        939,
+        972
+      ],
+      "reference_bounds": [
+        21,
+        50,
+        349,
+        646
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "side": {
+      "iou": 0.8204945545869455,
+      "intersection": 67955,
+      "union": 82822,
+      "model_bounds": [
+        576,
+        128,
+        824,
+        972
+      ],
+      "reference_bounds": [
+        36,
+        40,
+        226,
+        637
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "front": {
+      "iou": 0.9065314212077138,
+      "intersection": 120294,
+      "union": 132697,
+      "model_bounds": [
+        461,
+        128,
+        939,
+        972
+      ],
+      "reference_bounds": [
+        78,
+        47,
+        411,
+        643
+      ],
+      "alignment": "uniform scale by height + center"
+    }
+  },
+  "vanguard": {
+    "back": {
+      "iou": 0.763234162176634,
+      "intersection": 114031,
+      "union": 149405,
+      "model_bounds": [
+        424,
+        128,
+        976,
+        972
+      ],
+      "reference_bounds": [
+        15,
+        31,
+        397,
+        609
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "side": {
+      "iou": 0.6395222214660042,
+      "intersection": 56379,
+      "union": 88158,
+      "model_bounds": [
+        581,
+        128,
+        819,
+        972
+      ],
+      "reference_bounds": [
+        36,
+        21,
+        240,
+        601
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "front": {
+      "iou": 0.7797258375675896,
+      "intersection": 114785,
+      "union": 147212,
+      "model_bounds": [
+        424,
+        128,
+        976,
+        972
+      ],
+      "reference_bounds": [
+        37,
+        31,
+        409,
+        610
+      ],
+      "alignment": "uniform scale by height + center"
+    }
+  },
+  "ranger": {
+    "back": {
+      "iou": 0.8076291158343927,
+      "intersection": 108635,
+      "union": 134511,
+      "model_bounds": [
+        455,
+        128,
+        945,
+        972
+      ],
+      "reference_bounds": [
+        64,
+        24,
+        409,
+        636
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "side": {
+      "iou": 0.7578545523954954,
+      "intersection": 59556,
+      "union": 78585,
+      "model_bounds": [
+        586,
+        128,
+        814,
+        972
+      ],
+      "reference_bounds": [
+        40,
+        13,
+        226,
+        626
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "front": {
+      "iou": 0.8384900406784085,
+      "intersection": 115637,
+      "union": 137911,
+      "model_bounds": [
+        455,
+        128,
+        945,
+        972
+      ],
+      "reference_bounds": [
+        16,
+        24,
+        369,
+        639
+      ],
+      "alignment": "uniform scale by height + center"
+    }
+  },
+  "starwarden": {
+    "back": {
+      "iou": 0.8208256787837583,
+      "intersection": 113489,
+      "union": 138262,
+      "model_bounds": [
+        465,
+        128,
+        935,
+        972
+      ],
+      "reference_bounds": [
+        25,
+        1,
+        354,
+        605
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "side": {
+      "iou": 0.7336491408397202,
+      "intersection": 65666,
+      "union": 89506,
+      "model_bounds": [
+        587,
+        128,
+        813,
+        972
+      ],
+      "reference_bounds": [
+        35,
+        0,
+        240,
+        595
+      ],
+      "alignment": "uniform scale by height + center"
+    },
+    "front": {
+      "iou": 0.8519959105549193,
+      "intersection": 110837,
+      "union": 130091,
+      "model_bounds": [
+        465,
+        128,
+        935,
+        972
+      ],
+      "reference_bounds": [
+        69,
+        4,
+        400,
+        600
+      ],
+      "alignment": "uniform scale by height + center"
+    }
+  }
+}

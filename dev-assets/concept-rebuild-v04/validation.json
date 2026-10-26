@@ -1,0 +1,218 @@
+[
+  {
+    "id": "tungsten_sabre",
+    "cubes": 16,
+    "meshes": 2,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "83f771ea5b687ea5c2f1fdc6bba1a4283722f5a35451121c7cf9665865c2013e",
+    "evidence": {
+      "front.png": "bb61ada4a8226c1834c978d2e03e99267a9de7b8b2a0bbd8c04f6284c6bcafa9",
+      "front-editor.png": "00e301ed6bbbc55a74f8148ab0de5d80d7561dc11d26e90e070abd076153b35c",
+      "side.png": "938b7b5e3dfe0d693c376e5395c50828a789dda0cf14e923c85518ee4e0c2dab",
+      "side-editor.png": "e2446fd680e15d3f3cdd926f61874a8ec99631a26f5da3d6a5bd2be7423f8414",
+      "back.png": "d598e7111711aeb1985fe7344fc4f7ea0a1b8113ca91f2cf65b7ac95d9782ee2",
+      "back-editor.png": "2743f44b4edae25f9aa7c3ab96be53a24f701c7d977e0284d5e7c36cd73bccf5",
+      "top.png": "25d67ffff5d0d2322e043ec712dba474d60f921a92a2e1a839e0bfc7b1a27977",
+      "top-editor.png": "09a4298005a5589c13da86054f077a7cbac33187b1d373fa01e8af9adf7d8c59",
+      "perspective.png": "59fcd68c233b9314a3cbc2974e81bebfaccbd0e619a8f3f62dc73096d412542d",
+      "perspective-editor.png": "ccb4d76a7869f0878f43f05313a9dce702015516b0d154f4176450fbb7c0afb8"
+    }
+  },
+  {
+    "id": "coil_pistol",
+    "cubes": 30,
+    "meshes": 8,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "747e5b5f539580a84fd4cb187ea4f72dd73fbcbc7677a4e8e48861fb56b0fe9e",
+    "evidence": {
+      "front.png": "413df8c855994bfa0dfcd3cd61c8faed116fdfac7b875482b50cca59b4be4f2d",
+      "front-editor.png": "d9cdbd6e76042e0a602899f690a1a3eef3dfe887c528c280c0ad27938bda29f7",
+      "side.png": "64d1994551e59ab348c6c494c0ef905597c7e32ddf6f0b985741aa1e91bbf438",
+      "side-editor.png": "0ff9f541e7dc35b976c88752d2bef39e71654e0840a91b1e3a2a4f95e67ae944",
+      "back.png": "e247ad7c06cf0e8513bb010b23f79e35b4778e6e9db3b40cec4ef4f9217c5b87",
+      "back-editor.png": "a448ab152a0b71da1cfb98b81bc4bfa33e638bac26a9ed7b101a965b0a5c5600",
+      "top.png": "04a4e3c27bdee27bd7c8388df0d975461779a7354e6cee531608dba899b865cf",
+      "top-editor.png": "95351a60ce1f6954d2c4be0e64770e8ad5d01de8b3b9fb2055e5f589f3d5e32e",
+      "perspective.png": "d228a4710d351fb86b6d52167815b6a81cbe3b6cb7f184e76599399a926b22d8",
+      "perspective-editor.png": "8c9ce7a0e4002a7a402f316d687f6795e9e452201b9bc10c8fa0331d9c18de1c"
+    }
+  },
+  {
+    "id": "durasteel_glaive",
+    "cubes": 37,
+    "meshes": 5,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "7c6cff57c84d12354ac0ded92667ff1928a0be6f05d0be8cfd8f67893a684edf",
+    "evidence": {
+      "front.png": "b4a2fab7164fc8a68ca3838eb513069092bb84713cc1ccb1b9352694e7909246",
+      "front-editor.png": "f6ea4f2467ab8649a887f7402f2a0ed93f50e670fad554d892c4e4b4316d384c",
+      "side.png": "8cc3855e615c992eab0e672c2fd8bd8112654f3a1c654bac645e3ef0e51f6697",
+      "side-editor.png": "727d1ac6e3d5b10490fa5f788b9fb7ec0bb18db83b2c60bee4d9146212492420",
+      "back.png": "eff19a2f299b4e7b0daa67c80b23b592da5f017233476720e62f49884a3e144e",
+      "back-editor.png": "c92cb252e553d4a10e1321a6217973b41e974cd377f3267901f87d6487e71f1c",
+      "top.png": "d1fad043e5b309f2f9550d8b1d821e403fef9e5d5df36736650b1de34ec2becb",
+      "top-editor.png": "62863f3ea2a9c058d64ac6295900586b5351a7f9fabc26015aaa7b46a7fe8927",
+      "perspective.png": "c753d797122b8a80786d88125c794d4be739354b1b8f523b9af77b3990b91ea6",
+      "perspective-editor.png": "0af120e863fea9f83018902a3ee6656b52c1684223e523077dd6e39ef29db89a"
+    }
+  },
+  {
+    "id": "plasma_carbine",
+    "cubes": 38,
+    "meshes": 5,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "e91d33a99c3acd46bb8b916f9af96ed6cf52856dde9c387410dbb5c7cf28eb2d",
+    "evidence": {
+      "front.png": "21c4e6aae2570569361e56efb533b0d92b86ff8fc57f411951ef378fc70ab49f",
+      "front-editor.png": "432812ad29c571f61bd98a93a1b15cb0daf6c246a3cf480c23ff2bbb472cbaf3",
+      "side.png": "82b88d4f4b0fea2e1b1cf9481f4c3b37422d3682c582ebe125c62ebe2514bde6",
+      "side-editor.png": "8e0029ceafac1656f22c7e8753ef71e1cb250068bf8c68bec8b318a5b18ea2e0",
+      "back.png": "d3726aaa53776652be0ec344b4c0a18894b06a6c9997ba9ec06a853b4e735935",
+      "back-editor.png": "6e0ee9a4cf9ab95f09471784a8dc680521ce3dd25bef759391cacf477f107116",
+      "top.png": "be2e012d7eb1f929d9e388aaa28e994ced34bb5149cd700e6f307d1cb4af4da5",
+      "top-editor.png": "1a38198ffff74810efdcb44b35eb99cca8d50397c801446809fabc8c01ce7997",
+      "perspective.png": "81c97ad2470ed14c8658215a5dc9937f45fb29058eaf920dff47d375c3f54704",
+      "perspective-editor.png": "2f3c6d85367fe4953bc3aee11db63c2bc8e52e8b8c74f616b092b70daf3d45ae"
+    }
+  },
+  {
+    "id": "starcore_blade",
+    "cubes": 21,
+    "meshes": 13,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "3172482f7d3b97a0c4a8891a27afdc60b8edb1f29214c8c5266a003716472bde",
+    "evidence": {
+      "front.png": "fe05e55150053db669f7be30caab48d4df3c3e5d2dc7d51bfcd2bb5be1ba6ed8",
+      "front-editor.png": "38b599645e3aabd614712d23c8ed2a79133602f31b8d0107cb6096096a2874f4",
+      "side.png": "6ed07dfd1e319dbbdcacbf13256a9084616bbf7d2ca4319969e0f121e1446651",
+      "side-editor.png": "f10570e4d93b64ff71f2f3cc54cb000ad6dfff78f2ac3bf997be905b7fd1076e",
+      "back.png": "cf5cf50f4d17909312fce5c4ae12fdcd19214aeb2d2401533bbb6cb89be720d1",
+      "back-editor.png": "cbc084c2fecbc7dfcecdc32134cd206f5c63997760b15aa83d8c1b5facb39df8",
+      "top.png": "3fcb98a53159280a840f46f48d0e94535217950ba4fb9c13e554644e2f446e71",
+      "top-editor.png": "71713e2d45c10731917c18d1a1c31b8dc7b61513da3c0e1c4dea60ccf8448785",
+      "perspective.png": "bdd11317a2331d868bfd73c51c0a33a2b15c778b2e26d472d59654fc819e10f8",
+      "perspective-editor.png": "3430d5c0f7fd2765f269226ac6bc1cb9bf84d0dfa154d7e683ebaf1e318da5f8"
+    }
+  },
+  {
+    "id": "starcore_railgun",
+    "cubes": 46,
+    "meshes": 5,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "119816ce0142769e7b17701c9db38ef9b8b43e88e0604f6643ca183aa0f8eb2c",
+    "evidence": {
+      "front.png": "f7a095d24ffea47b3f5cd2e92a2be172e440b97761da3efb5a8250af5c924096",
+      "front-editor.png": "9560cc0f465742f6cb1a1c887183a4461da2e495b2dc03daaa10cec69da4a8ff",
+      "side.png": "257e49ef0a9c66380ba44c3acb4e817c52808e3fc1feea7f833e5a428b926f69",
+      "side-editor.png": "645e8a9a6b4e726eaac8be784ba34e3be2bb6364967e7664901a8cbb4667d189",
+      "back.png": "b5bf571370448dd611fd35c4d2808a0b3ce31f8c8118ec7ce446978ac096aa8c",
+      "back-editor.png": "1e920c821a7a0f0dc9d6df651b919bfbc79e9a30b29664908926a16f4bd6ca50",
+      "top.png": "7618379d6c0d5d8f24a63912cd43fd6d38725cabeba8023882537ca89c0a1c6c",
+      "top-editor.png": "9100434266d0f7861ff0b65cb6e0fa16d5ed236e214aa891a5654009e95d42d0",
+      "perspective.png": "3acb4fc7dffc3d51e6124d277cb9357973fcdcafa0ff231bd43cb060b4f2b9aa",
+      "perspective-editor.png": "4047ac465bb36c0822f7d789926da828fce3870bc152773e7502fdd6152a89b0"
+    }
+  },
+  {
+    "id": "pioneer",
+    "cubes": 27,
+    "meshes": 11,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "f527dec400344b1d287fbf51da6dbac0dc0025653a1c95c995fc70838a8cd8ac",
+    "evidence": {
+      "front.png": "a196a32eef3da038f39c3a5846039028555f4d8545b75cc2510f824c7b451c4d",
+      "front-editor.png": "c976e44dd9a5ba99f69fd47ef0332f1b6d9dcfd6850c3e112b02d87c038692be",
+      "side.png": "7be4ee8bbdd9fb62895ecf80c34ffd9bed1e1bc7ee06bf0c2e04b8f032dd053f",
+      "side-editor.png": "a076899f8cf8027b9ddaebf30125dc0d9e21918a372ef11894ebaf4a0a0f8378",
+      "back.png": "198a24ce0c1c13798abc384204db0ca5d6f59c5fe7ea38abb74a7871595aec0f",
+      "back-editor.png": "a10dc51ffe22aee199a5188a6462bd625bb89d31b9ea633e4691f143275a833e",
+      "top.png": "ad54ba0d1d80bc989a71a0a6422941b7147f0b9d7228d516ec76ad0209a384e7",
+      "top-editor.png": "29e03162670bdd970a9d5d5ece9d405159b704d8a02b5efe3c98c512c6039386",
+      "perspective.png": "7128237eee675fecbc8dae45310a834a9d75ae553a0eb955d503037f59f5c670",
+      "perspective-editor.png": "f9d8bbb506f0b6d32f09eed553d5ad87a6bca6ff751d8c3aa7145122b749d356",
+      "reference_side.png": "8d316b05692dc1bed4bfa2e46c3570ec7d28bb9a1f23e3c974179d705c2c31ca",
+      "reference_side-editor.png": "fefac839f4e8052c0b60dfa9eb954f511a8ac777dcbc5dc8d3b7357a2079fda4",
+      "reference_back.png": "773100f3294fa90adf14488216bae36ab0d073bb83b14ad565028734a7a8de7b",
+      "reference_back-editor.png": "c0c004a93d0c21934caf4a68bad30e7415872f31a9e1b1f76fd7d14fc820b6f1"
+    }
+  },
+  {
+    "id": "vanguard",
+    "cubes": 29,
+    "meshes": 13,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "b829c5a4c863c0688722b307272a1ebba89d1493b4d7bc95154163fd013ab8a4",
+    "evidence": {
+      "front.png": "a33d631ad69a30c0e172810938bec24ce909786647f57939cbf1e124687d6842",
+      "front-editor.png": "dd681d26fd6208028681892f6b4d4b12f9dbc66f2d682ba859decd17c1fc9525",
+      "side.png": "c150fe9306f26fc23ebf34b75afe801663f3a4a9a0064bb3d7b165cff83d9d8a",
+      "side-editor.png": "b3de157bdd34157f2d8043f43126854f04ede2d390ea07e5110d8aac63ece41a",
+      "back.png": "163a7644f38fbde51e77badacd6d2ffb2914b47121a749fc23f65204543e89d8",
+      "back-editor.png": "581c31b236abfc4978e401ac2ef2c83670664d68186a1f35ec9a272233fc8af7",
+      "top.png": "1a62a8d35c777fe0f4caf7df374d6ca81b8fbd8a25ddb45ef8e10b002aa6e722",
+      "top-editor.png": "65f2f816d60a257a0e78ea533f3abd447633d29a4173aadd2bb1abe038c053d2",
+      "perspective.png": "c56b2f138da35bca2e75372d1809bef57a7f3d5e3b0fce11c41123d50b2d4297",
+      "perspective-editor.png": "8b1d5a0e394eebe9745e0784b227c05302dd6185296fbf59ef7cab13aa43e80d",
+      "reference_side.png": "b650e13f0b8bc3e9367c0fed21fa17fe98cc7e4cf2bb329ac9e9c9b0a07b3bba",
+      "reference_side-editor.png": "7e6cbe6b8b9eb5d2fd72f5a1a1a2af9808b1c15a5279e5131aef61c8268f0aca",
+      "reference_back.png": "55366b3bdab40e93afb67a8b3e775ccd3e1ec50beb47ed94705f824241caeb12",
+      "reference_back-editor.png": "cb3e6686615801584ddeb7035054490d735256fdc2f60e1d3ced5a9f852b6bc1"
+    }
+  },
+  {
+    "id": "ranger",
+    "cubes": 21,
+    "meshes": 14,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "0b2bf5fc021e97602fc5f8544bce26a11a6312d6db8f6bda0b0da751dce624eb",
+    "evidence": {
+      "front.png": "326192bdcd9e49acaeb47db9984536f0e1435aa0f1ead21b73be4f875e9de33d",
+      "front-editor.png": "068082dd2557a3345750a724c5b91fec9452f5a5ce94283f656dcf1459e2e41e",
+      "side.png": "2b7ab8090eef3b6910333f0889f0a53dbfae448af9575899db418980c2dc304e",
+      "side-editor.png": "abeee29d777c05a97fc42aa5a80e9ca4a3cda273d3e9eb012ce2be40c9ef13de",
+      "back.png": "2d2f822918033e1bad300d66bad7acb3e11e95ae0c464a3e16d635333f626fc9",
+      "back-editor.png": "a33b20634aa43eb9ad6e5086945bd91c0e48cff1222c644431b570abacd5a830",
+      "top.png": "e8e605b175ed3ee1277f17e2361a09a4a3302aa2cf9dbebedd10f43e64659955",
+      "top-editor.png": "b6930951d5503736ac35ae4110c985532b03ac1ca72f21f5a808edfba2edc0d7",
+      "perspective.png": "b96eea9b7428ed38ce664c01a8220f9c09480c853240bee783496f793147fdb1",
+      "perspective-editor.png": "a5a85e2bcf390b357c35ee5095af54206778e30d530c510324aca26858268bb8",
+      "reference_side.png": "2395467622f054d3a01e75cd1d34c3138dbc6d7819d3c5635078b0b8e29011a8",
+      "reference_side-editor.png": "ca7ca97ab8f90114ed6bcd50e6827c581c98cae473be70031b1c7d28ab67fa20",
+      "reference_back.png": "8eecc90b808a8918872dde8ceed8620970f6995cf6fc60bac6e2643ecef79787",
+      "reference_back-editor.png": "35d870daf40e55edc3e46eb6a04ade4126ea4b5ebedf2190b4522e25b65e5668"
+    }
+  },
+  {
+    "id": "starwarden",
+    "cubes": 20,
+    "meshes": 22,
+    "closed_meshes": true,
+    "errors": [],
+    "sha256": "fb6473cce53f6eab9745c4f1a84a1f08deae8b42f372919efc13fa257ff8ce88",
+    "evidence": {
+      "front.png": "3357ca113a9892d5b72f2aeb2e1328119d6a99fe043bdee9760b8b35d1b51f18",
+      "front-editor.png": "c11715e0b0e99d350f76ee07480cbe52a308ce0351c8b249224f76b1c991daa4",
+      "side.png": "9398b49e1be1935baa95d3f38fe2c4b8dbf1b937ee0f02601560a349000e46a6",
+      "side-editor.png": "a620c216b4e667fe5b29be321e6645f6fb4fa5423a70e7927f78ecb0836aef0c",
+      "back.png": "469dc7d2d231e1cf46dbd31ef9fb0fca7daf73bbf6bab7589f0c73f26e6a7899",
+      "back-editor.png": "5cf20938a2adfbcc2b89cee80f7500fb4884ed185aba4423be8ed5d334436c56",
+      "top.png": "52c37e02bae821e5df2275eeb4133891d7f291274e31c6bb7061e59e3e57a87f",
+      "top-editor.png": "f5826512bc715697299fc754ed0fcc46404ed82350a809a516a0310af0edd089",
+      "perspective.png": "ef7ce3413303385ca062684fb963b90aecb124e29098a92545dbef8623ffd614",
+      "perspective-editor.png": "5cbc8bf071a504c19bfef1590157f7e485480bd267016b2d00799dcbcb11f96c",
+      "reference_side.png": "9ce6d723df40f7a2aaf258f220d508d902b3388b10bbfae0efad7e7e9997ffbf",
+      "reference_side-editor.png": "9934131564298f880cf44d4e54b45282a5da5f743d6ff7f7452a89ba03d66594",
+      "reference_back.png": "901af47bc869b31014b66a0eded9a302f4a986ed935a07b253e265bf39821bcc",
+      "reference_back-editor.png": "ccecc778cb7fc4a574d240fba69a999d46a4acee35ff096a27739427506779db"
+    }
+  }
+]
