@@ -5,7 +5,7 @@
 - 六份武器 `.bbmodel` 可在 Blockbench 的 Java Block/Item 模式打开，包含真实方块坐标、单轴旋转与嵌入材质。
 - 四套防具各有 `_outer.bbmodel` / `_inner.bbmodel`，分别对应头胸靴和护腿层；按原版骨架的头、身体、手臂和腿分组，已转换为 Blockbench 的向上坐标。
 - 所有模型均使用嵌入 PNG，打开时不依赖开发机的绝对纹理路径。
-- 正式可重复导出源是 `scripts/equipment_art.py`。修改方块尺寸、分件、像素轮廓与调色板后运行下列命令；`.bbmodel` 是相同源数据生成的可编辑交付稿，直接编辑后若需要保留，须将修改同步回源定义再重新导出。
+- 正式可重复导出源是 `scripts/equipment_art.py`，四套防具的独立轮廓定义在 `scripts/equipment_armor_geometry.py`。修改方块尺寸、分件、像素轮廓与调色板后运行下列命令；`.bbmodel` 是相同源数据生成的可编辑交付稿，直接编辑后若需要保留，须将修改同步回源定义再重新导出。
 
 ```powershell
 python scripts/generate_weapon_resources.py --stage 3

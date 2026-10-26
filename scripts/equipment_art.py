@@ -11,6 +11,7 @@ import math
 import struct
 import uuid
 import zlib
+from equipment_armor_geometry import armor_geometry
 
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT = PROJECT / 'src/main/resources'
@@ -228,9 +229,80 @@ def weapon_cubes(kind):
                 box('rail_channel', [12, y + .6, 5.8], [27, y + 1.2, 6], 13)
                 box('rail_end', [27.5, y - .2, 5.8], [29, y + 2.2, 10.2], 3)
             box('rail_bridge', [10, 7, 6], [12, 13, 10], 2)
+    # Structural detail at a readable sub-voxel scale: insets, stepped edges and fasteners.
+    if kind == 'blade':
+        box('blade_fuller', [7.7, 7, 7.25], [8.15, 20, 7.5], 2)
+        box('beveled_spine', [9.3, 5, 7.6], [9.6, 20, 8.4], 2)
+        box('blade_socket', [6.4, 4, 7], [9.6, 6, 9], 2)
+        for x in (4.2, 10.8): box('guard_end', [x, 2.6, 6.3], [x + 1, 4.4, 9.7], 3)
+        for y in (-2.6, -1.2, .2, 1.6): box('grip_wrap_seam', [6.85, y, 6.85], [9.15, y + .18, 9.15], 0)
+        box('pommel_inset', [7.3, -3.8, 6.3], [8.7, -3.2, 6.5], 6)
+    elif kind == 'glaive':
+        for y in (-7, -3, 1, 5, 9, 13, 17):
+            box('shaft_socket', [7.15, y, 7.15], [8.85, y + .55, 8.85], 2)
+        box('blade_recess', [10, 26.5, 7.02], [15.8, 29.5, 7.3], 1)
+        box('blade_inset_plate', [10.4, 27, 6.9], [15.4, 29, 7.02], 2)
+        for x in (10, 15): box('head_rivet', [x, 22.3, 7], [x + .55, 22.85, 7.3], 4)
+        box('split_edge_lower', [13, 22.5, 7.6], [16.5, 23, 8.4], 4)
+        box('head_lock', [6.5, 20, 6.6], [10, 22, 9.4], 3)
+        box('head_lock_light', [7, 20.5, 6.3], [9, 21, 6.6], 9)
+    elif kind == 'greatblade':
+        for y in (9, 13, 17, 21):
+            box('blade_facet', [4.5, y, 6.8], [6.5, y + 2.6, 7], 2)
+            box('spine_facet', [9.5, y, 6.8], [11.5, y + 2.6, 7], 2)
+            box('channel_bridge', [6.6, y, 6.6], [9.4, y + .35, 6.8], 12)
+        box('edge_bevel', [3.65, 6, 7.5], [4, 23, 8.5], 4)
+        for x in (3, 11): box('guard_energy', [x, 4.5, 6.2], [x + 2, 5.2, 6.5], 13)
+        box('pommel_crystal', [7.2, -4.5, 7.2], [8.8, -4, 8.8], 13)
+    else:
+        accent = 10 if kind == 'pistol' else 9 if kind == 'carbine' else 13
+        box('receiver_seam', [1.6, 10.8, 5.5], [10.2, 11.15, 5.8], 2)
+        box('service_panel', [2, 8, 5.45], [4.5, 10.5, 5.8], 2)
+        box('panel_inset', [2.5, 8.5, 5.3], [4, 10, 5.45], 1)
+        for x in (1.5, 9.5):
+            for y in (7.6, 11.6): box('receiver_fastener', [x, y, 5.3], [x + .45, y + .45, 5.8], 1)
+        for y in (2, 3, 4, 5): box('grip_rib', [1.35, y, 6.8], [4.65, y + .25, 9.2], 0)
+        box('trigger_guard_front', [6, 3.8, 7.4], [6.5, 7, 8.6], 2)
+        box('trigger_guard_base', [3.5, 3.8, 7.4], [6.5, 4.25, 8.6], 2)
+        box('trigger', [4.8, 5.2, 7.7], [5.2, 6.8, 8.3], 1)
+        box('sight_rear_notch', [4.7, 13.8, 6.8], [5.3, 14.35, 9.2], 2)
+        box('receiver_charge_strip', [6, 8, 5.4], [8.5, 8.4, 5.8], accent)
+        if kind == 'pistol':
+            box('coil_inner_bore', [11, 9.3, 7.4], [22, 10.3, 8.6], 1)
+            for x in (11.3, 19.2):
+                for y in (7.4, 11.6): box('cage_bolt', [x, y, 5.5], [x + .5, y + .5, 5.8], 4)
+            for z in (6.3, 9.1): box('muzzle_cheek', [21.7, 8, z], [22.7, 11.8, z + .6], 2)
+            box('muzzle_top', [21.7, 11.3, 6.3], [22.7, 11.8, 9.7], 3)
+            box('cell_latch', [7, 3.3, 6.5], [9.5, 3.8, 9.5], 2)
+        elif kind == 'carbine':
+            for x in (11.5, 13.5, 15.5, 17.5, 19.5):
+                box('handguard_rib', [x, 7.3, 5.35], [x + .5, 8, 5.8], 2)
+                box('top_rail_tooth', [x, 12, 6.5], [x + .8, 12.8, 9.5], 1)
+            box('stock_cheek_rest', [-6, 12, 6], [-.5, 13, 10], 2)
+            for y in (5, 6.5, 8, 9.5): box('stock_pad', [-7.4, y, 6], [-7, y + .7, 10], 0)
+            box('cell_release', [-3, 5.5, 5.35], [-1, 6.4, 5.8], 2)
+            box('emitter_inset', [24, 8.5, 7], [24.2, 10.5, 9], 0)
+            box('emitter_core', [24.2, 9.1, 7.6], [24.3, 9.9, 8.4], 9)
+        else:
+            for x in (13, 18, 23):
+                for y in (6.5, 10.7):
+                    box('rail_clamp', [x, y, 5.65], [x + 1.2, y + 2.8, 10.35], 2)
+                    box('rail_clamp_inset', [x + .2, y + .7, 5.4], [x + 1, y + 2, 5.65], 12)
+            for x in (1, 2, 3, 4): box('capacitor_cooling_fin', [x, 7.5, 5.15], [x + .4, 11.5, 10.85], 1)
+            box('capacitor_lower_bank', [5, 4.8, 6], [11.5, 7.4, 10], 11)
+            for x in (5.5, 7.5, 9.5): box('capacitor_cell', [x, 5.2, 5.7], [x + 1.2, 6.8, 6], 12)
+            box('upper_reinforcement', [8, 13, 6], [16, 14, 10], 2)
+            box('rail_upper_bus', [12, 13, 7], [27, 13.35, 9], 12)
+            box('focusing_aperture_top', [28, 12, 5.5], [30, 13.6, 10.5], 3)
+            box('focusing_aperture_bottom', [28, 6.6, 5.5], [30, 8, 10.5], 3)
+            box('stock_shock_absorber', [-6, 7, 7], [0, 8.5, 9], 2)
+            for x in (-5, -3, -1): box('stock_damper_ring', [x, 6.8, 6.8], [x + .45, 8.7, 9.2], 1)
+            # Widen actual receiver/rails by 35%, not just the inventory thumbnail.
+            for cube in cubes:
+                for end in ('from', 'to'): cube[end][2] = round(8 + (cube[end][2] - 8) * 1.35, 4)
     if kind in ('pistol', 'carbine', 'railgun'):
         for cube in cubes:
-            if cube['name'] in ('angled_grip', 'grip_heel'):
+            if cube['name'] in ('angled_grip', 'grip_heel', 'grip_rib'):
                 cube['rotation'] = {'origin': [3, 7, 8], 'axis': 'z', 'angle': -22.5}
     if kind == 'greatblade':
         for cube in cubes:
@@ -258,13 +330,13 @@ def generate_weapon(name, kind):
         if 'rotation' in cube: element['rotation'] = cube['rotation']
         elements.append(element)
     gun = kind in ('pistol', 'carbine', 'railgun')
-    scale = .52 if kind == 'pistol' else .43 if gun else .38 if kind == 'glaive' else .55
+    scale = .52 if kind == 'pistol' else .51 if kind == 'railgun' else .43 if gun else .38 if kind == 'glaive' else .55
     hand = {'credit': 'StarboundMC approved V01 cuboid source', 'textures': {'palette': f'starboundmc:{texture_name}', 'particle': f'starboundmc:{texture_name}'},
             'elements': elements, 'display': {
                 'firstperson_righthand': {'rotation': [0, 110, 0] if gun else [0, -90, 25], 'translation': [-1.5, 2.2, -2] if gun else [1.13, 3.2 if kind == 'glaive' else 4.2, 1.13], 'scale': [scale] * 3},
                 'firstperson_lefthand': {'rotation': [0, -70, 0] if gun else [0, 90, -25], 'translation': [-1.5, 2.2, -2] if gun else [1.13, 3.2 if kind == 'glaive' else 4.2, 1.13], 'scale': [scale] * 3},
-                'thirdperson_righthand': {'rotation': [0, -90, 55] if gun else [0, 0, 0], 'translation': [0, 3, .5], 'scale': [.58] * 3},
-                'thirdperson_lefthand': {'rotation': [0, 90, -55] if gun else [0, 0, 0], 'translation': [0, 3, .5], 'scale': [.58] * 3},
+                'thirdperson_righthand': {'rotation': [0, 90, 0] if gun else [0, 0, 0], 'translation': [0, 1.5, -2] if gun else [0, 3, .5], 'scale': [.66 if kind == 'railgun' else .58] * 3},
+                'thirdperson_lefthand': {'rotation': [0, -90, 0] if gun else [0, 0, 0], 'translation': [0, 1.5, -2] if gun else [0, 3, .5], 'scale': [.66 if kind == 'railgun' else .58] * 3},
                 'ground': {'translation': [0, 3, 0], 'scale': [.35] * 3}, 'fixed': {'rotation': [0, 180, 0], 'scale': [.55] * 3}}}
     write(ASSETS / f'models/item/{name}_hand.json', hand)
     write(ASSETS / f'models/item/{name}.json', {'loader': 'neoforge:separate_transforms',
@@ -317,96 +389,35 @@ def armor_icon(profile, part):
             im.rect(x - 1, 23, w + 1, 5, p[3]); im.rect(x - 1, 26, w + 1, 2, p[1])
             im.rect(x + 2, 11, 2 if profile != 'ranger' else 1, 4, p[6])
             if star: im.rect(x, 23, w - 1, 1, p[7])
+    # Inventory silhouettes reflect the differentiated wearable shells.
+    if part == 'helmet':
+        if profile == 'pioneer':
+            im.rect(3, 10, 26, 2, p[3]); im.rect(11, 20, 10, 6, p[2])
+            for y in (21, 23): im.rect(13, y, 6, 1, p[0])
+            for x in (8, 17): im.rect(x, 14, 7, 4, p[5])
+        elif profile == 'ranger':
+            im.rect(3, 2, 1, 13, p[1]); im.rect(3, 1, 1, 2, p[6])
+        elif star:
+            for x in (5, 24): im.poly([(x, 1), (x + 3, 3), (x + 2, 15), (x - 1, 12)], p[4])
+    elif part == 'chestplate':
+        if profile == 'pioneer':
+            for x in (9, 21): im.rect(x, 7, 2, 17, p[5])
+        elif heavy:
+            for x in (1, 24):
+                for y in (6, 9, 12): im.rect(x, y, 7, 2, p[3])
+            for y in (17, 21): im.rect(10, y, 12, 1, p[3])
+        elif profile == 'ranger':
+            im.poly([(21, 6), (23, 7), (12, 26), (10, 25)], p[5])
+            im.rect(23, 7, 5, 7, p[1]); im.rect(23, 9, 5, 1, p[5])
+        else:
+            im.poly([(1, 3), (10, 6), (9, 11), (3, 8)], p[4]); im.poly([(31, 3), (22, 6), (23, 11), (29, 8)], p[4])
+            for x in (7, 20): im.rect(x, 27, 5, 3, p[3])
+    elif part == 'leggings':
+        for x in (7, 18):
+            if heavy or star:
+                for y in (11, 14, 17): im.rect(x, y, 7, 1, p[3])
+            elif profile == 'pioneer': im.rect(x - 1, 10, 3, 6, p[2])
     im.outline(p[0]); return im
-
-
-def armor_geometry(profile, inner):
-    parts = {n: [] for n in ['head', 'hat', 'body', 'right_arm', 'left_arm', 'right_leg', 'left_leg']}
-    def box(part, name, xyz, size, material): parts[part].append({'name': name, 'from': xyz, 'size': size, 'material': material})
-    heavy, star = profile == 'vanguard', profile == 'starwarden'
-    if inner:
-        box('body', 'hip_belt', [-4.2, 9.5, -2.2], [8.4, 2.6, 4.4], 1)
-        box('body', 'belt_buckle', [-1.1, 10, -2.7], [2.2, 1.6, .5], 3)
-        for leg in ['right_leg', 'left_leg']:
-            box(leg, 'flexible_trouser', [-2.34, -.2, -2.34], [4.68, 11.8, 4.68], 1)
-            box(leg, 'thigh_plate', [-2.3, .7, -2.7], [4.6, 3.5 if heavy else 2.8, .8], 2)
-            box(leg, 'knee_frame', [-2.4, 5, -2.9], [4.8, 2.8, 1], 3)
-            box(leg, 'knee_plate', [-1.8, 5.4, -3.05], [3.6, 2, .3], 2)
-            if heavy: box(leg, 'orange_thigh', [-.5, 1, -2.8], [1, 3, .2], 6)
-            elif profile in ('ranger', 'starwarden'): box(leg, 'leg_channel', [-1.7, 1, -2.85], [.45, 3, .25], 6)
-        return parts
-    # Cuboid shell and separate inset visor geometry; head is fully helmeted.
-    box('head', 'helmet_shell', [-4.4, -8.4, -4.4], [8.8, 8.8, 8.8], 2)
-    box('head', 'visor_recess', [-3.6, -5.6, -4.58], [7.2, 3.8, .25], 0)
-    box('head', 'brow', [-4.5, -6.5, -4.8], [9, .8, .65], 3)
-    box('head', 'chin_guard', [-4.5, -1.7, -4.8], [9, 1.2, .65], 3)
-    box('head', 'helmet_crown_plate', [-3.7, -8.65, -3.7], [7.4, .35, 7.4], 3)
-    box('head', 'rear_helmet_panel', [-3.7, -7.7, 4.4], [7.4, 2.3, .4], 3)
-    box('head', 'rear_helmet_inset', [-2.7, -7.3, 4.8], [5.4, 1.4, .2], 2)
-    for x in (-4.8, 3.9): box('head', 'helmet_side', [x, -5.8, -4.7], [.9, 4.5, .6], 3)
-    if profile == 'pioneer':
-        box('head', 'lamp_housing', [-1.4, -8.2, -5], [2.8, 2.7, .8], 1)
-        box('head', 'amber_mining_lamp', [-1, -7.8, -5.3], [2, 1.9, .35], 6)
-        box('head', 'lamp_lens', [-.5, -7.3, -5.4], [1, .9, .15], 7)
-    elif heavy:
-        box('head', 'orange_brow', [-.7, -8.6, -4.9], [1.4, 2.8, .35], 6)
-        box('head', 't_visor_left', [-3.4, -4.6, -4.9], [2.5, 3.1, .4], 2)
-        box('head', 't_visor_right', [.9, -4.6, -4.9], [2.5, 3.1, .4], 2)
-    else:
-        box('head', 'lit_visor', [-3.5, -4.2, -5.1], [7, .8, .45], 7 if star else 6)
-        box('head', 'sensor', [-5, -4.7, -1.5], [.7, 2, 2], 3)
-        box('head', 'sensor_light', [-5.15, -4.3, -1], [.2, 1, 1], 6)
-        if star: box('head', 'central_crest', [-.75, -9, -4.6], [1.5, 3, .7], 6)
-    box('body', 'torso_undersuit', [-4.34, -.3, -2.34], [8.68, 12.6, 4.68], 1)
-    box('body', 'chest_plate', [-4.4, .8, -2.8], [8.8, 7.6, .9], 2)
-    box('body', 'back_plate', [-4.3, .8, 2], [8.6, 7.5, .8], 2)
-    box('body', 'lower_belt', [-4.2, 9.4, -2.6], [8.4, 1.5, 5.2], 1)
-    if profile == 'pioneer':
-        box('body', 'amber_chest_stripe', [-3.8, 2.7, -2.95], [7.6, .6, .2], 6)
-        for x in (-3.5, .6): box('body', 'utility_pocket', [x, 5, -3.4], [2.9, 2.8, .8], 1)
-        box('body', 'back_identification', [-3.5, 2, 2.8], [7, .55, .2], 6)
-    elif heavy:
-        for x in (-4.1, .3):
-            box('body', 'stacked_breastplate', [x, 1.6, -3.35], [3.8, 3.1, .8], 3)
-            box('body', 'back_reinforcement', [x, 1.3, 2.8], [3.8, 5.4, .6], 2)
-        box('body', 'abdomen_plate', [-2.9, 5.6, -3], [5.8, 2.2, .7], 3)
-        box('body', 'orange_abdomen', [-.65, 6.1, -3.75], [1.3, 1.3, .2], 6)
-        box('body', 'back_spine', [-.5, 1, 3.5], [1, 7.5, .5], 3)
-    elif star:
-        box('body', 'core_frame', [-1.9, 2, -3.5], [3.8, 3.8, .7], 3)
-        box('body', 'starcore', [-1.2, 2.7, -3.8], [2.4, 2.4, .4], 6)
-        box('body', 'core_light', [-.6, 3.3, -3.95], [1.2, 1.2, .2], 7)
-        for cube in parts['body']:
-            if cube['name'] in ('core_frame', 'starcore', 'core_light'):
-                cube['rotation'] = {'origin': [0, 3.9, -3.6], 'axis': 'z', 'angle': 45}
-        for x in (-3, 2.6): box('body', 'power_channel', [x, 6, -3], [.4, 2.8, .25], 6)
-        box('body', 'back_distribution', [-.5, 1.2, 2.9], [1, 6, .4], 6)
-        for x in (-4.5, 2): box('body', 'angular_hip_plate', [x, 9, -2.9], [2.5, 2.8, 1], 2)
-    else:
-        box('body', 'light_harness', [-2.6, 2, -3], [5.2, 1.2, .3], 5)
-        box('body', 'ranger_status', [-1.5, 3.5, -3.1], [3, .4, .3], 6)
-        for y in (1.5, 4, 6.5): box('body', 'spine_segment', [-1.6, y, 2.8], [3.2, 1.4, .5], 3)
-    for arm, sign in [('right_arm', -1), ('left_arm', 1)]:
-        x = -3 if sign < 0 else -1
-        # Cover the player's optional jacket/sleeve skin layer as well as the base skin.
-        box(arm, 'undersleeve', [x - .34, -2.34, -2.34], [4.68, 12.68, 4.68], 1)
-        shoulder_width = 5.8 if heavy else 4.7 if star else 4 if profile == 'pioneer' else 3.8
-        box(arm, 'shoulder_guard', [x - .35, -2.5, -2.5], [shoulder_width, 3.5 if heavy else 2.8, 5], 3)
-        box(arm, 'shoulder_plate', [x - .2, -2.6, -2.6], [shoulder_width - .3, 2.2, 5.2], 2)
-        if heavy or star:
-            box(arm, 'shoulder_outer_rim', [x - .45, -2.85, -2.8], [shoulder_width + .2, .55, 5.6], 3)
-            box(arm, 'shoulder_lower_layer', [x - .5, .7, -2.6], [shoulder_width + .2, 1, 5.2], 3)
-        box(arm, 'forearm_guard', [x - .5, 5, -2.7], [5, 3.8, 5.4], 3)
-        box(arm, 'forearm_face', [x + .2, 5.4, -2.8], [3.6, 3, .4], 2)
-        box(arm, 'identification', [x + 1.3, 5.8, -3], [.7, 2.1, .25], 6)
-    for leg in ['right_leg', 'left_leg']:
-        box(leg, 'armored_boot', [-2.25, 8, -2.3], [4.5, 4.2, 4.6], 2)
-        box(leg, 'boot_cuff', [-2.4, 7.8, -2.45], [4.8, .9, 4.9], 3)
-        box(leg, 'boot_toe', [-2.3, 10.5, -3.3], [4.6, 1.5, 5.7], 3)
-        box(leg, 'sole', [-2.4, 11.9, -3.4], [4.8, .5, 5.9], 1)
-        box(leg, 'ankle_indicator', [-.6, 8.8, -2.55], [1.2, .9, .3], 6)
-        if heavy: box(leg, 'heavy_shin', [-2.4, 6.3, -2.8], [4.8, 3.5, .8], 3)
-    return parts
 
 
 def generate_armor(profile):

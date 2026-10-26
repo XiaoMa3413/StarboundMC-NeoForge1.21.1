@@ -62,7 +62,7 @@ public final class ArmorRenderSmoke {
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!enabled() || finished) return;
         var mc = Minecraft.getInstance();
-        var output = mc.gameDirectory.toPath().resolve("screenshots/armor-approved-v01-final");
+        var output = mc.gameDirectory.toPath().resolve("screenshots/armor-detail-v02");
         if (start == 0) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             if (languageLoad == null) {

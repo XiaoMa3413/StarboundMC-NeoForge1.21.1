@@ -26,6 +26,10 @@ public final class WeaponRenderSmoke {
     private static long start, selected;
     private static int stage;
     private static boolean reloaded;
+    private static int itemIndex() { return stage < 14 ? stage / 2 : new int[]{2, 4, 6}[(stage - 14) / 6]; }
+    private static boolean leftHand() { return stage < 14 ? stage % 2 == 1 : (stage - 14) % 6 >= 3; }
+    private static float pitch() { return stage < 14 ? 0 : new float[]{-30, 0, 30}[(stage - 14) % 3]; }
+    private static String label() { return IDS[itemIndex()] + (leftHand() ? "-left" : "-right") + (stage < 14 ? "" : "-pose-" + (int)pitch()); }
     private static java.util.concurrent.CompletableFuture<Void> languageLoad;
     private static final String[] IDS = {"survival_knife", "tungsten_sabre", "coil_pistol", "durasteel_glaive",
             "plasma_carbine", "starcore_blade", "starcore_railgun"};
@@ -48,14 +52,46 @@ public final class WeaponRenderSmoke {
                 15728880, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, g.pose(), buffers, mc.level, 0);
         buffers.endBatch();
         g.pose().popPose();
+        g.fill(320, 100, 600, 400, 0xff17212c);
+        g.drawString(mc.font, "THIRD PERSON / FRONT + SIDE", 330, 108, 0xffe1edf2);
+        renderPlayer(g, 380, 260, 0);
+        renderPlayer(g, 510, 260, 90);
         event.getGuiGraphics().renderTooltip(mc.font, mc.player.getMainHandItem(), 28, 42);
+    }
+
+    private static void renderPlayer(net.minecraft.client.gui.GuiGraphics g, float x, float y, float angle) {
+        var player = Minecraft.getInstance().player;
+        float body = player.yBodyRot, yaw = player.getYRot(), head = player.yHeadRot, oldHead = player.yHeadRotO;
+        player.yBodyRot = player.yHeadRot = player.yHeadRotO = 180 + angle; player.setYRot(180 + angle);
+        net.minecraft.client.gui.screens.inventory.InventoryScreen.renderEntityInInventory(g, x, y, 95,
+                new org.joml.Vector3f(0, player.getBbHeight() / 2, 0),
+                new org.joml.Quaternionf().rotateZ((float)Math.PI), new org.joml.Quaternionf(), player);
+        player.yBodyRot = body; player.yHeadRot = head; player.yHeadRotO = oldHead; player.setYRot(yaw);
+    }
+
+    private static void verifyMuzzle() {
+        var mc = Minecraft.getInstance();
+        if (!(mc.player.getMainHandItem().getItem() instanceof com.starboundmc.weapon.EnergyGunItem)) return;
+        var renderer = (net.minecraft.client.renderer.entity.player.PlayerRenderer) mc.getEntityRenderDispatcher().getRenderer(mc.player);
+        var model = renderer.getModel();
+        model.setupAnim(mc.player, 0, 0, 0, 0, pitch());
+        var poses = new com.mojang.blaze3d.vertex.PoseStack();
+        model.translateToHand(mc.player.getMainArm(), poses);
+        poses.mulPose(com.mojang.math.Axis.XP.rotationDegrees(-90));
+        poses.mulPose(com.mojang.math.Axis.YP.rotationDegrees(180));
+        var context = leftHand() ? net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_LEFT_HAND : net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND;
+        mc.getItemRenderer().getModel(mc.player.getMainHandItem(), mc.level, mc.player, 0).applyTransform(context, poses, leftHand());
+        var direction = poses.last().pose().transformDirection(new org.joml.Vector3f(1, 0, 0)).normalize();
+        float rad = (float)Math.toRadians(pitch());
+        var aim = new org.joml.Vector3f(0, (float)Math.sin(rad), -(float)Math.cos(rad));
+        if (direction.dot(aim) < .85f) throw new IllegalStateException("Muzzle is not forward: " + label() + " direction=" + direction + " aim=" + aim);
     }
 
     @SubscribeEvent
     public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!enabled() || finished) return;
         var mc = Minecraft.getInstance();
-        Path output = mc.gameDirectory.toPath().resolve("screenshots/weapons-approved-v01-final");
+        Path output = mc.gameDirectory.toPath().resolve("screenshots/weapons-detail-v02");
         if (!started) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             String language = System.getProperty("starboundmc.debug.weaponSmokeLanguage", "zh_cn");
@@ -94,26 +130,32 @@ public final class WeaponRenderSmoke {
                 mc.player.getInventory().setItem(slot, stack);
                 mc.gameMode.handleCreativeModeItemAdd(stack, 36 + slot);
             }
-            mc.player.getInventory().selected = stage / 2;
-            mc.player.setMainArm(stage % 2 == 0 ? net.minecraft.world.entity.HumanoidArm.RIGHT : net.minecraft.world.entity.HumanoidArm.LEFT);
+            mc.player.getInventory().selected = itemIndex();
+            mc.player.setMainArm(leftHand() ? net.minecraft.world.entity.HumanoidArm.LEFT : net.minecraft.world.entity.HumanoidArm.RIGHT);
+            mc.options.keyShift.setDown(stage >= 14 && (stage - 14) % 3 == 1);
+            mc.player.setItemInHand(InteractionHand.OFF_HAND, stage >= 14 && (stage - 14) % 3 == 2 ? new ItemStack(net.minecraft.world.item.Items.SHIELD) : ItemStack.EMPTY);
             var active = mc.getItemRenderer().getModel(mc.player.getMainHandItem(), mc.level, mc.player, 0);
-            if (stage / 2 > 0) {
+            if (itemIndex() > 0) {
                 var gui = active.applyTransform(net.minecraft.world.item.ItemDisplayContext.GUI, new com.mojang.blaze3d.vertex.PoseStack(), false);
                 var hand = active.applyTransform(net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, new com.mojang.blaze3d.vertex.PoseStack(), false);
-                var expected = ResourceLocation.fromNamespaceAndPath("starboundmc", "item/" + IDS[stage / 2]);
+                var expected = ResourceLocation.fromNamespaceAndPath("starboundmc", "item/" + IDS[itemIndex()]);
                 if (gui == hand || !gui.getParticleIcon().contents().name().equals(expected)
                         || gui.getQuads(null, null, net.minecraft.util.RandomSource.create()).isEmpty())
                     throw new IllegalStateException("Missing rendered GUI sprite: " + expected);
             }
-            mc.player.setXRot(0); mc.player.setYRot(0);
+            mc.player.setXRot(pitch()); mc.player.setYRot(0);
             selected = System.nanoTime(); return;
         }
-        if ((System.nanoTime() - selected) / 1e9 < 3) return;
-        try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(IDS[stage / 2] + (stage % 2 == 0 ? "-right" : "-left") + ".png")); }
-        Files.writeString(output.resolve(IDS[stage / 2] + (stage % 2 == 0 ? "-right" : "-left") + ".txt"),
-                "item=" + IDS[stage / 2] + "\nmaxDamage=" + mc.player.getMainHandItem().getMaxDamage() + "\n");
-        if (++stage == IDS.length * 2) {
-            Files.writeString(output.resolve("complete.txt"), "Rendered 7 items in both hands, separate inventory icons and a resource reload.\n");
+        if ((System.nanoTime() - selected) / 1e9 < 2) return;
+        verifyMuzzle();
+        if (stage >= 14 && (stage - 14) % 3 == 1 && !mc.player.isCrouching())
+            throw new IllegalStateException("Crouch input was not applied: " + label());
+        if (stage >= 14 && (stage - 14) % 3 == 2 && !mc.player.getOffhandItem().is(net.minecraft.world.item.Items.SHIELD))
+            throw new IllegalStateException("Offhand fixture missing shield: " + label());
+        try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(label() + ".png")); }
+        Files.writeString(output.resolve(label() + ".txt"), "item=" + IDS[itemIndex()] + "\npitch=" + pitch() + "\ncrouch=" + mc.player.isCrouching() + "\n");
+        if (++stage == 32) {
+            Files.writeString(output.resolve("complete.txt"), "32 views: 7 items in both hands, three guns with +/-30 degree pitch, crouch, offhand shield, forward muzzle matrix and resource reload.\n");
             finished = true; mc.stop();
         } else { selected = 0; languageLoad = null; }
     }

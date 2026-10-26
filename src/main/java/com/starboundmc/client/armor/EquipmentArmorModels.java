@@ -72,6 +72,7 @@ public final class EquipmentArmorModels {
                 default -> PartPose.ZERO;
             };
             var bone = mesh.getRoot().addOrReplaceChild(part, cubes, pose);
+            int rotatedIndex = 0;
             for (var cube : rotated) {
                 var from = cube.getAsJsonArray("from"); var size = cube.getAsJsonArray("size");
                 var pivot = cube.getAsJsonObject("rotation").getAsJsonArray("origin");
@@ -79,7 +80,7 @@ public final class EquipmentArmorModels {
                 var rotatedCube = CubeListBuilder.create().texOffs(material % 4 * 64, material / 4 * 64).addBox(
                         from.get(0).getAsFloat() - pivot.get(0).getAsFloat(), from.get(1).getAsFloat() - pivot.get(1).getAsFloat(),
                         from.get(2).getAsFloat() - pivot.get(2).getAsFloat(), size.get(0).getAsFloat(), size.get(1).getAsFloat(), size.get(2).getAsFloat());
-                bone.addOrReplaceChild(cube.get("name").getAsString(), rotatedCube, PartPose.offsetAndRotation(
+                bone.addOrReplaceChild(cube.get("name").getAsString() + "_" + rotatedIndex++, rotatedCube, PartPose.offsetAndRotation(
                         pivot.get(0).getAsFloat(), pivot.get(1).getAsFloat(), pivot.get(2).getAsFloat(), 0, 0,
                         (float)Math.toRadians(cube.getAsJsonObject("rotation").get("angle").getAsDouble())));
             }

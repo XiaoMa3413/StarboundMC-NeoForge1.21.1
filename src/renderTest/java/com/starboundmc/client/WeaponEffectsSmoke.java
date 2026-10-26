@@ -43,7 +43,7 @@ public final class WeaponEffectsSmoke {
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!Boolean.getBoolean("starboundmc.debug.weaponEffectsSmoke") || finished) return;
         var mc = Minecraft.getInstance();
-        Path output = mc.gameDirectory.toPath().resolve("screenshots/approved-art-effects");
+        Path output = mc.gameDirectory.toPath().resolve("screenshots/equipment-detail-effects");
         if (started == 0) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             started = System.nanoTime(); Files.createDirectories(output); Files.deleteIfExists(output.resolve("complete.txt"));

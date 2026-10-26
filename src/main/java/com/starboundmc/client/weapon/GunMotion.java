@@ -15,7 +15,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.extensions.common.*;
 
-/** First-person model motion only; never changes aim or authoritative charge. */
+/** Cosmetic held-gun poses and first-person motion; never changes authoritative aim or charge. */
 @EventBusSubscriber(modid = "starboundmc", value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public final class GunMotion implements IClientItemExtensions {
     private static Item shotItem;
@@ -36,6 +36,27 @@ public final class GunMotion implements IClientItemExtensions {
         shotTime = System.nanoTime(); acknowledgedShots++;
     }
     public static void clear() { shotItem = null; lastPull = lastKick = 0; }
+
+    public static void alignCrouchedPose(net.minecraft.client.model.HumanoidModel<?> model,
+            net.minecraft.world.entity.LivingEntity entity) {
+        if (!model.crouching || !(entity.getMainHandItem().getItem() instanceof EnergyGunItem)) return;
+        var pose = entity.getMainArm() == HumanoidArm.RIGHT ? model.rightArmPose : model.leftArmPose;
+        if (pose != net.minecraft.client.model.HumanoidModel.ArmPose.CROSSBOW_HOLD
+                || entity.isFallFlying() || entity.isVisuallySwimming()) return;
+        // Vanilla adds 0.4 rad to both arms after CROSSBOW_HOLD. Undo only that cosmetic
+        // offset; preserve the lowered shoulder/body, head tracking and breathing motion.
+        model.rightArm.xRot -= .4f;
+        model.leftArm.xRot -= .4f;
+    }
+
+    @Override public net.minecraft.client.model.HumanoidModel.ArmPose getArmPose(
+            net.minecraft.world.entity.LivingEntity entity, net.minecraft.world.InteractionHand hand, ItemStack stack) {
+        // Native pose follows replicated head angles for local and remote players alike.
+        // Leave swimming, flight and active offhand use to vanilla animation.
+        if (hand != net.minecraft.world.InteractionHand.MAIN_HAND || entity.isFallFlying() || entity.isVisuallySwimming()
+                || (entity.isUsingItem() && entity.getUsedItemHand() != hand)) return null;
+        return net.minecraft.client.model.HumanoidModel.ArmPose.CROSSBOW_HOLD;
+    }
 
     @Override public boolean applyForgeHandTransform(PoseStack poses, LocalPlayer player, HumanoidArm arm,
             ItemStack stack, float partialTick, float equip, float swing) {

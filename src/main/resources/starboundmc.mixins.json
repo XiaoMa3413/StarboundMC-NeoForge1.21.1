@@ -4,5 +4,6 @@
   "package": "com.starboundmc.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": ["EvaPlayerMixin", "EvaConnectionMixin"],
+  "client": ["HumanoidGunPoseMixin"],
   "injectors": { "defaultRequire": 1 }
 }
