@@ -1,0 +1,56 @@
+{
+  "approval": "用户已审查 V01，并明确确认开始制作",
+  "reference_directory": "概念图/2026-10-26_武器与防具_V01",
+  "assets": [
+    {
+      "id": "W01",
+      "filename": "W01_钨钢军刀_图标与模型概念_V01.png",
+      "sha256": "995a5d98fb9fcf29aeffb9276fd0ad49a6b0f3a3c119a27182f01b2d73372db8"
+    },
+    {
+      "id": "W02",
+      "filename": "W02_线圈手枪_图标与模型概念_V01.png",
+      "sha256": "5a78cb7a9d94ee5396309595e8a5aa09f3a9ff561f8582ed2fe8883132253275"
+    },
+    {
+      "id": "W03",
+      "filename": "W03_耐钢战戟_图标与模型概念_V01.png",
+      "sha256": "3acb36c2ff1896996ae6c101072fec0090c78bf621bd115bcef1735451aa7bf6"
+    },
+    {
+      "id": "W04",
+      "filename": "W04_等离子卡宾枪_图标与模型概念_V01.png",
+      "sha256": "8d63c1c51104d1e600db5a258915d916ca0f924268912f68582f04f081cd58e3"
+    },
+    {
+      "id": "W05",
+      "filename": "W05_星核裁决刃_图标与模型概念_V01.png",
+      "sha256": "2d075047399ad3c02231d8dfb4b123e75a02b5d04eb5c461e7e49001164a2ad2"
+    },
+    {
+      "id": "W06",
+      "filename": "W06_星核轨道炮_图标与模型概念_V01.png",
+      "sha256": "97f490420eaf87dc335764697f876ab002e59ce2465e7a6763a3e38ac63431ef"
+    },
+    {
+      "id": "A01",
+      "filename": "A01_钨钢拓荒套_四部件图标与三视图_V01.png",
+      "sha256": "2830fd26e415afb78654a24ac883dc4be43d63af5042f90a754b629bb79f902c"
+    },
+    {
+      "id": "A02",
+      "filename": "A02_耐钢先锋套_四部件图标与三视图_V01.png",
+      "sha256": "1d01d8beaeea0fdbd3a930b6fc1bdf0807c6b1c19c2ac2a02dd01214d8e0d91e"
+    },
+    {
+      "id": "A03",
+      "filename": "A03_钛合金游骑套_四部件图标与三视图_V01.png",
+      "sha256": "e3b0b07d90aa4b0214b9a1143f0eb2b3aab29795796f68d22119d3c14a7d2223"
+    },
+    {
+      "id": "A04",
+      "filename": "A04_星核守望套_四部件图标与三视图_V01.png",
+      "sha256": "a662a95c50b059a3e7200f8d3b1d49b54cc783fdae25f452771237ee8b0d9de5"
+    }
+  ]
+}

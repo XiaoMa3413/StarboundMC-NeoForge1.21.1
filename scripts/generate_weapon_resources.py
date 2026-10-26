@@ -3,6 +3,7 @@ Run with --stage 1, 2, or 3 while bringing up each weapon tier.
 """
 import argparse
 import json
+import equipment_art
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / 'src/main/resources'
@@ -34,57 +35,12 @@ def printing(name, materials, cost, seconds, count=1, recipe=None):
         'type': 'starboundmc:voxel_printing', 'materials': entries, 'print_seconds': seconds,
         'result': {'id': 'starboundmc:' + name, 'count': count}})
 
-def model(kind, accent):
-    cubes = []
-    gun = kind in ('pistol', 'carbine', 'railgun')
-    def box(start, end, texture):
-        cubes.append({'from': start, 'to': end, 'faces': {
-            face: {'texture': '#' + texture} for face in ['north', 'south', 'east', 'west', 'up', 'down']}})
-    if kind in ('blade', 'glaive', 'greatblade'):
-        box([7, 0, 7], [9, 5, 9], 'grip')
-        box([4, 4, 6.5], [12, 5.5, 9.5], 'metal')
-        width = 2 if kind == 'blade' else 3
-        box([8-width, 5.5, 7], [8+width, 13.5, 9], 'metal')
-        box([7.5, 5.5, 6.8], [8.5, 14.5, 9.2], 'accent')
-        box([7, 13.5, 7], [9, 16, 9], 'metal')
-        if kind == 'glaive':
-            box([3, 10, 7], [6, 14, 9], 'accent')
-            box([10, 8, 7], [12, 12, 9], 'metal')
-        if kind == 'greatblade':
-            box([3, 6, 7], [5, 12, 9], 'accent')
-            box([11, 6, 7], [13, 12, 9], 'accent')
-    else:
-        box([3, 2, 7], [6, 8, 9], 'grip')
-        box([2, 7, 6], [11, 11, 10], 'metal')
-        box([5, 8, 5.8], [9, 10, 10.2], 'accent')
-        box([10, 8, 7], [16, 10, 9], 'grip')
-        box([7, 11, 7], [9, 12.5, 9], 'grip')
-        if kind != 'pistol':
-            box([0, 5, 6.5], [3, 10, 9.5], 'grip')
-            box([8, 4, 7], [10, 7, 9], 'metal')
-        if kind == 'railgun':
-            box([10, 7, 5.5], [16, 11, 6.5], 'accent')
-            box([10, 7, 9.5], [16, 11, 10.5], 'accent')
-    return {'credit': 'StarboundMC code-native weapon geometry', 'textures': {
-        'particle': 'minecraft:block/iron_block', 'metal': 'minecraft:block/iron_block',
-        'grip': 'minecraft:block/deepslate_tiles', 'accent': 'minecraft:block/' + accent},
-        'elements': cubes, 'display': {
-            'gui': {'rotation': [25, 225, 0], 'translation': [0, 0, 0], 'scale': [0.95]*3},
-            'ground': {'translation': [0, 3, 0], 'scale': [0.45]*3},
-            'fixed': {'rotation': [0, 180, 0], 'scale': [0.8]*3},
-            'firstperson_righthand': {'rotation': [0, 110, 0] if gun else [0, -90, 25],
-                                      'translation': [-1.5, 3.2, -2] if gun else [1.13, 3.2, 1.13], 'scale': [0.68]*3},
-            'firstperson_lefthand': {'rotation': [0, -70, 0] if gun else [0, 90, -25],
-                                     'translation': [-1.5, 3.2, -2] if gun else [1.13, 3.2, 1.13], 'scale': [0.68]*3},
-            'thirdperson_righthand': {'rotation': [0, -90, 55], 'translation': [0, 4, 0.5], 'scale': [0.85]*3},
-            'thirdperson_lefthand': {'rotation': [0, 90, -55], 'translation': [0, 4, 0.5], 'scale': [0.85]*3}}}
-
 def main(stage):
     translations = {lang: json.loads((ROOT / f'assets/starboundmc/lang/{lang}.json').read_text(encoding='utf-8'))
                     for lang in ('zh_cn', 'en_us')}
     for name, zh, en, tier, kind, accent, zhtip, entip in WEAPONS:
         if tier > stage: continue
-        write(f'assets/starboundmc/models/item/{name}.json', model(kind, accent))
+        equipment_art.generate_weapon(name, kind)
         for lang, label, tip in [('zh_cn', zh, zhtip), ('en_us', en, entip)]:
             translations[lang]['item.starboundmc.' + name] = label
             translations[lang]['item.starboundmc.' + name + '.tooltip'] = tip

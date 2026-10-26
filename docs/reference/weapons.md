@@ -44,7 +44,7 @@
 
 新增合成入口补充现有原矿精炼和探索战利品，不要求下界传送门。毕业阶段涉及古城探索与燃料晶体获取。前中期两件武器用钨锭修复，中后期用耐钢锭，毕业武器用星核碎片。剑加入原版 swords 标签，枪械加入耐久附魔标签以支持耐久/经验修补；不授予弓弩专属伤害附魔。
 
-六件新武器使用不同轮廓的 JSON 立体模型及原版纹理，不增加外部美术依赖。`python scripts/generate_weapon_resources.py --stage 3` 可重建模型、双语文本、标签与配方。
+六件新武器按已确认 V01 制作独立 32×32 物品栏像素图与 JSON 立体模型；专用像素材质和两侧结构细节见[装备美术](equipment-art.md)。`python scripts/generate_weapon_resources.py --stage 3` 可重建模型、双语文本、标签与配方。
 
 ## 开发验证
 
@@ -57,4 +57,4 @@
 & .\scripts\dev.ps1 test build --offline --console=plain
 ```
 
-GameTest 使用真实 ServerLevel 和注册物品；模型 smoke 输出 `run-weapon-smoke/screenshots/weapons`；战斗 smoke 使用客户端攻击键绑定/右键技能，经实际网络断言伤害与消耗，并将五个场景截图写入 `run-weapon-effects-smoke/screenshots/effects`。均创建独立新世界，仅按参数启用，常规产物不包含夹具。实际执行记录见根目录 process.md；多人实机和平衡验收的剩余项目见 current-work。
+GameTest 使用真实 ServerLevel 和注册物品；模型 smoke 输出 `run-weapon-smoke/screenshots/weapons-approved-v01-final`；战斗 smoke 使用客户端攻击键绑定/右键技能，经实际网络断言伤害与消耗，并将五个场景截图写入 `run-weapon-effects-smoke/screenshots/approved-art-effects`。均创建独立新世界，仅按参数启用，常规产物不包含夹具。实际执行记录见根目录 process.md；多人实机和平衡验收的剩余项目见 current-work。

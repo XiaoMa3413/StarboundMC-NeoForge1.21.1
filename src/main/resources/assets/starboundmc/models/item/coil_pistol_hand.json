@@ -1,0 +1,1984 @@
+{
+  "credit": "StarboundMC approved V01 cuboid source",
+  "textures": {
+    "palette": "starboundmc:item/equipment_palette",
+    "particle": "starboundmc:item/equipment_palette"
+  },
+  "elements": [
+    {
+      "name": "angled_grip",
+      "from": [
+        1.5,
+        1,
+        7
+      ],
+      "to": [
+        4.5,
+        7,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      },
+      "rotation": {
+        "origin": [
+          3,
+          7,
+          8
+        ],
+        "axis": "z",
+        "angle": -22.5
+      }
+    },
+    {
+      "name": "grip_heel",
+      "from": [
+        1,
+        0.5,
+        6.7
+      ],
+      "to": [
+        5,
+        1.5,
+        9.3
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      },
+      "rotation": {
+        "origin": [
+          3,
+          7,
+          8
+        ],
+        "axis": "z",
+        "angle": -22.5
+      }
+    },
+    {
+      "name": "receiver",
+      "from": [
+        1,
+        7,
+        5.8
+      ],
+      "to": [
+        11,
+        12,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "receiver_top",
+      "from": [
+        1,
+        11.5,
+        5.5
+      ],
+      "to": [
+        11.5,
+        12.5,
+        10.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "top_sight",
+      "from": [
+        5,
+        12.5,
+        7
+      ],
+      "to": [
+        8,
+        14,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "sight_lens",
+      "from": [
+        7.8,
+        13,
+        7.3
+      ],
+      "to": [
+        8.1,
+        13.7,
+        8.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_back_brace",
+      "from": [
+        10.5,
+        7,
+        5.8
+      ],
+      "to": [
+        12,
+        12.5,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_front_brace",
+      "from": [
+        19,
+        7,
+        5.8
+      ],
+      "to": [
+        20.5,
+        12.5,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "copper_coil",
+      "from": [
+        12,
+        7.8,
+        6.7
+      ],
+      "to": [
+        19,
+        9.2,
+        9.3
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        12.2,
+        7.7,
+        6.5
+      ],
+      "to": [
+        12.6,
+        9.3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        14,
+        7.7,
+        6.5
+      ],
+      "to": [
+        14.4,
+        9.3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        16,
+        7.7,
+        6.5
+      ],
+      "to": [
+        16.4,
+        9.3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        17.8,
+        7.7,
+        6.5
+      ],
+      "to": [
+        18.2,
+        9.3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "copper_coil",
+      "from": [
+        12,
+        10.4,
+        6.7
+      ],
+      "to": [
+        19,
+        11.8,
+        9.3
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        12.2,
+        10.3,
+        6.5
+      ],
+      "to": [
+        12.6,
+        11.9,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        14,
+        10.3,
+        6.5
+      ],
+      "to": [
+        14.4,
+        11.9,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        16,
+        10.3,
+        6.5
+      ],
+      "to": [
+        16.4,
+        11.9,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "coil_winding",
+      "from": [
+        17.8,
+        10.3,
+        6.5
+      ],
+      "to": [
+        18.2,
+        11.9,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            4.25,
+            7.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "cage_upper",
+      "from": [
+        11,
+        12,
+        5.8
+      ],
+      "to": [
+        20,
+        12.6,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "cage_lower",
+      "from": [
+        11,
+        7,
+        5.8
+      ],
+      "to": [
+        20,
+        7.6,
+        10.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "square_muzzle",
+      "from": [
+        20.5,
+        8,
+        6.3
+      ],
+      "to": [
+        22,
+        11.8,
+        9.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "muzzle_port",
+      "from": [
+        22,
+        9,
+        7.3
+      ],
+      "to": [
+        22.1,
+        10.5,
+        8.7
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            0.25,
+            3.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "energy_well",
+      "from": [
+        7,
+        3.5,
+        6.8
+      ],
+      "to": [
+        9.5,
+        7,
+        9.2
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "cell_indicator",
+      "from": [
+        7.6,
+        4.2,
+        6.65
+      ],
+      "to": [
+        8.4,
+        6.4,
+        6.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "receiver_indicator",
+      "from": [
+        5,
+        9,
+        5.6
+      ],
+      "to": [
+        7.5,
+        10,
+        5.8
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "cell_indicator_reverse",
+      "from": [
+        7.6,
+        4.2,
+        9.2
+      ],
+      "to": [
+        8.4,
+        6.4,
+        9.35
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "receiver_indicator_reverse",
+      "from": [
+        5,
+        9,
+        10.2
+      ],
+      "to": [
+        7.5,
+        10,
+        10.4
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            8.25,
+            11.75,
+            11.75
+          ]
+        }
+      }
+    }
+  ],
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        110,
+        0
+      ],
+      "translation": [
+        -1.5,
+        2.2,
+        -2
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        -70,
+        0
+      ],
+      "translation": [
+        -1.5,
+        2.2,
+        -2
+      ],
+      "scale": [
+        0.52,
+        0.52,
+        0.52
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        55
+      ],
+      "translation": [
+        0,
+        3,
+        0.5
+      ],
+      "scale": [
+        0.58,
+        0.58,
+        0.58
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -55
+      ],
+      "translation": [
+        0,
+        3,
+        0.5
+      ],
+      "scale": [
+        0.58,
+        0.58,
+        0.58
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
+  }
+}

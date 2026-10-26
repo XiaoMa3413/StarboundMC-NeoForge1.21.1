@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 public final class ArmorRenderSmoke {
     private static long start, equippedAt;
     private static int stage;
-    private static boolean finished;
+    private static boolean finished, reloaded;
     private static CompletableFuture<?> work, languageLoad;
     private static ArmorProfile profile() { return ArmorProfile.values()[stage / 4]; }
     private static ArmorItem.Type type() { return ModArmor.TYPES.get(stage % 4); }
@@ -36,16 +36,33 @@ public final class ArmorRenderSmoke {
         var g = event.getGuiGraphics();
         g.fill(0, 0, g.guiWidth(), g.guiHeight(), 0xff17212c);
         g.drawString(mc.font, "ARMOR VALIDATION / " + profile().id() + " / " + type().getName(), 24, 20, 0xffe1edf2);
-        InventoryScreen.renderEntityInInventoryFollowsAngle(g, 30, 55, 270, 400, 140, 0, -.5f, 0, mc.player);
-        for (int i = 0; i < 4; i++) g.renderItem(new ItemStack(ModArmor.item(profile(), ModArmor.TYPES.get(i))), 300 + i * 35, 65);
-        g.renderTooltip(mc.font, new ItemStack(ModArmor.item(profile(), type())), 300, 110);
+        renderView(g, 130, 240, 125, 0);
+        renderView(g, 320, 240, 125, 90);
+        renderView(g, 510, 240, 125, 180);
+        g.drawString(mc.font, "FRONT", 105, 65, 0xff85a5b0);
+        g.drawString(mc.font, "SIDE", 295, 65, 0xff85a5b0);
+        g.drawString(mc.font, "BACK", 485, 65, 0xff85a5b0);
+        for (int i = 0; i < 4; i++) g.renderItem(new ItemStack(ModArmor.item(profile(), ModArmor.TYPES.get(i))), 640 + i * 35, 65);
+        g.renderTooltip(mc.font, new ItemStack(ModArmor.item(profile(), type())), 640, 110);
         g.drawString(mc.font, "Armor=" + mc.player.getArmorValue() + "  Health=" + mc.player.getMaxHealth()
-                + "  Toughness=" + mc.player.getAttributeValue(Attributes.ARMOR_TOUGHNESS), 300, 380, 0xffa2bdc9);
+                + "  Toughness=" + mc.player.getAttributeValue(Attributes.ARMOR_TOUGHNESS), 620, 430, 0xffa2bdc9);
+    }
+    private static void renderView(net.minecraft.client.gui.GuiGraphics g, float x, float y, int scale, float angle) {
+        var player = Minecraft.getInstance().player;
+        float body = player.yBodyRot, yaw = player.getYRot(), pitch = player.getXRot();
+        float head = player.yHeadRot, oldHead = player.yHeadRotO;
+        player.yBodyRot = player.yHeadRot = player.yHeadRotO = 180 + angle;
+        player.setYRot(180 + angle); player.setXRot(0);
+        InventoryScreen.renderEntityInInventory(g, x, y, scale,
+                new org.joml.Vector3f(0, player.getBbHeight() / 2, 0),
+                new org.joml.Quaternionf().rotateZ((float)Math.PI), new org.joml.Quaternionf(), player);
+        player.yBodyRot = body; player.yHeadRot = head; player.yHeadRotO = oldHead;
+        player.setYRot(yaw); player.setXRot(pitch);
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!enabled() || finished) return;
         var mc = Minecraft.getInstance();
-        var output = mc.gameDirectory.toPath().resolve("screenshots/armor");
+        var output = mc.gameDirectory.toPath().resolve("screenshots/armor-approved-v01-final");
         if (start == 0) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             if (languageLoad == null) {
@@ -65,6 +82,11 @@ public final class ArmorRenderSmoke {
         }
         if ((System.nanoTime() - start) / 1e9 > 240) throw new IllegalStateException("Armor smoke timeout " + stage);
         if (mc.player == null || mc.level == null || mc.screen != null || mc.getOverlay() != null) return;
+        if (stage == 8 && !reloaded) {
+            if (languageLoad == null) languageLoad = mc.reloadResourcePacks();
+            if (!languageLoad.isDone()) return;
+            languageLoad.join(); reloaded = true; languageLoad = null;
+        }
         if (equippedAt == 0) {
             for (var part : ModArmor.TYPES) {
                 var stack = new ItemStack(ModArmor.item(profile(), part));
@@ -76,9 +98,13 @@ public final class ArmorRenderSmoke {
                 if (mc.getResourceManager().getResource(location).isEmpty()) throw new IllegalStateException("Missing armor UV texture");
             }
             var expected = profile();
+            boolean withEpp = type() == ArmorItem.Type.BOOTS;
             work = mc.getSingleplayerServer().submit(() -> {
                 var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();
                 for (var part : ModArmor.TYPES) player.setItemSlot(part.getSlot(), new ItemStack(ModArmor.item(expected, part)));
+                player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                player.setData(com.starboundmc.story.ModAttachments.EPP_EQUIPMENT, withEpp
+                        ? new ItemStack(com.starboundmc.item.ModItems.EPP_MK1.get()) : ItemStack.EMPTY);
                 player.inventoryMenu.broadcastChanges();
             });
             equippedAt = System.nanoTime(); return;
@@ -90,6 +116,8 @@ public final class ArmorRenderSmoke {
             throw new IllegalStateException("Native equipment attributes did not reach client");
         double expectedHealth = switch (profile()) { case PIONEER, VANGUARD -> 24; case RANGER -> 22; case STARWARDEN -> 30; };
         if (mc.player.getMaxHealth() != expectedHealth) throw new IllegalStateException("Set health not synchronized");
+        if (com.starboundmc.client.armor.EquipmentArmorModels.renderedSelections == 0)
+            throw new IllegalStateException("Custom armor models were never selected");
         var id = profile().id() + "_" + type().getName();
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(id + ".png")); }
         Files.writeString(output.resolve(id + ".txt"), "armor=" + mc.player.getArmorValue() + " maxHealth=" + mc.player.getMaxHealth()
@@ -97,6 +125,6 @@ public final class ArmorRenderSmoke {
         if (++stage == 16) {
             Files.writeString(output.resolve("complete.txt"), "All 16 items, four equipped sets, native attributes and localized tooltips rendered.\n");
             finished = true; mc.stop();
-        } else equippedAt = 0;
+        } else { equippedAt = 0; languageLoad = null; }
     }
 }

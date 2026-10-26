@@ -1,0 +1,1000 @@
+{
+  "credit": "StarboundMC approved V01 cuboid source",
+  "textures": {
+    "palette": "starboundmc:item/equipment_palette",
+    "particle": "starboundmc:item/equipment_palette"
+  },
+  "elements": [
+    {
+      "name": "wrapped_grip",
+      "from": [
+        7,
+        -3,
+        7
+      ],
+      "to": [
+        9,
+        3,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            4.25,
+            0.25,
+            7.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "grip_band",
+      "from": [
+        6.9,
+        -2,
+        6.9
+      ],
+      "to": [
+        9.1,
+        -1.6,
+        9.1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "grip_band",
+      "from": [
+        6.9,
+        0,
+        6.9
+      ],
+      "to": [
+        9.1,
+        0.4,
+        9.1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "grip_band",
+      "from": [
+        6.9,
+        2,
+        6.9
+      ],
+      "to": [
+        9.1,
+        2.4,
+        9.1
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "pommel",
+      "from": [
+        6.5,
+        -4,
+        6.5
+      ],
+      "to": [
+        9.5,
+        -3,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "guard",
+      "from": [
+        4,
+        3,
+        6.5
+      ],
+      "to": [
+        12,
+        4,
+        9.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            0.25,
+            11.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "tungsten_blade",
+      "from": [
+        6.7,
+        4,
+        7.5
+      ],
+      "to": [
+        9.3,
+        21,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "silver_edge",
+      "from": [
+        6.3,
+        4,
+        7.5
+      ],
+      "to": [
+        6.7,
+        21.5,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            0.25,
+            4.25,
+            3.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "clipped_tip",
+      "from": [
+        6.3,
+        21,
+        7.5
+      ],
+      "to": [
+        8.3,
+        22,
+        8.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            12.25,
+            0.25,
+            15.75,
+            3.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "amber_mark",
+      "from": [
+        7,
+        4.8,
+        7.35
+      ],
+      "to": [
+        7.8,
+        5.45,
+        7.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "amber_mark",
+      "from": [
+        7,
+        6,
+        7.35
+      ],
+      "to": [
+        7.8,
+        6.65,
+        7.5
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "amber_mark_reverse",
+      "from": [
+        7,
+        4.8,
+        8.5
+      ],
+      "to": [
+        7.8,
+        5.45,
+        8.65
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    },
+    {
+      "name": "amber_mark_reverse",
+      "from": [
+        7,
+        6,
+        8.5
+      ],
+      "to": [
+        7.8,
+        6.65,
+        8.65
+      ],
+      "faces": {
+        "north": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "south": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "east": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "west": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "up": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        },
+        "down": {
+          "texture": "#palette",
+          "uv": [
+            8.25,
+            4.25,
+            11.75,
+            7.75
+          ]
+        }
+      }
+    }
+  ],
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        -90,
+        25
+      ],
+      "translation": [
+        1.13,
+        4.2,
+        1.13
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        0,
+        90,
+        -25
+      ],
+      "translation": [
+        1.13,
+        4.2,
+        1.13
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0.5
+      ],
+      "scale": [
+        0.58,
+        0.58,
+        0.58
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        3,
+        0.5
+      ],
+      "scale": [
+        0.58,
+        0.58,
+        0.58
+      ]
+    },
+    "ground": {
+      "translation": [
+        0,
+        3,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.35,
+        0.35
+      ]
+    },
+    "fixed": {
+      "rotation": [
+        0,
+        180,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.55,
+        0.55
+      ]
+    }
+  }
+}

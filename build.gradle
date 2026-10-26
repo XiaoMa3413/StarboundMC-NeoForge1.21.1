@@ -31,6 +31,7 @@ sourceSets {
             include 'com/starboundmc/menu/ShipEngineMenu.java'
             include 'com/starboundmc/client/engine/*.java'
             include 'com/starboundmc/client/weapon/*.java'
+            include 'com/starboundmc/client/armor/*.java'
             include 'com/starboundmc/block/entity/ShipCrateBlockEntity.java'
             include 'com/starboundmc/block/entity/ShipDoorBlockEntity.java'
             include 'com/starboundmc/item/ModItems.java'
@@ -280,7 +281,7 @@ neoForge {
             if (project.hasProperty('armorSmoke')) {
                 gameDirectory = file('run-armor-smoke')
                 systemProperty 'starboundmc.debug.armorSmoke', 'true'
-                programArguments.addAll '--width', '1440', '--height', '900'
+                programArguments.addAll '--width', '1920', '--height', '1080'
             }
             if (project.hasProperty('weaponEffectsSmoke')) {
                 gameDirectory = file('run-weapon-effects-smoke')

@@ -3,8 +3,7 @@ Uses only Python's standard library. No third-party image assets or dependencies
 """
 from pathlib import Path
 import json
-import struct
-import zlib
+import equipment_art
 
 ROOT = Path(__file__).resolve().parents[1] / 'src/main/resources'
 TYPES = ['helmet', 'chestplate', 'leggings', 'boots']
@@ -42,88 +41,12 @@ def write(path, obj):
     target.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
 
-class Pixels:
-    def __init__(self, w, h):
-        self.w, self.h = w, h
-        self.rows = [[(0, 0, 0, 0) for _ in range(w)] for _ in range(h)]
-
-    def rect(self, x, y, w, h, color):
-        for py in range(y, y + h):
-            for px in range(x, x + w):
-                self.rows[py][px] = (*color[:3], color[3] if len(color) == 4 else 255)
-
-    def save(self, path):
-        def chunk(kind, data):
-            return struct.pack('!I', len(data)) + kind + data + struct.pack('!I', zlib.crc32(kind + data))
-        raw = b''.join(b'\0' + bytes(v for pixel in row for v in pixel) for row in self.rows)
-        content = b'\x89PNG\r\n\x1a\n' + chunk(b'IHDR', struct.pack('!2I5B', self.w, self.h, 8, 6, 0, 0, 0))
-        content += chunk(b'IDAT', zlib.compress(raw, 9)) + chunk(b'IEND', b'')
-        target = ROOT / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(content)
-
-
-def shade(color, amount):
-    return tuple(max(0, min(255, value + amount)) for value in color)
-
-
-def armor_uv(name, base, accent, layer):
-    image = Pixels(64, 32)
-    # Vanilla biped armor UV islands: helmet, torso, arm and mirrored leg.
-    islands = [(16, 16, 24, 16), (0, 16, 16, 16)]
-    if layer == 1:
-        islands += [(0, 0, 32, 16), (40, 16, 16, 16)]
-    for x, y, w, h in islands:
-        image.rect(x, y, w, h, base)
-        for row in range(y, y + h):
-            image.rect(x, row, w, 1, shade(base, 10 if row % 4 == 0 else -8 if row % 4 == 3 else 0))
-    # Chest armor panels, central power cell, waist belt and knee / shin strips.
-    image.rect(20, 20, 8, 12, shade(base, 20))
-    image.rect(23, 22, 2, 4, accent)
-    image.rect(20, 29, 8, 2, shade(base, -35))
-    image.rect(4, 23, 4, 2, accent)
-    image.rect(4, 28, 4, 3, shade(base, -30))
-    if layer == 1:
-        # Opaque dark visor framed by a colored brow; original face remains covered.
-        image.rect(8, 9, 8, 1, accent)
-        image.rect(8, 10, 8, 3, (16, 25, 36))
-        image.rect(9, 10, 6, 1, shade(accent, -15))
-        image.rect(44, 20, 4, 3, accent)
-        image.rect(44, 29, 4, 3, shade(base, -30))
-        if name == 'vanguard':
-            image.rect(20, 20, 3, 8, shade(base, 35)); image.rect(25, 20, 3, 8, shade(base, 35))
-        if name == 'starwarden':
-            image.rect(20, 25, 8, 1, accent); image.rect(11, 2, 2, 5, accent)
-    image.save(f'assets/starboundmc/textures/models/armor/{name}_layer_{layer}.png')
-
-
-def icon(name, part, base, accent):
-    image = Pixels(16, 16)
-    dark, light = shade(base, -35), shade(base, 30)
-    if part == 'helmet':
-        image.rect(3, 3, 10, 10, dark); image.rect(4, 3, 8, 4, light)
-        image.rect(3, 7, 10, 2, accent); image.rect(5, 9, 6, 4, (0, 0, 0, 0))
-    elif part == 'chestplate':
-        image.rect(2, 3, 12, 5, dark); image.rect(4, 5, 8, 9, base)
-        image.rect(5, 6, 6, 5, light); image.rect(7, 7, 2, 4, accent)
-        image.rect(6, 3, 4, 2, (0, 0, 0, 0))
-    elif part == 'leggings':
-        image.rect(4, 2, 8, 5, base); image.rect(4, 7, 3, 7, light); image.rect(9, 7, 3, 7, light)
-        image.rect(4, 9, 3, 2, accent); image.rect(9, 9, 3, 2, accent)
-    else:
-        image.rect(3, 5, 4, 8, base); image.rect(9, 5, 4, 8, base)
-        image.rect(2, 11, 5, 3, dark); image.rect(9, 11, 5, 3, dark)
-        image.rect(3, 6, 4, 2, accent); image.rect(9, 6, 4, 2, accent)
-    image.save(f'assets/starboundmc/textures/item/{name}_{part}.png')
-
-
 def main():
     langs = {lang: json.loads((ROOT / f'assets/starboundmc/lang/{lang}.json').read_text(encoding='utf-8')) for lang in ['zh_cn', 'en_us']}
     for name, zh, en, material, cost, seconds, base, accent, zhtips, entips, zhset, enset in SETS:
-        for layer in [1, 2]: armor_uv(name, base, accent, layer)
+        equipment_art.generate_armor(name)
         for i, part in enumerate(TYPES):
             item = f'{name}_{part}'
-            icon(name, part, base, accent)
             write(f'assets/starboundmc/models/item/{item}.json', {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'starboundmc:item/{item}'}})
             amount = [5, 8, 7, 4][i]
             materials = [{'ingredient': {'item': f'starboundmc:{material}'}, 'count': amount},
