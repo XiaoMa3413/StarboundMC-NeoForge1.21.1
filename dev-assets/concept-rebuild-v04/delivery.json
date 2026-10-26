@@ -1,0 +1,22 @@
+{
+  "version": "V04",
+  "date": "2026-10-26",
+  "status": "awaiting_user_art_review",
+  "threshold": 95,
+  "weights": {"shape_and_proportion": 40, "structure": 30, "color": 15, "details": 15},
+  "overall_score": null,
+  "accepted": false,
+  "native_tool": "Blockbench 5.2.2",
+  "model_count": 10,
+  "cubes": 285,
+  "closed_meshes": 98,
+  "native_view_count": 58,
+  "native_view_and_editor_png_count": 116,
+  "comparison_board_count": 18,
+  "source_commit": "7380282b9cf782e23aa3cd8cd82c8379640e5c48",
+  "branch": "feat/equipment-concept-rebuild-v04",
+  "gallery": "../../../概念图/2026-10-26_从零建模_V04/index.html",
+  "production_resources_changed": false,
+  "texture_method": "original concept projection plus newly painted end-face material patches",
+  "runtime_adaptation": "pending art acceptance; free-format meshes are not directly installable Minecraft assets"
+}
