@@ -82,6 +82,10 @@ for(const id of ids){try{const r=JSON.parse(localStorage.getItem('starbound-v04-
 function exportReview(){const review={version:'V04',threshold:95,reviewer:'user',created:new Date().toISOString(),equipment:Object.fromEntries(ids.map(id=>[id,refresh(id)]))};const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(review,null,2)],{type:'application/json'}));a.download='V04-我的审查意见.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 </script></main></html>'''
     page=page.replace('const ids=IDS;','const ids='+json.dumps([j['id'] for j in JOBS])+';')
+    delivery=MODELS/'delivery.json'
+    if delivery.exists() and json.loads(delivery.read_text(encoding='utf-8')).get('accepted'):
+        page=page.replace('当前状态：等待你的综合审查，尚未确认达到 95%。','当前状态：用户已确认美术验收通过（2026-10-26）。')
+        page=page.replace('每件需达到 95 分。下面的轮廓 IoU','用户原文“通过”；未提供具体分数，评分栏不补填。下面的轮廓 IoU')
     (OUT/'index.html').write_text(page,encoding='utf-8')
 
 

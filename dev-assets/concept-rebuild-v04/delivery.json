@@ -1,11 +1,12 @@
 {
   "version": "V04",
   "date": "2026-10-26",
-  "status": "awaiting_user_art_review",
+  "status": "user_art_review_accepted",
   "threshold": 95,
   "weights": {"shape_and_proportion": 40, "structure": 30, "color": 15, "details": 15},
   "overall_score": null,
-  "accepted": false,
+  "accepted": true,
+  "acceptance": {"date": "2026-10-26", "reviewer": "user", "message": "通过", "scope": "V04 six weapons and four armor sets", "numeric_score_provided": false},
   "native_tool": "Blockbench 5.2.2",
   "model_count": 10,
   "cubes": 285,
@@ -18,5 +19,5 @@
   "gallery": "../../../概念图/2026-10-26_从零建模_V04/index.html",
   "production_resources_changed": false,
   "texture_method": "original concept projection plus newly painted end-face material patches",
-  "runtime_adaptation": "pending art acceptance; free-format meshes are not directly installable Minecraft assets"
+  "runtime_adaptation": "art accepted; game integration pending; free-format meshes are not directly installable Minecraft assets"
 }
