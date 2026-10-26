@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-27",
+  "tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar": "build\\libs\\starboundmc-0.1-alpha.jar",
+  "jar_bytes": 113708979,
+  "jar_sha256": "f425ea5d947c8057abc82265051482baf9297f465f4a5097b8d60282f00f33c6",
+  "native_sources": {
+    "tungsten_sabre": {
+      "source_sha256": "83f771ea5b687ea5c2f1fdc6bba1a4283722f5a35451121c7cf9665865c2013e",
+      "native_triangles": 228,
+      "uv_topology_preserved": true
+    },
+    "coil_pistol": {
+      "source_sha256": "747e5b5f539580a84fd4cb187ea4f72dd73fbcbc7677a4e8e48861fb56b0fe9e",
+      "native_triangles": 604,
+      "uv_topology_preserved": true
+    },
+    "durasteel_glaive": {
+      "source_sha256": "7c6cff57c84d12354ac0ded92667ff1928a0be6f05d0be8cfd8f67893a684edf",
+      "native_triangles": 604,
+      "uv_topology_preserved": true
+    },
+    "plasma_carbine": {
+      "source_sha256": "e91d33a99c3acd46bb8b916f9af96ed6cf52856dde9c387410dbb5c7cf28eb2d",
+      "native_triangles": 540,
+      "uv_topology_preserved": true
+    },
+    "starcore_blade": {
+      "source_sha256": "3172482f7d3b97a0c4a8891a27afdc60b8edb1f29214c8c5266a003716472bde",
+      "native_triangles": 600,
+      "uv_topology_preserved": true
+    },
+    "starcore_railgun": {
+      "source_sha256": "119816ce0142769e7b17701c9db38ef9b8b43e88e0604f6643ca183aa0f8eb2c",
+      "native_triangles": 660,
+      "uv_topology_preserved": true
+    },
+    "pioneer": {
+      "source_sha256": "f527dec400344b1d287fbf51da6dbac0dc0025653a1c95c995fc70838a8cd8ac",
+      "native_triangles": 604,
+      "uv_topology_preserved": true
+    },
+    "vanguard": {
+      "source_sha256": "b829c5a4c863c0688722b307272a1ebba89d1493b4d7bc95154163fd013ab8a4",
+      "native_triangles": 664,
+      "uv_topology_preserved": true
+    },
+    "ranger": {
+      "source_sha256": "0b2bf5fc021e97602fc5f8544bce26a11a6312d6db8f6bda0b0da751dce624eb",
+      "native_triangles": 580,
+      "uv_topology_preserved": true
+    },
+    "starwarden": {
+      "source_sha256": "fb6473cce53f6eab9745c4f1a84a1f08deae8b42f372919efc13fa257ff8ce88",
+      "native_triangles": 928,
+      "uv_topology_preserved": true
+    }
+  },
+  "test_fixtures_absent": true,
+  "obsolete_armor_geometry_absent": true,
+  "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
+  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-v04\\starboundmc-0.1-alpha.jar",
+  "installed_sha256_verified": true,
+  "weapon_effect_scenes": 5
+}

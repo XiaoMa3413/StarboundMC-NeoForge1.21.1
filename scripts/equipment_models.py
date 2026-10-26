@@ -1,4 +1,4 @@
-"""Production export from editable Blockbench projects; no geometry authoring here."""
+"""Historical V03 exporter; current resources use equipment_mesh_export.py."""
 import base64
 import json
 from pathlib import Path

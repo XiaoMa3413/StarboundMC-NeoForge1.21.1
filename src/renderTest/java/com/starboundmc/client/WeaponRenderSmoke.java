@@ -91,7 +91,7 @@ public final class WeaponRenderSmoke {
     public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!enabled() || finished) return;
         var mc = Minecraft.getInstance();
-        Path output = mc.gameDirectory.toPath().resolve("screenshots/weapons-blockbench-v03");
+        Path output = mc.gameDirectory.toPath().resolve("screenshots/weapons-v04-game");
         if (!started) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             String language = System.getProperty("starboundmc.debug.weaponSmokeLanguage", "zh_cn");

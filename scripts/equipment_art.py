@@ -1,14 +1,14 @@
 """Equipment pixel icons and resource export from native Blockbench model sources.
 
 Run the weapon/armor resource generators. All production art is reproducible;
-concept illustrations are references, never resized into game textures.
+accepted V04 models retain their concept-projected textures and painted lighting.
 """
 from pathlib import Path
 import json
 import math
 import struct
 import zlib
-from equipment_models import armor_geometry, export_weapon
+from equipment_mesh_export import export_armor, export_weapon
 
 PROJECT = Path(__file__).resolve().parents[1]
 ROOT = PROJECT / 'src/main/resources'
@@ -211,5 +211,4 @@ def armor_icon(profile, part):
 def generate_armor(profile):
     for part in ('helmet', 'chestplate', 'leggings', 'boots'):
         armor_icon(profile, part).save(ASSETS / f'textures/item/{profile}_{part}.png')
-    geometry = {name: {'outer': armor_geometry(name, False), 'inner': armor_geometry(name, True)} for name in PALETTES}
-    write(ASSETS / 'equipment/armor_geometry.json', geometry)
+    export_armor()

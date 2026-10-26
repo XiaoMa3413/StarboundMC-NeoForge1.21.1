@@ -26,7 +26,7 @@ public final class ArmorRenderSmoke {
     private static int stage;
     private static boolean finished, reloaded;
     private static CompletableFuture<?> work, languageLoad;
-    private static ArmorProfile profile() { return ArmorProfile.values()[stage / 4]; }
+    private static ArmorProfile profile() { return ArmorProfile.values()[(stage % 16) / 4]; }
     private static ArmorItem.Type type() { return ModArmor.TYPES.get(stage % 4); }
     private static boolean enabled() { return Boolean.getBoolean("starboundmc.debug.armorSmoke"); }
 
@@ -35,7 +35,7 @@ public final class ArmorRenderSmoke {
         if (!enabled() || finished || mc.player == null || equippedAt == 0) return;
         var g = event.getGuiGraphics();
         g.fill(0, 0, g.guiWidth(), g.guiHeight(), 0xff17212c);
-        g.drawString(mc.font, "ARMOR VALIDATION / " + profile().id() + " / " + type().getName(), 24, 20, 0xffe1edf2);
+        g.drawString(mc.font, (stage < 16 ? "FULL SET / " : "SINGLE PIECE / ") + profile().id() + " / " + type().getName(), 24, 20, 0xffe1edf2);
         renderView(g, 130, 240, 125, 0);
         renderView(g, 320, 240, 125, 90);
         renderView(g, 510, 240, 125, 180);
@@ -62,7 +62,7 @@ public final class ArmorRenderSmoke {
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) throws Exception {
         if (!enabled() || finished) return;
         var mc = Minecraft.getInstance();
-        var output = mc.gameDirectory.toPath().resolve("screenshots/armor-blockbench-v03");
+        var output = mc.gameDirectory.toPath().resolve("screenshots/armor-v04-game");
         if (start == 0) {
             if (mc.screen == null || mc.getOverlay() != null) return;
             if (languageLoad == null) {
@@ -99,9 +99,11 @@ public final class ArmorRenderSmoke {
             }
             var expected = profile();
             boolean withEpp = type() == ArmorItem.Type.BOOTS;
+            mc.options.keyShift.setDown(stage < 16 && type() == ArmorItem.Type.LEGGINGS);
             work = mc.getSingleplayerServer().submit(() -> {
                 var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();
-                for (var part : ModArmor.TYPES) player.setItemSlot(part.getSlot(), new ItemStack(ModArmor.item(expected, part)));
+                for (var part : ModArmor.TYPES) player.setItemSlot(part.getSlot(),
+                        stage < 16 || part == type() ? new ItemStack(ModArmor.item(expected, part)) : ItemStack.EMPTY);
                 player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
                 player.setData(com.starboundmc.story.ModAttachments.EPP_EQUIPMENT, withEpp
                         ? new ItemStack(com.starboundmc.item.ModItems.EPP_MK1.get()) : ItemStack.EMPTY);
@@ -111,19 +113,23 @@ public final class ArmorRenderSmoke {
         }
         if (!work.isDone() || (System.nanoTime() - equippedAt) / 1e9 < 2) return;
         work.join();
-        for (var part : ModArmor.TYPES) if (!mc.player.getItemBySlot(part.getSlot()).is(ModArmor.item(profile(), part))) return;
-        if (mc.player.getArmorValue() != profile().helmet + profile().chestplate + profile().leggings + profile().boots)
+        for (var part : ModArmor.TYPES) {
+            var stack = mc.player.getItemBySlot(part.getSlot());
+            if (stage < 16 || part == type()) { if (!stack.is(ModArmor.item(profile(), part))) return; }
+            else if (!stack.isEmpty()) return;
+        }
+        if (stage < 16 && mc.player.getArmorValue() != profile().helmet + profile().chestplate + profile().leggings + profile().boots)
             throw new IllegalStateException("Native equipment attributes did not reach client");
         double expectedHealth = switch (profile()) { case PIONEER, VANGUARD -> 24; case RANGER -> 22; case STARWARDEN -> 30; };
-        if (mc.player.getMaxHealth() != expectedHealth) throw new IllegalStateException("Set health not synchronized");
+        if (stage < 16 && mc.player.getMaxHealth() != expectedHealth) throw new IllegalStateException("Set health not synchronized");
         if (com.starboundmc.client.armor.EquipmentArmorModels.renderedSelections == 0)
             throw new IllegalStateException("Custom armor models were never selected");
-        var id = profile().id() + "_" + type().getName();
+        var id = profile().id() + "_" + type().getName() + (stage < 16 ? "_set" : "_single");
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(id + ".png")); }
         Files.writeString(output.resolve(id + ".txt"), "armor=" + mc.player.getArmorValue() + " maxHealth=" + mc.player.getMaxHealth()
                 + " toughness=" + mc.player.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
-        if (++stage == 16) {
-            Files.writeString(output.resolve("complete.txt"), "All 16 items, four equipped sets, native attributes and localized tooltips rendered.\n");
+        if (++stage == 32) {
+            Files.writeString(output.resolve("complete.txt"), "All 16 items separately and four complete sets, crouch, EPP, resource reload, native attributes and localized tooltips rendered.\n");
             finished = true; mc.stop();
         } else { equippedAt = 0; languageLoad = null; }
     }
