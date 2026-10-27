@@ -1,0 +1,41 @@
+[
+  {
+    "id": "scrap_skitter",
+    "path": "dev-assets\\enemies\\concepts\\scrap_skitter.png",
+    "width": 1983,
+    "height": 793,
+    "sha256": "dcbcd48adf6da04065a1284643a82395dfc1fb3deaa131cb35f2806bd6793e64",
+    "tool": "built-in imagegen",
+    "prompt": "concept-prompts.json#scrap_skitter"
+  },
+  {
+    "id": "coil_sentry",
+    "path": "dev-assets\\enemies\\concepts\\coil_sentry.png",
+    "width": 1983,
+    "height": 793,
+    "sha256": "c74601faabedf19f279525c63b5efaa66172016e7c39b8c29e207c7cdd81a34c",
+    "tool": "built-in imagegen",
+    "prompt": "concept-prompts.json#coil_sentry"
+  },
+  {
+    "id": "breach_guard",
+    "path": "dev-assets\\enemies\\concepts\\breach_guard.png",
+    "width": 1900,
+    "height": 828,
+    "sha256": "a97f462a8aeeb714d158e5690b2071dcc00fbbb5e9278cfec17cf198f58a2407",
+    "tool": "built-in imagegen",
+    "prompt": "concept-prompts.json#breach_guard"
+  },
+  {
+    "id": "quarry_warden",
+    "path": "dev-assets\\enemies\\concepts\\quarry_warden-v2.png",
+    "width": 1942,
+    "height": 809,
+    "sha256": "0cdec158bc8f1fdc4fbc8f6b72db750626c60b414a6609491fe47b5659585647",
+    "tool": "built-in imagegen",
+    "prompt": "concept-prompts.json#quarry_warden",
+    "previous_path": "dev-assets\\enemies\\concepts\\quarry_warden.png",
+    "previous_sha256": "1908e6573b58cdec06ab9f7be053a5121e3fe9234cd75182512634e956fd54c3",
+    "revision": "v2: left-side hammer corrected"
+  }
+]

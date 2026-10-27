@@ -7,3 +7,7 @@ src/generated/**/*.json text eol=lf
 docs/legacy-forge/** whitespace=-blank-at-eol
 # Unified diff context prefixes intentionally precede the source indentation.
 patches/stellarview/*.patch text eol=lf whitespace=-blank-at-eol,-space-before-tab
+# Enemy export receipts hash exact native/cache/runtime bytes across platforms.
+dev-assets/enemies/models/*.bbmodel -text whitespace=cr-at-eol
+dev-assets/enemies/geometry/*.json -text whitespace=cr-at-eol
+src/main/resources/assets/starboundmc/enemies/*.json -text whitespace=cr-at-eol

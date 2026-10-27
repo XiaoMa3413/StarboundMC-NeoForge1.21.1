@@ -19,6 +19,7 @@
 - [制造与机器界面](reference/manufacturing.md)：钱包、提炼、打印队列与菜单 authority。
 - [武器与制造进度](reference/weapons.md)：三阶段武器、服务端命中、消耗、配方与测试入口。
 - [防具与套装](reference/armor.md)：四套十六件防具、部件与四件套效果、制造和测试入口。
+- [机械敌人](reference/enemies.md)：四种机械敌人、刷怪蛋、服务端攻击、原生模型与验证入口；未加入自然刷新。
 - [已确认装备美术](reference/equipment-art.md)：六把武器与四套防具的像素图、立体模型、源文件与客户端验证。
 - [HUD / AR](reference/hud.md)：Visor、世界标记、Boot 与通信的当前合同。
 - [太空渲染管线](space-render-pipeline.md)与[美术方向](space-render-art-direction.md)：pass、坐标/颜色/深度、资源和回退。

@@ -709,5 +709,14 @@
   "armor.starboundmc.starwarden.leggings": "普通近战伤害 +2",
   "item.starboundmc.starwarden_boots": "星核守望战靴",
   "armor.starboundmc.starwarden.boots": "安全跌落距离 +4 格",
-  "armor.starboundmc.starwarden.set": "四件套：生命上限额外 +4，攻速 +10%，弹射物伤害 +15%"
+  "armor.starboundmc.starwarden.set": "四件套：生命上限额外 +4，攻速 +10%，弹射物伤害 +15%",
+  "entity.starboundmc.scrap_skitter": "废铁掠行蛛",
+  "item.starboundmc.scrap_skitter_spawn_egg": "废铁掠行蛛刷怪蛋",
+  "entity.starboundmc.coil_sentry": "线圈巡逻机",
+  "item.starboundmc.coil_sentry_spawn_egg": "线圈巡逻机刷怪蛋",
+  "entity.starboundmc.breach_guard": "重装破拆卫",
+  "item.starboundmc.breach_guard_spawn_egg": "重装破拆卫刷怪蛋",
+  "entity.starboundmc.quarry_warden": "矿站监工 MK-I",
+  "item.starboundmc.quarry_warden_spawn_egg": "矿站监工 MK-I刷怪蛋",
+  "entity.starboundmc.enemy_plasma_bolt": "电浆弹"
 }

@@ -709,5 +709,14 @@
   "armor.starboundmc.starwarden.leggings": "Normal melee damage +2",
   "item.starboundmc.starwarden_boots": "Starcore Warden Boots",
   "armor.starboundmc.starwarden.boots": "Safe fall distance +4 blocks",
-  "armor.starboundmc.starwarden.set": "4 pieces: additional max health +4, attack speed +10%, projectile damage +15%"
+  "armor.starboundmc.starwarden.set": "4 pieces: additional max health +4, attack speed +10%, projectile damage +15%",
+  "entity.starboundmc.scrap_skitter": "Scrap Skitter",
+  "item.starboundmc.scrap_skitter_spawn_egg": "Scrap Skitter Spawn Egg",
+  "entity.starboundmc.coil_sentry": "Coil Sentry",
+  "item.starboundmc.coil_sentry_spawn_egg": "Coil Sentry Spawn Egg",
+  "entity.starboundmc.breach_guard": "Breach Guard",
+  "item.starboundmc.breach_guard_spawn_egg": "Breach Guard Spawn Egg",
+  "entity.starboundmc.quarry_warden": "Quarry Warden MK-I",
+  "item.starboundmc.quarry_warden_spawn_egg": "Quarry Warden MK-I Spawn Egg",
+  "entity.starboundmc.enemy_plasma_bolt": "Plasma Bolt"
 }

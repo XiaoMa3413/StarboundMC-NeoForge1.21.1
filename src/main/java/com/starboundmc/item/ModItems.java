@@ -222,6 +222,7 @@ public final class ModItems {
                         output.accept(STARCORE_BLADE);
                         output.accept(STARCORE_RAILGUN);
                         com.starboundmc.armor.ModArmor.creative(output);
+                        com.starboundmc.enemy.ModEnemies.creative(output);
                     })
                     .build());
 

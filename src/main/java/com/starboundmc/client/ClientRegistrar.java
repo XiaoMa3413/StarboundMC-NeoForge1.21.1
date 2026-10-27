@@ -72,6 +72,11 @@ public final class ClientRegistrar {
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.SEAT.get(), SeatRenderer::new);
+        for (var profile : com.starboundmc.enemy.EnemyProfile.values())
+            event.registerEntityRenderer(com.starboundmc.enemy.ModEnemies.type(profile),
+                    context -> new com.starboundmc.client.enemy.MachineEnemyRenderer(context,profile));
+        event.registerEntityRenderer(com.starboundmc.enemy.ModEnemies.BOLT.get(),
+                com.starboundmc.client.enemy.EnemyBoltRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SHIP_ENGINE.get(), ShipThrusterRenderer::new);
         event.registerBlockEntityRenderer(ModBlockEntities.SHIP_CRATE.get(), ShipLockerRenderer::new);
         event.registerBlockEntityRenderer(

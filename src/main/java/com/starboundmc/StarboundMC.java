@@ -41,6 +41,7 @@ public final class StarboundMC {
         ModBlocks.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModEntities.register(modEventBus);
+        com.starboundmc.enemy.ModEnemies.register(modEventBus);
         ModDataComponents.register(modEventBus);
         ModAttachments.register(modEventBus);
         ModItems.register(modEventBus);

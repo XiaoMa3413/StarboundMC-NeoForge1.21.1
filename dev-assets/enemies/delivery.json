@@ -1,0 +1,85 @@
+{
+  "created_at": "2026-10-27T20:03:43.522988+08:00",
+  "branch": "feat/mechanical-enemy-roster",
+  "baseline_commit": "e0c7313",
+  "scope": "Four mechanical enemies; spawn eggs only; no natural spawn entries",
+  "jar": {
+    "path": "build\\libs\\starboundmc-0.1-alpha.jar",
+    "sha256": "ce1b10d6e15e96de8bfd31bae8c689ce7b41e7f362cc436fe6ad9757694bb074",
+    "bytes": 125010109,
+    "production_assets_match_sources": true,
+    "development_fixtures_excluded": true
+  },
+  "models": [
+    {
+      "id": "breach_guard",
+      "source_sha256": "b2b5ce379d2ed28fd2af8b403a4f6948b84f792cce5bf518932a7cd312275f47",
+      "runtime_sha256": "b1477a8631b529fead3338cea37825607cf5463eb8377cdded998afc1467965e",
+      "texture_sha256": "5d408633f98459e5513f249f96909e303be842457e44911b80073bbfdc4094f0",
+      "bones": 15,
+      "parts": 97,
+      "triangles": 2600
+    },
+    {
+      "id": "coil_sentry",
+      "source_sha256": "446cda0176ee850b8a60573c7e7b4960c3e4ea8af7cc75033eed9260b84bf292",
+      "runtime_sha256": "2fcd0bc8cbaeafd5074b31349bcf5bb9b43e877fcb2ae528cfde891b7fcbd3d1",
+      "texture_sha256": "1d0390ee6ede0d2b9d45a0953b46ce8835cbc0583e90735102dc0c3a8d4d6c38",
+      "bones": 11,
+      "parts": 67,
+      "triangles": 1856
+    },
+    {
+      "id": "quarry_warden",
+      "source_sha256": "6fac3e1725d6471fef28e7e93aba57cba98f3f1067d48e45613ed6fb172b3d88",
+      "runtime_sha256": "b652b23738e0c38a01b333aa97820547eff99b3a7a48503580a1af23bd9b1411",
+      "texture_sha256": "68d66af7ae142f48f25b37b28bebcaaae8d6ad46dddf045e0dde24301fd0d2c4",
+      "bones": 24,
+      "parts": 139,
+      "triangles": 3796
+    },
+    {
+      "id": "scrap_skitter",
+      "source_sha256": "b104f90de5c7deeda612368e1907ede7e6310097ca60790e41da454af70734af",
+      "runtime_sha256": "8df45d0cdd4d8bf353c128bfb49251783baf4731e4c657802f597ac42ea93157",
+      "texture_sha256": "10e281b51e08e0969999a571b654d7e82aeb8bc5dca2b9470eff99bf05e21244",
+      "bones": 17,
+      "parts": 98,
+      "triangles": 2648
+    }
+  ],
+  "unit_tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "server_game_tests_passed": 9,
+  "client_pose_scenes": 13,
+  "client_world_views": 4,
+  "art_acceptance": "pending_user_review",
+  "gallery": "D:\\GPTWork\\小马的mc模组\\概念图\\2026-10-27_敌人设计与建模\\index.html",
+  "evidence_logs": [
+    {
+      "path": "logs/enemy-gametests-final.log",
+      "sha256": "cff5d5793c23137b6fb97979891af90d9766fc48f7fa943078736ace4463f2e0"
+    },
+    {
+      "path": "logs/enemy-client-smoke-release.log",
+      "sha256": "e2ea93633e4d7289aeccfa622e67cf60e2c20f90053581e1b4737259f02a7753"
+    },
+    {
+      "path": "logs/enemy-release-build.log",
+      "sha256": "4cf269bc336d4d02959887179300f0eee3dcfef671a5094ee591ad327c65fa58"
+    }
+  ],
+  "installed": {
+    "path": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
+    "sha256": "ce1b10d6e15e96de8bfd31bae8c689ce7b41e7f362cc436fe6ad9757694bb074",
+    "matches_build": true
+  },
+  "previous_jar_backup": {
+    "path": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-enemies-200249\\starboundmc-0.1-alpha.jar",
+    "sha256": "6cc456e99a6da43a6e10757bf2d2b3fb93bafbb34979d276c347bf70b5cae47f"
+  }
+}

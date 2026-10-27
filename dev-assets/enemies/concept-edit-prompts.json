@@ -1,0 +1,6 @@
+{
+  "tool": "built-in imagegen",
+  "input": "quarry_warden.png",
+  "output": "quarry_warden-v2.png",
+  "prompt": "Edit only the LEFT SIDE panel to show the near-side square impact hammer matching the FRONT viewer-right and BACK viewer-left tool. Preserve the other three panels, original canvas, proportions, four legs, roof core, floor alignment and colors. Front faces page left; far clamp is occluded. This fixes turnaround handedness."
+}

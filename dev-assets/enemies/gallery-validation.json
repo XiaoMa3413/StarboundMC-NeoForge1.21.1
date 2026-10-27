@@ -1,0 +1,313 @@
+{
+  "gallery": "D:\\GPTWork\\小马的mc模组\\概念图\\2026-10-27_敌人设计与建模",
+  "art_acceptance": "pending_user_review",
+  "models": [
+    {
+      "id": "scrap_skitter",
+      "name": "废铁掠行蛛",
+      "art_review": "pending_user_review",
+      "artifacts": [
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\back-editor.png",
+          "sha256": "e03cb2618ac76b2685eb503f5365cd9626c775c8c17039c4294b0e54983e8f1e"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\back.png",
+          "sha256": "f9bf4830e6f090e64934c12f518d8c3fa3459225d68b2280c176431a3400e748"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\comparison-back.png",
+          "sha256": "f5fc852fdf13413f7fed2d59ca7d877c80b0aa6e4111d37e3e3187371e2fed06"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\comparison-front.png",
+          "sha256": "5be6286650941b46a6e5c4f672b0476ad2ae85d49f4aad01ccfbdade4ab6caae"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\comparison-side.png",
+          "sha256": "55d1b3529ea0314ec2c3cca6b8932b135436f4e8a7e1863d359fabdb77c75619"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\concept.png",
+          "sha256": "dcbcd48adf6da04065a1284643a82395dfc1fb3deaa131cb35f2806bd6793e64"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\front-editor.png",
+          "sha256": "b624b5eaf6e9edf233fd401bb93a6f8134191b437d024e82b1d198a2ecb6ed5e"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\front.png",
+          "sha256": "8ce6928abf0f7e32c952b819ba0ac12f21f97e4d86e09316a02be20eb62c2e44"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\perspective-editor.png",
+          "sha256": "348a98607dff1eb6d69d7eeefec094277527ee866351d9c8a642b7d64b445788"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\perspective.png",
+          "sha256": "e3ed6e52678107461b49be6b956d25cbf18a79fc4c23c3799d2eba13bbac4d7b"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\side-editor.png",
+          "sha256": "ca4b9fd9f0ed66573629c678a3921e92c3930db2fa1b0cdc7fd21f039f9c46f6"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\scrap_skitter\\side.png",
+          "sha256": "3116379d08af072b7f0e374b1e3044b6197c3a263d16e5918017b98bd2568e1e"
+        },
+        {
+          "path": "模组位置\\dev-assets\\enemies\\models\\scrap_skitter.bbmodel",
+          "sha256": "b104f90de5c7deeda612368e1907ede7e6310097ca60790e41da454af70734af"
+        }
+      ]
+    },
+    {
+      "id": "coil_sentry",
+      "name": "线圈巡逻机",
+      "art_review": "pending_user_review",
+      "artifacts": [
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\back-editor.png",
+          "sha256": "a5fdbb5bd8b217c55dad674c6dbe201823dfcde4c1063ab35ca381396f7dcf4b"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\back.png",
+          "sha256": "c07bf710d5da5c448e8f0bd7022c4139235fe4d7f538e6508d800268d205919e"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\comparison-back.png",
+          "sha256": "ccf6ebf17635d927b38f6bfaaac8d748c88fd3467cfa337fa3271c7a67d216ac"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\comparison-front.png",
+          "sha256": "4287e8a230ab5634deaea9c903edb393c8bd26939b3899ca4a3a1de4dc32b1df"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\comparison-side.png",
+          "sha256": "de7c3bafd0c0c42e3dcf1ddd93e009112c7e2347c9a3a2f2dafa6e45997a32db"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\concept.png",
+          "sha256": "c74601faabedf19f279525c63b5efaa66172016e7c39b8c29e207c7cdd81a34c"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\front-editor.png",
+          "sha256": "5bdf71318c726561aa443f40313fb07661b9443341aabb117f52fe6022e42d1f"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\front.png",
+          "sha256": "42714d66e18e024473474254a68d3bba84443e31d17306db29c604be205db512"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\perspective-editor.png",
+          "sha256": "096af03fb7d15ed315945d0cfbf60949c8612e14eef098616100916784f753d3"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\perspective.png",
+          "sha256": "b2ddd3ac2d5f9387f9bcc2baf68264b421da9dd5e37307b3a22e556fcd5b91df"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\side-editor.png",
+          "sha256": "f25914f55f9687bd4fe61915cece287302b7f05c3684512fef0e3b0098bfef71"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\coil_sentry\\side.png",
+          "sha256": "013f6b58498e862375218a86cf5fddefae2a970025fff8ed6d69bdcb472fa911"
+        },
+        {
+          "path": "模组位置\\dev-assets\\enemies\\models\\coil_sentry.bbmodel",
+          "sha256": "446cda0176ee850b8a60573c7e7b4960c3e4ea8af7cc75033eed9260b84bf292"
+        }
+      ]
+    },
+    {
+      "id": "breach_guard",
+      "name": "重装破拆卫",
+      "art_review": "pending_user_review",
+      "artifacts": [
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\back-editor.png",
+          "sha256": "6d82034d68040295aa2e392582e1f218e91d9e9c907b972aec91da47bd325cfc"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\back.png",
+          "sha256": "eef474d23fd37b34f8ca364656d4b44dce98ce6d5518ff0b79721dc5c9dd43a1"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\comparison-back.png",
+          "sha256": "5a837bf84f5b6ec1336b16f48c01b43d740b8f284ef72775107b79a86d73ac60"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\comparison-front.png",
+          "sha256": "6a810f155864b3ff8ca637dc82932fc11e7d790c87518652236069c98bcb5c59"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\comparison-side.png",
+          "sha256": "dad481e8f1530266a3cd0d44523162f384915b71a2de3f87c8ad5392225c7bed"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\concept.png",
+          "sha256": "a97f462a8aeeb714d158e5690b2071dcc00fbbb5e9278cfec17cf198f58a2407"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\front-editor.png",
+          "sha256": "d8aa24046a57605a6636459a6cc29a1705456fe2541efb67fd8072e51a07e176"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\front.png",
+          "sha256": "1d5444f26f4a5bda9462d0a59b8d7549a543ef9e54427f62121af5eef14f0239"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\perspective-editor.png",
+          "sha256": "33b63a60736e421f589b2c3d9badde42d7eb46b895b83dddc63cc72c8d329a3a"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\perspective.png",
+          "sha256": "28bb970ba6200c5acfcbe0bb21619df33943e9c6872a9a02b2a30df77f617c70"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\side-editor.png",
+          "sha256": "460da9d7dfc5a963bb33f793c886018e0260fbb6cd565264f3d036df189d5483"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\breach_guard\\side.png",
+          "sha256": "86271cc13903ef41749867f8caca50d3d2c71dd78c14b968429a8e7e262c14f1"
+        },
+        {
+          "path": "模组位置\\dev-assets\\enemies\\models\\breach_guard.bbmodel",
+          "sha256": "b2b5ce379d2ed28fd2af8b403a4f6948b84f792cce5bf518932a7cd312275f47"
+        }
+      ]
+    },
+    {
+      "id": "quarry_warden",
+      "name": "矿站监工 MK-I",
+      "art_review": "pending_user_review",
+      "artifacts": [
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\back-editor.png",
+          "sha256": "cfd04132277f78356ec795866a0bcb4d3ead6d0d71bf818511c777892cf45c98"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\back.png",
+          "sha256": "0e7398802064f3d8ff0cfa151fe561604a32f6faa95e3b4a4bd1e31a4896eac0"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\comparison-back.png",
+          "sha256": "e2b780f240a69cd8f5eb554222b957d73ece1efd7296c038fd1315a118215f15"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\comparison-front.png",
+          "sha256": "3d7c8ca566d575b5cae08d53637567af79c640b233d8be47b3c167e7af0cc3ed"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\comparison-side.png",
+          "sha256": "7ef55de7986db314ffbdabee51c21a7486db43ba400696c80fe42d6a174be07a"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\concept.png",
+          "sha256": "0cdec158bc8f1fdc4fbc8f6b72db750626c60b414a6609491fe47b5659585647"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\front-editor.png",
+          "sha256": "6a166061a51e2f592c1a3ea1c33799bcbaeea8138fa9d3d1567aadaff04be930"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\front.png",
+          "sha256": "34e8477b947f0b2b11307272fa8daf27bbaa7cfc12cdee74cd37d361972ae57d"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\perspective-editor.png",
+          "sha256": "a7f88cd438477c09aafa75f42b2b45e7730eaabc6487f562bdedccafdb23f844"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\perspective.png",
+          "sha256": "2180cf367835ae995f19b72e0771bc287b7aff65feb29d2a73b992a4f19e4a6f"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\side-editor.png",
+          "sha256": "f3b500d76abb10dfa9f7f27ef9429cfbefe2518564f0796c9e9da3182566e354"
+        },
+        {
+          "path": "概念图\\2026-10-27_敌人设计与建模\\quarry_warden\\side.png",
+          "sha256": "fb82da4d1d38236c20a036c8ce668c3f98dfc4da280a1cc5e75587d1a782e471"
+        },
+        {
+          "path": "模组位置\\dev-assets\\enemies\\models\\quarry_warden.bbmodel",
+          "sha256": "6fac3e1725d6471fef28e7e93aba57cba98f3f1067d48e45613ed6fb172b3d88"
+        }
+      ]
+    }
+  ],
+  "client_screenshots": [
+    {
+      "path": "game/breach_guard-idle.png",
+      "sha256": "34637db578b808e692f5f0f8fa73eaa90bcffb5bb475f35222fc5699ad4d6a62"
+    },
+    {
+      "path": "game/breach_guard-movement.png",
+      "sha256": "09352c66a894c935513f464b3d570f6c47ad73496f5b58f70a2892f286ecc014"
+    },
+    {
+      "path": "game/breach_guard-windup.png",
+      "sha256": "e584222e1a2a4c541dec85302361c7b1bb1df712604bd09dede5fd3d08a66908"
+    },
+    {
+      "path": "game/breach_guard-world.png",
+      "sha256": "c834b6ec02f896c1f7a78c701f807b12f926e5a67fcc7eb76c5e5a1f305e92f3"
+    },
+    {
+      "path": "game/coil_sentry-idle.png",
+      "sha256": "66d386eff786ff586660a2fca98b2d92b45a752366be13bbc6ae14f1f534125f"
+    },
+    {
+      "path": "game/coil_sentry-movement.png",
+      "sha256": "b94894edd351268ec072ec1ea8078b758c4c5ef250d573507e97d82fff6e61bb"
+    },
+    {
+      "path": "game/coil_sentry-windup.png",
+      "sha256": "fe14c17635a84acc665a39f43d37e67ecd10d504c6600e4a8646afaddaa3828d"
+    },
+    {
+      "path": "game/coil_sentry-world.png",
+      "sha256": "0a49139f06c8144995b5e43608aeb71ab2c9287e102db2f9f2732539d4b2e046"
+    },
+    {
+      "path": "game/quarry_warden-idle.png",
+      "sha256": "c002b12387407c3089068492123e32f33ac65c545b2db6a67b29969fc054e7a3"
+    },
+    {
+      "path": "game/quarry_warden-movement.png",
+      "sha256": "fb31f16d28f86ff318c08df6a2cad5d0c393a5e0fa7e7fde834cbc367e4b66ba"
+    },
+    {
+      "path": "game/quarry_warden-stomp-windup.png",
+      "sha256": "5db0a78f155643f7254f989f1f722a8cd381a7e96550eb2878d91cd127e6f9bf"
+    },
+    {
+      "path": "game/quarry_warden-windup.png",
+      "sha256": "ee7fa8657abbf827858eb9d526123ae4c332b1522a0f27505937967752eafd73"
+    },
+    {
+      "path": "game/quarry_warden-world.png",
+      "sha256": "a3afa3069d5512d0846c4400195546c61ffaa9c5603d69d935c31e9a489c720c"
+    },
+    {
+      "path": "game/scrap_skitter-idle.png",
+      "sha256": "8df0274aee15ac8623742a9475634af72986633ca90ece62bd995642733b6836"
+    },
+    {
+      "path": "game/scrap_skitter-movement.png",
+      "sha256": "31e744db2e784e50738b2383b422face35d983e2fa35ead00285e02900563575"
+    },
+    {
+      "path": "game/scrap_skitter-windup.png",
+      "sha256": "5b9ff1a488901dd40706c09a9f89d3a0fa06581068c66eda0a0878917e9d6579"
+    },
+    {
+      "path": "game/scrap_skitter-world.png",
+      "sha256": "f1c6d709576fcd5eba0f552a4c0f8b5a6e15c0e548d5d6d5ec2c98180032cd24"
+    }
+  ],
+  "client_complete": "Four real spawn eggs, 13 idle/movement/windup triple-view scenes (both boss attacks), 4 in-world views, native attributes and resource reload verified. Windup snapshots pause real AI after its transition.\n"
+}

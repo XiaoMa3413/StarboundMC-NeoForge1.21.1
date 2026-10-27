@@ -1,0 +1,206 @@
+[
+  {
+    "id": "scrap_skitter",
+    "view": "front",
+    "reference_crop": [
+      680,
+      245,
+      1095,
+      590
+    ],
+    "model_bounds": [
+      326,
+      241,
+      1074,
+      859
+    ],
+    "score": null
+  },
+  {
+    "id": "scrap_skitter",
+    "view": "side",
+    "reference_crop": [
+      1110,
+      240,
+      1570,
+      590
+    ],
+    "model_bounds": [
+      277,
+      241,
+      1123,
+      859
+    ],
+    "score": null
+  },
+  {
+    "id": "scrap_skitter",
+    "view": "back",
+    "reference_crop": [
+      1595,
+      240,
+      1980,
+      590
+    ],
+    "model_bounds": [
+      326,
+      241,
+      1074,
+      859
+    ],
+    "score": null
+  },
+  {
+    "id": "coil_sentry",
+    "view": "front",
+    "reference_crop": [
+      540,
+      50,
+      995,
+      633
+    ],
+    "model_bounds": [
+      383,
+      127,
+      1017,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "coil_sentry",
+    "view": "side",
+    "reference_crop": [
+      1025,
+      22,
+      1395,
+      635
+    ],
+    "model_bounds": [
+      445,
+      127,
+      955,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "coil_sentry",
+    "view": "back",
+    "reference_crop": [
+      1480,
+      50,
+      1975,
+      635
+    ],
+    "model_bounds": [
+      383,
+      127,
+      1017,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "breach_guard",
+    "view": "front",
+    "reference_crop": [
+      560,
+      35,
+      1055,
+      735
+    ],
+    "model_bounds": [
+      452,
+      127,
+      948,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "breach_guard",
+    "view": "side",
+    "reference_crop": [
+      1070,
+      30,
+      1325,
+      735
+    ],
+    "model_bounds": [
+      597,
+      127,
+      803,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "breach_guard",
+    "view": "back",
+    "reference_crop": [
+      1348,
+      30,
+      1880,
+      735
+    ],
+    "model_bounds": [
+      452,
+      127,
+      948,
+      973
+    ],
+    "score": null
+  },
+  {
+    "id": "quarry_warden",
+    "view": "front",
+    "reference_crop": [
+      620,
+      155,
+      1102,
+      610
+    ],
+    "model_bounds": [
+      277,
+      128,
+      1123,
+      972
+    ],
+    "score": null
+  },
+  {
+    "id": "quarry_warden",
+    "view": "side",
+    "reference_crop": [
+      1105,
+      155,
+      1478,
+      610
+    ],
+    "model_bounds": [
+      409,
+      128,
+      991,
+      972
+    ],
+    "score": null
+  },
+  {
+    "id": "quarry_warden",
+    "view": "back",
+    "reference_crop": [
+      1483,
+      155,
+      1915,
+      610
+    ],
+    "model_bounds": [
+      277,
+      128,
+      1123,
+      972
+    ],
+    "score": null
+  }
+]
