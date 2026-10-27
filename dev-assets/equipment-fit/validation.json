@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-27",
+  "runtime_scale": [
+    1,
+    1,
+    1
+  ],
+  "old_oversized_helmet_dimensions": [
+    11.8598,
+    11.2221,
+    12.2228
+  ],
+  "new_remodeled_helmet_dimensions": [
+    10,
+    9.65,
+    10.6154
+  ],
+  "head_coverage": {
+    "head_outer_layer_samples": 125,
+    "outside_shell": 0,
+    "runtime_scale": [
+      1,
+      1,
+      1
+    ]
+  },
+  "client_armor_views": 32,
+  "client_log": "logs/starwarden-helmet-shell-client.log",
+  "build_log": "logs/starwarden-helmet-shell-build.log",
+  "tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar_sha256": "cc6112d4fc5509b265ba5b8b239ab76b684c3d8481918f086495da542a98743f",
+  "jar_bytes": 113708831,
+  "source_sha256": "17c3b6d859d938676eae76dcba65d51221e8128de2c88df115f98148b30f3d09",
+  "screenshots_sha256": {
+    "blockbench-back.png": "9067e937094679d6300a0fb1a219a265ca6f9cbdf3eddc919d639dc5fbf9290e",
+    "blockbench-editor.png": "40dfbc8a08170f1266983238eade78d4940f56f8c4eaa8c0124ccfbc2c7e1e8c",
+    "blockbench-front.png": "0631178e8bc08623cbf6f18dcc7916dfb6e8ed694a35309ec5eb374b012ba393",
+    "blockbench-perspective.png": "ae8dd728535c317c3e55aefa7347afec955fa08d0c077ee0446b4a48aef2329e",
+    "blockbench-side.png": "0de18a9315d219d978e8da6cc9b40f51c06f5aad53e3301790ef5c4a5b7ae037",
+    "starwarden_boots_set.png": "84be6925f392843bf67d9e8582552c02f1805c9da6bd4fb628ff10f2bfbb621a",
+    "starwarden_boots_single.png": "21f3652ede4b62fa32681b4f06b29a454ac24012c49d610fa88a3667148f1c3d",
+    "starwarden_chestplate_set.png": "031de0ece44c8c181228f860499011bf5da36d96a0b6cdeef5c72af74c119f1d",
+    "starwarden_chestplate_single.png": "d3155df42f36040ad390e3e96f083a65f6fb2e27adde881afa163acc2e0eba79",
+    "starwarden_helmet_set.png": "007bd46264a1297186aab7952dd33c3fab5a7656e0e2b09ffb0e0ca65b5c056c",
+    "starwarden_helmet_single.png": "1c970242e58b6ec019a23c430534d45c63c32766726e1ecebc49898344ea819c",
+    "starwarden_leggings_set.png": "0fe6eb1c000d2f9dac859cd695aab143c8131392e3f1d3dbb740016f2a587afe",
+    "starwarden_leggings_single.png": "a471818a319d914501efc45b36074386d3929cdf3a67c2373e394e249cda7c05",
+    "游戏内_三视图.png": "16e8abe651d11a4e19795c3d0046af1ffd49eb8853372425c9b5fc47e75817b1",
+    "游戏内_完整三视图.png": "007bd46264a1297186aab7952dd33c3fab5a7656e0e2b09ffb0e0ca65b5c056c"
+  },
+  "installed_sha256_verified": true,
+  "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar"
+}

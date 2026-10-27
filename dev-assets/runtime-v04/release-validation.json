@@ -7,8 +7,8 @@
     "skipped": 0
   },
   "jar": "build\\libs\\starboundmc-0.1-alpha.jar",
-  "jar_bytes": 113708979,
-  "jar_sha256": "f425ea5d947c8057abc82265051482baf9297f465f4a5097b8d60282f00f33c6",
+  "jar_bytes": 113708831,
+  "jar_sha256": "cc6112d4fc5509b265ba5b8b239ab76b684c3d8481918f086495da542a98743f",
   "native_sources": {
     "tungsten_sabre": {
       "source_sha256": "83f771ea5b687ea5c2f1fdc6bba1a4283722f5a35451121c7cf9665865c2013e",
@@ -64,7 +64,8 @@
   "test_fixtures_absent": true,
   "obsolete_armor_geometry_absent": true,
   "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
-  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-v04\\starboundmc-0.1-alpha.jar",
+  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-helmet-shell-fit\\starboundmc-0.1-alpha.jar",
   "installed_sha256_verified": true,
-  "weapon_effect_scenes": 5
+  "weapon_effect_scenes": 5,
+  "helmet_override": "../equipment-fit/validation.json"
 }

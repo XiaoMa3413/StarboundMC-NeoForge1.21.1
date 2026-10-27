@@ -32,7 +32,7 @@
 
 纹理使用验收工程内嵌的1536×1088投影图，保留概念原有绘制光照；不是重新绘制的PBR材质。资源重载后清除模型和几何缓存。缺失或损坏几何明确报错。
 
-`extract_v04_meshes.py` 在真实Blockbench中读取实际渲染网格，输出带源SHA256的 `dev-assets/runtime-v04/` 三角面缓存。`equipment_mesh_export.py` 校验源哈希并导出武器OBJ/MTL及防具 `equipment/armor_meshes.json`；普通导出不需要启动Blockbench。盔甲从概念人体比例适配原版方块骨架，仅生产输出变形，验收工程保持不变。生产适配包含各套头盔包覆宽度与原版皮肤外层所需的深色内衬，防止头发、衣袖在关节处穿出。星核守望头盔按用户反馈在适配尺寸基础上绕头部中心额外整体放大12%。
+`extract_v04_meshes.py` 在真实Blockbench中读取实际渲染网格，输出带源SHA256的 `dev-assets/runtime-v04/` 三角面缓存。`equipment_mesh_export.py` 校验源哈希并导出武器OBJ/MTL及防具 `equipment/armor_meshes.json`；普通导出不需要启动Blockbench。盔甲从概念人体比例适配原版方块骨架，仅生产输出变形，验收工程保持不变。生产适配包含各套头盔包覆宽度与原版皮肤外层所需的深色内衬，防止头发、衣袖在关节处穿出。星核守望头盔使用 `dev-assets/equipment-fit/starwarden_helmet.bbmodel` 内重塑的最终尺寸网格（约10.00×9.65×10.62像素）；直接绑定头部，运行时缩放为1，不再使用整体12%放大或头盔方形补洞内衬。
 
 ## 生成与验证
 
