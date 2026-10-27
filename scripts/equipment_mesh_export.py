@@ -17,6 +17,9 @@ WEAPONS = {
  'starcore_blade': ([33,165,877,370], [165,264]),
  'starcore_railgun': ([37,135,858,331], [225,280]),
 }
+# Final geometry sizes, relative to the V04 integration baseline, centered on the grip.
+GUN_MODEL_SCALE = {'coil_pistol': .85, 'plasma_carbine': 1.5, 'starcore_railgun': 2.0}
+
 # Concept-space landmarks, independently fitted to the vanilla humanoid rig.
 ARMOR = {
  'pioneer': ([176,133,515,727],345,267,485,280,518,[(225,213),(455,477)],[(305,295),(383,395)]),
@@ -49,6 +52,9 @@ def export_weapon(name):
   for tri in part['triangles']:
    for x,y,z,u,v in tri:
     x,y,z = (-x+ax+6,y-ay+4,-z+8) if gun else (y-ay+8,-x+ax+2,z+8)
+    if gun:
+     size=GUN_MODEL_SCALE[name]
+     x,y,z=6+(x-6)*size,4+(y-4)*size,8+(z-8)*size
     lines.append('v %.7f %.7f %.7f'%(x/16,y/16,z/16))
     lines.append('vt %.7f %.7f'%(u,v))
    lines.append('f '+' '.join(f'{i}/{i}' for i in range(n,n+3))); n+=3

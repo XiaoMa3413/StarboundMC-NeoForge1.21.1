@@ -1,0 +1,115 @@
+{
+  "baseline_commit": "d99260f",
+  "scale_center_model_pixels": [
+    6,
+    4,
+    8
+  ],
+  "weapons": {
+    "coil_pistol": {
+      "factor": 0.85,
+      "old_dimensions_model_pixels": [
+        31.95537,
+        16.15621,
+        4.15063
+      ],
+      "new_dimensions_model_pixels": [
+        27.16206,
+        13.73278,
+        3.52803
+      ],
+      "measured_axis_ratios": [
+        0.8499999949930168,
+        0.8500000346616021,
+        0.8499997301612633
+      ],
+      "vertex_affine_check": true
+    },
+    "starcore_railgun": {
+      "factor": 2.0,
+      "old_dimensions_model_pixels": [
+        31.61023,
+        7.60049,
+        3.7028
+      ],
+      "new_dimensions_model_pixels": [
+        63.22046,
+        15.20097,
+        7.4056
+      ],
+      "measured_axis_ratios": [
+        2.0,
+        2.0000002105128427,
+        2.0000008642108678
+      ],
+      "vertex_affine_check": true
+    },
+    "plasma_carbine": {
+      "factor": 1.5,
+      "old_dimensions_model_pixels": [
+        31.91257,
+        11.97814,
+        3.54098
+      ],
+      "new_dimensions_model_pixels": [
+        47.86885,
+        17.96721,
+        5.31148
+      ],
+      "measured_axis_ratios": [
+        1.5000000250684933,
+        1.5000001335766564,
+        1.5000004518520056
+      ],
+      "vertex_affine_check": true
+    }
+  },
+  "client_views": 32,
+  "client_log": "logs/gun-size-client.log",
+  "screenshots_sha256": {
+    "coil_pistol-left-pose--30.png": "89e2883429a0ca4b2dc4050df8d634bdd7134bdd48adf52fc4f6f1f3a4683196",
+    "coil_pistol-left-pose-0.png": "1a8328384877a82a225771d5b4c7bc0644ed24428ea725df25cde6d044fc9ae8",
+    "coil_pistol-left-pose-30.png": "b90d8683a86059a77bc5605a812503f10282e92d08992751f5746a8c273b7188",
+    "coil_pistol-left.png": "3957d5d2d79002b72aa9dbd158116e5bc10a11fd14bb6cb0246a8c0425a430c3",
+    "coil_pistol-right-pose--30.png": "4054f2f5a29b6034ec8e7e721e696997c97a8d73ec2cc2883676291ba3ff6ee4",
+    "coil_pistol-right-pose-0.png": "743564fca96b99340ecbee26bb22dae3c32284d0a818568a20f5e7a342b23273",
+    "coil_pistol-right-pose-30.png": "dafcd245a89aaf22a10825c3cdc92af8abcc30fa3e19383bb75fc21caef31c23",
+    "coil_pistol-right.png": "51732e8778493a9917f332a16be6f54a909f8496ea840fdd0f8826df55200093",
+    "durasteel_glaive-left.png": "1e7ea21279c13a7f55cb350e42365e10b42aadf9026727c5054300169730d267",
+    "durasteel_glaive-right.png": "b67e7bed88c7718fc5eae89964660a7620d9349a9e62820f8d075406a21ec87c",
+    "plasma_carbine-left-pose--30.png": "912345fc2e04f03feb13746c16fd3fcf848ce1dba435ba5fc6e417c8032877cc",
+    "plasma_carbine-left-pose-0.png": "2fe723e42f5686eaa4e3b6bf4df33586ef084ebcab103ae416a9a98e3ebcc307",
+    "plasma_carbine-left-pose-30.png": "deb1ba87de3b802342a60941f1161d8c229be33b951eda400100c52dcf092ce3",
+    "plasma_carbine-left.png": "12aea45a2d98908d7b035628061e5cea199b00cc3b5e3a5c6fe61dac5465f83c",
+    "plasma_carbine-right-pose--30.png": "5e07731422d4a8ff45ffb1a2c0bdc1e00337d8b6c31147cf19b26d0b6f9822e5",
+    "plasma_carbine-right-pose-0.png": "e7ccf3ef5da17b722ec9b0a11059d8b7d5d6f73081d59c0e8293874a6bf2d0f3",
+    "plasma_carbine-right-pose-30.png": "88224697f75d6e737a97617f8dae1d34b51b69c22f39cd9ebdd291dff5b7be2f",
+    "plasma_carbine-right.png": "e9f1d215b3ba2268c99c7fcc21ddbcbc19db69ffc433abecd6e7d5d841f3d44c",
+    "starcore_blade-left.png": "31db9d263c0735b291160b60ae591c0e8c60aacf77251b3fac63d30c3f62136f",
+    "starcore_blade-right.png": "42a6e78aeee5622fab20951949454a19e1d56ad114f6eda505da59b714e45da7",
+    "starcore_railgun-left-pose--30.png": "0a92a36edac668a3e11e8bdf9a61c240ee31df4a142c9d68ba8835b25757002e",
+    "starcore_railgun-left-pose-0.png": "db26f9a47d5f817f02dbcb1a46ecbf8ca3919a631335b34fb141500654f2698d",
+    "starcore_railgun-left-pose-30.png": "7b96108d704446d3bfed2ac5122a15b52257cc3d7dc721fa3f7440d3033dabc6",
+    "starcore_railgun-left.png": "55a89b8ef5fe349dd73d2a951d76effc5ab3119609ebea5016aaaf5ecc958f02",
+    "starcore_railgun-right-pose--30.png": "1c87bd62e8b550c3e3bb0c2276c6b5cf94fbf8e0b47be6aa8e18e7a24fc4d816",
+    "starcore_railgun-right-pose-0.png": "5bdf16ee8fd7d8f67c50472d994a62a04d3701daf4443465e3b85448f179968c",
+    "starcore_railgun-right-pose-30.png": "f70da5501dd80de507d0123e89c31322ffe0c9efbd9b351dd16b730ee9308678",
+    "starcore_railgun-right.png": "8ae5236d65e3c61ad0c639eac2191b10b1a14d83c3e9cd8421d2daf0d908d92b",
+    "survival_knife-left.png": "33ef7ab8d15daaa065e8d63fcb59e5084427800416c98b8e756e351404043187",
+    "survival_knife-right.png": "a82628bd6538c6b269f397cf5197b901af29e1b83b80507db6b7060babdefe2b",
+    "tungsten_sabre-left.png": "b9a57b6cd9d5de83df7147ab8532edbe3cc996f2eb0ad2f3a8751b19da6293dd",
+    "tungsten_sabre-right.png": "8ec225ad1f23dda2a7f5db7cdcc718813986a07b3463b4bfe151642da6f676c1"
+  },
+  "tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar_sha256": "950f182ff8528dce02a68f1b7e634ca1f98855f5e6e6bc16e8db09ea7ad9ca90",
+  "jar_bytes": 113708753,
+  "build_log": "logs/gun-size-release-build.log",
+  "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
+  "installed_sha256_verified": true,
+  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-gun-size-adjustments\\starboundmc-0.1-alpha.jar"
+}
