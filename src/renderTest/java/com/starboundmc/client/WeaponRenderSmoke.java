@@ -69,6 +69,23 @@ public final class WeaponRenderSmoke {
         player.yBodyRot = body; player.yHeadRot = head; player.yHeadRotO = oldHead; player.setYRot(yaw);
     }
 
+    private static void verifyFirstPersonYaw() {
+        var mc = Minecraft.getInstance();
+        if (!(mc.player.getMainHandItem().getItem() instanceof com.starboundmc.weapon.EnergyGunItem)) return;
+        var context = leftHand() ? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND
+                : net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND;
+        var poses = new com.mojang.blaze3d.vertex.PoseStack();
+        mc.getItemRenderer().getModel(mc.player.getMainHandItem(), mc.level, mc.player, 0)
+                .applyTransform(context, poses, leftHand());
+        var expected = new org.joml.Quaternionf().rotationY((float)Math.toRadians((leftHand() ? 70 : 110) - 15));
+        for (var axis : java.util.List.of(new org.joml.Vector3f(1, 0, 0),
+                new org.joml.Vector3f(0, 1, 0), new org.joml.Vector3f(0, 0, 1))) {
+            var actual = poses.last().pose().transformDirection(new org.joml.Vector3f(axis)).normalize();
+            if (actual.distance(expected.transform(new org.joml.Vector3f(axis))) > .0001f)
+                throw new IllegalStateException("First-person rightward yaw / upright model mismatch: " + label());
+        }
+    }
+
     private static void verifyMuzzle() {
         var mc = Minecraft.getInstance();
         if (!(mc.player.getMainHandItem().getItem() instanceof com.starboundmc.weapon.EnergyGunItem)) return;
@@ -148,6 +165,7 @@ public final class WeaponRenderSmoke {
         }
         if ((System.nanoTime() - selected) / 1e9 < 2) return;
         verifyMuzzle();
+        verifyFirstPersonYaw();
         if (stage >= 14 && (stage - 14) % 3 == 1 && !mc.player.isCrouching())
             throw new IllegalStateException("Crouch input was not applied: " + label());
         if (stage >= 14 && (stage - 14) % 3 == 2 && !mc.player.getOffhandItem().is(net.minecraft.world.item.Items.SHIELD))
@@ -155,7 +173,7 @@ public final class WeaponRenderSmoke {
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) { image.writeToFile(output.resolve(label() + ".png")); }
         Files.writeString(output.resolve(label() + ".txt"), "item=" + IDS[itemIndex()] + "\npitch=" + pitch() + "\ncrouch=" + mc.player.isCrouching() + "\n");
         if (++stage == 32) {
-            Files.writeString(output.resolve("complete.txt"), "32 views: 7 items in both hands, three guns with +/-30 degree pitch, crouch, offhand shield, forward muzzle matrix and resource reload.\n");
+            Files.writeString(output.resolve("complete.txt"), "32 views: 7 items in both hands, three guns with +/-30 degree pitch, crouch, offhand shield, forward muzzle matrix, 15-degree rightward first-person yaw with zero roll in both hands and resource reload.\n");
             finished = true; mc.stop();
         } else { selected = 0; languageLoad = null; }
     }

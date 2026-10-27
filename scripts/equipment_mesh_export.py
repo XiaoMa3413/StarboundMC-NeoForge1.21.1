@@ -63,6 +63,11 @@ def export_weapon(name):
  (folder/f'{name}.mtl').write_text(f'newmtl equipment\nKa 0 0 0\nKd 1 1 1\nd 1\nmap_Kd starboundmc:item/{name}_model\n',encoding='utf-8')
  hand = folder/f'{name}_hand.json'
  display=json.loads(hand.read_text(encoding='utf-8'))['display']
+ if gun:
+  # Camera-horizontal rightward yaw is -15 degrees; left-hand Y is mirrored.
+  for context,yaw in (('firstperson_righthand',95),('firstperson_lefthand',-55)):
+   display[context]['rotation']=[0,yaw,0]
+   display[context].pop('right_rotation',None)
  write(hand,{'loader':'neoforge:obj','model':f'starboundmc:models/item/{name}.obj',
   'automatic_culling':False,'shade_quads':True,'flip_v':False,'emissive_ambient':False,
   'textures':{'particle':f'starboundmc:item/{name}_model'},'display':display})

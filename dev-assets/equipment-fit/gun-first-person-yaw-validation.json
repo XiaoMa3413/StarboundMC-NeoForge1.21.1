@@ -1,0 +1,293 @@
+{
+  "baseline_commit": "2dd2715",
+  "rightward_yaw_degrees": 15,
+  "roll_degrees": 0,
+  "contexts": {
+    "coil_pistol": {
+      "before": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            110,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.52,
+            0.52,
+            0.52
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -70,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.52,
+            0.52,
+            0.52
+          ]
+        }
+      },
+      "after": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            95,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.52,
+            0.52,
+            0.52
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -55,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.52,
+            0.52,
+            0.52
+          ]
+        }
+      }
+    },
+    "plasma_carbine": {
+      "before": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            110,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.43,
+            0.43,
+            0.43
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -70,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.43,
+            0.43,
+            0.43
+          ]
+        }
+      },
+      "after": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            95,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.43,
+            0.43,
+            0.43
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -55,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.43,
+            0.43,
+            0.43
+          ]
+        }
+      }
+    },
+    "starcore_railgun": {
+      "before": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            110,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.51,
+            0.51,
+            0.51
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -70,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.51,
+            0.51,
+            0.51
+          ]
+        }
+      },
+      "after": {
+        "firstperson_righthand": {
+          "rotation": [
+            0,
+            95,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.51,
+            0.51,
+            0.51
+          ]
+        },
+        "firstperson_lefthand": {
+          "rotation": [
+            0,
+            -55,
+            0
+          ],
+          "translation": [
+            -1.5,
+            2.2,
+            -2
+          ],
+          "scale": [
+            0.51,
+            0.51,
+            0.51
+          ]
+        }
+      }
+    }
+  },
+  "client_views": 32,
+  "client_log": "logs/gun-first-person-yaw-client.log",
+  "actual_baked_transform_basis_verified": true,
+  "third_person_forward_muzzle_verified": true,
+  "screenshots_sha256": {
+    "coil_pistol-left-pose--30.png": "a7351d0086058a67df2c54ea6d740accbf417ae5ea9d7c2fc362c425d2701a44",
+    "coil_pistol-left-pose-0.png": "2a921bbe9eb0d620bc1b1670cfc58939a2b312ef9c769884c662328eee8b0da3",
+    "coil_pistol-left-pose-30.png": "782f2053f42bb8ec4d15db594ee6f2a317451bfc88f459917d61493b16fe3367",
+    "coil_pistol-left.png": "ff7a1c56c55cb1fb70a9cd679bb8561d480d39edf34ea95bdac0164c92721e7c",
+    "coil_pistol-right-pose--30.png": "e507abdebf2f875c88256e2b7992a81806e68e36f46149fcd59e0e23dead8afb",
+    "coil_pistol-right-pose-0.png": "5752e039e17de9542c4090469521f8da5ca57058a6e0b16b15a1bfd913cdc39f",
+    "coil_pistol-right-pose-30.png": "0a8045ca1f0b6670a6d72e73095fb80758f668ef18a55e5e0a0f55b21f4e7557",
+    "coil_pistol-right.png": "467187159b1cb800320ad2dae5cedf99a25d97cede993a010561dedb426c469f",
+    "durasteel_glaive-left.png": "feaf682c7065959a9bfd0a6445080cf9a5d73ceb2032c8f3be07b3924e810164",
+    "durasteel_glaive-right.png": "51ced0032a68fe37c2617b5d3e65a085844c4e3d92c6e8e95cea5c3c88d0b625",
+    "plasma_carbine-left-pose--30.png": "20d54d3e661ca07c2f9523bfeaee8702169fa190043e372694eb4d94c522f144",
+    "plasma_carbine-left-pose-0.png": "8de5482b45df85abaeaa1f2d89d74df5db425155a47583ba80610a48399e9122",
+    "plasma_carbine-left-pose-30.png": "773679e11e32b3008d4ef3b9770412e925e8d605d15412069c1a3ba6a7cba4af",
+    "plasma_carbine-left.png": "4fd1d05fc7517a566fcea36983e37e219be2da3cd69e5269f6a386ed45095443",
+    "plasma_carbine-right-pose--30.png": "b84d683dafd9977ed2734fbe7af37c881359b4fb2d076eccb551e9bb8a266c17",
+    "plasma_carbine-right-pose-0.png": "c550f0d7d655949fcb89eee3da8baaa7db415b83bed6e0b122c4b70f1df06451",
+    "plasma_carbine-right-pose-30.png": "17d5f9e45c358920f1d27e6f2d4f4eab4a55707dd9528dc8b12bc902f104cae2",
+    "plasma_carbine-right.png": "16bcf20901a3a2b257729df315a7ee68776dc0242a12169c6339a930f6585923",
+    "starcore_blade-left.png": "7763e233d7c32cf8e3c5e6b19504ee193072d0e689dce8ac1a570e1be8aae485",
+    "starcore_blade-right.png": "103397e4f309cb1cdd2f6e89895bd1024f759d76910b877804b41168781e7b7c",
+    "starcore_railgun-left-pose--30.png": "07cab1f114fe43304cf0515a738adc18cfef96cf0029638e96545fa1258ee02e",
+    "starcore_railgun-left-pose-0.png": "7a9691341705d0fb19268cbb1d88b50184862a2f29c4bd295fb77416563132a6",
+    "starcore_railgun-left-pose-30.png": "75a489a470db42151684c7e3805887580405b07f38464041e4733380768c094c",
+    "starcore_railgun-left.png": "25809bb0a16bb4c02c15d9d3cbd35a1fd472823b6d68c2340f1a608c5047483a",
+    "starcore_railgun-right-pose--30.png": "ca45b711c39a7d804d936844a6936c4d8dde6cde78279a5c4f4dc41521e89b64",
+    "starcore_railgun-right-pose-0.png": "02c59c39005b6b575692fc9abf8bc42affcd6b30f93dd1667e0f225fe78572db",
+    "starcore_railgun-right-pose-30.png": "31a7f869a14fa5f68d8f28e72b42faaec41fdea3f641782a42f764ba4c3602f6",
+    "starcore_railgun-right.png": "c8e79a850ef8f62b033a70f63aeef7d065cfb1f45a2adcccb943edb7046656cb",
+    "survival_knife-left.png": "685e9b02e55d673726f411e9d7d34686dba3aac65d1771becbcf8fc00be996c5",
+    "survival_knife-right.png": "c38843654be939a2f304ab8756afaf893cb369ca10e35a97bf9752d36d209410",
+    "tungsten_sabre-left.png": "4e48fed96b605d4b8860451457a1b11e659973bac8a6b9ee6c2c953f5919dc40",
+    "tungsten_sabre-right.png": "a815f8e64e899d2ea097e1fb25f4fd7f717dc5559f5c8ba1511d2382e41c065e",
+    "firstperson-coil-left-auto-idle.png": "c142605552030618e2a67d4e554978a8a6a0152137056082822334fd13ca2ecf",
+    "firstperson-coil-left-auto.png": "0087892edc1d5fde073b088b4f9aa1e3bd4874d33dd60cc3f29caddd0e504c6e",
+    "firstperson-glaive-fan-idle.png": "5903511f95bee6b51f8e2a3c98982eec4c5aea10c9f340dafae40a14c7c53352",
+    "firstperson-glaive-fan.png": "27555a6adb298f130ced29107fe102d662a824f6f54250a5e536ddc5cda562e7",
+    "firstperson-plasma-left-auto-idle.png": "ce6d13de0a994393c9870bcb6e7d5abfa99e44acce0e14bef4590fb7871e15d0",
+    "firstperson-plasma-left-auto.png": "f5da1c51c458cbb161170d53679bf59fedaeab6ab823530c0057952dab99e364",
+    "firstperson-rail-blast-idle.png": "a72ce01fb0cd830ed749ac9bd6c7e45dbbcdb770ac73b8f3e4af8dc21bde7e11",
+    "firstperson-rail-blast.png": "0d7d0ccb8e38742fd3dde412d88e4254d284ac82f8a91398ff387c457d665f4b",
+    "firstperson-rail-charge-0.png": "cd214d785ff146eb34923b2ddceb6377367ad8e837f65d944d9572864e45f4d2",
+    "firstperson-rail-charge-1.png": "1cb7f069d8c32a00430a70814370a736716ff0b8e68de93eeede8af7eb0327ed",
+    "firstperson-starcore-arc-idle.png": "ef49b1bb88395c7d7a284ff9b6ce41614798d78b4b27479426c437e74ccf1b90",
+    "firstperson-starcore-arc.png": "d65b052382dc5c04a57374c88f695bb0745ef6cace3d178b0ae5ddfd29f853c9"
+  },
+  "effect_scenes": 5,
+  "effects_log": "logs/gun-first-person-yaw-effects.log",
+  "tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "jar_sha256": "6cc456e99a6da43a6e10757bf2d2b3fb93bafbb34979d276c347bf70b5cae47f",
+  "jar_bytes": 113708750,
+  "build_log": "logs/gun-first-person-yaw-release-build.log",
+  "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
+  "installed_sha256_verified": true,
+  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-gun-yaw\\starboundmc-0.1-alpha.jar"
+}

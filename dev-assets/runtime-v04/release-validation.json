@@ -7,8 +7,8 @@
     "skipped": 0
   },
   "jar": "build\\libs\\starboundmc-0.1-alpha.jar",
-  "jar_bytes": 113708753,
-  "jar_sha256": "950f182ff8528dce02a68f1b7e634ca1f98855f5e6e6bc16e8db09ea7ad9ca90",
+  "jar_bytes": 113708750,
+  "jar_sha256": "6cc456e99a6da43a6e10757bf2d2b3fb93bafbb34979d276c347bf70b5cae47f",
   "native_sources": {
     "tungsten_sabre": {
       "source_sha256": "83f771ea5b687ea5c2f1fdc6bba1a4283722f5a35451121c7cf9665865c2013e",
@@ -64,9 +64,10 @@
   "test_fixtures_absent": true,
   "obsolete_armor_geometry_absent": true,
   "installed_jar": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
-  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-gun-size-adjustments\\starboundmc-0.1-alpha.jar",
+  "previous_jar_backup": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-27-before-gun-yaw\\starboundmc-0.1-alpha.jar",
   "installed_sha256_verified": true,
   "weapon_effect_scenes": 5,
   "helmet_override": "../equipment-fit/validation.json",
-  "gun_size_adjustment": "../equipment-fit/gun-size-validation.json"
+  "gun_size_adjustment": "../equipment-fit/gun-size-validation.json",
+  "gun_yaw_adjustment": "../equipment-fit/gun-first-person-yaw-validation.json"
 }
