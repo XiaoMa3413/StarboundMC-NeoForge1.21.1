@@ -2,6 +2,8 @@
 
 本目录保存首批四种机械敌人的设计、概念、可编辑 Blockbench 工程及导出回执。只加入四枚刷怪蛋，不添加自然刷新。玩法合同见 [enemies reference](../../docs/reference/enemies.md)，具体造型与攻击设计见 [design.md](design.md)。
 
+后续战斗优化的构建、安装和33张实机截图回执为 [combat-validation.json](combat-validation.json)，审查页在工作区 `../概念图/2026-10-28_敌人战斗优化/index.html`。初次建模交付的delivery.json保留原记录；当前战斗数值以reference和代码为准。
+
 ## 资产来源
 
 - 概念及正/左侧/背视图由内置 imagegen 生成，完整提示词为 [concept-prompts.json](concept-prompts.json)，修订提示词见 [concept-edit-prompts.json](concept-edit-prompts.json)。[概念清单](concepts/manifest.json) 记录来源、尺寸和SHA256。

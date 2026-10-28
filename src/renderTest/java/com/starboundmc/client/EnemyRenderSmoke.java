@@ -33,10 +33,20 @@ public final class EnemyRenderSmoke {
     private static long started,configured;
     private static boolean finished,reloaded,frozen,worldCapture,arenaPrepared,arenaReady;
     private static CompletableFuture<Boolean> arenaCheck;
-    private static EnemyProfile profile(){return EnemyProfile.values()[Math.min(stage/3,3)];}
-    private static int mode(){return stage==12?2:stage%3;}
+    private static boolean combat(){return Boolean.getBoolean("starboundmc.debug.enemyCombatSmoke");}
+    private static EnemyProfile profile(){
+        if(stage>=13)return stage<=15?EnemyProfile.BREACH_GUARD:stage==20?EnemyProfile.SCRAP_SKITTER:stage==21?EnemyProfile.COIL_SENTRY:EnemyProfile.QUARRY_WARDEN;
+        return EnemyProfile.values()[Math.min(stage/3,3)];
+    }
+    private static int mode(){return stage>=13?(stage==13||stage==16?2:3):stage==12?2:stage%3;}
+    private static int expectedAction(){return switch(stage){case 13,14->MachineEnemy.BASH;case 15->MachineEnemy.DRILL;
+        case 16,17->MachineEnemy.CHARGE;case 18->MachineEnemy.STOMP;case 19->MachineEnemy.SWEEP;
+        case 20->MachineEnemy.POUNCE;case 21->MachineEnemy.SHOT;default->stage==12?MachineEnemy.STOMP:-1;};}
     private static boolean enabled(){return Boolean.getBoolean("starboundmc.debug.enemySmoke");}
-    private static String label(){return stage==12?"quarry_warden-stomp-windup":profile().id+"-"+new String[]{"idle","movement","windup"}[mode()];}
+    private static String label(){
+        if(stage>=13)return profile().id+"-"+new String[]{"pounce","salvo","drill","sweep","stomp","bash","charge"}[expectedAction()]+(mode()==3?"-active":"-windup");
+        return stage==12?"quarry_warden-stomp-windup":profile().id+"-"+new String[]{"idle","movement","windup"}[mode()];
+    }
     private static MachineEnemy mob(){var e=Minecraft.getInstance().level.getEntity(enemyId);return e instanceof MachineEnemy m?m:null;}
 
     @SubscribeEvent public static void overlay(RenderGuiEvent.Post event){
@@ -53,7 +63,7 @@ public final class EnemyRenderSmoke {
         g.drawString(mc.font,"HP="+enemy.getHealth()+" / "+enemy.getMaxHealth(),770,200,0xffa8c3ce);
         g.drawString(mc.font,"ARMOR="+enemy.getArmorValue(),770,220,0xffa8c3ce);
         g.drawString(mc.font,"Egg created entity #"+enemyId,770,240,0xffa8c3ce);
-        g.drawString(mc.font,mode()==2?"Actual windup; AI paused for inspection":"Registered native bone model",24,440,0xffa8c3ce);
+        g.drawString(mc.font,mode()==2?"Actual windup; AI paused for inspection":mode()==3?"LIVE ATTACK / action="+enemy.action()+" / elapsed="+(int)enemy.animationTicks(0):"Registered native bone model",24,440,0xffa8c3ce);
     }
     private static void renderView(net.minecraft.client.gui.GuiGraphics g,MachineEnemy enemy,float x,float y,int scale,float angle){
         float body=enemy.yBodyRot,yaw=enemy.getYRot(),pitch=enemy.getXRot(),head=enemy.yHeadRot,old=enemy.yHeadRotO;
@@ -63,7 +73,7 @@ public final class EnemyRenderSmoke {
         enemy.yBodyRot=body;enemy.yHeadRot=head;enemy.yHeadRotO=old;enemy.setYRot(yaw);enemy.setXRot(pitch);
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event)throws Exception{
-        if(!enabled()||finished)return;var mc=Minecraft.getInstance();var output=mc.gameDirectory.toPath().resolve("screenshots/enemies-v01");
+        if(!enabled()||finished)return;var mc=Minecraft.getInstance();var output=mc.gameDirectory.toPath().resolve(combat()?"screenshots/enemy-combat":"screenshots/enemies-v01");
         if(started==0){
             if(mc.screen==null||mc.getOverlay()!=null)return;
             if(language==null){mc.getLanguageManager().setSelected("zh_cn");mc.options.languageCode="zh_cn";language=mc.reloadResourcePacks();return;}
@@ -104,7 +114,7 @@ public final class EnemyRenderSmoke {
                 var server=mc.getSingleplayerServer();var level=server.overworld();var player=server.getPlayerList().getPlayers().getFirst();
                 server.setDifficulty(Difficulty.NORMAL,true);level.setDayTime(6000);
                 player.teleportTo(level,1000.5,101,1000.5,Set.of(),0,0);player.setGameMode(GameType.CREATIVE);
-                if(mode==0){
+                if(mode==0||stage>=13){
                     if(serverEnemy!=null)serverEnemy.discard();if(target!=null)target.discard();
                     for(int x=993;x<=1007;x++)for(int z=996;z<=1042;z++)level.setBlockAndUpdate(new BlockPos(x,100,z),Blocks.SMOOTH_STONE.defaultBlockState());
                     player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(ModEnemies.egg(profile)));player.inventoryMenu.broadcastChanges();
@@ -116,6 +126,12 @@ public final class EnemyRenderSmoke {
                     serverEnemy.setNoAi(true);serverEnemy.setYRot(180);serverEnemy.yBodyRot=180;
                     target=EntityType.VILLAGER.create(level);target.setNoAi(true);target.setNoGravity(true);target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(1000);target.setHealth(1000);
                     target.setPos(1000.5,101,1036.5);level.addFreshEntity(target);
+                    if(stage>=13){
+                        double distance=switch(expectedAction()){case MachineEnemy.BASH->1.5;case MachineEnemy.CHARGE,MachineEnemy.SHOT->10;
+                            case MachineEnemy.STOMP->4.4;case MachineEnemy.DRILL->4.2;default->3.2;};
+                        target.setPos(1000.5,101,1006.5+distance);serverEnemy.setYRot(0);serverEnemy.yBodyRot=0;
+                        serverEnemy.setTarget(target);serverEnemy.setNoAi(false);
+                    }
                 }else{
                     serverEnemy.setPos(1000.5,101,1006.5);serverEnemy.setDeltaMovement(Vec3.ZERO);serverEnemy.getNavigation().stop();
                     double distance=mode==1?30:profile==EnemyProfile.COIL_SENTRY?10:profile.boss()?3.2:2.2;
@@ -126,26 +142,31 @@ public final class EnemyRenderSmoke {
         }
         if(!work.isDone())return;work.join();if(!mc.level.dimension().equals(Level.OVERWORLD))return;
         var enemy=mob();if(enemy==null)return;
+        if(worldCapture){
+            String name=mode()==0?profile().id+"-world":label()+"-world";
+            try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){image.writeToFile(output.resolve(name+".png"));}
+            worldCapture=false;advance(output);return;
+        }
         if(mode()==2&&!frozen){
-            if(enemy.phase()!=MachineEnemy.WINDUP||(stage==12&&enemy.action()!=MachineEnemy.STOMP))return;
+            if(enemy.phase()!=MachineEnemy.WINDUP||(expectedAction()>=0&&enemy.action()!=expectedAction()))return;
             work=mc.getSingleplayerServer().submit(()->{if(serverEnemy.phase()!=MachineEnemy.WINDUP)throw new IllegalStateException("Lost windup before freeze");serverEnemy.setNoAi(true);serverEnemy.setDeltaMovement(Vec3.ZERO);});
             frozen=true;configured=System.nanoTime();return;
         }
-        if((System.nanoTime()-configured)/1e9<1.8)return;
+        if(mode()==3){
+            if(enemy.phase()!=MachineEnemy.ACTIVE||enemy.action()!=expectedAction())return;
+            float elapsed=enemy.animationTicks(0);
+            if(elapsed<(stage==18?5:3)||elapsed>7)return;
+        }else if((System.nanoTime()-configured)/1e9<1.8)return;
         if(mc.getItemRenderer().getModel(new ItemStack(ModEnemies.egg(profile())),mc.level,mc.player,0)==mc.getModelManager().getMissingModel())throw new IllegalStateException("Missing egg model");
         if(!(mc.getEntityRenderDispatcher().getRenderer(enemy) instanceof com.starboundmc.client.enemy.MachineEnemyRenderer))throw new IllegalStateException("Custom enemy renderer not selected");
         if(mode()==1&&enemy.position().distanceTo(new Vec3(1000.5,101,1006.5))<.1)throw new IllegalStateException("Enemy did not actually move");
         if(mode()==2&&enemy.phase()!=MachineEnemy.WINDUP)throw new IllegalStateException("Windup not synchronized");
-        if(worldCapture){
-            try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){image.writeToFile(output.resolve(profile().id+"-world.png"));}
-            worldCapture=false;advance(output);return;
-        }
         try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){image.writeToFile(output.resolve(label()+".png"));}
-        Files.writeString(output.resolve(label()+".txt"),"entity="+enemyId+" hp="+enemy.getHealth()+" armor="+enemy.getArmorValue()+" phase="+enemy.phase()+" pos="+enemy.position());
-        if(mode()==0){worldCapture=true;return;}advance(output);
+        Files.writeString(output.resolve(label()+".txt"),"entity="+enemyId+" hp="+enemy.getHealth()+" armor="+enemy.getArmorValue()+" phase="+enemy.phase()+" action="+enemy.action()+" elapsed="+enemy.animationTicks(0)+" pos="+enemy.position());
+        if(mode()==0||mode()==3){worldCapture=true;return;}advance(output);
     }
     private static void advance(Path output)throws Exception{
-        if(++stage==13){Files.writeString(output.resolve("complete.txt"),"Four real spawn eggs, 13 idle/movement/windup triple-view scenes (both boss attacks), 4 in-world views, native attributes and resource reload verified. Windup snapshots pause real AI after its transition.\n");finished=true;Minecraft.getInstance().stop();}
+        if(++stage==(combat()?22:13)){Files.writeString(output.resolve("complete.txt"),combat()?"22 registered enemy scenes and 11 world views: all seven attacks captured while ACTIVE without pausing AI; windup poses separately frozen; real eggs, movement, attributes and resource reload verified.\n":"Four real spawn eggs, 13 idle/movement/windup triple-view scenes (both boss attacks), 4 in-world views, native attributes and resource reload verified. Windup snapshots pause real AI after its transition.\n");finished=true;Minecraft.getInstance().stop();}
         else configured=0;
     }
 }

@@ -132,7 +132,7 @@ public final class EnemyGameTests {
             var creative=h.makeMockPlayer(GameType.CREATIVE);h.assertTrue(!enemy.canHarmTarget(creative),"Creative player was a valid target");
         }h.succeed();
     }
-    private static final class Fixture implements AutoCloseable {
+    static final class Fixture implements AutoCloseable {
         final ServerLevel level;final Vec3 base;final List<LivingEntity> entities=new ArrayList<>();
         Fixture(GameTestHelper h) {
             level=h.getLevel();level.getServer().setDifficulty(Difficulty.NORMAL,true);var p=h.absolutePos(new BlockPos(16,5,10));base=Vec3.atBottomCenterOf(p);

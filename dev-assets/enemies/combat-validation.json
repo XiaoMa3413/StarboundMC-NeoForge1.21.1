@@ -1,0 +1,229 @@
+{
+  "created_at": "2026-10-28T12:05:00.879618+08:00",
+  "branch": "feat/enemy-combat-ai",
+  "baseline_commit": "1792b3d",
+  "scope": "Combat AI and attack animation; spawn eggs only",
+  "unit_tests": {
+    "tests": 668,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "server_game_tests_passed": 21,
+  "live_attack_captures": [
+    {
+      "scene": "breach_guard-bash-active",
+      "phase": 2,
+      "action": 5,
+      "elapsed_ticks": 3.0
+    },
+    {
+      "scene": "breach_guard-drill-active",
+      "phase": 2,
+      "action": 2,
+      "elapsed_ticks": 3.0
+    },
+    {
+      "scene": "coil_sentry-salvo-active",
+      "phase": 2,
+      "action": 1,
+      "elapsed_ticks": 3.0
+    },
+    {
+      "scene": "quarry_warden-charge-active",
+      "phase": 2,
+      "action": 6,
+      "elapsed_ticks": 3.0
+    },
+    {
+      "scene": "quarry_warden-stomp-active",
+      "phase": 2,
+      "action": 4,
+      "elapsed_ticks": 5.0
+    },
+    {
+      "scene": "quarry_warden-sweep-active",
+      "phase": 2,
+      "action": 3,
+      "elapsed_ticks": 3.0
+    },
+    {
+      "scene": "scrap_skitter-pounce-active",
+      "phase": 2,
+      "action": 0,
+      "elapsed_ticks": 3.0
+    }
+  ],
+  "client_pose_scenes": 22,
+  "client_world_views": 11,
+  "native_geometry_and_textures_unchanged": true,
+  "development_fixtures_excluded": true,
+  "jar": {
+    "path": "build\\libs\\starboundmc-0.1-alpha.jar",
+    "sha256": "3ea661d14c4b4cede1983b433a17cbdaecad0c2c1fe0850c6fc53f6323291fee",
+    "bytes": 125018954
+  },
+  "gallery": "D:\\GPTWork\\小马的mc模组\\概念图\\2026-10-28_敌人战斗优化\\index.html",
+  "screenshots": [
+    {
+      "path": "game/breach_guard-bash-active-world.png",
+      "sha256": "b4f31da1afd3fbd8239aded5c3d9ba2c054a94cf9a131b758f5e50cb704174f1"
+    },
+    {
+      "path": "game/breach_guard-bash-active.png",
+      "sha256": "18677773a241db525b66513681d74844216fa5869654101a1342ccc2c569c4f5"
+    },
+    {
+      "path": "game/breach_guard-bash-windup.png",
+      "sha256": "d4d9836447f60273c9f025d1df5d72b869a421927ff2808d8d1fbf8ad9adbfab"
+    },
+    {
+      "path": "game/breach_guard-drill-active-world.png",
+      "sha256": "9754fbec9f6af650d99f4ba6a98ad6b7acfed8bec363af111e0674cefb47b0de"
+    },
+    {
+      "path": "game/breach_guard-drill-active.png",
+      "sha256": "a51a1019b64296f529131501af290780f21b1402ad05fb5aeeb985524c1b7582"
+    },
+    {
+      "path": "game/breach_guard-idle.png",
+      "sha256": "00f56505cd99f2de45966ee1cce0a6940a12a6f877a18133e0e16f15f756e605"
+    },
+    {
+      "path": "game/breach_guard-movement.png",
+      "sha256": "35cd11aaa38c2eeb4bddd389552cdfe49e668def77644ba2c3cbfe8728720d52"
+    },
+    {
+      "path": "game/breach_guard-windup.png",
+      "sha256": "257143ee67b25dc0658ea55a7042deecd8e481957ea8cde073983a2fa1dbd26d"
+    },
+    {
+      "path": "game/breach_guard-world.png",
+      "sha256": "8cc710c640c54dada35e1d6b39e2d97e17c4eaa43a6b923d9043d09bb92e0f61"
+    },
+    {
+      "path": "game/coil_sentry-idle.png",
+      "sha256": "f96de773d8ebb193be5b83b4d77d63f511a1b1431329475b9f8690fbed6aa0d2"
+    },
+    {
+      "path": "game/coil_sentry-movement.png",
+      "sha256": "c79e66c527228da335724b81292b9852877d1469e8625fad19a0d43192dc82b2"
+    },
+    {
+      "path": "game/coil_sentry-salvo-active-world.png",
+      "sha256": "eb1bcb32841b704287a7bf432490fdfb7fdedf2c3b93ac8a3486ef9a09d39dac"
+    },
+    {
+      "path": "game/coil_sentry-salvo-active.png",
+      "sha256": "c8ec046268e229061c4fb712238386ca93db6ed050788e52b017108320747450"
+    },
+    {
+      "path": "game/coil_sentry-windup.png",
+      "sha256": "1601667e3f32b7e75daff835c2a61e051f967c856968a16d66e942829032ef91"
+    },
+    {
+      "path": "game/coil_sentry-world.png",
+      "sha256": "61d2fc49e8f16a909391a896fe976e614d32bb28c4b56863d3cf83e2be5085d8"
+    },
+    {
+      "path": "game/quarry_warden-charge-active-world.png",
+      "sha256": "842c72c93bcab9d945a6e7af2a419795e584562d537350280e67decb8fe80c27"
+    },
+    {
+      "path": "game/quarry_warden-charge-active.png",
+      "sha256": "8f14d579cdb003b4c606698bd84b3b4c5bbc476d006fe715247ac9109524b702"
+    },
+    {
+      "path": "game/quarry_warden-charge-windup.png",
+      "sha256": "2f8cc6cd6285f4660b9f1ec0060606715f456a29e04a7bdd9f55c98c79d79025"
+    },
+    {
+      "path": "game/quarry_warden-idle.png",
+      "sha256": "49ffb5f41137d5f86204d7f4714f2d649d4bf99d56ad7974220aa02f6d68edd0"
+    },
+    {
+      "path": "game/quarry_warden-movement.png",
+      "sha256": "16fe16bc1a4a1856a191f654b119a2d402ac21bba641edceca477a627a8b9b06"
+    },
+    {
+      "path": "game/quarry_warden-stomp-active-world.png",
+      "sha256": "cb6f679e66b1440f670d26a9fb94c09cf3c01bc16281b2dc2e64ae37025df2bf"
+    },
+    {
+      "path": "game/quarry_warden-stomp-active.png",
+      "sha256": "948c26a14986271aac613a38d3b6529c4b40b767a984e109d57e5ce0c9375b58"
+    },
+    {
+      "path": "game/quarry_warden-stomp-windup.png",
+      "sha256": "b3fcbe31e890484046f6f6e68c3198f1f38645913595224111d004b921d95bb7"
+    },
+    {
+      "path": "game/quarry_warden-sweep-active-world.png",
+      "sha256": "e9d384e7c26a86c776092284ea54843f147c6e947774fd1cd02a62d21eef941a"
+    },
+    {
+      "path": "game/quarry_warden-sweep-active.png",
+      "sha256": "d09887189bd567466b68f7395d0c062d5157487cb8d138af31a43f55934d1b98"
+    },
+    {
+      "path": "game/quarry_warden-windup.png",
+      "sha256": "ccf24c2c6ff5ac05c325683250c81aef85b63442ae6ee8de24fab8b1874e1b2a"
+    },
+    {
+      "path": "game/quarry_warden-world.png",
+      "sha256": "369f597510a94e1a0d56795660e6ad182b2035ae2d81482f63bc98fd8c5b6da4"
+    },
+    {
+      "path": "game/scrap_skitter-idle.png",
+      "sha256": "e693fa99f2735216865acd933da6beec82a8dc9520ab835e22b1171db018bb32"
+    },
+    {
+      "path": "game/scrap_skitter-movement.png",
+      "sha256": "085bdf8fb5dac18440583f7e69bbd34fabf690142a0d581f1a58e7a1c16a2b8c"
+    },
+    {
+      "path": "game/scrap_skitter-pounce-active-world.png",
+      "sha256": "d161ebf9e12396362933e2c978b7d00804c6e3847ca90128f7b963759cc8206f"
+    },
+    {
+      "path": "game/scrap_skitter-pounce-active.png",
+      "sha256": "0a5e101a909e4e81fd11594eacc7b238fe971cf3f755dfe9356b9102cba6fe0d"
+    },
+    {
+      "path": "game/scrap_skitter-windup.png",
+      "sha256": "3d026606b29e9a032739ab168eccff8aa2f4152b83174834255b5a77b8c4c49a"
+    },
+    {
+      "path": "game/scrap_skitter-world.png",
+      "sha256": "f7ebd505636028b1c2974057527860d9f8ae4dd78e1cc4e2ddf6be65901fa4e3"
+    }
+  ],
+  "logs": [
+    {
+      "path": "logs/enemy-combat-gametests-final.log",
+      "sha256": "d7869abe0b2cc4a0b33dcd64b402e629eff22d7de25b0490efd31bad0e06abe8"
+    },
+    {
+      "path": "logs/enemy-combat-client.log",
+      "sha256": "8aa50754d42895f7b2242e12d3b8140a00083b4164bfdbe493f14b7312f937fa"
+    },
+    {
+      "path": "logs/enemy-combat-release.log",
+      "sha256": "1f4867aa509e59086657c95ea4dda903936b04c2b7e286fd51bada9af4ab51a1"
+    }
+  ],
+  "remaining_manual_review": [
+    "combat feel and balance",
+    "two real networked clients",
+    "large groups and long sessions"
+  ],
+  "installed": {
+    "path": "D:\\重度机械症\\Mechanomania\\versions\\1.21.1-NeoForge_21.1.264\\mods\\starboundmc-0.1-alpha.jar",
+    "sha256": "3ea661d14c4b4cede1983b433a17cbdaecad0c2c1fe0850c6fc53f6323291fee",
+    "matches_build": true
+  },
+  "previous_jar_backup": {
+    "path": "D:\\GPTWork\\小马的mc模组\\.backups\\mods\\2026-10-28-before-enemy-combat-120459\\starboundmc-0.1-alpha.jar",
+    "sha256": "ce1b10d6e15e96de8bfd31bae8c689ce7b41e7f362cc436fe6ad9757694bb074"
+  }
+}

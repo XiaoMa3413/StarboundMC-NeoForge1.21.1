@@ -230,7 +230,7 @@ if (project.hasProperty('armorGameTests')) {
 if (project.hasProperty('enemyGameTests')) {
     sourceSets.main.java.srcDir('src/enemyTest/java')
 }
-if (project.hasProperty('enemySmoke')) {
+if (project.hasProperty('enemySmoke') || project.hasProperty('enemyCombatSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
 if (project.hasProperty('armorSmoke')) {
@@ -286,6 +286,12 @@ neoForge {
     runs {
         client {
             client()
+            if (project.hasProperty('enemyCombatSmoke')) {
+                gameDirectory = file('run-enemy-combat')
+                systemProperty 'starboundmc.debug.enemySmoke', 'true'
+                systemProperty 'starboundmc.debug.enemyCombatSmoke', 'true'
+                programArguments.addAll '--width', '1920', '--height', '1080'
+            }
             if (project.hasProperty('enemySmoke')) {
                 gameDirectory = file('run-enemy-smoke')
                 systemProperty 'starboundmc.debug.enemySmoke', 'true'

@@ -49,16 +49,20 @@ public final class EnemyModel extends HierarchicalModel<MachineEnemy> {
     private static float smooth(float t){return t*t*(3-2*t);}
     @Override public void setupAnim(MachineEnemy mob,float limbSwing,float limbAmount,float age,float yaw,float pitch) {
         root.getAllParts().forEach(ModelPart::resetPose);
-        float progress=mob.animationProgress(age-mob.tickCount);
-        float lift=mob.phase()==MachineEnemy.WINDUP?smooth(progress):mob.phase()==MachineEnemy.ACTIVE?1-smooth(progress):0;
+        float partial=age-mob.tickCount,progress=mob.animationProgress(partial),ticks=mob.animationTicks(partial);
+        boolean winding=mob.phase()==MachineEnemy.WINDUP,active=mob.phase()==MachineEnemy.ACTIVE,recovering=mob.phase()==MachineEnemy.RECOVERY;
+        float lift=winding?smooth(progress):active?1-smooth(progress):0;
+        float settle=recovering?1-smooth(Math.min(1,progress*2)):0;
         float walk=Math.min(limbAmount,1);var body=bone("body");
         switch(mob.profile()) {
             case SCRAP_SKITTER -> {
                 body.y+=Mth.sin(limbSwing*1.5f)*walk*.35f;
+                body.y+=winding?smooth(progress)*.7f:settle*.25f;
+                body.xRot=winding?smooth(progress)*.12f:active?-.18f*(1-progress):0;
                 for(String prefix:List.of("front","rear"))for(String side:List.of("right","left")) {
                     String name=prefix+"_"+side;float phase=(prefix.equals("front")==side.equals("right"))?0:Mth.PI;
                     float stride=Mth.sin(limbSwing*1.6f+phase)*walk;
-                    bone(name).xRot=stride*.45f-(prefix.equals("front")?lift*.65f:0);
+                    bone(name).xRot=stride*.55f-(prefix.equals("front")?lift*.9f:0);
                     bone(name).zRot=stride*.18f*(side.equals("right")?-1:1);
                     bone(name+"_lower").xRot=-stride*.25f;
                 }
@@ -72,7 +76,8 @@ public final class EnemyModel extends HierarchicalModel<MachineEnemy> {
                 bone("cannon").yRot=Mth.clamp(yaw*Mth.DEG_TO_RAD,-.3f,.3f);
                 bone("coil_right").zRot=-lift*.1f;bone("coil_left").zRot=lift*.1f;
                 bone("cannon").z+=lift*.9f;
-                bone("cannon").z+=mob.phase()==MachineEnemy.ACTIVE?Mth.sin(progress*Mth.PI)*.6f:0;
+                bone("cannon").z+=active?Mth.sin(Math.min((ticks%12)/4,1)*Mth.PI)*1.2f:0;
+                body.zRot+=winding?Mth.sin(age*1.2f)*progress*.015f:0;
                 bone("rear_rotor").zRot=age*.14f;
                 bone("fin_right").xRot=Mth.sin(age*.05f)*.025f;bone("fin_left").xRot=-Mth.sin(age*.05f)*.025f;
             }
@@ -82,8 +87,19 @@ public final class EnemyModel extends HierarchicalModel<MachineEnemy> {
                     float stride=Mth.cos(limbSwing*.85f+(side.equals("left")?Mth.PI:0))*walk;
                     bone(side+"_leg").xRot=stride*.45f;bone(side+"_leg_lower").xRot=Math.max(0,-stride)*.3f;
                 }
-                bone("right_arm").xRot=-lift*1.3f;bone("left_arm").xRot=mob.shieldRaised()?-.3f:0;
-                bone("drill").yRot=age*(mob.phase()==MachineEnemy.WINDUP?.75f:.15f);
+                if(mob.action()==MachineEnemy.BASH && mob.phase()!=MachineEnemy.IDLE) {
+                    float thrust=active?Mth.sin(Math.min(ticks/6,1)*Mth.PI):0;
+                    bone("left_arm").xRot=winding?-smooth(progress)*.65f:active?-.65f:settle*-.3f;
+                    bone("shield").xRot=-bone("left_arm").xRot;
+                    bone("shield").z-=thrust*2.5f;
+                    body.z-=thrust*.8f;
+                    bone("right_arm").xRot=-.2f*(lift+settle);
+                } else {
+                    bone("right_arm").xRot=winding?-smooth(progress)*1.3f:active?-1.55f:settle*-.8f;
+                    bone("right_arm_lower").z-=active?Mth.sin(Math.min(ticks/7,1)*Mth.PI)*1.5f:0;
+                    bone("left_arm").xRot=mob.shieldRaised()?-.35f:0;
+                }
+                bone("drill").yRot=age*(winding||active?.85f:.15f);
             }
             case QUARRY_WARDEN -> {
                 body.y+=Mth.cos(limbSwing*.8f)*walk*.25f;
@@ -93,10 +109,20 @@ public final class EnemyModel extends HierarchicalModel<MachineEnemy> {
                     bone(name).xRot=stride*.3f;bone(name+"_lower").xRot=-stride*.2f;
                 }
                 bone("core").y+=Mth.sin(age*.07f)*.08f;
-                if(mob.action()==MachineEnemy.STOMP)bone("hammer_arm").xRot=-lift*1.4f;
-                else {
-                    bone("clamp_arm").xRot=-lift*.65f;
-                    bone("clamp_arm").yRot=mob.phase()==MachineEnemy.ACTIVE?Mth.sin(progress*Mth.PI)*.9f:lift*.25f;
+                if(mob.action()==MachineEnemy.CHARGE && mob.phase()!=MachineEnemy.IDLE) {
+                    float brace=winding?smooth(progress):active?1:settle;
+                    body.xRot=brace*.16f;body.y+=brace*.9f;
+                    bone("clamp_arm").xRot=-brace*.65f;bone("hammer_arm").xRot=-brace*.65f;
+                } else if(mob.action()==MachineEnemy.STOMP) {
+                    bone("hammer_arm").xRot=winding?-smooth(progress)*1.9f:active?Mth.lerp(smooth(Math.min(ticks/5,1)),-1.9f,0):0;
+                    // Extend the hydraulic forearm at impact; inverse scale keeps the tool head rigid.
+                    float stroke=active?smooth(Mth.clamp((ticks-2)/3,0,1)):recovering?1-smooth(Math.min(progress*3,1)):0;
+                    bone("hammer_arm_lower").yScale=1+stroke*3;
+                    bone("hammer").yScale=1/(1+stroke*3);
+                    body.y+=active?Mth.sin(progress*Mth.PI)*.7f:0;
+                } else {
+                    bone("clamp_arm").xRot=-.7f*(winding?smooth(progress):active?1:settle);
+                    bone("clamp_arm").yRot=winding?-smooth(progress)*.65f:active?Mth.lerp(smooth(Math.min(ticks/6,1)),-.65f,.9f):settle*.9f;
                 }
                 bone("clamp_inner").zRot=-lift*.3f;bone("clamp_outer").zRot=lift*.3f;
             }
