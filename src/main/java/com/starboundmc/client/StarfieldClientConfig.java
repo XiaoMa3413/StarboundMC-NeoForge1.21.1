@@ -7,8 +7,6 @@ public final class StarfieldClientConfig
 {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    public enum StarfieldBackend { NATIVE, STELLAR_VIEW }
-
     public static final ModConfigSpec.DoubleValue SPACE_BLOOM_STRENGTH = BUILDER
             .comment("HDR optical bloom strength. Performance and minimal visual fallback disable bloom; zero disables it in all presets.")
             .translation("starboundmc.config.space_bloom_strength")
@@ -20,7 +18,7 @@ public final class StarfieldClientConfig
             .defineInRange("spaceExposure", 1.0, .25, 4.0);
 
     public static final ModConfigSpec.EnumValue<SpaceVisualQuality> SPACE_VISUAL_QUALITY = BUILDER
-            .comment("Space visual quality preset. Performance disables clouds and Stellar View background stars.",
+            .comment("Space visual quality preset. Performance disables clouds and uses a smaller cinematic star budget.",
                     "Balanced disables cloud shadows; High and Ultra enable them. Custom uses the toggles below.")
             .translation("starboundmc.config.space_visual_quality")
             .defineEnum("spaceVisualQuality", SpaceVisualQuality.BALANCED);
@@ -40,12 +38,6 @@ public final class StarfieldClientConfig
             .translation("starboundmc.config.atmosphere_enabled")
             .define("atmosphereEnabled", true);
 
-    public static final ModConfigSpec.EnumValue<StarfieldBackend> SPACE_STARFIELD_BACKEND = BUILDER
-            .comment("Native is the default cinematic starfield. Stellar_View selects the optional compatible mod.",
-                    "Applies to every quality preset except Performance, which always uses Native.")
-            .translation("starboundmc.config.space_starfield_backend")
-            .defineEnum("spaceStarfieldBackend", StarfieldBackend.NATIVE);
-
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     public static boolean cloudsEnabled()
@@ -61,11 +53,6 @@ public final class StarfieldClientConfig
     public static boolean atmosphereEnabled()
     {
         return SPACE_VISUAL_QUALITY.get().atmosphereEnabled(ATMOSPHERE_ENABLED.get());
-    }
-
-    public static boolean stellarViewStarsEnabled()
-    {
-        return SPACE_VISUAL_QUALITY.get().stellarViewStarsEnabled(SPACE_STARFIELD_BACKEND.get() == StarfieldBackend.STELLAR_VIEW);
     }
 
     private StarfieldClientConfig() {}

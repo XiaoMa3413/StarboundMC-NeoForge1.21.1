@@ -12,7 +12,7 @@
 - Flight/Relay 网络 phase 和终端 action 使用显式稳定 ID，未知值拒绝；终端 action ID 4 已删除，其余 ID 不变。网络协议版本为 19，同协议客户端/服务器必须匹配。
 - `RelayData` 封装状态转换、dirty 与持久 journal；世界修改前排空旧异步保存并同步写入事务，写入失败中止；成功保存 chunk 后确认完成。冲突保留现场和 snapshot，进入 ERROR 等待恢复；非法 phase/UUID 不转为新 encounter。
 - 打印机只有输出槽；玩家库存 reservation、钱包与队列是当前生产模型。存储版本 1 不接受退休材料槽格式，损坏任务不跳过、不补随机身份。
-- StellarView 是可选外部视觉后端；反射限定在独立 package，主项目无编译依赖，失败返回原生星场。它不提供玩法状态。
+- 背景星场在 `client/space` 内置 StellarView HDR2 派生的球形目录与星点光学，由主项目管理资源与坐标；不加载外部 StellarView 模组或反射适配。来源和 MIT 声明见 `third_party/stellarview/`。
 - Mixin 保持薄且 fail-fast。玩法、存档、网络和 authoring 错误 fail fast / fail closed；可选视觉和 GPU 能力失败可记录并最小降级，资源重载允许恢复。
 
 首次公开 playtest 前不承诺内部开发快照兼容。Story 与 Nova task 只读取当前 schema，旧版和未来版本均拒绝；已序列化 attachment 必须包含全部必需字段并满足当前 invariant，钱包余额缺失或负值也拒绝。新玩家通过 attachment supplier 获得 DEFAULT，全新世界通过明确的新建路径初始化。缺失/损坏的既有 authoritative state 不解释为新世界，未初始化的航行 authority 不提供假位置或假燃料。

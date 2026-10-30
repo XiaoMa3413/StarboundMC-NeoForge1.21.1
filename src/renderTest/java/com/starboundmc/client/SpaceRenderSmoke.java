@@ -43,10 +43,6 @@ public final class SpaceRenderSmoke {
             "@terminator-close", "@twilight-atmosphere", "@phase-night", "@window", "@resize", "@reload"};
     private static final String[] BODIES = System.getProperty("starboundmc.debug.spaceSmokeViews") != null
             ? System.getProperty("starboundmc.debug.spaceSmokeViews").split(",")
-            : Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")
-            ? java.util.stream.Stream.concat(Arrays.stream(BASE_VIEWS),java.util.stream.Stream.of(
-                    "@stellar-mode-textured-instanced", "@stellar-mode-textured-regular",
-                    "@stellar-mode-plain-instanced", "@stellar-mode-plain-regular")).toArray(String[]::new)
             : BASE_VIEWS;
     private static final double[] FRAME_MS = new double[180];
     private static boolean started, finished;
@@ -59,6 +55,8 @@ public final class SpaceRenderSmoke {
     private static float beforeDepth;
     private static long verifiedPasses, verifiedMinimalPasses;
     private static boolean injectedFailure;
+    private static int captureWidth = Integer.getInteger("starboundmc.debug.spaceSmokeWidth",1280);
+    private static int captureHeight = Integer.getInteger("starboundmc.debug.spaceSmokeHeight",720);
 
     @SubscribeEvent(priority = net.neoforged.bus.api.EventPriority.HIGHEST)
     public static void beforeSpacePass(net.neoforged.neoforge.client.event.RenderLevelStageEvent event) {
@@ -99,8 +97,6 @@ public final class SpaceRenderSmoke {
             mc.options.fov().set(70);
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
                     System.getProperty("starboundmc.debug.spaceSmokeQuality", "custom").toUpperCase(java.util.Locale.ROOT)));
-            StarfieldClientConfig.SPACE_STARFIELD_BACKEND.set(Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarView")
-                    ? StarfieldClientConfig.StarfieldBackend.STELLAR_VIEW : StarfieldClientConfig.StarfieldBackend.NATIVE);
             String name = "space-fixture-" + System.currentTimeMillis();
             mc.createWorldOpenFlows().createFreshLevel(name,
                     new LevelSettings(name, GameType.CREATIVE, false, Difficulty.PEACEFUL,
@@ -129,6 +125,17 @@ public final class SpaceRenderSmoke {
         }
         if (!setup.isDone() || !mc.level.dimension().equals(ShipDimensions.SHIP_LEVEL)) return;
         setup.join();
+        // Hidden GLFW windows can report a 1x1 framebuffer on Windows. Render the
+        // real game into an explicit offscreen size, and never accept placeholder captures.
+        if (mc.getMainRenderTarget().width != captureWidth || mc.getMainRenderTarget().height != captureHeight) {
+            mc.getWindow().setWidth(captureWidth);
+            mc.getWindow().setHeight(captureHeight);
+            mc.resizeDisplay();
+            if (stageStart != 0) stageStart = System.nanoTime();
+            previousFrame = 0;
+            samples = 0;
+            return;
+        }
         if ("@reload".equals(BODIES[stage]) || "@spyglass-reload".equals(BODIES[stage])) {
             if (reload == null) { reload = mc.reloadResourcePacks(); return; }
             if (!reload.isDone()) return;
@@ -154,7 +161,6 @@ public final class SpaceRenderSmoke {
         if ((now - stageStart) / 1e9 < 3 || samples == 0) return;
         if (BODIES[stage] != null && BODIES[stage].startsWith("@spyglass-")
                 && !mc.player.isScoping()) throw new IllegalStateException("Spyglass fixture did not start using the real item");
-        if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.verifyRestoration();
         var output = mc.gameDirectory.toPath().resolve("screenshots")
                 .resolve(System.getProperty("starboundmc.debug.spaceSmokeLabel", "capture"));
         Files.createDirectories(output);
@@ -173,7 +179,6 @@ public final class SpaceRenderSmoke {
                 + "scoping=" + mc.player.isScoping() + " ordinaryFov=" + mc.options.fov().get() + "\n"
                 + GpuSpaceBackground.diagnostics() + "\n" + SpaceSceneTarget.diagnostics() + "\n"
                 + "quality=" + StarfieldClientConfig.SPACE_VISUAL_QUALITY.get() + " "
-                + com.starboundmc.client.compat.stellarview.StellarViewStarfield.diagnostics() + "\n"
                 + SpaceRenderProfiler.report());
         if ("@failure".equals(BODIES[stage]) && (SpaceSceneTarget.begin() || verifiedMinimalPasses == 0))
             throw new IllegalStateException("Failure did not activate verified minimal rendering");
@@ -184,13 +189,13 @@ public final class SpaceRenderSmoke {
                 if (!SpaceSceneTarget.begin()) throw new IllegalStateException("Resource reload did not recover the isolated target");
                 SpaceSceneTarget.finish();
             } finally { state.restore(); }
+            injectedFailure = false;
         }
         if (++stage == BODIES.length) {
             mc.options.keyUse.setDown(false);
             if (mc.player.isUsingItem()) mc.gameMode.releaseUsingItem(mc.player);
             Files.writeString(output.resolve("depth-checks.txt"), SpaceDepthSmoke.verify());
             SpaceRenderState.resetPoseProvider();
-            if (Boolean.getBoolean("starboundmc.debug.spaceSmokeStellarMatrix")) StellarShaderSmoke.restore();
             if (verifiedPasses == 0 || Boolean.getBoolean("starboundmc.debug.spaceMinimal") && verifiedMinimalPasses == 0)
                 throw new IllegalStateException("No production render passes were verified");
             Files.writeString(output.resolve("pass-checks.txt"), "Production event state and world depth preserved: "
@@ -201,6 +206,7 @@ public final class SpaceRenderSmoke {
         } else {
             stageStart = previousFrame = 0;
             samples = 0;
+            reload = null;
         }
     }
 
@@ -230,10 +236,11 @@ public final class SpaceRenderSmoke {
         } else if ("@star-wide".equals(view) || "@star-return".equals(view)
                 || view != null && view.startsWith("@spyglass-")
                 && !"@spyglass-galaxy".equals(view)) {
+            var observer=position;
             var star=Arrays.stream(BackgroundStarCatalog.generate(2000))
-                    .filter(s -> s.dustFraction() == 0 && Math.abs(s.x()*.24+s.y()*.87+s.z()*.43) > .2)
-                    .max(java.util.Comparator.comparingDouble(BackgroundStarCatalog.Star::flux)).orElseThrow();
-            delta=new UniverseDelta(star.x(),star.y(),star.z());
+                    .max(java.util.Comparator.comparingDouble(s -> s.brightness()*Math.pow(Math.max(.01,
+                            s.size()*4*(1-observer.deltaTo(UniversePosition.of(s.x(),s.y(),s.z())).length()/1_000_000)),2))).orElseThrow();
+            delta=position.deltaTo(UniversePosition.of(star.x(),star.y(),star.z()));
         } else if ("@galaxy".equals(view) || "@spyglass-galaxy".equals(view)) delta = new UniverseDelta(.87, -.24, 0);
         else if ("@galaxy-outer".equals(view)) delta = new UniverseDelta(-.87,.24,0);
         else if ("@galaxy-side".equals(view)) {
@@ -293,16 +300,16 @@ public final class SpaceRenderSmoke {
                 delta = new UniverseDelta(direction.x,direction.y,direction.z);
             }
         }
-        else if (view != null && view.startsWith("@stellar-mode-")) {
-            StellarShaderSmoke.configure(view.contains("textured"),view.endsWith("instanced"));
-            delta = new UniverseDelta(.87,-.24,0);
-        }
         else if (view != null && view.startsWith("@quality-")) {
             StarfieldClientConfig.SPACE_VISUAL_QUALITY.set(SpaceVisualQuality.valueOf(
                     view.substring("@quality-".length()).toUpperCase(java.util.Locale.ROOT)));
             delta = new UniverseDelta(.87,-.24,0);
         }
-        if ("@resize".equals(view) || "@spyglass-resize".equals(view)) GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), 960, 540);
+        if ("@resize".equals(view) || "@spyglass-resize".equals(view)) {
+            captureWidth = 960;
+            captureHeight = 540;
+            GLFW.glfwSetWindowSize(mc.getWindow().getWindow(), captureWidth, captureHeight);
+        }
         if ("@window".equals(view)) {
             mc.getSingleplayerServer().submit(() -> {
                 var player = mc.getSingleplayerServer().getPlayerList().getPlayers().getFirst();

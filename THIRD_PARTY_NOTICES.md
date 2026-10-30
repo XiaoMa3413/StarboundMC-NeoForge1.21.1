@@ -32,14 +32,13 @@ StarboundMC MPL-2.0 的授权对象；使用本项目时请单独满足这些依
 
 跃迁和传送使用 Minecraft 原版 `SoundEvents`，本项目不重新分发对应的 Minecraft 音频文件。
 
-## StellarView 定制补丁
+## StellarView 派生星场核心与定制补丁
 
-可选 StellarView 依赖的原作者为 Povstalec（Copyright 2024），采用 MIT 许可。源码来源为
-[Povstalec/StellarView](https://github.com/Povstalec/StellarView)，本项目基于
-[XiaoMa3413/StellarView](https://github.com/XiaoMa3413/StellarView) 的 external-view-center 分支定制。
-`patches/stellarview/starbound-hdr.patch` 保存新增 HDR 输出、像素尺寸补偿及星点过滤的源码改动，
-原版权与许可文本保留在 `patches/stellarview/LICENSE.txt`。构建基线、版本及修改说明见
-[定制说明](patches/stellarview/README.md)。补丁及其第三方上下文继续按 MIT 处理。
+原作者 Povstalec，Copyright (c) 2024，MIT 许可。源项目为 [Povstalec/StellarView](https://github.com/Povstalec/StellarView)，本项目使用 [XiaoMa3413/StellarView](https://github.com/XiaoMa3413/StellarView) HDR2 定制分支 `f55e85f` 的星场实现。
+
+生产派生文件为 `client/space/BackgroundStarCatalog.java`、`client/space/BackgroundStarRenderer.java` 与 `shaders/core/background_stars.vsh` / `.fsh`。提取球形星群、加权选择和随机序列，以及距离/像素补偿和 HDR 光学轮廓；改为由本项目的坐标、VBO、shader 注册与资源生命周期管理。不包含 StellarView 的完整模组、天空注册、配置或其他天体系统。原版权与完整 MIT 许可保留于 [third_party/stellarview/LICENSE.txt](third_party/stellarview/LICENSE.txt)，构建时放入 JAR 的 `META-INF/licenses/stellarview/LICENSE.txt`；派生部分继续按 MIT 处理。
+
+历史源码差异仍保存在 `patches/stellarview/starbound-hdr.patch`，该补丁及其第三方上下文继续按 MIT 处理。文件映射和修改说明见 [来源说明](third_party/stellarview/README.md)。
 
 ## 新增素材规则
 

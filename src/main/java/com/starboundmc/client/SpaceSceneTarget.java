@@ -8,7 +8,6 @@ import com.mojang.logging.LogUtils;
 import com.starboundmc.StarboundMC;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
@@ -19,23 +18,20 @@ final class SpaceSceneTarget {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static TextureTarget target;
     private static TextureTarget atmosphereInput;
-    private static TextureTarget externalStars;
     private static ShaderInstance composite;
-    private static ShaderInstance externalCopy;
     private static VertexBuffer triangle;
     private static boolean failed, active, linear;
     private static float distanceScale = 1;
     private static int drawFramebuffer, readFramebuffer;
     private static final int[] viewport = new int[4];
     private static long allocations, composites;
-    private static long externalCopies;
 
     private SpaceSceneTarget() {}
 
     static void register(RegisterShadersEvent event) {
         release();
         SpaceBloom.register(event);
-        composite = externalCopy = null;
+        composite = null;
         failed = false;
         try {
             event.registerShader(new ShaderInstance(event.getResourceProvider(),
@@ -44,28 +40,18 @@ final class SpaceSceneTarget {
         } catch (java.io.IOException | RuntimeException failure) {
             LOGGER.warn("Space composite unavailable; using minimal visual fallback", failure);
         }
-        try {
-            event.registerShader(new ShaderInstance(event.getResourceProvider(),
-                    ResourceLocation.fromNamespaceAndPath(StarboundMC.MODID, "space_external_stars"),
-                    DefaultVertexFormat.POSITION), shader -> externalCopy = shader);
-        } catch (java.io.IOException | RuntimeException failure) {
-            LOGGER.warn("External star color adapter unavailable; using display-space compatibility", failure);
-        }
     }
 
     static boolean begin() {
         active = false;
-        if (failed || composite == null || PlanetSurfaceShader.current() == null
+        if (failed || composite == null || !GpuSpaceBackground.ready() || PlanetSurfaceShader.current() == null
                 || !SpaceStellarRenderer.ready() || !SpaceRingShader.ready()
                 || Boolean.getBoolean("starboundmc.debug.spaceMinimal"))
             return false;
         drawFramebuffer = GL11.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         readFramebuffer = GL11.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
         GL11.glGetIntegerv(GL11.GL_VIEWPORT, viewport);
-        // The external backend renders into a display-space target and is decoded on import.
-        linear = GpuSpaceBackground.ready()
-                && (externalCopy != null || !externalRequested()
-                || com.starboundmc.client.compat.stellarview.StellarViewStarfield.linearRadianceAvailable());
+        linear = true;
         try {
             if (target == null || target.width != viewport[2] || target.height != viewport[3]) {
                 if (target != null) target.destroyBuffers();
@@ -137,29 +123,6 @@ final class SpaceSceneTarget {
         shader.safeGetUniform("ViewportSize").set((float) target.width, (float) target.height);
     }
 
-    private static boolean externalRequested() {
-        return StarfieldClientConfig.stellarViewStarsEnabled() && ModList.get().isLoaded("stellarview");
-    }
-
-    static boolean beginExternalStars() {
-        if (!linear() || externalCopy == null || !externalRequested()) return false;
-        if (externalStars == null || externalStars.width != target.width || externalStars.height != target.height) {
-            if (externalStars != null) externalStars.destroyBuffers();
-            externalStars = new TextureTarget(target.width, target.height, false, false);
-            externalStars.setClearColor(0, 0, 0, 0);
-        }
-        RenderSystem.disableScissor(); RenderSystem.colorMask(true, true, true, true);
-        externalStars.clear(false);
-        externalStars.bindWrite(true);
-        return true;
-    }
-
-    static void finishExternalStars() {
-        target.bindWrite(true);
-        drawFullscreen(externalCopy, externalStars.getColorTextureId(), true);
-        externalCopies++;
-    }
-
     static void drawFullscreen(ShaderInstance shader, int texture, boolean additive) {
         if (triangle == null || triangle.isInvalid()) {
             if (triangle != null) triangle.close();
@@ -223,8 +186,6 @@ final class SpaceSceneTarget {
         target = null;
         if (atmosphereInput != null) atmosphereInput.destroyBuffers();
         atmosphereInput = null;
-        if (externalStars != null) externalStars.destroyBuffers();
-        externalStars = null;
         if (triangle != null) triangle.close();
         triangle = null;
     }
@@ -240,7 +201,7 @@ final class SpaceSceneTarget {
     static String diagnostics() {
         return "sceneTarget=" + (target != null) + " linearHDR=" + linear + " targetFailed=" + failed
                 + " targetAllocations=" + allocations + " composites=" + composites
-                + " externalCopies=" + externalCopies + " " + SpaceBloom.diagnostics()
+                + " " + SpaceBloom.diagnostics()
                 + " " + AtmosphereSolarLut.diagnostics();
     }
 }

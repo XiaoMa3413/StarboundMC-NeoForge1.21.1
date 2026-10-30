@@ -1,5 +1,7 @@
 package com.starboundmc.client;
 
+import com.starboundmc.client.space.BackgroundStarRenderer;
+
 import com.starboundmc.StarboundMC;
 import com.starboundmc.block.ModBlockEntities;
 import com.starboundmc.entity.ModEntities;
@@ -58,6 +60,7 @@ public final class ClientRegistrar {
         AtmosphereShader.register(event);
         CloudShader.register(event);
         GpuSpaceBackground.register(event);
+        BackgroundStarRenderer.register(event);
         SpaceStellarRenderer.register(event);
         SpaceRingShader.register(event);
         SpaceSceneTarget.register(event);

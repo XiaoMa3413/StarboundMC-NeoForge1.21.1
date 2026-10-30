@@ -1,11 +1,12 @@
 package com.starboundmc.client;
 
+import com.starboundmc.client.space.BackgroundStarRenderer;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.vertex.*;
 import com.starboundmc.client.space.CelestialDepth;
 import com.starboundmc.client.space.AtmosphereSolarOptics;
-import com.starboundmc.client.space.StarfieldOptics;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -91,7 +92,9 @@ final class SpaceDepthSmoke {
                 SpaceSceneTarget.finish();
             }
             verifyAtmosphereQuality(report);
-            verifyNativeStarMotion(report);
+            verifyCinematicStarRadiance(report);
+            verifyCinematicStarEdges(report);
+
             verifyBackgroundField(report);
             verifyCloudOptics(quad,report);
             verifyRingOptics(quad,sphere,report);
@@ -199,73 +202,102 @@ final class SpaceDepthSmoke {
         return Arrays.stream(queries).map(GL11::glGetInteger).toArray();
     }
 
-    private static void verifyNativeStarMotion(StringBuilder report) {
-        var shader=GpuSpaceBackground.starShader();
-        if (shader == null) throw new IllegalStateException("Native star shader did not load");
-        var builder=Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,DefaultVertexFormat.POSITION_TEX_COLOR);
-        for (int i=0;i<4;i++) builder.addVertex(0,0,-1).setUv(.45F,2F).setColor(1F,1F,1F,0F);
-        try (var point=upload(builder)) {
-            for (int divisor:new int[] {1,2}) {
-                double ordinaryRadius=0;
-                for (float fov:new float[] {70,35,7}) {
-                    double reference=0;
-                    for (float offset:new float[] {0,.125F,.25F,.5F,.75F,1F}) {
-                        if (!SpaceSceneTarget.begin() || !SpaceSceneTarget.linear())
-                            throw new IllegalStateException("Native motion test requires linear HDR");
-                        int w=width()/divisor,h=height()/divisor;
-                        RenderSystem.viewport(0,0,w,h);
-                        float depth=readDepth();
-                        RenderSystem.disableCull(); RenderSystem.disableDepthTest(); RenderSystem.depthMask(false);
-                        RenderSystem.enableBlend();
-                        RenderSystem.blendFunc(com.mojang.blaze3d.platform.GlStateManager.SourceFactor.SRC_ALPHA,
-                                com.mojang.blaze3d.platform.GlStateManager.DestFactor.ONE);
-                        shader.safeGetUniform("ViewportSize").set((float)w,(float)h);
-                        shader.safeGetUniform("LinearColor").set(1F);
-                        shader.safeGetUniform("FieldDetail").set(1F);
-                        shader.safeGetUniform("ConvergenceAxis").set(0F,0F,1F);
-                        shader.safeGetUniform("Convergence").set(0F);
-                        shader.safeGetUniform("StarAlpha").set(1F);
-                        shader.safeGetUniform("TintAmount").set(0F);
-                        Matrix4f projection=new Matrix4f().perspective((float)Math.toRadians(fov),(float)w/h,.05F,1000F);
-                        float zoom=StarfieldOptics.magnification(projection,70);
-                        double imageScale=Math.sqrt(zoom);
-                        shader.safeGetUniform("OpticalZoom").set(zoom);
-                        // Move the point by a fraction of a pixel; no temporal history or screen noise.
-                        projection.m20(-2F*offset/w); projection.m21(-2F*offset/h);
-                        point.bind(); point.drawWithShader(new Matrix4f(),projection,shader); VertexBuffer.unbind();
-                        int radius=(int)Math.ceil(7.25*imageScale)+2, side=radius*2;
-                        float[] pixels=new float[side*side*4];
-                        GL11.glReadPixels(w/2-radius,h/2-radius,side,side,GL11.GL_RGBA,GL11.GL_FLOAT,pixels);
-                        double energy=0,moment=0; float peak=0;
-                        for (int i=0;i<pixels.length;i+=4) {
-                            if (!Float.isFinite(pixels[i]) || pixels[i] < 0)
-                                throw new IllegalStateException("Native point spread has invalid radiance");
-                            energy+=pixels[i]; peak=Math.max(peak,pixels[i]);
-                            int pixel=i/4;
-                            double x=pixel%side-radius+.5-offset,y=pixel/side-radius+.5-offset;
-                            moment+=pixels[i]*(x*x+y*y);
+    /** Check the transplanted angular sprite/radiance contract, including its subpixel response. */
+    private static void verifyCinematicStarRadiance(StringBuilder report) {
+        var shader=BackgroundStarRenderer.shader();
+        if (shader == null) throw new IllegalStateException("Cinematic star shader did not load");
+        for (float size : new float[] {.04F,.4F,.88F}) {
+            var builder=Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,DefaultVertexFormat.POSITION_TEX_COLOR);
+            for(int i=0;i<4;i++) builder.addVertex(0,0,-100000).setUv(size,6000000).setColor(255,255,255,255);
+            try(var point=upload(builder)) {
+                for(int divisor : new int[] {1,2}) for(float fov : new float[] {70,35,7}) {
+                    double sampledEnergy=0;
+                    for(float offset : new float[] {0,.125F,.25F,.5F,.75F,1F}) {
+                        double fullEnergy=0;
+                        for(float visibility : new float[] {1,.25F,0}) {
+                            if(!SpaceSceneTarget.begin() || !SpaceSceneTarget.linear())
+                                throw new IllegalStateException("Cinematic test requires linear HDR");
+                            int w=width()/divisor,h=height()/divisor;
+                            RenderSystem.viewport(0,0,w,h);
+                            float depth=readDepth();
+                            RenderSystem.disableCull(); RenderSystem.disableDepthTest(); RenderSystem.depthMask(false);
+                            RenderSystem.enableBlend();
+                            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE);
+                            shader.safeGetUniform("ViewportSize").set((float)w,(float)h);
+                            shader.safeGetUniform("LinearColor").set(1F);
+                            shader.safeGetUniform("ObserverOffset").set(0F,0F,0F);
+                            shader.safeGetUniform("ConvergenceAxis").set(0F,0F,1F);
+                            shader.safeGetUniform("Convergence").set(0F);
+                            shader.safeGetUniform("StarAlpha").set(visibility);
+                            Matrix4f projection=new Matrix4f().perspective((float)Math.toRadians(fov),(float)w/h,.05F,1000F);
+                            projection.m20(-2F*offset/w); projection.m21(-2F*offset/h);
+                            point.bind(); point.drawWithShader(new Matrix4f(),projection,shader); VertexBuffer.unbind();
+                            double pixels=size*.9*projection.m11()*h/200;
+                            double radius=Math.max(pixels,.7);
+                            int extent=(int)Math.ceil(radius)+2,side=extent*2;
+                            float[] data=new float[side*side*4];
+                            GL11.glReadPixels(w/2-extent,h/2-extent,side,side,GL11.GL_RGBA,GL11.GL_FLOAT,data);
+                            double energy=0;
+                            for(int i=0;i<data.length;i+=4) {
+                                for(int c=0;c<3;c++) if(!Float.isFinite(data[i+c]) || data[i+c]<0 || data[i+c]>4.481F)
+                                    throw new IllegalStateException("Invalid cinematic star radiance");
+                                energy+=data[i];
+                            }
+                            if(visibility==1) {
+                                fullEnergy=energy;
+                                sampledEnergy+=energy;
+                                // Integral of the source's truncated radial Gaussian over a unit disk.
+                                double expected=4.48*Math.PI*(.2-1/Math.expm1(5))*pixels*pixels;
+                                if(pixels>=3 && Math.abs(energy-expected)>expected*.025)
+                                    throw new IllegalStateException("Resolved source star energy mismatch: "+energy+" expected "+expected);
+                            } else if(Math.abs(energy-fullEnergy*visibility)>Math.max(.00001,fullEnergy*.002))
+                                throw new IllegalStateException("Star visibility changed the HDR colour/energy response");
+                            if(Float.compare(depth,readDepth())!=0) throw new IllegalStateException("Cinematic stars modified depth");
+                            if(visibility==1) report.append("cinematicStar size=").append(size).append(" divisor=").append(divisor)
+                                    .append(" fov=").append(fov).append(" pixelOffset=").append(offset)
+                                    .append(" integratedRadiance=").append(energy).append(" finite/visibilityLinear/depthPreserved\n");
+                            SpaceSceneTarget.finish();
                         }
-                        double expected=2*imageScale*imageScale;
-                        if (Math.abs(energy-expected) > expected*.003
-                                || reference != 0 && Math.abs(energy-reference) > expected*.0015)
-                            throw new IllegalStateException("Native star flux changed with subpixel motion: "+energy+" vs "+reference);
-                        double rmsRadius=Math.sqrt(moment/energy);
-                        if (fov == 70 && offset == 0) ordinaryRadius=rmsRadius;
-                        if (fov < 70 && (rmsRadius < ordinaryRadius*imageScale*.75 || rmsRadius > ordinaryRadius*imageScale*1.15))
-                            throw new IllegalStateException("Native star did not enlarge with the optical projection: "+rmsRadius);
-                        if (Float.compare(depth,readDepth()) != 0) throw new IllegalStateException("Native star modified depth");
-                        if (reference == 0) reference=energy;
-                        report.append("nativeStarMotion divisor=").append(divisor).append(" pixelOffset=").append(offset)
-                                .append(" fov=").append(fov).append(" opticalZoom=").append(zoom)
-                                .append(" imageScale=").append(imageScale)
-                                .append(" integratedFlux=").append(energy).append(" rmsRadius=").append(rmsRadius).append(" peak=").append(peak)
-                                .append(" finite/fluxPreserved/depthPreserved\n");
-                        SpaceSceneTarget.finish();
                     }
+                    if(sampledEnergy<=0) throw new IllegalStateException("Star profile disappeared at all subpixel phases");
                 }
             }
-        } finally {
-            shader.safeGetUniform("OpticalZoom").set(1F);
+        }
+    }
+
+    private static void verifyCinematicStarEdges(StringBuilder report) {
+        var shader=BackgroundStarRenderer.shader();
+        float[][] cases={{0,100000,0,-(float)Math.PI/2,6000000,1},
+                {0,-100000,0,(float)Math.PI/2,6000000,1},
+                {0,0,-100000,0,50000,0},{0,0,0,0,6000000,0}};
+        for(float[] edge : cases) {
+            var builder=Tesselator.getInstance().begin(VertexFormat.Mode.QUADS,DefaultVertexFormat.POSITION_TEX_COLOR);
+            for(int i=0;i<4;i++) builder.addVertex(edge[0],edge[1],edge[2]).setUv(.4F,edge[4]).setColor(255,255,255,255);
+            try(var point=upload(builder)) {
+                if(!SpaceSceneTarget.begin()) throw new IllegalStateException("Missing cinematic edge target");
+                int w=width(),h=height(); float depth=readDepth();
+                RenderSystem.disableCull(); RenderSystem.disableDepthTest(); RenderSystem.depthMask(false);
+                RenderSystem.enableBlend(); RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE);
+                shader.safeGetUniform("ViewportSize").set((float)w,(float)h);
+                shader.safeGetUniform("LinearColor").set(1F);
+                shader.safeGetUniform("ObserverOffset").set(0F,0F,0F);
+                shader.safeGetUniform("Convergence").set(0F);
+                shader.safeGetUniform("StarAlpha").set(1F);
+                point.bind(); point.drawWithShader(new Matrix4f().rotateX(edge[3]),
+                        new Matrix4f().perspective((float)Math.toRadians(70),(float)w/h,.05F,1000),shader); VertexBuffer.unbind();
+                float[] data=new float[32*32*4];
+                GL11.glReadPixels(w/2-16,h/2-16,32,32,GL11.GL_RGBA,GL11.GL_FLOAT,data);
+                double energy=0;
+                for(int i=0;i<data.length;i+=4) {
+                    if(!Float.isFinite(data[i]) || data[i]<0) throw new IllegalStateException("Invalid pole/cutoff radiance");
+                    energy+=data[i];
+                }
+                if((energy>0)!=(edge[5]>0) || Float.compare(depth,readDepth())!=0)
+                    throw new IllegalStateException("Incorrect cinematic pole/distance cutoff");
+                report.append("cinematicStarEdge position=").append(Arrays.toString(edge))
+                        .append(" radiance=").append(energy).append(" finite/cutoff/depthPreserved\n");
+                SpaceSceneTarget.finish();
+            }
         }
     }
 

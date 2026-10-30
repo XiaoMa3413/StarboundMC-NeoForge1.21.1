@@ -1,12 +1,13 @@
 package com.starboundmc.client;
 
+import com.starboundmc.client.space.BackgroundStarRenderer;
+
 import com.starboundmc.StarboundMC;
 import com.starboundmc.client.shipai.ClientShipAiTerminalState;
 import com.starboundmc.client.shipai.ClientShipStoryState;
 import com.starboundmc.client.shipai.ClientNovaBroadcastState;
 import com.starboundmc.client.shipai.NovaBroadcastHudLayer;
 import com.starboundmc.client.hud.StarboundHudLayer;
-import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
 import com.starboundmc.network.ClientNetworkState;
 import com.starboundmc.world.universe.ClientUniverseCatalog;
 import net.minecraft.client.Minecraft;
@@ -50,7 +51,7 @@ public final class ClientConnectionEvents {
         PlanetRenderer.resetSceneState();
         SpaceRenderProfiler.release();
         SpaceSceneTarget.release();
-        StellarViewStarfield.resetSession();
+        BackgroundStarRenderer.release();
         ClientNetworkState.resetConnectionState();
         ClientPlanetState.resetConnectionState();
         WarpSounds.reset();

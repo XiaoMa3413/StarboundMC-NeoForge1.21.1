@@ -1,5 +1,7 @@
 package com.starboundmc.client;
 
+import com.starboundmc.client.space.BackgroundStarRenderer;
+
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -8,7 +10,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.starboundmc.client.compat.stellarview.StellarViewStarfield;
 import com.starboundmc.client.space.GalaxyEnvironmentBlend;
 import com.starboundmc.client.space.SpaceCoordinateFrame;
 import com.starboundmc.client.space.SpaceRenderContext;
@@ -123,28 +124,11 @@ public final class SpaceBackgroundRenderer
         Matrix4f starModelView = new Matrix4f(pose.last().pose())
                 .rotateX((float) Math.toRadians(-space.pitch()))
                 .rotateY((float) Math.toRadians(-space.yaw()));
-        if (SpaceSceneTarget.active() && starAlpha > 0.01F)
-        {
-            // Match the established star orientation: stable camera + visual roll,
-            // then inverse ship pitch/yaw. The coordinate provider independently
-            // anchors the field to the virtual ship position, never the player.
-            boolean linearExternal = SpaceSceneTarget.linear() && StellarViewStarfield.linearRadianceAvailable();
-            boolean externalTarget = !linearExternal && SpaceSceneTarget.beginExternalStars();
-            boolean rendered;
-            try {
-                rendered = StellarViewStarfield.render(level, camera, partialTick, starModelView,
-                        RenderSystem.getProjectionMatrix(), space, starAlpha, starConvergence,
-                        frame.backgroundForwardDirection(new Vector3f()), linearExternal);
-            } finally {
-                if (externalTarget) SpaceSceneTarget.finishExternalStars();
-            }
-            if (rendered) return;
-        }
-
-        if (SpaceSceneTarget.active() && GpuSpaceBackground.renderStars(starModelView, RenderSystem.getProjectionMatrix(),
+        if (SpaceSceneTarget.active() && BackgroundStarRenderer.render(
+                starModelView, RenderSystem.getProjectionMatrix(), space.universePosition(),
                 frame.backgroundForwardDirection(new Vector3f()), starAlpha, starConvergence,
-                environment.skyTintColor(), environment.skyTintAmount(),
-                SpaceRenderClock.twinklePhase(level.getGameTime(), partialTick)))
+                StarfieldClientConfig.SPACE_VISUAL_QUALITY.get().backgroundStarBudget(),
+                SpaceSceneTarget.width(), SpaceSceneTarget.height(), SpaceSceneTarget.linear()))
             return;
 
         renderStarField(pose, frame, starAlpha, starConvergence,

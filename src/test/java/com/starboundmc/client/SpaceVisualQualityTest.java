@@ -9,11 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class SpaceVisualQualityTest
 {
     @Test
-    void performanceDisablesCloudsAndStellarViewButKeepsAtmosphere()
+    void performanceDisablesCloudsButKeepsAtmosphere()
     {
         assertFalse(SpaceVisualQuality.PERFORMANCE.cloudsEnabled(true));
         assertTrue(SpaceVisualQuality.PERFORMANCE.atmosphereEnabled(false));
-        assertFalse(SpaceVisualQuality.PERFORMANCE.stellarViewStarsEnabled(true));
         assertFalse(SpaceVisualQuality.PERFORMANCE.cloudShadowsEnabled(true));
     }
 
@@ -25,8 +24,6 @@ class SpaceVisualQualityTest
         {
             assertTrue(quality.cloudsEnabled(false));
             assertTrue(quality.atmosphereEnabled(false));
-            assertFalse(quality.stellarViewStarsEnabled(false));
-            assertTrue(quality.stellarViewStarsEnabled(true));
             assertEquals(quality != SpaceVisualQuality.BALANCED, quality.cloudShadowsEnabled(false));
         }
     }
@@ -38,8 +35,6 @@ class SpaceVisualQualityTest
         assertFalse(SpaceVisualQuality.CUSTOM.cloudsEnabled(false));
         assertTrue(SpaceVisualQuality.CUSTOM.atmosphereEnabled(true));
         assertFalse(SpaceVisualQuality.CUSTOM.atmosphereEnabled(false));
-        assertTrue(SpaceVisualQuality.CUSTOM.stellarViewStarsEnabled(true));
-        assertFalse(SpaceVisualQuality.CUSTOM.stellarViewStarsEnabled(false));
         assertTrue(SpaceVisualQuality.CUSTOM.cloudShadowsEnabled(true));
         assertFalse(SpaceVisualQuality.CUSTOM.cloudShadowsEnabled(false));
     }

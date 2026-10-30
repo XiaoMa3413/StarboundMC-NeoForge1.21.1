@@ -1,44 +1,50 @@
 #version 150
-#moj_import <starboundmc:space_common.glsl>
-#moj_import <starboundmc:space_background_field.glsl>
-#moj_import <starboundmc:space_star_optics.glsl>
+// Derived from StellarView HDR2, Copyright (c) 2024 Povstalec, MIT.
+// See third_party/stellarview/LICENSE.txt. Circular profile is tangent-rotation invariant.
 in vec3 Position;
 in vec2 UV0;
 in vec4 Color;
 uniform mat4 ModelViewMat;
 uniform mat4 ProjMat;
+uniform vec3 ObserverOffset;
 uniform vec3 ConvergenceAxis;
 uniform float Convergence;
 uniform float StarAlpha;
-uniform vec3 TintColor;
-uniform float TintAmount;
 uniform vec2 ViewportSize;
-uniform float FieldDetail;
-uniform float OpticalZoom;
-out vec2 pixelOffset;
-flat out vec3 starRadiance;
-flat out vec2 starOptics;
-flat out float starVisibility;
+out vec2 externalUv;
+out vec4 vertexColor;
 void main() {
-    vec3 axis = normalize(ConvergenceAxis);
-    float axial = dot(Position, axis);
-    float front = smoothstep(-0.05, 1.0, axial);
-    vec3 direction = normalize(axis * axial + (Position - axis * axial)
-                              * (1.0 - 0.82 * Convergence * front));
     int corner = gl_VertexID % 4;
-    vec2 uv = corner == 0 ? vec2(1,1) : corner == 1 ? vec2(-1,1)
-            : corner == 2 ? vec2(-1,-1) : vec2(1,-1);
-    // Screen-aligned support avoids pole singularities and off-axis foreshortening.
-    float extent = UV0.y > .15 ? 7.25 : 2.5;
-    pixelOffset = uv*extent*spaceStarImageScale(OpticalZoom);
-    gl_Position = ProjMat * ModelViewMat * vec4(direction * 200.0, 1.0);
-    gl_Position.xy += pixelOffset*(2.0/max(ViewportSize,vec2(1)))*gl_Position.w;
+    externalUv = corner == 0 ? vec2(-1,-1) : corner == 1 ? vec2(-1,1)
+            : corner == 2 ? vec2(1,1) : vec2(1,-1);
+    vec3 xyz = Position - ObserverOffset;
+    float distance = length(xyz);
+    if (distance <= 0.0 || distance > UV0.y) {
+        gl_Position = vec4(0,0,2,1);
+        vertexColor = vec4(0);
+        return;
+    }
+    float starSize = max(UV0.x*(1.0-distance/1000000.0),.01);
+    float alpha = Color.a;
+    vec4 clip = ProjMat * ModelViewMat * vec4(normalize(xyz)*100.0,1.0);
+    float pixels = starSize*abs(ProjMat[1][1])*ViewportSize.y / max(2.0*abs(clip.w),.001);
+    float radius = max(pixels,.7);
+    alpha *= min(1.0,pixels*pixels/(radius*radius));
+    starSize *= radius/max(pixels,.0001);
+    xyz /= distance;
+    if (Convergence > 0.0) {
+        vec3 axis = normalize(ConvergenceAxis);
+        float axial = dot(xyz,axis);
+        float squeeze = 1.0-.82*clamp(Convergence,0.0,1.0)*smoothstep(-.05,.9,axial);
+        xyz = normalize(axis*axial+(xyz-axis*axial)*squeeze);
+    }
+    float theta = dot(xyz.xz,xyz.xz) > 1e-12 ? atan(xyz.x,xyz.z) : 0.0;
+    float sinTheta = sin(theta), cosTheta = cos(theta);
+    float phi = atan(length(xyz.xz),xyz.y);
+    float height = externalUv.x*starSize, width = externalUv.y*starSize;
+    float heightY = height*sin(phi), heightXZ = -height*cos(phi);
+    vec3 tangent = vec3(heightXZ*sinTheta-width*cosTheta,heightY,width*sinTheta+heightXZ*cosTheta);
+    gl_Position = ProjMat * ModelViewMat * vec4(xyz*100.0+tangent,1.0);
     gl_Position.z = gl_Position.w;
-    vec3 color=spaceToLinear(mix(Color.rgb,TintColor,clamp(TintAmount,0.0,1.0)));
-    color/=max(dot(color,vec3(.2126,.7152,.0722)),.05);
-    vec3 transmission = Color.a > .001
-            ? pow(spaceBackgroundTransmission(normalize(Position),FieldDetail),vec3(Color.a)) : vec3(1);
-    starRadiance=color*transmission;
-    starOptics = UV0; // sigma and unquantized integrated flux, both float attributes
-    starVisibility = StarAlpha;
+    vertexColor = vec4(Color.rgb,alpha*StarAlpha);
 }
