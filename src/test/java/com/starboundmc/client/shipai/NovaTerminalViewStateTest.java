@@ -45,6 +45,24 @@ class NovaTerminalViewStateTest {
     }
 
     @Test
+    void askingNextEndsTheInquiryWithoutLosingTaskReadingPosition() {
+        var view = new NovaTerminalViewState();
+        view.openTask(NovaTask.REPAIR, REPAIR);
+        view.taskScroll(83);
+        view.askSelected();
+        view.returnToTask(REPAIR);
+        view.historyOpen(true);
+
+        view.askNext();
+
+        assertNull(view.inquiry());
+        assertEquals(NovaTerminalViewState.Page.COMMS, view.page());
+        assertFalse(view.historyOpen());
+        assertEquals(NovaTask.REPAIR, view.selected());
+        assertEquals(83, view.taskScroll());
+    }
+
+    @Test
     void completedFilterOpensAnUnclaimedRewardAndAllowsReadingLockedTasks() {
         var view = new NovaTerminalViewState();
         view.synchronize(REPAIR, true);

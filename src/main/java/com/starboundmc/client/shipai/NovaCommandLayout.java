@@ -360,11 +360,16 @@ final class NovaCommandLayout extends UIElement {
         return false;
     }
 
+    Component nextGuidance() {
+        reading.askNext();
+        refresh();
+        return currentGuidance();
+    }
+
     Component currentGuidance() {
         if (progress.completedMask() == NovaTask.KNOWN_MASK)
             return Component.translatable("gui.starboundmc.tasks.chapter_done");
-        NovaTask task = reading.inquiry() != null ? reading.inquiry() : NovaTerminalViewState.recommended(progress);
-        return guidance(task, "help");
+        return guidance(NovaTerminalViewState.recommended(progress), "help");
     }
 
     private Component guidance(NovaTask task, String kind) {

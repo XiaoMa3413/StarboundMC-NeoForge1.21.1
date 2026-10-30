@@ -436,7 +436,7 @@ public final class ShipAiTerminalRoot extends UIElement
                         : ClientShipAiTerminalState.CompletionIntent.NONE;
         Component response = mission == SurfaceMissionState.LOCKED
                 ? Component.translatable("gui.starboundmc.ship_ai.prologue.landing.briefing")
-                : currentStatusText();
+                : commandLayout.nextGuidance();
         int firstNewIndex = session.selectOption(
                 Component.translatable("gui.starboundmc.ship_ai.prologue.option.next"),
                 response, completion, null);

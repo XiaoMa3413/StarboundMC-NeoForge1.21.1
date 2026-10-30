@@ -72,6 +72,12 @@ final class NovaTerminalViewState {
         page = Page.COMMS;
     }
 
+    void askNext() {
+        inquiry = null;
+        historyOpen = false;
+        page = Page.COMMS;
+    }
+
     void returnToTask(NovaTaskProgress progress) {
         if (inquiry != null) {
             openTask(inquiry, progress);

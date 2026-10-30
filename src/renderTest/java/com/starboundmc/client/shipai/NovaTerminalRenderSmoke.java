@@ -95,11 +95,14 @@ public final class NovaTerminalRenderSmoke {
         try (var image = Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
             image.writeToFile(folder.resolve(test.language() + "-scale" + test.scale() + "-" + test.mode() + ".png"));
         }
-        if (test.mode().equals("tasks")) verifyQuestionReturn(g);
+        if (test.mode().equals("tasks")) {
+            verifyQuestionReturn(g);
+            verifyNextGuidanceAfterTaskCompletion(g);
+        }
         ui.onRemoved(); ui = null; root = null; frames = 0;
         if (++stage == CASES.size()) {
             finished = true;
-            Files.writeString(folder.resolve("passed.txt"), "PASS: 24 production-tree captures, zh/en, GUI 2/3/4, task question/return hit paths, reward/locked/reference/history/topic/offline states. No world/server opened.\n");
+            Files.writeString(folder.resolve("passed.txt"), "PASS: 24 production-tree captures, zh/en, GUI 2/3/4, task question/return and next-guidance-after-completion hit paths, reward/locked/reference/history/topic/offline states. No world/server opened.\n");
             mc.stop();
         }
     }
@@ -160,6 +163,46 @@ public final class NovaTerminalRenderSmoke {
         ui.tick(); ui.getWidget().render(g, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
         if (view.page() != NovaTerminalViewState.Page.TASKS || Math.abs(view.taskScroll() - scroll) > 1)
             throw new IllegalStateException("Root rebuild lost task navigation or reading position");
+    }
+
+    private static void verifyNextGuidanceAfterTaskCompletion(GuiGraphics g) {
+        var session = ClientShipAiTerminalState.current();
+        while (session.isStreaming()) ui.tick();
+        var progress = new NovaTaskProgress(NovaTaskProgress.SCHEMA, 3,
+                NovaTask.CONTACT.mask() | NovaTask.SURFACE.mask() | NovaTask.REPAIR.mask(),
+                NovaTask.SURFACE.mask() | NovaTask.REPAIR.mask(),
+                NovaTaskProgress.UPGRADED | NovaTaskProgress.CORE_OBTAINED, NovaTask.EXPLORATION.id(), "");
+        ClientShipStoryState.apply(77, new ShipStorySnapshotPacket(77, 0,
+                SharedShipProgress.CURRENT_SCHEMA_VERSION, 3, CoreState.ONLINE, SurfaceMissionState.COMPLETE,
+                EngineState.ONLINE, EngineState.DAMAGED, MineralScanState.COMPLETE, 0,
+                PlayerStoryState.CURRENT_SCHEMA_VERSION, 2, true, 0, 0, 0, progress));
+        ui.tick();
+        while (session.isStreaming()) ui.tick();
+        ui.tick();
+
+        var command = root.select(".command-shell", NovaCommandLayout.class).findFirst().orElseThrow();
+        String expected = Component.translatable("gui.starboundmc.guidance.exploration.help").getString();
+        if (!command.currentGuidance().getString().equals(expected))
+            throw new IllegalStateException("Current guidance stayed on the completed inquiry task");
+        if (session.view().inquiry() != NovaTask.REPAIR)
+            throw new IllegalStateException("Task completion discarded the inquiry return path prematurely");
+
+        ui.getWidget().render(g, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
+        Button comms = root.select(".command-button", Button.class)
+                .filter(b -> b.hasClass("command-nav-button")
+                        && b.text.getText().getString().equals(Component.translatable("gui.starboundmc.command.comms").getString()))
+                .findFirst().orElseThrow();
+        click(g, comms);
+        ui.tick();
+        ui.getWidget().render(g, Integer.MAX_VALUE, Integer.MAX_VALUE, 0);
+        Button next = root.select(".command-button", Button.class)
+                .filter(b -> b.text.getText().getString().equals(Component.translatable("gui.starboundmc.ship_ai.prologue.option.next").getString()))
+                .findFirst().orElseThrow();
+        click(g, next);
+        if (session.view().inquiry() != null)
+            throw new IllegalStateException("Asking what to do next retained the old inquiry context");
+        if (!session.message(session.latestReplyIndex()).body().getString().equals(expected))
+            throw new IllegalStateException("Next-action reply did not recommend the next available task");
     }
 
     private static void click(GuiGraphics g, Button button) {
