@@ -241,6 +241,9 @@ if (project.hasProperty('transporterSmoke')) {
 if (project.hasProperty('fuelPanelSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
+if (project.hasProperty('novaTerminalSmoke')) {
+    sourceSets.main.java.srcDir('src/renderTest/java')
+}
 if (project.hasProperty('spaceSmoke')) {
     sourceSets.main.java.srcDir('src/renderTest/java')
 }
@@ -308,6 +311,11 @@ neoForge {
                 gameDirectory = file('run-fuel-panel-smoke')
                 systemProperty 'starboundmc.debug.fuelPanelSmoke', 'true'
                 programArguments.addAll '--width', '1440', '--height', '900'
+            }
+            if (project.hasProperty('novaTerminalSmoke')) {
+                gameDirectory = file('run-nova-terminal-smoke')
+                systemProperty 'starboundmc.debug.novaTerminalSmoke', 'true'
+                programArguments.addAll '--width', '1440', '--height', '960'
             }
             if (project.hasProperty('thrusterSmoke')) {
                 gameDirectory = file('run-thruster-smoke')

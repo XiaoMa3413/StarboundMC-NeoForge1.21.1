@@ -1,16 +1,13 @@
-package com.starboundmc.client;
+package com.starboundmc.client.shipai;
 
 import com.starboundmc.StarboundMC;
-import com.starboundmc.client.shipai.ClientShipStoryState;
-import com.starboundmc.client.shipai.ClientShipAiTerminalState;
-import com.starboundmc.client.shipai.ShipAiTerminalRoot;
 import com.starboundmc.client.ui.StarboundModularScreen;
 import com.starboundmc.menu.ShipAiTerminalMenu;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-/** LDLib2-backed prototype screen for the shipboard N.O.V.A. terminal. */
+/** LDLib2 screen for the shipboard N.O.V.A. terminal. */
 public final class ShipAiTerminalScreen
         extends StarboundModularScreen<ShipAiTerminalMenu, ShipAiTerminalRoot> {
     public ShipAiTerminalScreen(ShipAiTerminalMenu menu, Inventory inventory, Component title) {

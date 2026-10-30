@@ -138,7 +138,8 @@ public final class NovaPortraitElement extends UIElement {
         }
         if (!remoteCommunication) {
             drawFaultGlitch(context.graphics, x, y, width, height, ticks + context.partialTick);
-            drawHologramOverlay(context, x, y, width, height);
+            if (coreState != CoreState.ONLINE)
+                drawHologramOverlay(context, x, y, width, height);
             drawProjectionTelemetry(context, x, y, width, height);
         }
     }
@@ -147,26 +148,16 @@ public final class NovaPortraitElement extends UIElement {
     private void drawProjectionTelemetry(GUIContext context, int x, int y, int width, int height) {
         if (coreState == null || coreState == CoreState.OFFLINE)
             return;
-        float time = ticks + context.partialTick;
         float strength = coreState == CoreState.REBOOTING ? 0.3F : 0.65F;
         int rgb = activity == NovaPortraitActivity.WARNING ? 0xF2B576 : 0x72E9ED;
         int dot = Math.max(1, width / 96);
-        // A segmented projection base and travelling packet lights, not another facial layer.
+        // Quiet projection base; the face and reply carry the activity feedback.
         for (int segment = 0; segment < 40; segment++) {
             float angle = segment * TWO_PI / 40F;
-            float wave = 0.5F + 0.5F * Mth.sin(angle - time * 0.035F);
             int px = x + Math.round(width * (0.5F + Mth.cos(angle) * 0.30F));
             int py = y + Math.round(height * (0.89F + Mth.sin(angle) * 0.035F));
             context.graphics.fill(px, py, px + dot, py + dot,
-                    colorWithAlpha(rgb, strength * (0.18F + wave * 0.55F)));
-        }
-        for (int packet = 0; packet < 6; packet++) {
-            float progress = (time * 0.006F + packet / 6F) % 1F;
-            float fade = Mth.sin(progress * (float) Math.PI);
-            int px = x + Math.round(width * (packet % 2 == 0 ? 0.09F : 0.91F));
-            int py = y + Math.round(height * (0.82F - progress * 0.56F));
-            context.graphics.fill(px, py, px + dot, py + dot * 2,
-                    colorWithAlpha(rgb, strength * fade * 0.6F));
+                    colorWithAlpha(rgb, strength * 0.5F));
         }
     }
 
@@ -175,7 +166,7 @@ public final class NovaPortraitElement extends UIElement {
         float onlineActivity = coreState == CoreState.ONLINE ? 1F
                 : coreState == CoreState.REBOOTING ? 0.45F : 0F;
         float hoverY = remoteCommunication ? 0F : Mth.sin(time * TWO_PI / 72F) * 0.85F * onlineActivity;
-        float breathe = remoteCommunication ? 1F : 1F + Mth.sin(time * TWO_PI / 62F) * 0.006F * onlineActivity;
+        float breathe = 1F;
         float jitterX = remoteCommunication ? 0F : projectionJitter(time);
         float textPulse = textPulse(context.partialTick);
         float warningPulse = activity == NovaPortraitActivity.WARNING

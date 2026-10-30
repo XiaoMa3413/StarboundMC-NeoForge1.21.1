@@ -1,221 +1,34 @@
-/* Button surfaces are drawn by NovaTerminalButton; text and layout remain styled here. */
-// Shipboard AI terminal: a compact, embedded glass-and-metal console.
-/* Command terminal: quiet reading surface, fine structural dividers, no system dashboard. */
-.command-shell { background: group(rect(#fc0b121a), border(1, #66888f)); }
-.command-header { background: group(rect(#192d37), border(-1, #3d5963)); }
-.command-brand { font-size: 9; text-color: #91ded1; text-shadow: false; }
-.command-page-title { font-size: 8; text-color: #d8e7eb; text-shadow: false; }
+/* Approved N.O.V.A. terminal: graphite equipment, cyan interaction, flat reading surfaces.
+   Button surfaces and 1px edge relief are drawn by NovaTerminalButton. */
+.ship-ai-screen { background: rect(#b8020507); }
+.command-shell { background: group(rect(#ff0b151d), border(-1, #344b55)); }
+.command-header { background: rect(#162630); }
 .command-body { background: rect(#0b151d); }
-.command-nav { background: rect(#0b151e); }
-.command-center { background: rect(#101e28); }
-.command-nova { background: group(rect(#0c1821), border(-1, #304852)); }
-.command-portrait-stage { background: group(rect(#132d36), border(1, #3e6e77)); }
-.command-objective { background: group(rect(#192f3b), border(-1, #446472)); }
-.command-reward-panel { background: group(rect(#252a2b), border(-1, #655b42)); }
-.command-reward-heading { font-size: 7; text-color: #e2c28b; text-shadow: false; text-wrap: wrap; }
-.command-task-details { background: rect(#00142630); }
-.command-milestone { background: rect(#344b56); }
-.command-milestone-done { background: rect(#6fa49e); }
-.command-milestone-current { background: rect(#b1eddf); }
-.command-nova .nova-portrait { background: rect(#081822); }
-.command-title { font-size: 10; text-color: #eef6f5; text-shadow: false; }
-.command-eyebrow { font-size: 6; text-color: #85b5ba; text-shadow: false; }
-.command-copy { font-size: 7; text-color: #c0d3da; text-shadow: false; text-wrap: wrap; }
+.command-brand { font-size: 9; text-color: #d8edf0; text-shadow: false; }
+.command-title { font-size: 10; text-color: #e5f3f5; text-shadow: false; }
+.command-context-title { font-size: 7; text-color: #b6ced5; text-shadow: false; }
+.command-copy, .ship-ai-reply-text { font-size: 8; text-color: #d8edf0; text-shadow: false; text-wrap: wrap; }
 .command-muted { font-size: 7; text-color: #95aeb9; text-shadow: false; text-wrap: wrap; }
-.command-accent { font-size: 7; text-color: #8cddd0; text-shadow: false; text-wrap: wrap; }
-.command-archive-entry { background: rect(#00162b35); }
-.command-button:host {
-
-
-
-  padding-horizontal: 6;
-}
-.command-button .__button_text__ { flex: 1; font-size: 7; text-color: #d1e0e4; text-shadow: false; text-wrap: hide; }
-.command-selected .__button_text__ { text-color: #a0eee0; }
-.command-primary .__button_text__ { text-color: #0b2529; }
+.command-accent { font-size: 8; text-color: #63d8d4; text-shadow: false; }
+.command-section { font-size: 7; text-color: #85a5b0; text-shadow: false; margin-top: 3; }
+.command-task-state { font-size: 7; text-color: #95aeb9; text-shadow: false; }
+.command-button .__button_text__ { font-size: 8; text-color: #d8edf0; text-shadow: false; text-wrap: wrap; }
+.command-nav-button .__button_text__ { font-size: 8; text-color: #85a5b0; }
+.command-nav-button.command-selected .__button_text__ { text-color: #e5f3f5; }
+.command-filter .__button_text__ { font-size: 7; }
+.command-link .__button_text__ { font-size: 7; text-color: #b6d5dc; }
+.command-selected .__button_text__ { text-color: #e5f3f5; }
 .command-button:disabled .__button_text__ { text-color: #718791; }
-.command-scroll .__scroller_view_vertical-scroller__ { width: 3; margin-left: 3; }
+.command-button:hover .__button_text__ { text-color: #e5f3f5; }
+.command-button:disabled:hover .__button_text__ { text-color: #718791; }
+.command-scroll .__scroller_view_vertical-scroller__ { width: 3; margin-left: 4; }
 .command-scroll .__scroller_scroll_container__ { background: rect(#172c35); }
-.command-scroll .__scroller_scroll_bar__ { base-background: rect(#446772); hover-background: rect(#8bc6c1); pressed-background: rect(#a4eee0); }
-.command-shell .ship-ai-history-text { font-size: 8; text-color: #d1dfe3; }
-.command-shell .ship-ai-message-speaker { font-size: 6; text-shadow: false; }
-.command-shell .ship-ai-topic-button .__button_text__ { font-size: 7; }
-.command-shell .ship-ai-next-button .__button_text__ { font-size: 7; }
-.command-shell .ship-ai-return-button .__button_text__ { font-size: 6; }
-.command-shell .ship-ai-conversation-pane { background: rect(#0d1922); }
-.command-shell .ship-ai-history { background: rect(#000b1720); }
-// Straight edges and restrained framing keep it visually distinct from the
-// rounded starmap and from the image-backed teleporter skin.
-.ship-ai-screen {
-  background: rect(#b8020507);
-}
-
-.ship-ai-shell {
-  background: group(rect(#f3090d0f), border(1, #a3aaac));
-}
-
-.ship-ai-header {
-  background: group(rect(#f20d1214), border(-1, #485052));
-}
-
-.ship-ai-title {
-  font-size: 9;
-  text-color: #eef2f2;
-  text-shadow: false;
-}
-
-.ship-ai-subtitle {
-  font-size: 6;
-  text-color: #7f898b;
-  text-shadow: false;
-}
-
-.ship-ai-link-status {
-  font-size: 6;
-  text-color: #79e3df;
-  text-shadow: false;
-}
-
-.ship-ai-body {
-  background: rect(#f006090b);
-}
-
-.ship-ai-portrait-pane {
-  background: group(rect(#e9090f11), border(-1, #4b5355));
-}
-
-.ship-ai-portrait-stage {
-  background: rect(#d7050b0d);
-}
-
-.nova-portrait {
-  background: rect(#a6061012);
-}
-
-.ship-ai-portrait-identity {
-  font-size: 7;
-  text-color: #dce1e2;
-  text-shadow: false;
-}
-
-.ship-ai-portrait-state {
-  font-size: 5;
-  text-color: #70cfcc;
-  text-shadow: false;
-}
-
-.ship-ai-conversation-pane {
-  background: rect(#ed080c0e);
-}
-
-.ship-ai-section-title {
-  font-size: 7;
-  text-color: #bfc6c8;
-  text-shadow: false;
-}
-
-.ship-ai-history {
-  background: rect(#b8040809);
-}
-
-.ship-ai-history-text {
-  font-size: 6;
-  text-color: #c6d3d6;
-  text-shadow: false;
-  text-wrap: wrap;
-}
-
-.ship-ai-option-hint {
-  font-size: 6;
-  text-color: #697476;
-  text-shadow: false;
-}
-
-.ship-ai-return-button:host {
-  base-background: group(rect(#151a1c), border(1, #646d6f));
-  hover-background: group(rect(#222a2c), border(1, #aeb6b8));
-  pressed-background: group(rect(#0b0f10), border(1, #79e3df));
-}
-
-.ship-ai-return-button .__button_text__ {
-  flex: 1;
-  font-size: 5;
-  text-color: #c7cdce;
-  text-shadow: false;
-}
-
-.ship-ai-primary-action:host {
-  base-background: group(rect(#152123), border(1, #79aaa8));
-  hover-background: group(rect(#213536), border(1, #a6efeb));
-  pressed-background: group(rect(#081314), border(1, #79e3df));
-  padding-horizontal: 6;
-}
-
-.ship-ai-primary-action .__button_text__ {
-  flex: 1;
-  font-size: 6;
-  text-color: #e5f3f2;
-  text-shadow: false;
-}
-
-.ship-ai-topic-button:host {
-
-
-
-  padding-horizontal: 4;
-}
-
-.ship-ai-topic-button .__button_text__ {
-  flex: 1;
-  font-size: 5;
-  text-color: #e0e4e5;
-  text-shadow: false;
-  text-wrap: hide;
-}
-
-.ship-ai-topic-button:hover .__button_text__ {
-  text-color: #ffffff;
-}
-
-.ship-ai-topic-button:disabled .__button_text__ {
-  text-color: #718791;
-}
-
-.ship-ai-topic-button:disabled:host .__button_text__ {
-  text-color: #718791;
-  text-shadow: false;
-}
-
-.ship-ai-next-button:host {
-
-
-
-  padding-horizontal: 5;
-}
-
-.ship-ai-next-button .__button_text__ {
-  flex: 1;
-  font-size: 5;
-  text-color: #edf1f1;
-  text-shadow: false;
-  text-wrap: hide;
-}
-
-.ship-ai-next-button:disabled .__button_text__ {
-  text-color: #718791;
-}
-
-.ship-ai-history .__scroller_view_vertical-scroller__ {
-  width: 4;
-  margin-left: 3;
-}
-
-.ship-ai-history .__scroller_scroll_container__ {
-  background: rect(#161c1e);
-}
-
-.ship-ai-history .__scroller_scroll_bar__ {
-  base-background: rect(#626b6d);
-  hover-background: rect(#a0aaac);
-  pressed-background: rect(#79e3df);
-}
+.command-scroll .__scroller_scroll_bar__ { base-background: rect(#526975); hover-background: rect(#63d8d4); pressed-background: rect(#d8edf0); }
+.ship-ai-history-text { font-size: 8; text-color: #d8edf0; text-shadow: false; text-wrap: wrap; }
+.ship-ai-message-speaker { font-size: 7; text-color: #63d8d4; text-shadow: false; }
+.ship-ai-portrait-state { font-size: 7; text-color: #95b7c0; text-shadow: false; }
+.ship-ai-option-hint { font-size: 7; text-color: #95aeb9; text-shadow: false; text-wrap: wrap; }
+.ship-ai-topic-button .__button_text__ { font-size: 7; }
+.command-complete { text-color: #83e3a2; }
+.command-cost { font-size: 7; text-color: #e2b66f; text-shadow: false; }
+.command-fault { text-color: #e46b72; }

@@ -1,6 +1,6 @@
 package com.starboundmc.story;
 
-/** Stable bit assignments for the four mandatory N.O.V.A. situation topics. */
+/** Stable saved bit assignments for the four optional N.O.V.A. background topics. */
 public enum SituationTopic
 {
     NOVA_IDENTITY(0, 0x01, "nova_identity"),

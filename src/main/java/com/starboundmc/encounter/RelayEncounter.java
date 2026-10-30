@@ -110,7 +110,10 @@ public final class RelayEncounter {
         }
         data.beginMaterialization(level.getServer());
         if (!RelayStructure.place(level, data.origin(), data.snapshot())) {
-            data.markRecoveryError(level.getServer()); announce(level, "interrupted"); return;
+            data.markRecoveryError(level.getServer());
+            for (var player : level.players())
+                player.sendSystemMessage(Component.translatable("message.starboundmc.relay.interrupted"));
+            return;
         }
         // Save chunks before marking ACTIVE: a restart may never reseed a looted barrel.
         level.getChunkSource().save(true);

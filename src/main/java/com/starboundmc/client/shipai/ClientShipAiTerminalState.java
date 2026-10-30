@@ -130,6 +130,16 @@ public final class ClientShipAiTerminalState
         private long nextRequestId = 1L;
         private PendingRequest pendingRequest;
         private int activeContainerId = -1;
+        private final NovaTerminalViewState view = new NovaTerminalViewState();
+
+        NovaTerminalViewState view() { return view; }
+
+        /** Current terminal answer; the complete exchange remains in the transcript. */
+        int latestReplyIndex() {
+            for (int index = messages.size() - 1; index >= 0; index--)
+                if (messages.get(index).speaker() != Speaker.PLAYER) return index;
+            return -1;
+        }
 
         int messageCount()
         {
@@ -223,9 +233,15 @@ public final class ClientShipAiTerminalState
         {
             if (pendingRequest != null)
                 throw new IllegalStateException("A terminal action is already pending");
+            long requestId = nextActionRequestId();
+            pendingRequest = new PendingRequest(containerId, requestId, kind);
+            return requestId;
+        }
+
+        /** Shared by dialogue and task actions, including across root rebuilds. */
+        long nextActionRequestId() {
             long requestId = nextRequestId;
             nextRequestId = nextRequestId == Long.MAX_VALUE ? 1L : nextRequestId + 1L;
-            pendingRequest = new PendingRequest(containerId, requestId, kind);
             return requestId;
         }
 
